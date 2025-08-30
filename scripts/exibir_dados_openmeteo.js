@@ -17,16 +17,18 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
     
     
     // Exibe dados atuais
-    const { temperature_2m, wind_speed_10m, wind_gusts_10m, weather_code } = dados_openMeteo.current;
+    const { temperature_2m, wind_speed_10m, wind_gusts_10m, weather_code,apparent_temperature, cloud_cover, relative_humidity_2m } = dados_openMeteo.current;
     
     const descricaoAtual = weatherCodeMap[weather_code] || "❓ Desconhecido";
 
     base.innerHTML = `
         <div>
-            <p>${descricaoAtual}</p>
-            <p>🌡️ Temperatura agora: ${temperature_2m}°C</p>
-            <p>💨 Vento: ${wind_speed_10m} km/h</p>
-            <p>💨 Rajadas de vento: ${wind_gusts_10m} km/h</p>
+            <p>${descricaoAtual} (${cloud_cover}%)</p>
+            <p>🌡️ Temperatura: ${temperature_2m}°C</p>
+            <p>🌡️ Sensação térmica: ${apparent_temperature}°C</p>
+            <p>💧 Umidade relativa do ar: ${relative_humidity_2m}%</p>
+            <p>🍃 Vento: ${wind_speed_10m} km/h</p>
+            <p>🍃 Rajadas de vento: ${wind_gusts_10m} km/h</p>
         </div>
     `;
 
@@ -91,11 +93,12 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
         card.innerHTML = `
             <h3>${dataFormatada}</h3>
             <p>${descricao}</p>
-            <p>🌡️ Temperatura Mínima: ${dados_openMeteo.daily.temperature_2m_min[i]} °C</p>
-            <p>🌡️ Temperatura Máxima: ${dados_openMeteo.daily.temperature_2m_max[i]} °C</p>
-            <p>💨 Vento Máximo: ${dados_openMeteo.daily.wind_speed_10m_max[i]} km/h</p>
+            <p>🌡️ Temp. Mínima: ${dados_openMeteo.daily.temperature_2m_min[i]} °C (ST de ${dados_openMeteo.daily.apparent_temperature_min[i]} °C)</p>
+            <p>🌡️ Temp. Máxima: ${dados_openMeteo.daily.temperature_2m_max[i]} °C (ST de ${dados_openMeteo.daily.apparent_temperature_max[i]} °C)</p>
+            <p>🍃 Vento Máximo: ${dados_openMeteo.daily.wind_speed_10m_max[i]} km/h</p>
             <p>🍃 Rajada de Vento Máxima: ${dados_openMeteo.daily.wind_gusts_10m_max[i]} km/h</p>
             <p>🌧️ Chuva acumulada: ${dados_openMeteo.daily.precipitation_sum[i]} mm</p>
+            <p>☔ Possibilidade de chuva: ${dados_openMeteo.daily.precipitation_probability_max[i]}%</p>
         `;
 
         base_diaria.appendChild(card);
