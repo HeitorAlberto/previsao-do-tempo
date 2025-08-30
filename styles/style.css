@@ -4,7 +4,7 @@
     padding: 0;
     box-sizing: border-box;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    font-size: 1.05em
+    font-size: 1.05em;
 }
 
 /* Estrutura */
@@ -33,6 +33,7 @@ header h1 {
     gap: 10px;
     align-items: center;
     padding: 20px 0;
+    flex-wrap: wrap; /* Permite quebra em telas menores */
 }
 
 input, button {
@@ -42,6 +43,7 @@ input, button {
 
 input {
     width: 350px;
+    max-width: 100%; /* Evita ultrapassar em telas pequenas */
     border: 1px solid #ccc;
     border-radius: 6px;
 }
@@ -81,6 +83,7 @@ button:hover {
     color: #000;
     font-size: 20px;
     font-weight: 500;
+    text-align: center;
 }
 
 /* Dashboard */
@@ -123,17 +126,92 @@ button:hover {
 .card-diario {
     background-color: white;
     padding: 20px;
-    line-height: 1.6em;
+    line-height: 1.5em;
     border-radius: 8px;
     box-shadow: 0 2px 6px #0000001a;
+
+    display: flex;        /* Layout interno mais consistente */
+    flex-direction: column;
+    gap: 8px;
 }
 
 /* Tipografia */
 h3 {
     margin-bottom: 10px;
+    font-size: clamp(1rem, 2vw, 1.2rem); /* Fonte fluida */
+    white-space: nowrap;                 /* Evita quebra */
+    overflow: hidden;
+    text-overflow: ellipsis;             /* Reticências se passar */
 }
 
 p {
     margin-bottom: 6px;
     text-align: left;
+    font-size: clamp(0.9rem, 1.8vw, 1rem);
+    line-height: 1.4em;
+    overflow-wrap: break-word;           /* Quebra elegante em palavras longas */
+}
+
+/* ==================== RESPONSIVIDADE ==================== */
+
+/* Tablets */
+@media (max-width: 992px) {
+    header {
+        padding: 15px 30px;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .div-base-form {
+        justify-content: center;
+    }
+
+    .model-column {
+        grid-template-columns: 1fr; /* Coloca colunas em uma só linha */
+    }
+}
+
+/* Celulares */
+@media (max-width: 600px) {
+    header {
+        padding: 15px 20px;
+    }
+
+    header h1 {
+        font-size: 1.4em;
+    }
+
+    input {
+        width: 100%; /* Ocupa a largura total */
+    }
+
+    button {
+        width: 100%; /* Botão embaixo do input */
+    }
+
+    #resultado {
+        font-size: 18px;
+    }
+
+    .dashboard {
+        padding: 0 10px;
+    }
+
+    #base-column-now,
+    #base-column {
+        grid-template-columns: 1fr; /* Apenas 1 card por linha */
+    }
+
+    .card-diario {
+        padding: 15px;
+    }
+
+    h3 {
+        font-size: 1rem;
+    }
+
+    p {
+        font-size: 0.9rem;
+        line-height: 1.3em;
+    }
 }
