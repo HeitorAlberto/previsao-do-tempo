@@ -23,7 +23,8 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
 
     base.innerHTML = `
         <div>
-            <p>${descricaoAtual} (${cloud_cover}%)</p>
+            <p>${descricaoAtual}</p>
+            <p>🌫️ Cobertura de nuvens: ${cloud_cover}%</p>
             <p>🌡️ Temperatura: ${temperature_2m}°C</p>
             <p>🌡️ Sensação térmica: ${apparent_temperature}°C</p>
             <p>💧 Umidade relativa do ar: ${relative_humidity_2m}%</p>
@@ -93,11 +94,13 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
         card.innerHTML = `
             <h3>${dataFormatada}</h3>
             <p>${descricao}</p>
-            <p>🌡️ Temp. Mínima: ${dados_openMeteo.daily.temperature_2m_min[i]} °C (ST de ${dados_openMeteo.daily.apparent_temperature_min[i]} °C)</p>
-            <p>🌡️ Temp. Máxima: ${dados_openMeteo.daily.temperature_2m_max[i]} °C (ST de ${dados_openMeteo.daily.apparent_temperature_max[i]} °C)</p>
+            <p>🌡️ Temperatura Mínima: ${dados_openMeteo.daily.temperature_2m_min[i]} °C </p>
+            <p>🌡️ Temperatura Máxima: ${dados_openMeteo.daily.temperature_2m_max[i]} °C </p>
+            <p>🌡️ Sensação Térmica Mínima: ${dados_openMeteo.daily.apparent_temperature_min[i]} °C</p>
+            <p>🌡️ Sensação Térmica Máxima: ${dados_openMeteo.daily.apparent_temperature_max[i]} °C</p>
             <p>🍃 Vento Máximo: ${dados_openMeteo.daily.wind_speed_10m_max[i]} km/h</p>
             <p>🍃 Rajada de Vento Máxima: ${dados_openMeteo.daily.wind_gusts_10m_max[i]} km/h</p>
-            <p>🌧️ Chuva acumulada: ${dados_openMeteo.daily.precipitation_sum[i]} mm</p>
+            <p>☔ Chuva acumulada: ${dados_openMeteo.daily.precipitation_sum[i]} mm</p>
             <p>☔ Possibilidade de chuva: ${dados_openMeteo.daily.precipitation_probability_max[i]}%</p>
         `;
 
