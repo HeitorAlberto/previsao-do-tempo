@@ -21,7 +21,7 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
     base.innerHTML = `
         <div>
             <p>ℹ️ ${descricaoAtual}</p>
-            <p>🌫️ Cobertura de nuvens: ${Number(cloud_cover).toFixed(0)}%</p>
+            <p>☁️ Cobertura de nuvens: ${Number(cloud_cover).toFixed(0)}%</p>
             <p>🌡️ Temperatura: ${Number(temperature_2m).toFixed(0)}°C</p>
             <p>🌡️ Sensação térmica: ${Number(apparent_temperature).toFixed(0)}°C</p>
             <p>💧 Umidade relativa do ar: ${Number(relative_humidity_2m).toFixed(0)}%</p>
@@ -82,3 +82,4 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
         base_diaria.appendChild(card);
     }
 }
+
