@@ -94,10 +94,8 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
         card.innerHTML = `
             <h3>${dataFormatada}</h3>
             <p>ℹ️ ${descricao}</p>
-            <p>🌡️ Temperatura Mínima: ${dados_openMeteo.daily.temperature_2m_min[i]} °C </p>
-            <p>🌡️ Temperatura Máxima: ${dados_openMeteo.daily.temperature_2m_max[i]} °C </p>
-            <p>🌡️ Sensação Térmica Mínima: ${dados_openMeteo.daily.apparent_temperature_min[i]} °C</p>
-            <p>🌡️ Sensação Térmica Máxima: ${dados_openMeteo.daily.apparent_temperature_max[i]} °C</p>
+            <p>🌡️ Temperatura: ${dados_openMeteo.daily.temperature_2m_min[i]} °C a ${dados_openMeteo.daily.temperature_2m_max[i]} </p>
+            <p>🌡️ Sensação Térmica: ${dados_openMeteo.daily.apparent_temperature_min[i]} °C a ${dados_openMeteo.daily.apparent_temperature_max[i]} °C</p>
             <p>🍃 Vento Máximo: ${dados_openMeteo.daily.wind_speed_10m_max[i]} km/h</p>
             <p>🍃 Rajada de Vento Máxima: ${dados_openMeteo.daily.wind_gusts_10m_max[i]} km/h</p>
             <p>☔ Chuva acumulada: ${dados_openMeteo.daily.precipitation_sum[i]} mm</p>
@@ -107,4 +105,5 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
         base_diaria.appendChild(card);
     }
 }
+
 
