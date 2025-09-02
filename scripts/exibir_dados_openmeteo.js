@@ -23,7 +23,7 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
 
     base.innerHTML = `
         <div>
-            <p>${descricaoAtual}</p>
+            <p>ℹ️ ${descricaoAtual}</p>
             <p>🌫️ Cobertura de nuvens: ${cloud_cover}%</p>
             <p>🌡️ Temperatura: ${temperature_2m}°C</p>
             <p>🌡️ Sensação térmica: ${apparent_temperature}°C</p>
@@ -93,7 +93,7 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
 
         card.innerHTML = `
             <h3>${dataFormatada}</h3>
-            <p>${descricao}</p>
+            <p>ℹ️ ${descricao}</p>
             <p>🌡️ Temperatura Mínima: ${dados_openMeteo.daily.temperature_2m_min[i]} °C </p>
             <p>🌡️ Temperatura Máxima: ${dados_openMeteo.daily.temperature_2m_max[i]} °C </p>
             <p>🌡️ Sensação Térmica Mínima: ${dados_openMeteo.daily.apparent_temperature_min[i]} °C</p>
@@ -107,3 +107,4 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
         base_diaria.appendChild(card);
     }
 }
+
