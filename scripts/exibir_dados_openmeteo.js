@@ -70,7 +70,7 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
 
         card.innerHTML = `
             <h3>${dataFormatada}</h3>
-            <p>ℹ️ ${descricao}</p>
+            <p id = "condicao-diaria">ℹ️ ${descricao}</p>
             <p>🌡️ Temperatura: ${Number(dados_openMeteo.daily.temperature_2m_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.temperature_2m_max[i]).toFixed(0)}°</p>
             <p>🌡️ Sensação Térmica: ${Number(dados_openMeteo.daily.apparent_temperature_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.apparent_temperature_max[i]).toFixed(0)}°</p>
             <p>🍃 Vento Máximo: ${Number(dados_openMeteo.daily.wind_speed_10m_max[i]).toFixed(0)} km/h</p>
