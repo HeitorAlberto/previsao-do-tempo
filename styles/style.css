@@ -116,9 +116,9 @@ button:hover {
 /* Blocos de modelo */
 .model-column-now {
     background-color: #99f8ff;
-    max-width: 600px; /* largura máxima */
-    width: 90%;       /* ocupa 90% da largura em telas menores */
-    margin: 0 auto;   /* centraliza horizontalmente */
+    max-width: 760px; /* Aumentei de 600px para dar mais espaço às 2 colunas */
+    width: 90%;
+    margin: 0 auto;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
@@ -145,6 +145,29 @@ button:hover {
     display: flex;        
     flex-direction: column;
     gap: 8px;
+}
+
+#condicao-diaria {
+    font-weight: 700;
+}
+
+/* NOVO: conteúdo do card "agora" em duas colunas */
+#opmmm-column-now > div {
+    column-count: 2;
+    column-gap: 28px;
+}
+
+#opmmm-column-now > div p {
+    break-inside: avoid;
+    margin-bottom: 8px;
+}
+
+/* OPCIONAL: primeira linha ocupa largura inteira */
+#opmmm-column-now > div p:first-child {
+    column-span: all;
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 25px;
 }
 
 /* Tipografia */
@@ -226,9 +249,9 @@ p {
         font-size: 0.9rem;
         line-height: 1.3em;
     }
+
+    /* NOVO: no mobile, volta para 1 coluna */
+    #opmmm-column-now > div {
+        column-count: 1;
+    }
 }
-
-
-
-
-
