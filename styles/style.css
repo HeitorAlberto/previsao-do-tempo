@@ -187,6 +187,11 @@ p {
     overflow-wrap: break-word;
 }
 
+hr {
+    border: none;
+    border-top: 2px solid #ccc;
+}
+
 /* ==================== RESPONSIVIDADE ==================== */
 
 /* Tablets */
