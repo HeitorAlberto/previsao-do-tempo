@@ -24,7 +24,7 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
             <p>☁️ Cobertura de nuvens: ${Number(cloud_cover).toFixed(0)}%</p>
             <p>🌡️ Temperatura: ${Number(temperature_2m).toFixed(0)}°C</p>
             <p>🌡️ Sensação térmica: ${Number(apparent_temperature).toFixed(0)}°C</p>
-            <p>💧 Umidade relativa do ar: ${Number(relative_humidity_2m).toFixed(0)}%</p>
+            <p>💧 Umidade do ar: ${Number(relative_humidity_2m).toFixed(0)}%</p>
             <p>🍃 Vento: ${Number(wind_speed_10m).toFixed(0)} km/h</p>
             <p>🍃 Rajadas de vento: ${Number(wind_gusts_10m).toFixed(0)} km/h</p>
         </div>
@@ -72,11 +72,16 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
             <h3>${dataFormatada}</h3>
             <p id = "condicao-diaria">ℹ️ ${descricao}</p>
             <p>🌡️ Temperatura: ${Number(dados_openMeteo.daily.temperature_2m_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.temperature_2m_max[i]).toFixed(0)}°</p>
-            <p>🌡️ Sensação Térmica: ${Number(dados_openMeteo.daily.apparent_temperature_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.apparent_temperature_max[i]).toFixed(0)}°</p>
-            <p>🍃 Vento Máximo: ${Number(dados_openMeteo.daily.wind_speed_10m_max[i]).toFixed(0)} km/h</p>
-            <p>🍃 Rajada de Vento Máxima: ${Number(dados_openMeteo.daily.wind_gusts_10m_max[i]).toFixed(0)} km/h</p>
+            <p>🌡️ Sensação térmica: ${Number(dados_openMeteo.daily.apparent_temperature_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.apparent_temperature_max[i]).toFixed(0)}°</p>
+            <hr>
             <p>☔ Chuva acumulada: ${Number(dados_openMeteo.daily.precipitation_sum[i]).toFixed(0)} mm</p>
             <p>☔ Possibilidade de chuva: ${Number(dados_openMeteo.daily.precipitation_probability_max[i]).toFixed(0)}%</p>
+            <p>☁️ Cobertura de nuvens: ${Number(dados_openMeteo.daily.cloud_cover_mean[i]).toFixed(0)}%</p>
+            <hr>
+            <p>💧 Umidade do ar: ${Number(dados_openMeteo.daily.relative_humidity_2m_min[i]).toFixed(0)}% a ${Number(dados_openMeteo.daily.relative_humidity_2m_max[i]).toFixed(0)}%</p>
+            <p>☀️ Índice UV máximo: ${Number(dados_openMeteo.daily.uv_index_max[i]).toFixed(0)}</p>
+            <p>🍃 Vento máximo: ${Number(dados_openMeteo.daily.wind_speed_10m_max[i]).toFixed(0)} km/h</p>
+            <p>🍃 Rajadas máximas: ${Number(dados_openMeteo.daily.wind_gusts_10m_max[i]).toFixed(0)} km/h</p>
         `;
 
         base_diaria.appendChild(card);
