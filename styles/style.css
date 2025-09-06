@@ -4,7 +4,6 @@
     padding: 0;
     box-sizing: border-box;
     font-size: 1.05em;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 /* Estrutura */
@@ -260,3 +259,4 @@ hr {
         column-count: 1;
     }
 }
+
