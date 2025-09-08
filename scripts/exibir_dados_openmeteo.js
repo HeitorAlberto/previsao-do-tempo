@@ -37,24 +37,65 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
     
     base_diaria.innerHTML = "";
 
+    // Função auxiliar: soma (chuva) ou média (nuvens)
+    function calcularPeriodo(arrayHoras, diaIndex, tipo = "soma") {
+        const periodos = { madrugada: 0, manha: 0, tarde: 0, noite: 0 };
+        const contagem = { madrugada: 0, manha: 0, tarde: 0, noite: 0 };
+        const startHour = diaIndex * 24;
+        for (let h = 0; h < 24; h++) {
+            const valor = Number(arrayHoras[startHour + h]) || 0;
+            let periodo;
+            if (h >= 0 && h <= 5) periodo = "madrugada";
+            else if (h >= 6 && h <= 11) periodo = "manha";
+            else if (h >= 12 && h <= 17) periodo = "tarde";
+            else periodo = "noite";
+
+            if (tipo === "soma") {
+                periodos[periodo] += valor;
+            } else {
+                periodos[periodo] += valor;
+                contagem[periodo]++;
+            }
+        }
+
+        if (tipo === "media") {
+            for (let p in periodos) {
+                periodos[p] = contagem[p] ? periodos[p] / contagem[p] : 0;
+            }
+        }
+
+        return periodos;
+    }
+
+    // Função para probabilidade de chuva por período (máximo)
+    function calcularProbabilidadePeriodo(arrayHoras, diaIndex) {
+        const periodos = { madrugada: 0, manha: 0, tarde: 0, noite: 0 };
+        const startHour = diaIndex * 24;
+        for (let h = 0; h < 24; h++) {
+            const valor = Number(arrayHoras[startHour + h]) || 0;
+            if (h >= 0 && h <= 5) periodos.madrugada = Math.max(periodos.madrugada, valor);
+            else if (h >= 6 && h <= 11) periodos.manha = Math.max(periodos.manha, valor);
+            else if (h >= 12 && h <= 17) periodos.tarde = Math.max(periodos.tarde, valor);
+            else periodos.noite = Math.max(periodos.noite, valor);
+        }
+        return periodos;
+    }
+
     for (let i = 0; i < dados_openMeteo.daily.time.length; i++) {
         
         const codigoMaisFrequente = dados_openMeteo.daily.weather_code[i]; 
         const descricao = weatherCodeMap[codigoMaisFrequente] || "❓ Desconhecido";
 
-        // Cria a data em UTC
-        const dataParts = dados_openMeteo.daily.time[i].split("-"); // ["YYYY","MM","DD"]
+        const dataParts = dados_openMeteo.daily.time[i].split("-");
         const data = new Date(Date.UTC(
             parseInt(dataParts[0]),
             parseInt(dataParts[1]) - 1,
             parseInt(dataParts[2])
         ));
 
-        // Formata dia e mês
         const dia = String(data.getUTCDate()).padStart(2, "0");
         const mes = String(data.getUTCMonth() + 1).padStart(2, "0");
 
-        // Define se é "Hoje" ou o nome do dia
         let nomeDia;
         if (i === 0) {
             nomeDia = "Hoje";
@@ -68,23 +109,77 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
         const card = document.createElement("div");
         card.classList.add("card-diario");
 
+        // Calcula chuva e nuvens por período
+        const chuvaPeriodo = calcularPeriodo(dados_openMeteo.hourly.precipitation, i, "soma");
+        const nuvensPeriodo = calcularPeriodo(dados_openMeteo.hourly.cloud_cover, i, "media");
+        const probChuvaPeriodo = calcularProbabilidadePeriodo(dados_openMeteo.hourly.precipitation_probability, i);
+
         card.innerHTML = `
             <h3>${dataFormatada}</h3>
-            <p id = "condicao-diaria">ℹ️ ${descricao}</p>
-            <p>🌡️ Temperatura: ${Number(dados_openMeteo.daily.temperature_2m_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.temperature_2m_max[i]).toFixed(0)}°</p>
-            <p>🌡️ Sensação térmica: ${Number(dados_openMeteo.daily.apparent_temperature_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.apparent_temperature_max[i]).toFixed(0)}°</p>
+            <p id="condicao-diaria">ℹ️ ${descricao}</p>
+
+            <p>🌡️ Temperatura: 
+                <span style="background-color:#ffe0b3; padding:2px 6px; border-radius:4px;">
+                    ${Number(dados_openMeteo.daily.temperature_2m_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.temperature_2m_max[i]).toFixed(0)}°
+                </span>
+            </p>
+
+            <p>🌡️ Sensação térmica: 
+                <span style="background-color:#ffe0b3; padding:2px 6px; border-radius:4px;">
+                    ${Number(dados_openMeteo.daily.apparent_temperature_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.apparent_temperature_max[i]).toFixed(0)}°
+                </span>
+            </p>
+
             <hr>
-            <p>☔ Chuva acumulada: ${Number(dados_openMeteo.daily.precipitation_sum[i]).toFixed(0)} mm</p>
-            <p>☔ Possibilidade de chuva: ${Number(dados_openMeteo.daily.precipitation_probability_max[i]).toFixed(0)}%</p>
-            <p>☁️ Cobertura de nuvens: ${Number(dados_openMeteo.daily.cloud_cover_mean[i]).toFixed(0)}%</p>
+
+            <p>☔ Chuva acumulada: 
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${Number(dados_openMeteo.daily.precipitation_sum[i]).toFixed(0)} mm</span>
+            </p>
+
+            <p>☔ Chuva (período): 
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.madrugada.toFixed(0)} mm</span>
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.manha.toFixed(0)} mm</span>
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.tarde.toFixed(0)} mm</span>
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.noite.toFixed(0)} mm</span>
+            </p>
+
+            <p>☔ Prob. de chuva (por período): 
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.madrugada.toFixed(0)}%</span>
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.manha.toFixed(0)}%</span>
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.tarde.toFixed(0)}%</span>
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.noite.toFixed(0)}%</span>
+            </p>
+
+            <p>☁️ Nuvens (período): 
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.madrugada.toFixed(0)}%</span>
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.manha.toFixed(0)}%</span>
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.tarde.toFixed(0)}%</span>
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.noite.toFixed(0)}%</span>
+            </p>
+
             <hr>
-            <p>💧 Umidade do ar: ${Number(dados_openMeteo.daily.relative_humidity_2m_min[i]).toFixed(0)}% a ${Number(dados_openMeteo.daily.relative_humidity_2m_max[i]).toFixed(0)}%</p>
-            <p>☀️ Índice UV máximo: ${Number(dados_openMeteo.daily.uv_index_max[i]).toFixed(0)}</p>
-            <p>🍃 Vento máximo: ${Number(dados_openMeteo.daily.wind_speed_10m_max[i]).toFixed(0)} km/h</p>
-            <p>🍃 Rajadas máximas: ${Number(dados_openMeteo.daily.wind_gusts_10m_max[i]).toFixed(0)} km/h</p>
+
+            <p>💧 Umidade do ar: 
+                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">
+                    ${Number(dados_openMeteo.daily.relative_humidity_2m_min[i]).toFixed(0)}% a ${Number(dados_openMeteo.daily.relative_humidity_2m_max[i]).toFixed(0)}%
+                </span>
+            </p>
+
+            <p>☀️ Índice UV máximo: 
+                <span style="background-color:#ffe0b3; padding:2px 6px; border-radius:4px;">${Number(dados_openMeteo.daily.uv_index_max[i]).toFixed(0)}</span>
+            </p>
+
+            <p>🍃 Vento máximo: 
+                <span style="background-color:#d4edda; padding:2px 6px; border-radius:4px;">${Number(dados_openMeteo.daily.wind_speed_10m_max[i]).toFixed(0)} km/h</span>
+            </p>
+
+            <p>🍃 Rajadas máximas: 
+                <span style="background-color:#d4edda; padding:2px 6px; border-radius:4px;">${Number(dados_openMeteo.daily.wind_gusts_10m_max[i]).toFixed(0)} km/h</span>
+            </p>
         `;
+
+
 
         base_diaria.appendChild(card);
     }
 }
-
