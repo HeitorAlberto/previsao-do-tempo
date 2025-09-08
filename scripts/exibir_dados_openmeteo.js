@@ -132,25 +132,25 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
 
             <hr>
 
-            <p>☔ Chuva acumulada: 
+            <p>☔ Chuva (24h): 
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${Number(dados_openMeteo.daily.precipitation_sum[i]).toFixed(0)} mm</span>
             </p>
 
-            <p>☔ Chuva (período): 
+            <p>☔ Chuva (6h): 
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.madrugada.toFixed(0)} mm</span>
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.manha.toFixed(0)} mm</span>
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.tarde.toFixed(0)} mm</span>
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.noite.toFixed(0)} mm</span>
             </p>
 
-            <p>☔ Prob. de chuva (por período): 
+            <p>☔ Probabilidade (6h): 
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.madrugada.toFixed(0)}%</span>
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.manha.toFixed(0)}%</span>
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.tarde.toFixed(0)}%</span>
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.noite.toFixed(0)}%</span>
             </p>
 
-            <p>☁️ Nuvens (período): 
+            <p>☁️ Qtd. Nuvens (6h): 
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.madrugada.toFixed(0)}%</span>
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.manha.toFixed(0)}%</span>
                 <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.tarde.toFixed(0)}%</span>
