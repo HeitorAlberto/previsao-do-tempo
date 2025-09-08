@@ -116,9 +116,11 @@ button:hover {
 }
 
 /* Blocos de modelo */
+
+/* Coluna "agora" */
 .model-column-now {
     background-color: #99f8ff;
-    max-width: 760px; /* Aumentei de 600px para dar mais espaço às 2 colunas */
+    max-width: 760px; /* largura desejada */
     width: 90%;
     margin: 0 auto;
     padding: 20px;
@@ -126,14 +128,19 @@ button:hover {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
+/* Coluna diária - mesma largura da coluna "agora" */
 .model-column {
     background-color: #ffffff;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 50px;
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+
+    max-width: 760px; /* mesma largura da coluna "now" */
+    width: 90%;       /* mesma proporção da coluna "now" */
+    margin: 0 auto;   /* centraliza */
 }
 
 /* Cards diários */
@@ -154,22 +161,14 @@ button:hover {
 }
 
 /* NOVO: conteúdo do card "agora" em duas colunas */
-#opmmm-column-now > div {
-    column-count: 2;
-    column-gap: 28px;
-}
 
-#opmmm-column-now > div p {
-    break-inside: avoid;
-    margin-bottom: 8px;
-}
+
+
 
 /* OPCIONAL: primeira linha ocupa largura inteira */
 #opmmm-column-now > div p:first-child {
     column-span: all;
-    text-align: center;
     font-weight: 600;
-    margin-bottom: 25px;
 }
 
 /* Tipografia */
@@ -262,6 +261,3 @@ hr {
         column-count: 1;
     }
 }
-
-
-
