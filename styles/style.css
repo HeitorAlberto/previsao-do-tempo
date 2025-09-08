@@ -223,6 +223,7 @@ hr {
         width: 100%;
     }
 
+
     #resultado {
         font-size: 18px;
     }
@@ -237,6 +238,8 @@ hr {
         max-width: none;
         margin: 0;      /* remove margens */
         padding: 15;
+        border: none;
+        border-radius: 0px;
     }
 
     #base-column-now,
@@ -246,6 +249,8 @@ hr {
 
     .card-diario {
         padding: 15px;
+        border: 1px solid black;
+        border-radius: 0px;
     }
 
     h3 {
