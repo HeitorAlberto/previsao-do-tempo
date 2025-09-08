@@ -118,63 +118,54 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
             <h3>${dataFormatada}</h3>
             <p id="condicao-diaria">ℹ️ ${descricao}</p>
 
-            <p>🌡️ Temperatura: 
-                <span style="background-color:#ffe0b3; padding:2px 6px; border-radius:4px;">
-                    ${Number(dados_openMeteo.daily.temperature_2m_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.temperature_2m_max[i]).toFixed(0)}°
-                </span>
+            <p style="background-color:#ffe0b3;"><b>🌡️ Temperatura:</b>
+                ${Number(dados_openMeteo.daily.temperature_2m_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.temperature_2m_max[i]).toFixed(0)}°
             </p>
 
-            <p>🌡️ Sensação térmica: 
-                <span style="background-color:#ffe0b3; padding:2px 6px; border-radius:4px;">
-                    ${Number(dados_openMeteo.daily.apparent_temperature_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.apparent_temperature_max[i]).toFixed(0)}°
-                </span>
+            <p style="background-color:#ffe0b3;"><b>🌡️ Sensação térmica: </b>
+                ${Number(dados_openMeteo.daily.apparent_temperature_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.apparent_temperature_max[i]).toFixed(0)}°
             </p>
 
-            <hr>
-
-            <p>☔ Chuva (24h): 
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${Number(dados_openMeteo.daily.precipitation_sum[i]).toFixed(0)} mm</span>
+            <p style="background-color:#e0f0ff;"><b>☔ Chuva em 24h:</b>
+                ${Number(dados_openMeteo.daily.precipitation_sum[i]).toFixed(0)} mm
             </p>
 
-            <p>☔ Chuva (6h): 
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.madrugada.toFixed(0)} mm</span>
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.manha.toFixed(0)} mm</span>
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.tarde.toFixed(0)} mm</span>
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${chuvaPeriodo.noite.toFixed(0)} mm</span>
+            <p style="background-color:#e0f0ff;"><b>☔ Chuva em 6h:</b>
+                (${chuvaPeriodo.madrugada.toFixed(0)} mm)
+                (${chuvaPeriodo.manha.toFixed(0)} mm)
+                (${chuvaPeriodo.tarde.toFixed(0)} mm)
+                (${chuvaPeriodo.noite.toFixed(0)} mm) 
             </p>
 
-            <p>☔ Probabilidade (6h): 
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.madrugada.toFixed(0)}%</span>
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.manha.toFixed(0)}%</span>
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.tarde.toFixed(0)}%</span>
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${probChuvaPeriodo.noite.toFixed(0)}%</span>
+            <p style="background-color:#e0f0ff;"><b>☔ Probabilidade em 6h:</b> 
+                (${probChuvaPeriodo.madrugada.toFixed(0)}%)
+                (${probChuvaPeriodo.manha.toFixed(0)}%)
+                (${probChuvaPeriodo.tarde.toFixed(0)}%)
+                (${probChuvaPeriodo.noite.toFixed(0)}%)
             </p>
 
-            <p>☁️ Qtd. Nuvens (6h): 
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.madrugada.toFixed(0)}%</span>
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.manha.toFixed(0)}%</span>
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.tarde.toFixed(0)}%</span>
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">${nuvensPeriodo.noite.toFixed(0)}%</span>
+            <p style="background-color:#e0f0ff;"><b>☁️ Qtd. Nuvens em 6h:</b> 
+                (${nuvensPeriodo.madrugada.toFixed(0)}%)
+                (${nuvensPeriodo.manha.toFixed(0)}%)
+                (${nuvensPeriodo.tarde.toFixed(0)}%)
+                (${nuvensPeriodo.noite.toFixed(0)}%) 
             </p>
 
-            <hr>
-
-            <p>💧 Umidade do ar: 
-                <span style="background-color:#e0f0ff; padding:2px 6px; border-radius:4px;">
-                    ${Number(dados_openMeteo.daily.relative_humidity_2m_min[i]).toFixed(0)}% a ${Number(dados_openMeteo.daily.relative_humidity_2m_max[i]).toFixed(0)}%
-                </span>
+            <p style="background-color:#e0f0ff;"><b>💧 Umidade do ar:</b> 
+                
+                ${Number(dados_openMeteo.daily.relative_humidity_2m_min[i]).toFixed(0)}% a ${Number(dados_openMeteo.daily.relative_humidity_2m_max[i]).toFixed(0)}%
             </p>
 
-            <p>☀️ Índice UV máximo: 
-                <span style="background-color:#ffe0b3; padding:2px 6px; border-radius:4px;">${Number(dados_openMeteo.daily.uv_index_max[i]).toFixed(0)}</span>
+            <p style="background-color:#ffe0b3;"><b>☀️ Índice UV máximo: </b>
+                ${Number(dados_openMeteo.daily.uv_index_max[i]).toFixed(0)}
             </p>
 
-            <p>🍃 Vento máximo: 
-                <span style="background-color:#d4edda; padding:2px 6px; border-radius:4px;">${Number(dados_openMeteo.daily.wind_speed_10m_max[i]).toFixed(0)} km/h</span>
+            <p style="background-color:#d4edda;"><b>🍃 Vento máximo: </b>
+                ${Number(dados_openMeteo.daily.wind_speed_10m_max[i]).toFixed(0)} km/h
             </p>
 
-            <p>🍃 Rajadas máximas: 
-                <span style="background-color:#d4edda; padding:2px 6px; border-radius:4px;">${Number(dados_openMeteo.daily.wind_gusts_10m_max[i]).toFixed(0)} km/h</span>
+            <p style="background-color:#d4edda;"><b>🍃 Rajadas máximas: </b>
+                ${Number(dados_openMeteo.daily.wind_gusts_10m_max[i]).toFixed(0)} km/h
             </p>
         `;
 
