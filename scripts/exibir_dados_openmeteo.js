@@ -143,24 +143,24 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
             </p>
 
             <p style="background-color:#e0f0ff;"><b>☔ Chuva em 6h:</b>
-                [${chuvaPeriodo.madrugada.toFixed(0)} mm]
-                [${chuvaPeriodo.manha.toFixed(0)} mm]
-                [${chuvaPeriodo.tarde.toFixed(0)} mm]
-                [${chuvaPeriodo.noite.toFixed(0)} mm] 
+                ${chuvaPeriodo.madrugada.toFixed(0)} mm,
+                ${chuvaPeriodo.manha.toFixed(0)} mm,
+                ${chuvaPeriodo.tarde.toFixed(0)} mm,
+                ${chuvaPeriodo.noite.toFixed(0)} mm, 
             </p>
 
             <p style="background-color:#e0f0ff;"><b>☔ Probabilidade em 6h:</b> 
-                [${probChuvaPeriodo.madrugada.toFixed(0)}%]
-                [${probChuvaPeriodo.manha.toFixed(0)}%]
-                [${probChuvaPeriodo.tarde.toFixed(0)}%]
-                [${probChuvaPeriodo.noite.toFixed(0)}%]
+                ${probChuvaPeriodo.madrugada.toFixed(0)}%,
+                ${probChuvaPeriodo.manha.toFixed(0)}%,
+                ${probChuvaPeriodo.tarde.toFixed(0)}%,
+                ${probChuvaPeriodo.noite.toFixed(0)}%
             </p>
 
             <p style="background-color:#e0f0ff;"><b>☁️ Qtd. Nuvens em 6h:</b> 
-                [${nuvensPeriodo.madrugada.toFixed(0)}%]
-                [${nuvensPeriodo.manha.toFixed(0)}%]
-                [${nuvensPeriodo.tarde.toFixed(0)}%]
-                [${nuvensPeriodo.noite.toFixed(0)}%] 
+                ${nuvensPeriodo.madrugada.toFixed(0)}%,
+                ${nuvensPeriodo.manha.toFixed(0)}%,
+                ${nuvensPeriodo.tarde.toFixed(0)}%,
+                ${nuvensPeriodo.noite.toFixed(0)}% 
             </p>
 
             <p style="background-color:#e0f0ff;"><b>💧 Umidade do ar:</b> 
