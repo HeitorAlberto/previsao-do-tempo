@@ -128,7 +128,7 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
 
         card.innerHTML = `
             <h3>${dataFormatada}</h3>
-            <p id="condicao-diaria" style="border: 1px solid black">ℹ️ ${descricao}</p>
+            <p id="condicao-diaria">ℹ️ ${descricao}</p>
 
             <p style="background-color:#ffe0b3;"><b>🌡️ Temperatura:</b>
                 ${Number(dados_openMeteo.daily.temperature_2m_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.temperature_2m_max[i]).toFixed(0)}°
