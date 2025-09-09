@@ -39,9 +39,13 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
 
     // Função auxiliar: soma (chuva) ou média (nuvens)
     function calcularPeriodo(arrayHoras, diaIndex, tipo = "soma") {
+        
         const periodos = { madrugada: 0, manha: 0, tarde: 0, noite: 0 };
+        
         const contagem = { madrugada: 0, manha: 0, tarde: 0, noite: 0 };
+        
         const startHour = diaIndex * 24;
+        
         for (let h = 0; h < 24; h++) {
             const valor = Number(arrayHoras[startHour + h]) || 0;
             let periodo;
@@ -69,8 +73,11 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
 
     // Função para probabilidade de chuva por período (máximo)
     function calcularProbabilidadePeriodo(arrayHoras, diaIndex) {
+        
         const periodos = { madrugada: 0, manha: 0, tarde: 0, noite: 0 };
+        
         const startHour = diaIndex * 24;
+        
         for (let h = 0; h < 24; h++) {
             const valor = Number(arrayHoras[startHour + h]) || 0;
             if (h >= 0 && h <= 5) periodos.madrugada = Math.max(periodos.madrugada, valor);
@@ -78,15 +85,18 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
             else if (h >= 12 && h <= 17) periodos.tarde = Math.max(periodos.tarde, valor);
             else periodos.noite = Math.max(periodos.noite, valor);
         }
+        
         return periodos;
     }
 
     for (let i = 0; i < dados_openMeteo.daily.time.length; i++) {
         
         const codigoMaisFrequente = dados_openMeteo.daily.weather_code[i]; 
+        
         const descricao = weatherCodeMap[codigoMaisFrequente] || "❓ Desconhecido";
 
         const dataParts = dados_openMeteo.daily.time[i].split("-");
+        
         const data = new Date(Date.UTC(
             parseInt(dataParts[0]),
             parseInt(dataParts[1]) - 1,
@@ -94,9 +104,11 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
         ));
 
         const dia = String(data.getUTCDate()).padStart(2, "0");
+        
         const mes = String(data.getUTCMonth() + 1).padStart(2, "0");
 
         let nomeDia;
+        
         if (i === 0) {
             nomeDia = "Hoje";
         } else {
@@ -116,7 +128,7 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
 
         card.innerHTML = `
             <h3>${dataFormatada}</h3>
-            <p id="condicao-diaria">ℹ️ ${descricao}</p>
+            <p id="condicao-diaria" style="border: 1px solid black">ℹ️ ${descricao}</p>
 
             <p style="background-color:#ffe0b3;"><b>🌡️ Temperatura:</b>
                 ${Number(dados_openMeteo.daily.temperature_2m_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.temperature_2m_max[i]).toFixed(0)}°
@@ -131,24 +143,24 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
             </p>
 
             <p style="background-color:#e0f0ff;"><b>☔ Chuva em 6h:</b>
-                (${chuvaPeriodo.madrugada.toFixed(0)} mm)
-                (${chuvaPeriodo.manha.toFixed(0)} mm)
-                (${chuvaPeriodo.tarde.toFixed(0)} mm)
-                (${chuvaPeriodo.noite.toFixed(0)} mm) 
+                [${chuvaPeriodo.madrugada.toFixed(0)} mm]
+                [${chuvaPeriodo.manha.toFixed(0)} mm]
+                [${chuvaPeriodo.tarde.toFixed(0)} mm]
+                [${chuvaPeriodo.noite.toFixed(0)} mm] 
             </p>
 
             <p style="background-color:#e0f0ff;"><b>☔ Probabilidade em 6h:</b> 
-                (${probChuvaPeriodo.madrugada.toFixed(0)}%)
-                (${probChuvaPeriodo.manha.toFixed(0)}%)
-                (${probChuvaPeriodo.tarde.toFixed(0)}%)
-                (${probChuvaPeriodo.noite.toFixed(0)}%)
+                [${probChuvaPeriodo.madrugada.toFixed(0)}%]
+                [${probChuvaPeriodo.manha.toFixed(0)}%]
+                [${probChuvaPeriodo.tarde.toFixed(0)}%]
+                [${probChuvaPeriodo.noite.toFixed(0)}%]
             </p>
 
             <p style="background-color:#e0f0ff;"><b>☁️ Qtd. Nuvens em 6h:</b> 
-                (${nuvensPeriodo.madrugada.toFixed(0)}%)
-                (${nuvensPeriodo.manha.toFixed(0)}%)
-                (${nuvensPeriodo.tarde.toFixed(0)}%)
-                (${nuvensPeriodo.noite.toFixed(0)}%) 
+                [${nuvensPeriodo.madrugada.toFixed(0)}%]
+                [${nuvensPeriodo.manha.toFixed(0)}%]
+                [${nuvensPeriodo.tarde.toFixed(0)}%]
+                [${nuvensPeriodo.noite.toFixed(0)}%] 
             </p>
 
             <p style="background-color:#e0f0ff;"><b>💧 Umidade do ar:</b> 
