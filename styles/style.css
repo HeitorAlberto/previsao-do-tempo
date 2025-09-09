@@ -247,7 +247,7 @@ hr {
 
     .card-diario {
         padding: 15px;
-        border: 1px solid black;
+        border: 0px;
         border-radius: 0px;
     }
 
@@ -273,4 +273,3 @@ hr {
         padding: 15px;
     }
 }
-
