@@ -138,25 +138,25 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
                 ${Number(dados_openMeteo.daily.apparent_temperature_min[i]).toFixed(0)}° a ${Number(dados_openMeteo.daily.apparent_temperature_max[i]).toFixed(0)}°
             </p>
 
-            <p style="background-color:#e0f0ff;"><b>☔ Chuva em 24h:</b>
+            <p style="background-color:#e0f0ff;"><b>☔ Chuva (24h):</b>
                 ${Number(dados_openMeteo.daily.precipitation_sum[i]).toFixed(0)} mm
             </p>
 
-            <p style="background-color:#e0f0ff;"><b>☔ Chuva em 6h:</b>
+            <p style="background-color:#e0f0ff;"><b>☔ Chuva (6h):</b>
                 ${chuvaPeriodo.madrugada.toFixed(0)} mm,
                 ${chuvaPeriodo.manha.toFixed(0)} mm,
                 ${chuvaPeriodo.tarde.toFixed(0)} mm,
                 ${chuvaPeriodo.noite.toFixed(0)} mm, 
             </p>
 
-            <p style="background-color:#e0f0ff;"><b>☔ Probabilidade em 6h:</b> 
+            <p style="background-color:#e0f0ff;"><b>☔ Probabilidade (6h):</b> 
                 ${probChuvaPeriodo.madrugada.toFixed(0)}%,
                 ${probChuvaPeriodo.manha.toFixed(0)}%,
                 ${probChuvaPeriodo.tarde.toFixed(0)}%,
                 ${probChuvaPeriodo.noite.toFixed(0)}%
             </p>
 
-            <p style="background-color:#e0f0ff;"><b>☁️ Qtd. Nuvens em 6h:</b> 
+            <p style="background-color:#e0f0ff;"><b>☁️ Nuvens (6h):</b> 
                 ${nuvensPeriodo.madrugada.toFixed(0)}%,
                 ${nuvensPeriodo.manha.toFixed(0)}%,
                 ${nuvensPeriodo.tarde.toFixed(0)}%,
@@ -172,11 +172,11 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
                 ${Number(dados_openMeteo.daily.uv_index_max[i]).toFixed(0)}
             </p>
 
-            <p style="background-color:#d4edda;"><b>🍃 Vento máximo: </b>
+            <p style="background-color:#d4edda;"><b>🍃 Ventos: </b>
                 ${Number(dados_openMeteo.daily.wind_speed_10m_max[i]).toFixed(0)} km/h
             </p>
 
-            <p style="background-color:#d4edda;"><b>🍃 Rajadas máximas: </b>
+            <p style="background-color:#d4edda;"><b>🍃 Rajadas de vento: </b>
                 ${Number(dados_openMeteo.daily.wind_gusts_10m_max[i]).toFixed(0)} km/h
             </p>
         `;
@@ -186,3 +186,4 @@ export function exibir_dados_openMeteo(dados_openMeteo) {
         base_diaria.appendChild(card);
     }
 }
+
