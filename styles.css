@@ -1,0 +1,172 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', Arial, sans-serif;
+  background: #f3f4f6;
+  padding: 1rem;
+  color: #374151;
+}
+
+/* ======================= */
+/* Caixa de busca          */
+/* ======================= */
+#search-box {
+  padding: 1rem;
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+#search-box input {
+  width: 300px;
+  max-width: 400px;
+  padding: .5rem 1rem;
+  border-radius: .5rem 0 0 .5rem;
+  border: 1px solid #ccc;
+  outline: none;
+  transition: background .2s;
+}
+
+#search-box input:focus {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+#search-box button {
+  background: #3b82f6;
+  color: white;
+  padding: .5rem 1rem;
+  border-radius: 0 .5rem .5rem 0;
+  border: none;
+  cursor: pointer;
+  transition: background .2s;
+}
+
+#search-box button:hover {
+  background: #2563eb;
+}
+
+/* ======================= */
+/* Localização             */
+/* ======================= */
+#location-info {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+#current-location {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: .25rem;
+}
+
+#location-info a {
+  color: #059669;
+  text-decoration: none;
+}
+
+/* ======================= */
+/* Container clima         */
+/* ======================= */
+#weather-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* ======================= */
+/* Cartões                 */
+/* ======================= */
+.weather-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+}
+
+.weather-card h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.weather-card h2 span {
+  font-weight: normal;
+  color: #6b7280;
+}
+
+/* ======================= */
+/* Grid e blocos           */
+/* ======================= */
+.weather-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: center;
+}
+
+.badge {
+  font-size: 1rem;
+  padding: .25rem .5rem;
+  border-radius: .5rem;
+  display: inline-block;
+}
+
+.badge.temp { background: #fed7aa; }
+.badge.feels { background: #fed7aa; }
+.badge.humidity { background: #bfdbfe; }
+.badge.clouds { background: #e5e7eb; }
+.badge.rain { background: #bae6fd; }
+.badge.wind { background: #bbf7d0; }
+.badge.uv { background: #fef9c3; }
+
+/* ======================= */
+/* Períodos do dia         */
+/* ======================= */
+.periods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+
+}
+
+.period-box {
+  border: 1px solid #d1d5db;
+  border-radius: .5rem;
+  padding: .75rem;
+  background: #f9fafb;
+  text-align: center;
+  line-height: 1.6rem;
+}
+
+.period-box h3 {
+  font-weight: 600;
+  margin-bottom: .25rem;
+}
+
+/* ======================= */
+/* Linha final             */
+/* ======================= */
+.extra-info {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.extra-info div {
+  padding: .25rem .75rem;
+  border-radius: .5rem;
+  font-size: 1rem;
+  background: #f3f4f6;
+}
