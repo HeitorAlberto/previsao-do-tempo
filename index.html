@@ -117,7 +117,7 @@ function renderWeather(data) {
           <div class="border border-gray-300 rounded-lg p-2 bg-gray-50 hover:bg-gray-100">
             <h3 class="font-semibold mb-1">${period}</h3>
             <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-            <p>Prob.: ${d.prob}%</p>
+            <p>Chance: ${d.prob}%</p>
             <p>Nuvens: ${d.nuvens}%</p>
           </div>
         `).join('')}
@@ -172,3 +172,4 @@ if(navigator.geolocation){
 </script>
 </body>
 </html>
+
