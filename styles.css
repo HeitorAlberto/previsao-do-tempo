@@ -25,7 +25,7 @@ body {
 }
 
 #search-box input {
-  font-size: 1rem;
+  font-size: 1.25rem;
   width: 300px;
   max-width: 400px;
   padding: .5rem 1rem;
@@ -41,7 +41,7 @@ body {
 }
 
 #search-box button {
-  font-size: 1rem;
+  font-size: 1.25rem;
   background: #3b82f6;
   color: white;
   padding: .5rem 1rem;
@@ -80,7 +80,7 @@ body {
 /* Container clima         */
 /* ======================= */
 #weather-container {
-  max-width: 1000px;
+  max-width: 890px;
   margin: 0 auto;
 }
 
@@ -91,7 +91,7 @@ body {
   background: white;
   border-radius: 1rem;
   padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
 
@@ -118,6 +118,15 @@ body {
   justify-content: center;
 }
 
+#weather-info-now {
+  display: flex;
+  align-items: center;
+}
+
+.weather-info div, .extra-info div {
+  box-shadow: 1px 1px 1px #6b7280;
+}
+
 .badge {
   font-size: 1rem;
   padding: .25rem .5rem;
@@ -127,9 +136,9 @@ body {
   hyphens: auto;
 }
 
-.badge.temp { background: #fed7aa; }
-.badge.feels { background: #fed7aa; }
-.badge.humidity { background: #bfdbfe; }
+.badge.temp { background: #fbd8af; }
+.badge.feels { background: #fbd8af; }
+.badge.humidity { background: #bae6fd; }
 .badge.clouds { background: #e5e7eb; }
 .badge.rain { background: #bae6fd; }
 .badge.wind { background: #bbf7d0; }
@@ -194,14 +203,37 @@ body {
     width: 100%;
     flex: none;
     box-sizing: border-box;
-    border-radius: 0.5rem;
   }
+
+  #search-box input {
+    border-radius: 0.5rem 0.5rem 0 0;
+    text-align: center;
+  }
+
+  #search-box button {
+    border-radius: 0 0 0.5rem 0.5rem;
+  }
+
+  #current-location {
+    font-size: 0.9rem;
+  }
+
+  #open-meteo-reference {
+    font-size: 0.8rem;
+  }
+
   .periods {
     grid-template-columns: 1fr 1fr; /* 2x2 */
   }
+
   .period-box {
     font-size: 0.86rem;
   }
+
+  .weather-card h2 span {
+    font-size: 1rem;
+  }
+
 }
 
 /* ======================= */
