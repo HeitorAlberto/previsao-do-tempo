@@ -7,10 +7,26 @@ function getCityName(addr) {
 
 function formatDate(dateStr) {
   const date = new Date(dateStr + "T00:00:00");
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+
+  const isToday = date.toDateString() === today.toDateString();
+  const isTomorrow = date.toDateString() === tomorrow.toDateString();
+
   const days = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
-  const dayName = days[date.getDay()];
+  let dayName;
+  if (isToday) {
+    dayName = "Hoje";
+  } else if (isTomorrow) {
+    dayName = "Amanhã";
+  } else {
+    dayName = days[date.getDay()];
+  }
+
   const dayNum = String(date.getDate()).padStart(2,'0');
   const monthNum = String(date.getMonth()+1).padStart(2,'0');
+  
   return `${dayName}, ${dayNum}/${monthNum}`;
 }
 
@@ -22,7 +38,7 @@ function formatHour(str) {
 }
 
 const weatherDescriptions = {
-  0: "Céu limpo",1: "Principalmente limpo",2: "Parcialmente nublado",3: "Nublado",
+  0: "Céu limpo",1: "Poucas nuvens",2: "Muitas nuvens",3: "Nublado",
   45: "Nevoeiro",48: "Nevoeiro congelado",51: "Chuvisco leve",53: "Chuvisco moderado",
   55: "Chuvisco intenso",56: "Chuvisco congelado leve",57: "Chuvisco congelado intenso",
   61: "Chuva fraca",63: "Chuva moderada",65: "Chuva forte",66: "Chuva congelada leve",
@@ -101,7 +117,7 @@ function renderCurrentWeather(data) {
   card.className = "weather-card";
   card.innerHTML = `
     <h2>Agora <span>• ${descricao}</span></h2>
-    <div class="weather-info">
+    <div class="weather-info" id="weather-info-now">
       <div class="badge temp">🌡️ Temperatura: ${temp}°</div>
       <div class="badge feels">🌡️ Sensação: ${appTemp}°</div>
       <div class="badge humidity">💧 Umidade: ${humidity}%</div>
