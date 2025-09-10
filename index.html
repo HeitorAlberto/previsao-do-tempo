@@ -5,13 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Previsão do Tempo</title>
   <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { font-family: Arial, sans-serif; }
+    body { font-family: 'Inter', Arial, sans-serif; }
   </style>
 </head>
 <body class="bg-gray-100 p-4">
-  <div class="flex flex-col items-center mb-6">
+  
+  <!-- Caixa de busca -->
+  <div class="p-4 rounded-xl mb-4 flex justify-center">
     <div class="flex">
       <input id="location-input" type="text" placeholder="Digite uma cidade"
         class="w-64 sm:w-80 px-4 py-2 rounded-l shadow bg-white focus:bg-blue-50 focus:outline-none transition-colors duration-200" />
@@ -20,11 +26,14 @@
         Buscar
       </button>
     </div>
-    <div class="mt-8 text-center">
-      <div id="current-location" class="text-gray-700 text-lg sm:text-xl md:text-2xl font-semibold"></div>
-      <div class="text-sm sm:text-base text-gray-600 mt-1">
-        Dados meteorológicos fornecidos por <a href="https://open-meteo.com/" target="_blank" class="text-green-400 no-underline">Open-Meteo</a>
-      </div>
+  </div>
+
+  <!-- Localização -->
+  <div class="text-center mb-6">
+    <div id="current-location" class="text-gray-700 text-lg sm:text-xl md:text-2xl font-semibold"></div>
+    <div class="text-sm sm:text-base text-gray-600 mt-1">
+      Dados meteorológicos fornecidos por 
+      <a href="https://open-meteo.com/" target="_blank" class="text-green-600 no-underline">Open-Meteo</a>
     </div>
   </div>
 
@@ -34,7 +43,6 @@
 let latitude = -9.7811;
 let longitude = -36.0936;
 
-// Função auxiliar para obter o melhor nome de cidade/região
 function getCityName(addr) {
   return addr.city || addr.town || addr.village || addr.hamlet || addr.municipality || addr.county || addr.state || "";
 }
@@ -48,28 +56,79 @@ function formatDate(dateStr) {
   return `${dayName}, ${dayNum}/${monthNum}`;
 }
 
+function formatHour(str) {
+  const d = new Date(str);
+  const h = String(d.getHours()).padStart(2,'0');
+  const m = String(d.getMinutes()).padStart(2,'0');
+  return `${h}h${m}`;
+}
+
+// Mapeamento de weathercode -> descrição + emoji
+const weatherDescriptions = {
+  0: "Céu limpo",
+  1: "Principalmente limpo",
+  2: "Parcialmente nublado",
+  3: "Nublado",
+  45: "Nevoeiro",
+  48: "Nevoeiro congelado",
+  51: "Chuvisco leve",
+  53: "Chuvisco moderado",
+  55: "Chuvisco intenso",
+  56: "Chuvisco congelado leve",
+  57: "Chuvisco congelado intenso",
+  61: "Chuva fraca",
+  63: "Chuva moderada",
+  65: "Chuva forte",
+  66: "Chuva congelada leve",
+  67: "Chuva congelada intensa",
+  71: "Neve fraca",
+  73: "Neve moderada",
+  75: "Neve forte",
+  77: "Grãos de neve",
+  80: "Chuva leve",
+  81: "Chuva moderada",
+  82: "Chuva forte",
+  85: "Neve leve",
+  86: "Neve forte",
+  95: "Tempestade",
+  96: "Tempestade com granizo leve",
+  99: "Tempestade com granizo forte"
+};
+
 const dailyParams = [
   "temperature_2m_max","temperature_2m_min","apparent_temperature_max","apparent_temperature_min",
-  "uv_index_max","rain_sum","precipitation_probability_max","wind_speed_10m_max","wind_gusts_10m_max"
+  "uv_index_max","rain_sum","precipitation_probability_max","wind_speed_10m_max","wind_gusts_10m_max",
+  "sunrise","sunset","weathercode"
 ].join(",");
 
 const hourlyParams = [
   "temperature_2m","apparent_temperature","relative_humidity_2m",
-  "precipitation","precipitation_probability","cloud_cover"
+  "precipitation","precipitation_probability","cloud_cover",
+  "wind_speed_10m","wind_gusts_10m","weathercode"
 ].join(",");
 
 async function fetchWeather() {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=${dailyParams}&hourly=${hourlyParams}&timezone=auto&forecast_days=7`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=${dailyParams}&hourly=${hourlyParams}&timezone=auto&forecast_days=10`;
   const res = await fetch(url);
   const data = await res.json();
   renderWeather(data);
 }
 
 function getPeriodData(hourly, start, end, dayDate) {
-  const indices = hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(dayDate)).map(({i})=>i).filter(i=>{const hour=new Date(hourly.time[i]).getHours();return hour>=start && hour<=end;});
+  const indices = hourly.time.map((t,i)=>({t,i}))
+    .filter(({t})=>t.startsWith(dayDate))
+    .map(({i})=>i)
+    .filter(i=>{
+      const hour=new Date(hourly.time[i]).getHours();
+      return hour>=start && hour<=end;
+    });
   if(indices.length===0) return {chuva:0,prob:0,nuvens:0};
   let chuva=0,prob=0,nuvens=0;
-  indices.forEach(i=>{chuva+=hourly.precipitation[i];prob=Math.max(prob,hourly.precipitation_probability[i]);nuvens+=hourly.cloud_cover[i];});
+  indices.forEach(i=>{
+    chuva+=hourly.precipitation[i];
+    prob=Math.max(prob,hourly.precipitation_probability[i]);
+    nuvens+=hourly.cloud_cover[i];
+  });
   nuvens /= indices.length;
   return {chuva, prob: Math.round(prob), nuvens: Math.round(nuvens)};
 }
@@ -78,13 +137,56 @@ function getHumidity(hourly, dayDate) {
   const indices = hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(dayDate)).map(({i})=>i);
   if(indices.length===0) return {min:0,max:0};
   let minH=100,maxH=0;
-  indices.forEach(i=>{const h=hourly.relative_humidity_2m[i]; if(h<minH) minH=h; if(h>maxH) maxH=h;});
+  indices.forEach(i=>{
+    const h=hourly.relative_humidity_2m[i];
+    if(h<minH) minH=h;
+    if(h>maxH) maxH=h;
+  });
   return {min: Math.round(minH), max: Math.round(maxH)};
+}
+
+function renderCurrentWeather(data) {
+  const nowIndex = data.hourly.time.findIndex(t => new Date(t) > new Date());
+  const index = nowIndex === -1 ? data.hourly.time.length - 1 : nowIndex;
+
+  const temp = Math.round(data.hourly.temperature_2m[index]);
+  const appTemp = Math.round(data.hourly.apparent_temperature[index]);
+  const humidity = Math.round(data.hourly.relative_humidity_2m[index]);
+  const chuva = data.hourly.precipitation[index].toFixed(1);
+  const prob = data.hourly.precipitation_probability[index];
+  const nuvens = data.hourly.cloud_cover[index];
+  const vento = Math.round(data.hourly.wind_speed_10m[index]);
+  const rajada = Math.round(data.hourly.wind_gusts_10m[index]);
+  const wcode = data.hourly.weathercode[index];
+  const descricao = weatherDescriptions[wcode] || "...";
+
+  const card = document.createElement("div");
+  card.className = "bg-white shadow-md rounded-2xl p-4 sm:p-6";
+  card.innerHTML = `
+    <h2 class="text-lg sm:text-xl font-bold mb-2 text-center sm:text-left">
+      Agora <span class="text-gray-500 font-normal">(${descricao})</span>
+    </h2>
+    <div class="flex flex-wrap justify-center items-center gap-2 text-center">
+      <div class="text-base sm:text-lg bg-orange-100 px-2 py-1 rounded">🌡️ Temperatura: ${temp}°</div>
+      <div class="text-base sm:text-lg bg-orange-100 px-2 py-1 rounded">🌡️ Sensação: ${appTemp}°</div>
+      <div class="text-base sm:text-lg bg-blue-100 px-2 py-1 rounded">💧 Umidade: ${humidity}%</div>
+      <div class="text-base sm:text-lg bg-gray-100 px-2 py-1 rounded">☁️ Nuvens: ${nuvens}%</div>
+      <div class="text-base sm:text-lg bg-blue-100 px-2 py-1 rounded">☔ Chuva: ${chuva} mm</div>
+      <div class="text-base sm:text-lg bg-blue-100 px-2 py-1 rounded">☔ Chance: ${prob}%</div>
+      <div class="text-base sm:text-lg bg-green-100 px-2 py-1 rounded">🍃 Vento: ${vento} km/h</div>
+      <div class="text-base sm:text-lg bg-green-100 px-2 py-1 rounded">🍃 Rajada: ${rajada} km/h</div>
+    </div>
+  `;
+  const container = document.getElementById("weather-container");
+  container.appendChild(card);
 }
 
 function renderWeather(data) {
   const container=document.getElementById("weather-container");
   container.innerHTML="";
+
+  renderCurrentWeather(data);
+
   data.daily.time.forEach((day,index)=>{
     const tempMin=Math.round(data.daily.temperature_2m_min[index]);
     const tempMax=Math.round(data.daily.temperature_2m_max[index]);
@@ -93,6 +195,11 @@ function renderWeather(data) {
     const uvMax=Math.round(data.daily.uv_index_max[index]);
     const vento=Math.round(data.daily.wind_speed_10m_max[index]);
     const rajada=Math.round(data.daily.wind_gusts_10m_max[index]);
+    const nascer=formatHour(data.daily.sunrise[index]);
+    const por=formatHour(data.daily.sunset[index]);
+    const wcode=data.daily.weathercode[index];
+    const descricao=weatherDescriptions[wcode]||"...";
+
     const periods={
       "Madrugada":getPeriodData(data.hourly,0,5,day),
       "Manhã":getPeriodData(data.hourly,6,11,day),
@@ -102,10 +209,14 @@ function renderWeather(data) {
     const humidity=getHumidity(data.hourly,day);
     const dailyIndices=data.hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(day)).map(({i})=>i);
     let chuvaDia=0; dailyIndices.forEach(i=>{chuvaDia+=data.hourly.precipitation[i];});
+
     const card=document.createElement("div");
     card.className="bg-white shadow-md rounded-2xl p-4 sm:p-6";
     card.innerHTML=`
-      <h2 class="text-lg sm:text-xl font-bold mb-4 text-center sm:text-left">${formatDate(day)}</h2>
+      <h2 class="text-lg sm:text-xl font-bold mb-4 text-center sm:text-left">
+        ${formatDate(day)} <span class="text-gray-500 font-normal">(${descricao})</span>
+      </h2>
+
       <div class="flex flex-col items-center text-center sm:flex-row sm:items-center sm:justify-between sm:text-left mb-4 gap-2 sm:gap-6">
         <div class="text-base sm:text-lg bg-orange-100 px-2 py-1 rounded">🌡️ Temperatura: ${tempMin}° a ${tempMax}°</div>
         <div class="text-base sm:text-lg bg-orange-100 px-2 py-1 rounded">🌡️ Sensação: ${appMin}° a ${appMax}°</div>
@@ -114,7 +225,7 @@ function renderWeather(data) {
       </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
         ${Object.entries(periods).map(([period,d])=>`
-          <div class="border border-gray-300 rounded-lg p-2 bg-gray-50 hover:bg-gray-100">
+          <div class="border border-gray-300 rounded-lg p-2 bg-gray-50">
             <h3 class="font-semibold mb-1">${period}</h3>
             <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
             <p>Chance: ${d.prob}%</p>
@@ -126,6 +237,7 @@ function renderWeather(data) {
         <div class="bg-blue-100 px-4 py-1 rounded">☔ Chuva acumulada: ${chuvaDia.toFixed(1)} mm</div>
         <div class="bg-green-100 px-2 py-1 rounded">🍃 Ventos: ${vento} km/h</div>
         <div class="bg-green-100 px-2 py-1 rounded">🍃 Rajadas: ${rajada} km/h</div>
+        <div class="bg-orange-100 px-2 py-1 rounded">☀️ ${nascer} a ${por}</div>
       </div>
     `;
     container.appendChild(card);
@@ -172,4 +284,3 @@ if(navigator.geolocation){
 </script>
 </body>
 </html>
-
