@@ -25,14 +25,15 @@ body {
 }
 
 #search-box input {
+  font-size: 1rem;
   width: 300px;
   max-width: 400px;
   padding: .5rem 1rem;
   border-radius: 0.2rem 0rem 0rem 0.2rem;
   outline: none;
-  transition: background .2s;
   flex: 1 1 auto;
   border: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
 
 #search-box input:focus {
@@ -40,6 +41,7 @@ body {
 }
 
 #search-box button {
+  font-size: 1rem;
   background: #3b82f6;
   color: white;
   padding: .5rem 1rem;
@@ -92,6 +94,7 @@ body {
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
+
 
 .weather-card h2 {
   font-size: 1.25rem;
@@ -179,9 +182,9 @@ body {
 }
 
 /* ======================= */
-/* Ajustes mobile          */
+/* Ajustes para smartphones pequenos (~411px) */
 /* ======================= */
-@media (max-width: 470px) {
+@media (max-width: 480px) {
   #search-box {
     flex-direction: column;
     gap: 0.5rem;
@@ -189,14 +192,42 @@ body {
   #search-box input,
   #search-box button {
     width: 100%;
-    flex: none;         
-    box-sizing: border-box; 
+    flex: none;
+    box-sizing: border-box;
     border-radius: 0.5rem;
   }
   .periods {
-    grid-template-columns: 1fr 1fr; 
+    grid-template-columns: 1fr 1fr; /* 2x2 */
   }
   .period-box {
     font-size: 0.86rem;
   }
+}
+
+/* ======================= */
+/* Ajustes para smartphones maiores (~412px a 768px) */
+/* ======================= */
+@media (min-width: 481px) and (max-width: 768px) {
+  #search-box input {
+    width: 300px;
+    max-width: 80%;
+  }
+  #search-box button {
+    width: auto;
+  }
+  .periods {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .period-box {
+    font-size: 0.95rem;
+  }
+}
+
+
+@media (min-width: 768px) {
+  
+  .periods {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
 }
