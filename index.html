@@ -11,7 +11,6 @@
   </style>
 </head>
 <body class="bg-gray-100 p-4">
-  <!-- Caixa de busca centralizada -->
   <div class="flex flex-col items-center mb-6">
     <div class="flex">
       <input id="location-input" type="text" placeholder="Digite uma cidade"
@@ -21,7 +20,6 @@
         Buscar
       </button>
     </div>
-    <!-- Local reconhecido com texto maior e responsivo -->
     <div class="mt-8 text-center">
       <div id="current-location" class="text-gray-700 text-lg sm:text-xl md:text-2xl font-semibold"></div>
       <div class="text-sm sm:text-base text-gray-600 mt-1">
@@ -33,30 +31,13 @@
   <div id="weather-container" class="max-w-5xl mx-auto space-y-6"></div>
 
 <script>
-// === Código JavaScript permanece igual ===
 let latitude = -9.7811;
 let longitude = -36.0936;
 
-const dailyParams = [
-  "temperature_2m_max",
-  "temperature_2m_min",
-  "apparent_temperature_max",
-  "apparent_temperature_min",
-  "uv_index_max",
-  "rain_sum",
-  "precipitation_probability_max",
-  "wind_speed_10m_max",
-  "wind_gusts_10m_max"
-].join(",");
-
-const hourlyParams = [
-  "temperature_2m",
-  "apparent_temperature",
-  "relative_humidity_2m",
-  "precipitation",
-  "precipitation_probability",
-  "cloud_cover"
-].join(",");
+// Função auxiliar para obter o melhor nome de cidade/região
+function getCityName(addr) {
+  return addr.city || addr.town || addr.village || addr.hamlet || addr.municipality || addr.county || addr.state || "";
+}
 
 function formatDate(dateStr) {
   const date = new Date(dateStr + "T00:00:00");
@@ -67,6 +48,16 @@ function formatDate(dateStr) {
   return `${dayName}, ${dayNum}/${monthNum}`;
 }
 
+const dailyParams = [
+  "temperature_2m_max","temperature_2m_min","apparent_temperature_max","apparent_temperature_min",
+  "uv_index_max","rain_sum","precipitation_probability_max","wind_speed_10m_max","wind_gusts_10m_max"
+].join(",");
+
+const hourlyParams = [
+  "temperature_2m","apparent_temperature","relative_humidity_2m",
+  "precipitation","precipitation_probability","cloud_cover"
+].join(",");
+
 async function fetchWeather() {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=${dailyParams}&hourly=${hourlyParams}&timezone=auto&forecast_days=7`;
   const res = await fetch(url);
@@ -75,173 +66,109 @@ async function fetchWeather() {
 }
 
 function getPeriodData(hourly, start, end, dayDate) {
-  const indices = hourly.time
-    .map((t, i) => ({ t, i }))
-    .filter(({ t }) => t.startsWith(dayDate))
-    .map(({ i }) => i)
-    .filter(i => {
-      const hour = new Date(hourly.time[i]).getHours();
-      return hour >= start && hour <= end;
-    });
-
-  if(indices.length === 0) return { chuva: 0, prob: 0, nuvens: 0 };
-
-  let chuva = 0, prob = 0, nuvens = 0;
-  indices.forEach(i => {
-    chuva += hourly.precipitation[i];
-    prob = Math.max(prob, hourly.precipitation_probability[i]);
-    nuvens += hourly.cloud_cover[i];
-  });
-  nuvens = nuvens / indices.length;
-
-  return { 
-    chuva,
-    prob: Math.round(prob),
-    nuvens: Math.round(nuvens)
-  };
+  const indices = hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(dayDate)).map(({i})=>i).filter(i=>{const hour=new Date(hourly.time[i]).getHours();return hour>=start && hour<=end;});
+  if(indices.length===0) return {chuva:0,prob:0,nuvens:0};
+  let chuva=0,prob=0,nuvens=0;
+  indices.forEach(i=>{chuva+=hourly.precipitation[i];prob=Math.max(prob,hourly.precipitation_probability[i]);nuvens+=hourly.cloud_cover[i];});
+  nuvens /= indices.length;
+  return {chuva, prob: Math.round(prob), nuvens: Math.round(nuvens)};
 }
 
 function getHumidity(hourly, dayDate) {
-  const indices = hourly.time
-    .map((t, i) => ({ t, i }))
-    .filter(({ t }) => t.startsWith(dayDate))
-    .map(({ i }) => i);
-
-  if(indices.length === 0) return { min: 0, max: 0 };
-
-  let minH = 100, maxH = 0;
-  indices.forEach(i => {
-    const h = hourly.relative_humidity_2m[i];
-    if(h < minH) minH = h;
-    if(h > maxH) maxH = h;
-  });
-
-  return { min: Math.round(minH), max: Math.round(maxH) };
+  const indices = hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(dayDate)).map(({i})=>i);
+  if(indices.length===0) return {min:0,max:0};
+  let minH=100,maxH=0;
+  indices.forEach(i=>{const h=hourly.relative_humidity_2m[i]; if(h<minH) minH=h; if(h>maxH) maxH=h;});
+  return {min: Math.round(minH), max: Math.round(maxH)};
 }
 
 function renderWeather(data) {
-  const container = document.getElementById("weather-container");
-  container.innerHTML = "";
-
-  data.daily.time.forEach((day, index) => {
-    const tempMin = Math.round(data.daily.temperature_2m_min[index]);
-    const tempMax = Math.round(data.daily.temperature_2m_max[index]);
-    const appMin = Math.round(data.daily.apparent_temperature_min[index]);
-    const appMax = Math.round(data.daily.apparent_temperature_max[index]);
-    const uvMax = Math.round(data.daily.uv_index_max[index]);
-    const vento = Math.round(data.daily.wind_speed_10m_max[index]);
-    const rajada = Math.round(data.daily.wind_gusts_10m_max[index]);
-
-    const periods = {
-      "Madrugada": getPeriodData(data.hourly, 0, 5, day),
-      "Manhã": getPeriodData(data.hourly, 6, 11, day),
-      "Tarde": getPeriodData(data.hourly, 12, 17, day),
-      "Noite": getPeriodData(data.hourly, 18, 23, day)
+  const container=document.getElementById("weather-container");
+  container.innerHTML="";
+  data.daily.time.forEach((day,index)=>{
+    const tempMin=Math.round(data.daily.temperature_2m_min[index]);
+    const tempMax=Math.round(data.daily.temperature_2m_max[index]);
+    const appMin=Math.round(data.daily.apparent_temperature_min[index]);
+    const appMax=Math.round(data.daily.apparent_temperature_max[index]);
+    const uvMax=Math.round(data.daily.uv_index_max[index]);
+    const vento=Math.round(data.daily.wind_speed_10m_max[index]);
+    const rajada=Math.round(data.daily.wind_gusts_10m_max[index]);
+    const periods={
+      "Madrugada":getPeriodData(data.hourly,0,5,day),
+      "Manhã":getPeriodData(data.hourly,6,11,day),
+      "Tarde":getPeriodData(data.hourly,12,17,day),
+      "Noite":getPeriodData(data.hourly,18,23,day)
     };
-
-    const humidity = getHumidity(data.hourly, day);
-
-    const dailyIndices = data.hourly.time
-      .map((t, i) => ({ t, i }))
-      .filter(({ t }) => t.startsWith(day))
-      .map(({ i }) => i);
-
-    let chuvaDia = 0;
-    dailyIndices.forEach(i => {
-      chuvaDia += data.hourly.precipitation[i];
-    });
-
-    const card = document.createElement("div");
-    card.className = "bg-white shadow-md rounded-2xl p-4 sm:p-6";
-
-    card.innerHTML = `
+    const humidity=getHumidity(data.hourly,day);
+    const dailyIndices=data.hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(day)).map(({i})=>i);
+    let chuvaDia=0; dailyIndices.forEach(i=>{chuvaDia+=data.hourly.precipitation[i];});
+    const card=document.createElement("div");
+    card.className="bg-white shadow-md rounded-2xl p-4 sm:p-6";
+    card.innerHTML=`
       <h2 class="text-lg sm:text-xl font-bold mb-4 text-center sm:text-left">${formatDate(day)}</h2>
-
       <div class="flex flex-col items-center text-center sm:flex-row sm:items-center sm:justify-between sm:text-left mb-4 gap-2 sm:gap-6">
         <div class="text-base sm:text-lg bg-orange-100 px-2 py-1 rounded">🌡️ Temperatura: ${tempMin}° a ${tempMax}°</div>
         <div class="text-base sm:text-lg bg-orange-100 px-2 py-1 rounded">🌡️ Sensação: ${appMin}° a ${appMax}°</div>
         <div class="text-base sm:text-lg bg-blue-100 px-2 py-1 rounded">💧 Umidade: ${humidity.min}% a ${humidity.max}%</div>
         <div class="text-base sm:text-lg bg-orange-100 px-2 py-1 rounded">☀️ UV Máx: ${uvMax}</div>
       </div>
-
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-        ${Object.entries(periods).map(([period, d]) => `
+        ${Object.entries(periods).map(([period,d])=>`
           <div class="border border-gray-300 rounded-lg p-2 bg-gray-50 hover:bg-gray-100">
             <h3 class="font-semibold mb-1">${period}</h3>
             <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-            <p>Probabilidade: ${d.prob}%</p>
+            <p>Prob.: ${d.prob}%</p>
             <p>Nuvens: ${d.nuvens}%</p>
           </div>
         `).join('')}
       </div>
-
       <div class="mt-4 flex flex-wrap items-center justify-center gap-4 text-base sm:text-lg">
         <div class="bg-blue-100 px-4 py-1 rounded">☔ Chuva acumulada: ${chuvaDia.toFixed(1)} mm</div>
         <div class="bg-green-100 px-2 py-1 rounded">🍃 Ventos: ${vento} km/h</div>
         <div class="bg-green-100 px-2 py-1 rounded">🍃 Rajadas: ${rajada} km/h</div>
       </div>
     `;
-
     container.appendChild(card);
   });
 }
 
-// Mostrar cidade, estado, país
-const currentLocationDiv = document.getElementById("current-location");
+const currentLocationDiv=document.getElementById("current-location");
 
 async function searchLocation(query) {
-  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${query}`);
-  const data = await res.json();
-  if(data && data.length > 0) {
-    latitude = parseFloat(data[0].lat);
-    longitude = parseFloat(data[0].lon);
-
-    const addr = data[0].address;
-    const city = addr.city || addr.town || addr.village || addr.hamlet || "";
-    const state = addr.state || "";
-    const country = addr.country || "";
-    currentLocationDiv.textContent = `📌 ${city}${city && state ? ", " : ""}${state}${(city || state) && country ? ", " : ""}${country}`;
-
+  const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${query}`);
+  const data=await res.json();
+  if(data && data.length>0){
+    latitude=parseFloat(data[0].lat);
+    longitude=parseFloat(data[0].lon);
+    const addr=data[0].address;
+    const city=getCityName(addr);
+    const state=addr.state||"";
+    const country=addr.country||"";
+    currentLocationDiv.textContent=`📌 ${city}${city&&state?", ":""}${state}${(city||state)&&country?", ":""}${country}`;
     fetchWeather();
-  } else {
-    alert("Localização não encontrada!");
-    currentLocationDiv.textContent = "";
-  }
+  } else { alert("Localização não encontrada!"); currentLocationDiv.textContent=""; }
 }
 
-// Input de busca
-const input = document.getElementById("location-input");
-input.addEventListener("keydown", (e) => {
-  if(e.key === "Enter") searchLocation(input.value);
-});
+const input=document.getElementById("location-input");
+input.addEventListener("keydown",(e)=>{if(e.key==="Enter") searchLocation(input.value);});
+document.getElementById("search-button").addEventListener("click",()=>{searchLocation(input.value);});
 
-// Botão de busca
-document.getElementById("search-button").addEventListener("click", () => {
-  searchLocation(input.value);
-});
-
-// Geolocalização ao carregar
-if(navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(async pos => {
-    latitude = pos.coords.latitude;
-    longitude = pos.coords.longitude;
-
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
-    const data = await res.json();
-    if(data && data.address) {
-      const addr = data.address;
-      const city = addr.city || addr.town || addr.village || addr.hamlet || "";
-      const state = addr.state || "";
-      const country = addr.country || "";
-      currentLocationDiv.textContent = `📌 ${city}${city && state ? ", " : ""}${state}${(city || state) && country ? ", " : ""}${country}`;
+if(navigator.geolocation){
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    latitude=pos.coords.latitude;
+    longitude=pos.coords.longitude;
+    const res=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
+    const data=await res.json();
+    if(data && data.address){
+      const addr=data.address;
+      const city=getCityName(addr);
+      const state=addr.state||"";
+      const country=addr.country||"";
+      currentLocationDiv.textContent=`📌 ${city}${city&&state?", ":""}${state}${(city||state)&&country?", ":""}${country}`;
     }
-
     fetchWeather();
-  }, () => fetchWeather());
-} else {
-  fetchWeather();
-}
+  },()=>fetchWeather());
+}else{fetchWeather();}
 </script>
 </body>
 </html>
-
