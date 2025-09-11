@@ -122,14 +122,13 @@ function renderCurrentWeather(data) {
   const temp = Math.round(data.hourly.temperature_2m[index]);
   const appTemp = Math.round(data.hourly.apparent_temperature[index]);
   const humidity = Math.round(data.hourly.relative_humidity_2m[index]);
-  const humidityEmoji = humidity < 30 ? " ⚠️" : "";
   const chuva = data.hourly.precipitation[index].toFixed(1);
   const prob = data.hourly.precipitation_probability[index];
+  const probText = formatProbabilityResponsive(prob);
   const nuvens = data.hourly.cloud_cover[index];
   const vento = Math.round(data.hourly.wind_speed_10m[index]);
   const rajada = Math.round(data.hourly.wind_gusts_10m[index]);
   const wcode = data.hourly.weathercode[index];
-  const descricao = weatherDescriptions[wcode] || "...";
 
   const card = document.createElement("div");
   card.className = "weather-card";
@@ -138,23 +137,21 @@ function renderCurrentWeather(data) {
     <div class="weather-info" id="weather-info-now">
       <div class="badge temp">🌡️ Temperatura: ${temp}°</div>
       <div class="badge feels">🌡️ Sensação: ${appTemp}°</div>
-      <div class="badge humidity">💧 Umidade: ${humidity}%${humidityEmoji}</div>
+      <div class="badge humidity">💧 Umidade: ${humidity}% ${humidity < 30 ? "⚠️" : ""}</div>
       <div class="badge clouds">☁️ <span title="${nuvens}%">${formatClouds(nuvens)}</span></div>
       <div class="badge rain">☔ Chuva: ${chuva} mm</div>
-      <div class="badge rain">☔<span title="${prob}%">${formatProbabilityResponsive(prob)}</span></div>
+      <div class="badge rain">☔ <span title="${probText}">${probText}</span></div>
       <div class="badge wind">🍃 Vento: ${vento} km/h</div>
       <div class="badge wind">🍃 Rajada: ${rajada} km/h</div>
     </div>
   `;
-  const container = document.getElementById("weather-container");
-  container.appendChild(card);
+  document.getElementById("weather-container").appendChild(card);
 }
 
 // --- Render diário ---
 function renderWeather(data) {
   const container=document.getElementById("weather-container");
   container.innerHTML="";
-
   renderCurrentWeather(data);
 
   data.daily.time.forEach((day,index)=>{
@@ -167,8 +164,6 @@ function renderWeather(data) {
     const rajada=Math.round(data.daily.wind_gusts_10m_max[index]);
     const nascer=formatHour(data.daily.sunrise[index]);
     const por=formatHour(data.daily.sunset[index]);
-    const wcode=data.daily.weathercode[index];
-    const descricao=weatherDescriptions[wcode]||"...";
 
     const periods={
       "Madrugada":getPeriodData(data.hourly,0,5,day),
@@ -177,10 +172,12 @@ function renderWeather(data) {
       "Noite":getPeriodData(data.hourly,18,23,day)
     };
     const humidity=getHumidity(data.hourly,day);
-    const minEmoji = humidity.min < 30 ? " ⚠️" : "";
-    const maxEmoji = humidity.max < 30 ? " ⚠️" : "";
     const dailyIndices=data.hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(day)).map(({i})=>i);
     let chuvaDia=0; dailyIndices.forEach(i=>{chuvaDia+=data.hourly.precipitation[i];});
+
+    const humidityText = humidity.min < 30
+      ? `💧 Umidade: ${humidity.min}% a ${humidity.max}% ⚠️`
+      : `💧 Umidade: ${humidity.min}% a ${humidity.max}%`;
 
     const card=document.createElement("div");
     card.className="weather-card";
@@ -189,7 +186,7 @@ function renderWeather(data) {
       <div class="weather-info">
         <div class="badge temp">🌡️ Temperatura: ${tempMin}° a ${tempMax}°</div>
         <div class="badge feels">🌡️ Sensação: ${appMin}° a ${appMax}°</div>
-        <div class="badge humidity">💧 Umidade: ${humidity.min}%${minEmoji} a ${humidity.max}%${maxEmoji}</div>
+        <div class="badge humidity">${humidityText}</div>
         <div class="badge uv">☀️ UV Máx: ${uvMax}</div>
       </div>
       <div class="periods">
@@ -197,7 +194,7 @@ function renderWeather(data) {
           <div class="period-box">
             <h3>${period}</h3>
             <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-            <p><span title="${d.prob}%">${formatProbabilityResponsive(d.prob)}</span></p>
+            <p><span title="${formatProbabilityResponsive(d.prob)}">${formatProbabilityResponsive(d.prob)}</span></p>
             <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
           </div>
         `).join('')}
@@ -219,18 +216,22 @@ function renderWeather(data) {
 const currentLocationDiv=document.getElementById("current-location");
 
 async function searchLocation(query) {
-  const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${query}`);
-  const data=await res.json();
-  if(data && data.length>0){
-    latitude=parseFloat(data[0].lat);
-    longitude=parseFloat(data[0].lon);
-    const addr=data[0].address;
-    const city=getCityName(addr);
-    const state=addr.state||"";
-    const country=addr.country||"";
-    currentLocationDiv.textContent=`📌 ${city}${city&&state?", ":""}${state}${(city||state)&&country?", ":""}${country}`;
-    fetchWeather();
-  } else { alert("Localização não encontrada!"); currentLocationDiv.textContent=""; }
+  try {
+    const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${query}`);
+    const data=await res.json();
+    if(data && data.length>0){
+      latitude=parseFloat(data[0].lat);
+      longitude=parseFloat(data[0].lon);
+      const addr=data[0].address;
+      const city=getCityName(addr);
+      const state=addr.state||"";
+      const country=addr.country||"";
+      currentLocationDiv.textContent=`📌 ${city}${city&&state?", ":""}${state}${(city||state)&&country?", ":""}${country}`;
+      fetchWeather();
+    } else { alert("Localização não encontrada!"); currentLocationDiv.textContent=""; }
+  } catch(e) {
+    alert("Erro ao buscar localização.");
+  }
 }
 
 const input=document.getElementById("location-input");
@@ -268,7 +269,7 @@ if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
 function updateResponsiveProb() {
   document.querySelectorAll(".badge.rain span").forEach(span => {
     const prob = span.getAttribute("title");
-    if(prob) span.textContent = formatProbabilityResponsive(Number(prob));
+    if(prob) span.textContent = prob;
   });
 }
 
