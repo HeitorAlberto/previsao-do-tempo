@@ -190,6 +190,9 @@ body {
   hyphens: auto;
 }
 
+
+
+
 /* ======================= */
 /* Ajustes para smartphones pequenos (~411px) */
 /* ======================= */
@@ -232,6 +235,16 @@ body {
 
   .weather-card h2 span {
     font-size: 1rem;
+  }
+
+  #weather-info-now {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* duas colunas iguais */
+    gap: 0.5rem;
+  }
+  
+  #weather-info-now .badge {
+    text-align: center;
   }
 
 }
