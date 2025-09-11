@@ -1,6 +1,6 @@
 let latitude = -9.7811;
 let longitude = -36.0936;
-let lastFetchedData = null; // para atualizar cards ao redimensionar
+let lastFetchedData = null; // salva os dados para ajustes responsivos
 
 function getCityName(addr) {
   return addr.city || addr.town || addr.village || addr.hamlet || addr.municipality || addr.county || addr.state || "";
@@ -61,7 +61,7 @@ async function fetchWeather() {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=${dailyParams}&hourly=${hourlyParams}&timezone=auto&forecast_days=10`;
   const res = await fetch(url);
   const data = await res.json();
-  lastFetchedData = data; // salvar para redimensionamento
+  lastFetchedData = data;
   renderWeather(data);
 }
 
@@ -96,7 +96,7 @@ function getHumidity(hourly, dayDate) {
   return {min: Math.round(minH), max: Math.round(maxH)};
 }
 
-// --- Texto descritivo ---
+// --- Texto descritivo responsivo ---
 function formatProbabilityResponsive(prob) {
   let text;
   if (prob < 40) text = "baixa";
@@ -122,6 +122,7 @@ function renderCurrentWeather(data) {
   const temp = Math.round(data.hourly.temperature_2m[index]);
   const appTemp = Math.round(data.hourly.apparent_temperature[index]);
   const humidity = Math.round(data.hourly.relative_humidity_2m[index]);
+  const humidityEmoji = humidity < 30 ? " ⚠️" : "";
   const chuva = data.hourly.precipitation[index].toFixed(1);
   const prob = data.hourly.precipitation_probability[index];
   const nuvens = data.hourly.cloud_cover[index];
@@ -137,10 +138,10 @@ function renderCurrentWeather(data) {
     <div class="weather-info" id="weather-info-now">
       <div class="badge temp">🌡️ Temperatura: ${temp}°</div>
       <div class="badge feels">🌡️ Sensação: ${appTemp}°</div>
-      <div class="badge humidity">💧 Umidade: ${humidity}%</div>
+      <div class="badge humidity">💧 Umidade: ${humidity}%${humidityEmoji}</div>
       <div class="badge clouds">☁️ <span title="${nuvens}%">${formatClouds(nuvens)}</span></div>
       <div class="badge rain">☔ Chuva: ${chuva} mm</div>
-      <div class="badge rain">☔ ${formatProbabilityResponsive(prob)}<span title="${prob}%"></span></div>
+      <div class="badge rain">☔<span title="${prob}%">${formatProbabilityResponsive(prob)}</span></div>
       <div class="badge wind">🍃 Vento: ${vento} km/h</div>
       <div class="badge wind">🍃 Rajada: ${rajada} km/h</div>
     </div>
@@ -176,6 +177,8 @@ function renderWeather(data) {
       "Noite":getPeriodData(data.hourly,18,23,day)
     };
     const humidity=getHumidity(data.hourly,day);
+    const minEmoji = humidity.min < 30 ? " ⚠️" : "";
+    const maxEmoji = humidity.max < 30 ? " ⚠️" : "";
     const dailyIndices=data.hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(day)).map(({i})=>i);
     let chuvaDia=0; dailyIndices.forEach(i=>{chuvaDia+=data.hourly.precipitation[i];});
 
@@ -186,7 +189,7 @@ function renderWeather(data) {
       <div class="weather-info">
         <div class="badge temp">🌡️ Temperatura: ${tempMin}° a ${tempMax}°</div>
         <div class="badge feels">🌡️ Sensação: ${appMin}° a ${appMax}°</div>
-        <div class="badge humidity">💧 Umidade: ${humidity.min}% a ${humidity.max}%</div>
+        <div class="badge humidity">💧 Umidade: ${humidity.min}%${minEmoji} a ${humidity.max}%${maxEmoji}</div>
         <div class="badge uv">☀️ UV Máx: ${uvMax}</div>
       </div>
       <div class="periods">
@@ -208,6 +211,8 @@ function renderWeather(data) {
     `;
     container.appendChild(card);
   });
+
+  updateResponsiveProb();
 }
 
 // --- Localização ---
@@ -259,7 +264,12 @@ if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
   fetchWeather();
 }
 
-// --- Atualiza probabilidade responsiva ao redimensionar ---
-window.addEventListener("resize", ()=>{
-  if(lastFetchedData) renderWeather(lastFetchedData);
-});
+// --- Atualiza probabilidade responsiva ---
+function updateResponsiveProb() {
+  document.querySelectorAll(".badge.rain span").forEach(span => {
+    const prob = span.getAttribute("title");
+    if(prob) span.textContent = formatProbabilityResponsive(Number(prob));
+  });
+}
+
+window.addEventListener("resize", updateResponsiveProb);
