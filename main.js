@@ -1,5 +1,6 @@
 let latitude = -9.7811;
 let longitude = -36.0936;
+let lastFetchedData = null; // para atualizar cards ao redimensionar
 
 function getCityName(addr) {
   return addr.city || addr.town || addr.village || addr.hamlet || addr.municipality || addr.county || addr.state || "";
@@ -16,13 +17,9 @@ function formatDate(dateStr) {
 
   const days = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
   let dayName;
-  if (isToday) {
-    dayName = "Hoje";
-  } else if (isTomorrow) {
-    dayName = "Amanhã";
-  } else {
-    dayName = days[date.getDay()];
-  }
+  if (isToday) dayName = "Hoje";
+  else if (isTomorrow) dayName = "Amanhã";
+  else dayName = days[date.getDay()];
 
   const dayNum = String(date.getDate()).padStart(2,'0');
   const monthNum = String(date.getMonth()+1).padStart(2,'0');
@@ -64,6 +61,7 @@ async function fetchWeather() {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=${dailyParams}&hourly=${hourlyParams}&timezone=auto&forecast_days=10`;
   const res = await fetch(url);
   const data = await res.json();
+  lastFetchedData = data; // salvar para redimensionamento
   renderWeather(data);
 }
 
@@ -98,6 +96,25 @@ function getHumidity(hourly, dayDate) {
   return {min: Math.round(minH), max: Math.round(maxH)};
 }
 
+// --- Texto descritivo ---
+function formatProbabilityResponsive(prob) {
+  let text;
+  if (prob < 40) text = "baixa";
+  else if (prob <= 60) text = "moderada";
+  else text = "alta";
+
+  const prefix = window.innerWidth <= 768 ? "Prob." : "Probabilidade";
+  return `${prefix} ${text}`;
+}
+
+function formatClouds(nuvens) {
+  if (nuvens < 25) return "Céu limpo";
+  if (nuvens < 50) return "Poucas nuvens";
+  if (nuvens < 75) return "Muitas nuvens";
+  return "Nublado";
+}
+
+// --- Render atual ---
 function renderCurrentWeather(data) {
   const nowIndex = data.hourly.time.findIndex(t => new Date(t) > new Date());
   const index = nowIndex === -1 ? data.hourly.time.length - 1 : nowIndex;
@@ -116,14 +133,14 @@ function renderCurrentWeather(data) {
   const card = document.createElement("div");
   card.className = "weather-card";
   card.innerHTML = `
-    <h2>Agora <span>• ${descricao}</span></h2>
+    <h2>Agora</h2>
     <div class="weather-info" id="weather-info-now">
       <div class="badge temp">🌡️ Temperatura: ${temp}°</div>
       <div class="badge feels">🌡️ Sensação: ${appTemp}°</div>
       <div class="badge humidity">💧 Umidade: ${humidity}%</div>
-      <div class="badge clouds">☁️ Nuvens: ${nuvens}%</div>
+      <div class="badge clouds">☁️ <span title="${nuvens}%">${formatClouds(nuvens)}</span></div>
       <div class="badge rain">☔ Chuva: ${chuva} mm</div>
-      <div class="badge rain">☔ Chance: ${prob}%</div>
+      <div class="badge rain">☔ ${formatProbabilityResponsive(prob)}<span title="${prob}%"></span></div>
       <div class="badge wind">🍃 Vento: ${vento} km/h</div>
       <div class="badge wind">🍃 Rajada: ${rajada} km/h</div>
     </div>
@@ -132,6 +149,7 @@ function renderCurrentWeather(data) {
   container.appendChild(card);
 }
 
+// --- Render diário ---
 function renderWeather(data) {
   const container=document.getElementById("weather-container");
   container.innerHTML="";
@@ -164,7 +182,7 @@ function renderWeather(data) {
     const card=document.createElement("div");
     card.className="weather-card";
     card.innerHTML=`
-      <h2>${formatDate(day)} <span> • ${descricao}</span></h2>
+      <h2>${formatDate(day)}</h2>
       <div class="weather-info">
         <div class="badge temp">🌡️ Temperatura: ${tempMin}° a ${tempMax}°</div>
         <div class="badge feels">🌡️ Sensação: ${appMin}° a ${appMax}°</div>
@@ -176,8 +194,8 @@ function renderWeather(data) {
           <div class="period-box">
             <h3>${period}</h3>
             <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-            <p>Chance: ${d.prob}%</p>
-            <p>Nuvens: ${d.nuvens}%</p>
+            <p><span title="${d.prob}%">${formatProbabilityResponsive(d.prob)}</span></p>
+            <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
           </div>
         `).join('')}
       </div>
@@ -192,6 +210,7 @@ function renderWeather(data) {
   });
 }
 
+// --- Localização ---
 const currentLocationDiv=document.getElementById("current-location");
 
 async function searchLocation(query) {
@@ -213,7 +232,7 @@ const input=document.getElementById("location-input");
 input.addEventListener("keydown",(e)=>{if(e.key==="Enter") searchLocation(input.value);});
 document.getElementById("search-button").addEventListener("click",()=>{searchLocation(input.value);});
 
-// Detecta se estamos no localhost e ignora reverse geocoding
+// --- Geolocalização ---
 if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
   currentLocationDiv.textContent = "📌 Localização padrão";
   fetchWeather();
@@ -239,3 +258,8 @@ if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
 } else {
   fetchWeather();
 }
+
+// --- Atualiza probabilidade responsiva ao redimensionar ---
+window.addEventListener("resize", ()=>{
+  if(lastFetchedData) renderWeather(lastFetchedData);
+});
