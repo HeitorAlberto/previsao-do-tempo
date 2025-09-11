@@ -180,7 +180,7 @@ function renderWeather(data) {
           <div class="period-box">
             <h3>${period}</h3>
             <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-            <p>Probabilidade: ${d.prob}%</p>
+            <p>Prob.: ${d.prob}%</p>
             <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
           </div>
         `).join('')}
