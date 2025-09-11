@@ -1,6 +1,6 @@
 let latitude = -9.7811;
 let longitude = -36.0936;
-let lastFetchedData = null; // salva os dados para ajustes responsivos
+let lastFetchedData = null;
 
 function getCityName(addr) {
   return addr.city || addr.town || addr.village || addr.hamlet || addr.municipality || addr.county || addr.state || "";
@@ -96,17 +96,6 @@ function getHumidity(hourly, dayDate) {
   return {min: Math.round(minH), max: Math.round(maxH)};
 }
 
-// --- Texto descritivo responsivo ---
-function formatProbabilityResponsive(prob) {
-  let text;
-  if (prob < 40) text = "baixa";
-  else if (prob <= 60) text = "moderada";
-  else text = "alta";
-
-  const prefix = window.innerWidth <= 768 ? "Prob." : "Probabilidade";
-  return `${prefix} ${text}`;
-}
-
 function formatClouds(nuvens) {
   if (nuvens < 25) return "Céu limpo";
   if (nuvens < 50) return "Poucas nuvens";
@@ -123,12 +112,10 @@ function renderCurrentWeather(data) {
   const appTemp = Math.round(data.hourly.apparent_temperature[index]);
   const humidity = Math.round(data.hourly.relative_humidity_2m[index]);
   const chuva = data.hourly.precipitation[index].toFixed(1);
-  const prob = data.hourly.precipitation_probability[index];
-  const probText = formatProbabilityResponsive(prob);
+  const prob = data.hourly.precipitation_probability[index]; // valor direto da API
   const nuvens = data.hourly.cloud_cover[index];
   const vento = Math.round(data.hourly.wind_speed_10m[index]);
   const rajada = Math.round(data.hourly.wind_gusts_10m[index]);
-  const wcode = data.hourly.weathercode[index];
 
   const card = document.createElement("div");
   card.className = "weather-card";
@@ -140,7 +127,7 @@ function renderCurrentWeather(data) {
       <div class="badge humidity">💧 Umidade: ${humidity}% ${humidity < 30 ? "⚠️" : ""}</div>
       <div class="badge clouds">☁️ <span title="${nuvens}%">${formatClouds(nuvens)}</span></div>
       <div class="badge rain">☔ Chuva: ${chuva} mm</div>
-      <div class="badge rain">☔ <span title="${probText}">${probText}</span></div>
+      <div class="badge rain">☔ Probabilidade: ${prob}%</div>
       <div class="badge wind">🍃 Vento: ${vento} km/h</div>
       <div class="badge wind">🍃 Rajada: ${rajada} km/h</div>
     </div>
@@ -164,7 +151,6 @@ function renderWeather(data) {
     const rajada=Math.round(data.daily.wind_gusts_10m_max[index]);
     const nascer=formatHour(data.daily.sunrise[index]);
     const por=formatHour(data.daily.sunset[index]);
-
     const periods={
       "Madrugada":getPeriodData(data.hourly,0,5,day),
       "Manhã":getPeriodData(data.hourly,6,11,day),
@@ -194,7 +180,7 @@ function renderWeather(data) {
           <div class="period-box">
             <h3>${period}</h3>
             <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-            <p><span title="${formatProbabilityResponsive(d.prob)}">${formatProbabilityResponsive(d.prob)}</span></p>
+            <p>Probabilidade: ${d.prob}%</p>
             <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
           </div>
         `).join('')}
@@ -208,8 +194,6 @@ function renderWeather(data) {
     `;
     container.appendChild(card);
   });
-
-  updateResponsiveProb();
 }
 
 // --- Localização ---
@@ -264,13 +248,3 @@ if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
 } else {
   fetchWeather();
 }
-
-// --- Atualiza probabilidade responsiva ---
-function updateResponsiveProb() {
-  document.querySelectorAll(".badge.rain span").forEach(span => {
-    const prob = span.getAttribute("title");
-    if(prob) span.textContent = prob;
-  });
-}
-
-window.addEventListener("resize", updateResponsiveProb);
