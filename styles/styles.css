@@ -118,6 +118,15 @@ body {
   justify-content: center;
 }
 
+.weather-info-daily, .extra-info-daily {
+  display: flex;
+  justify-content: space-between;
+}
+
+.extra-info-daily {
+  margin-top: 1rem;
+}
+
 #weather-info-now {
   display: flex;
   align-items: center;
@@ -173,13 +182,6 @@ body {
 /* ======================= */
 /* Linha final             */
 /* ======================= */
-.extra-info {
-  margin-top: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
-}
 
 .extra-info div {
   padding: .25rem .75rem;
