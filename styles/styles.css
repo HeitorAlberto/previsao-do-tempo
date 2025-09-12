@@ -118,13 +118,13 @@ body {
   justify-content: center;
 }
 
-.weather-info-daily, .extra-info-daily {
-  display: flex;
-  justify-content: space-between;
-}
 
 .extra-info-daily {
   margin-top: 1rem;
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 #weather-info-now {
