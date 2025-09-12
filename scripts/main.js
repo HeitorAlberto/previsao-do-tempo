@@ -2,6 +2,8 @@ let latitude = -9.7811;
 let longitude = -36.0936;
 let lastFetchedData = null;
 
+
+
 function getCityName(addr) {
   return addr.city || addr.town || addr.village || addr.hamlet || addr.municipality || addr.county || addr.state || "";
 }
@@ -98,31 +100,26 @@ async function fetchWeather() {
 
 
 function getPeriodData(hourly, start, end, dayDate) {
+  let chuva = 0, prob = 0, nuvens = 0;
+  let count = 0;
 
-  const indices = hourly.time.map((t,i)=>({t,i}))
-    .filter(({t})=>t.startsWith(dayDate))
-    .map(({i})=>i)
-    .filter(i=>{
-      const hour=new Date(hourly.time[i]).getHours();
-      return hour>=start && hour<=end;
-    });
-  
-    if(indices.length===0) return {chuva:0,prob:0,nuvens:0};
-  
-    let chuva=0,prob=0,nuvens=0;
-  
-    indices.forEach(i=>{
-    chuva+=hourly.precipitation[i];
-    prob=Math.max(prob,hourly.precipitation_probability[i]);
-    nuvens+=hourly.cloud_cover[i];
-  
+  hourly.time.forEach((t, i) => {
+    const date = new Date(t);
+    const hour = date.getHours();
+
+    if (t.startsWith(dayDate) && hour >= start && hour <= end) {
+      chuva += hourly.precipitation[i];
+      prob = Math.max(prob, hourly.precipitation_probability[i]);
+      nuvens += hourly.cloud_cover[i];
+      count++;
+    }
   });
-  
-  nuvens /= indices.length;
-  
-  return {chuva, prob: Math.round(prob), nuvens: Math.round(nuvens)};
 
+  if (count === 0) return { chuva: 0, prob: 0, nuvens: 0 };
+
+  return { chuva, prob: Math.round(prob), nuvens: Math.round(nuvens / count) };
 }
+
 
 
 
