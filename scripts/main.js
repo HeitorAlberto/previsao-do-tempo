@@ -57,6 +57,11 @@ const weatherDescriptions = {
 };
 
 
+const currentParams = [
+  "cloud_cover","temperature_2m","relative_humidity_2m","apparent_temperature","is_day","snowfall","showers","rain","precipitation","weather_code","pressure_msl","surface_pressure","wind_gusts_10m","wind_direction_10m","wind_speed_10m"
+].join(",");
+
+
 
 
 const dailyParams = [
@@ -81,7 +86,7 @@ const hourlyParams = [
 
 
 async function fetchWeather() {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=${dailyParams}&hourly=${hourlyParams}&timezone=auto&forecast_days=10`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=${dailyParams}&hourly=${hourlyParams}&current=${currentParams}&timezone=auto&forecast_days=10`;
   const res = await fetch(url);
   const data = await res.json();
   lastFetchedData = data;
@@ -161,19 +166,30 @@ function formatClouds(nuvens) {
 
 // --- Render atual ---
 function renderCurrentWeather(data) {
-  
-  const nowIndex = data.hourly.time.findIndex(t => new Date(t) > new Date());
+  // Dados atuais
+  const current = data.current; // ou data.current_weather, depende da API
 
-  const index = nowIndex === -1 ? data.hourly.time.length - 1 : nowIndex;
+  // Pegar índice da hora mais próxima de agora
+  const now = new Date();
+  let index = 0;
+  let minDiff = Infinity;
 
-  const temp = Math.round(data.hourly.temperature_2m[index]);
-  const appTemp = Math.round(data.hourly.apparent_temperature[index]);
-  const humidity = Math.round(data.hourly.relative_humidity_2m[index]);
-  const chuva = data.hourly.precipitation[index].toFixed(1);
-  const prob = data.hourly.precipitation_probability[index];
-  const nuvens = data.hourly.cloud_cover[index];
-  const vento = Math.round(data.hourly.wind_speed_10m[index]);
-  const rajada = Math.round(data.hourly.wind_gusts_10m[index]);
+  data.hourly.time.forEach((t, i) => {
+    const diff = Math.abs(new Date(t) - now);
+    if (diff < minDiff) {
+      minDiff = diff;
+      index = i;
+    }
+  });
+
+  const temp = Math.round(current.temperature_2m);
+  const appTemp = Math.round(current.apparent_temperature);
+  const humidity = Math.round(current.relative_humidity_2m);
+  const chuva = current.precipitation.toFixed(1);
+  const prob = data.hourly.precipitation_probability[index]; // pega do hourly
+  const nuvens = current.cloud_cover;
+  const vento = Math.round(current.wind_speed_10m);
+  const rajada = Math.round(current.wind_gusts_10m);
 
   const card = document.createElement("div");
   card.className = "weather-card";
@@ -182,7 +198,7 @@ function renderCurrentWeather(data) {
     <div class="weather-info" id="weather-info-now">
       <div class="badge temp">🌡️ Temperatura: ${temp}°</div>
       <div class="badge feels">🌡️ Sensação: ${appTemp}°</div>
-      <div class="badge humidity">💧 Umidade: ${humidity}% ${humidity < 30 ? "⚠️" : ""}</div>
+      <div class="badge humidity">💧 Umidade: ${humidity}%</div>
       <div class="badge clouds">☁️ <span title="${nuvens}%">${formatClouds(nuvens)}</span></div>
       <div class="badge rain">☔ Chuva: ${chuva} mm</div>
       <div class="badge rain">☔ Probabilidade: ${prob}%</div>
@@ -192,6 +208,8 @@ function renderCurrentWeather(data) {
   `;
   document.getElementById("weather-container").appendChild(card);
 }
+
+
 
 
 
