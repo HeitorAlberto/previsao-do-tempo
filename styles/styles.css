@@ -221,8 +221,8 @@ body {
   #current-location { font-size: 0.9rem; }
   #open-meteo-reference { font-size: 0.8rem; }
 
-  .period-box { font-size: 0.86rem; }
-  .weather-card { padding: 1.5rem 0; }
+
+  .weather-card { padding: 1.5rem 1.5rem; }
   .weather-card h2 { text-align: center; }
   .weather-card h2 span { font-size: 1rem; }
 
