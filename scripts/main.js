@@ -59,7 +59,7 @@ const hourlyParams = [
 ].join(",");
 
 async function fetchWeather() {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=${dailyParams}&hourly=${hourlyParams}&current=${currentParams}&timezone=auto&forecast_days=10`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=${dailyParams}&hourly=${hourlyParams}&current=${currentParams}&timezone=auto&forecast_days=16`;
   const res = await fetch(url);
   const data = await res.json();
   lastFetchedData = data;
