@@ -231,8 +231,8 @@ div {
   .weather-card h2 span { font-size: 1rem; }
 
   .weather-info, .extra-info-daily { justify-content: center; }
-  #weather-info-now { display: grid; grid-template-columns: 60%; }
-  #weather-info-now div { text-align: center; }
+  #weather-info-now { display: grid; grid-template-columns: 70%; }
+  #weather-info-now div { text-align: center;}
 }
 
 /* ======================= */
