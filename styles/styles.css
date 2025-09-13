@@ -110,6 +110,12 @@ body {
 /* ======================= */
 /* Grid e blocos           */
 /* ======================= */
+#weather-info-now {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+
 .weather-info {
   display: flex;
   flex-wrap: wrap;
@@ -126,10 +132,11 @@ body {
   justify-content: space-between;
 }
 
-#weather-info-now {
-  display: flex;
-  align-items: center;
+.extra-info div, .weather-info div {
+  box-shadow: 1px 1px 1px #374151;
 }
+
+
 
 .badge {
   font-size: 1rem;
@@ -253,6 +260,12 @@ body {
     justify-content: center;
   }
 
+  #weather-info-now {
+    display: grid;
+    grid-template-columns: 1fr;
+    place-items: center;
+  }
+
 
 
 }
@@ -290,12 +303,20 @@ body {
   }
 
   .weather-info {
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+
+  #weather-info-now {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
 
   .extra-info-daily {
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
 
