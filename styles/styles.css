@@ -29,32 +29,28 @@ body {
   width: 300px;
   max-width: 400px;
   padding: .5rem 1rem;
-  border-radius: 0.2rem 0rem 0rem 0.2rem;
+  border-radius: 0.2rem 0 0 0.2rem;
   outline: none;
   flex: 1 1 auto;
   border: none;
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
 
-#search-box input:focus {
-  border: none;
-}
+#search-box input:focus { border: none; }
 
 #search-box button {
   font-size: 1.25rem;
   background: #3b82f6;
   color: white;
   padding: .5rem 1rem;
-  border-radius: 0rem 0.2rem 0.2rem 0rem;
+  border-radius: 0 0.2rem 0.2rem 0;
   border: none;
   cursor: pointer;
   transition: background .2s;
   flex: 1 1 auto;
 }
 
-#search-box button:hover {
-  background: #2563eb;
-}
+#search-box button:hover { background: #2563eb; }
 
 /* ======================= */
 /* Localização             */
@@ -94,7 +90,6 @@ body {
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
 }
 
-
 .weather-card h2 {
   font-size: 1.25rem;
   font-weight: 600;
@@ -115,14 +110,12 @@ body {
   grid-template-columns: 1fr 1fr 1fr;
 }
 
-
 .weather-info {
   display: flex;
   flex-wrap: wrap;
   gap: .5rem;
   justify-content: space-between;
 }
-
 
 .extra-info-daily {
   margin-top: 1rem;
@@ -135,8 +128,6 @@ body {
 .extra-info div, .weather-info div {
   box-shadow: 1px 1px 1px #374151;
 }
-
-
 
 .badge {
   font-size: 1rem;
@@ -155,11 +146,11 @@ body {
 .badge.uv { background: #fef9c3; }
 
 /* ======================= */
-/* Períodos do dia         */
+/* Períodos do dia - padrão (desktop e tablet) */
 /* ======================= */
 .periods {
   display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-top: 1rem;
 }
@@ -172,6 +163,7 @@ body {
   line-height: 1.6rem;
   word-wrap: break-word;
   hyphens: auto;
+  cursor: default;
 }
 
 .period-box h3 {
@@ -179,10 +171,34 @@ body {
   margin-bottom: .25rem;
 }
 
+.period-box small { display: none; }
+
+/* ======================= */
+/* Mobile: apenas 1 período (<480px) */
+/* ======================= */
+@media (max-width: 479px) {
+  .periods {
+    display: block; /* mostra apenas 1 período por vez */
+    width: 100%;
+  }
+
+  .period-box {
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .period-box small {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-style: italic;
+  }
+}
+
 /* ======================= */
 /* Linha final             */
 /* ======================= */
-
 .extra-info div {
   padding: .25rem .75rem;
   font-size: 1rem;
@@ -191,145 +207,52 @@ body {
   hyphens: auto;
 }
 
-
-
-
 /* ======================= */
 /* Ajustes para smartphones pequenos (~411px) */
 /* ======================= */
 @media (max-width: 480px) {
+  body { padding: 0; }
 
-  body {
-    padding: 0px;
-  }
+  #search-box { flex-direction: column; gap: 0.5rem; }
+  #search-box input, #search-box button { width: 100%; flex: none; box-sizing: border-box; }
+  #search-box input { border-radius: 0.5rem 0.5rem 0 0; text-align: center; }
+  #search-box button { border-radius: 0 0 0.5rem 0.5rem; }
 
-  #search-box {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  #search-box input,
-  #search-box button {
-    width: 100%;
-    flex: none;
-    box-sizing: border-box;
-  }
+  #current-location { font-size: 0.9rem; }
+  #open-meteo-reference { font-size: 0.8rem; }
 
-  #search-box input {
-    border-radius: 0.5rem 0.5rem 0 0;
-    text-align: center;
-  }
+  .period-box { font-size: 0.86rem; }
+  .weather-card { padding: 1.5rem 0; }
+  .weather-card h2 { text-align: center; }
+  .weather-card h2 span { font-size: 1rem; }
 
-  #search-box button {
-    border-radius: 0 0 0.5rem 0.5rem;
-  }
-
-  #current-location {
-    font-size: 0.9rem;
-  }
-
-  #open-meteo-reference {
-    font-size: 0.8rem;
-  }
-
-  .periods {
-    grid-template-columns: 1fr 1fr; /* 2x2 */
-  }
-
-  .period-box {
-    font-size: 0.86rem;
-  }
-
-  .weather-card {
-    padding: 1.5rem 0px;
-  }
-
-  .weather-card h2 {
-    text-align: center;
-  }
-
-  .weather-card h2 span {
-    font-size: 1rem;
-  }
-
-  .weather-info {
-    justify-content: center;
-  }
-
-
-  .extra-info-daily {
-    justify-content: center;
-  }
-
-  #weather-info-now {
-    display: grid;
-    grid-template-columns: 60%;
-  }
-
-  #weather-info-now div {
-    text-align: center;
-  }
-
-
-
+  .weather-info, .extra-info-daily { justify-content: center; }
+  #weather-info-now { display: grid; grid-template-columns: 60%; }
+  #weather-info-now div { text-align: center; }
 }
 
 /* ======================= */
-/* Ajustes para smartphones maiores (~412px a 768px) */
+/* Ajustes para tablets (480px a 768px) */
 /* ======================= */
-@media (min-width: 481px) and (max-width: 768px) {
+@media (min-width: 480px) and (max-width: 767px) {
+  body { padding: 0; }
 
-  body {
-    padding: 0px;
-  }
+  #search-box input { width: 300px; max-width: 80%; }
+  #search-box button { width: auto; }
 
-  #search-box input {
-    width: 300px;
-    max-width: 80%;
-  }
-  #search-box button {
-    width: auto;
-  }
+  .weather-card { padding: 1.5rem 0; }
+  .weather-card h2 { text-align: center; }
 
-  .weather-card {
-    padding: 1.5rem 0px;
-  }
-
-  .weather-card h2 {
-    text-align: center;
-  }
-
-  .periods {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .period-box {
-    font-size: 0.95rem;
-  }
-
-  .weather-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-
-  #weather-info-now {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-
-  .extra-info-daily {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-
+  .periods { grid-template-columns: repeat(4, 1fr); }
+  .period-box { font-size: 0.95rem; }
+  .weather-info { display: grid; grid-template-columns: 1fr 1fr; }
+  #weather-info-now { display: grid; grid-template-columns: 1fr 1fr; }
+  .extra-info-daily { display: grid; grid-template-columns: 1fr 1fr; }
 }
 
-
+/* ======================= */
+/* Desktop (>768px)        */
+/* ======================= */
 @media (min-width: 768px) {
-  
-  .periods {
-    grid-template-columns: repeat(4, 1fr);
-  }
-  
+  .periods { grid-template-columns: repeat(4, 1fr); }
 }

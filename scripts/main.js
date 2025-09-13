@@ -217,53 +217,78 @@ function renderCurrentWeather(data) {
 
 // --- Render diário ---
 function renderWeather(data) {
-  const container=document.getElementById("weather-container");
-  container.innerHTML="";
+  const container = document.getElementById("weather-container");
+  container.innerHTML = "";
   renderCurrentWeather(data);
 
-  data.daily.time.forEach((day,index)=>{
-    const tempMin=Math.round(data.daily.temperature_2m_min[index]);
-    const tempMax=Math.round(data.daily.temperature_2m_max[index]);
-    const appMin=Math.round(data.daily.apparent_temperature_min[index]);
-    const appMax=Math.round(data.daily.apparent_temperature_max[index]);
-    const uvMax=Math.round(data.daily.uv_index_max[index]);
-    const vento=Math.round(data.daily.wind_speed_10m_max[index]);
-    const rajada=Math.round(data.daily.wind_gusts_10m_max[index]);
-    const nascer=formatHour(data.daily.sunrise[index]);
-    const por=formatHour(data.daily.sunset[index]);
-    const periods={
-      "00h até 6h":getPeriodData(data.hourly,0,5,day),
-      "6h até 12h":getPeriodData(data.hourly,6,11,day),
-      "12h até 18h":getPeriodData(data.hourly,12,17,day),
-      "18h até 00h":getPeriodData(data.hourly,18,23,day)
+  data.daily.time.forEach((day, index) => {
+    const tempMin = Math.round(data.daily.temperature_2m_min[index]);
+    const tempMax = Math.round(data.daily.temperature_2m_max[index]);
+    const appMin = Math.round(data.daily.apparent_temperature_min[index]);
+    const appMax = Math.round(data.daily.apparent_temperature_max[index]);
+    const uvMax = Math.round(data.daily.uv_index_max[index]);
+    const vento = Math.round(data.daily.wind_speed_10m_max[index]);
+    const rajada = Math.round(data.daily.wind_gusts_10m_max[index]);
+    const nascer = formatHour(data.daily.sunrise[index]);
+    const por = formatHour(data.daily.sunset[index]);
+
+    const periods = {
+      "00h até 6h": getPeriodData(data.hourly, 0, 5, day),
+      "6h até 12h": getPeriodData(data.hourly, 6, 11, day),
+      "12h até 18h": getPeriodData(data.hourly, 12, 17, day),
+      "18h até 00h": getPeriodData(data.hourly, 18, 23, day)
     };
 
-    const humidity=getHumidity(data.hourly,day);
-    
-    const dailyIndices=data.hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(day)).map(({i})=>i);
+    const humidity = getHumidity(data.hourly, day);
 
-    let chuvaDia=0; dailyIndices.forEach(i=>{chuvaDia+=data.hourly.precipitation[i];});
+    const dailyIndices = data.hourly.time
+      .map((t, i) => ({ t, i }))
+      .filter(({ t }) => t.startsWith(day))
+      .map(({ i }) => i);
 
-    const card=document.createElement("div");
-    card.className="weather-card";
-    card.innerHTML=`
+    let chuvaDia = 0;
+    dailyIndices.forEach(i => { chuvaDia += data.hourly.precipitation[i]; });
+
+    const card = document.createElement("div");
+    card.className = "weather-card";
+
+    let periodIndex = 0;
+    const periodLabels = Object.keys(periods);
+
+    function renderSinglePeriod() {
+      const label = periodLabels[periodIndex];
+      const d = periods[label];
+      return `
+        <div class="period-box" style="width:100%">
+          <h3>${label}</h3>
+          <p>Chuva acumulada: ${d.chuva.toFixed(1)} mm</p>
+          <p>Probabilidade: ${d.prob}%</p>
+          <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
+          <small style="display:block; margin-top:6px; opacity:0.7">clique para mudar o período</small>
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
       <h2>${formatDate(day)}</h2>
-      <div class="weather-info weather-info-daily" >
+      <div class="weather-info weather-info-daily">
         <div class="badge temp">🌡️ Temperatura: ${tempMin}° a ${tempMax}°</div>
         <div class="badge feels">🌡️ Sensação: ${appMin}° a ${appMax}°</div>
         <div class="badge humidity">💧 Umidade: ${humidity.min}% a ${humidity.max}%</div>
         <div class="badge uv">☀️ UV Máx: ${uvMax}</div>
       </div>
-      
+
       <div class="periods">
-        ${Object.entries(periods).map(([period,d])=>`
-          <div class="period-box">
-            <h3>${period}</h3>
-            <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-            <p>Prob.: ${d.prob}%</p>
-            <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
-          </div>
-        `).join('')}
+        ${window.innerWidth < 480 ? renderSinglePeriod() :
+          Object.entries(periods).map(([label, d]) => `
+            <div class="period-box">
+              <h3>${label}</h3>
+              <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
+              <p>Prob.: ${d.prob}%</p>
+              <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
+            </div>
+          `).join('')
+        }
       </div>
 
       <div class="extra-info extra-info-daily">
@@ -273,9 +298,46 @@ function renderWeather(data) {
         <div class="badge uv">☀️ ${nascer} até ${por}</div>
       </div>
     `;
+
+    const periodsDiv = card.querySelector(".periods");
+
+    // Mobile (<480px) - clique alterna período
+    function enableMobilePeriods() {
+      if (window.innerWidth >= 480) return;
+
+      periodIndex = 0;
+      periodsDiv.innerHTML = renderSinglePeriod();
+
+      periodsDiv.onclick = () => {
+        periodIndex = (periodIndex + 1) % periodLabels.length;
+        periodsDiv.innerHTML = renderSinglePeriod();
+      };
+    }
+
+    enableMobilePeriods();
+
+    // Ajusta no resize
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 480) {
+        // Tablet/desktop: mostra todos os períodos
+        periodsDiv.innerHTML = Object.entries(periods).map(([label, d]) => `
+          <div class="period-box">
+            <h3>${label}</h3>
+            <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
+            <p>Prob.: ${d.prob}%</p>
+            <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
+          </div>
+        `).join('');
+      } else {
+        enableMobilePeriods();
+      }
+    });
+
     container.appendChild(card);
   });
 }
+
+
 
 
 
