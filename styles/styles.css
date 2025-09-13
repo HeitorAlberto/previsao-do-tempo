@@ -89,7 +89,6 @@ body {
 /* ======================= */
 .weather-card {
   background: white;
-  border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
   box-shadow: 0 2px 6px rgba(0,0,0,.15);
@@ -115,7 +114,7 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: .5rem;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 
@@ -124,7 +123,7 @@ body {
   display: flex;
   gap: .5rem;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 #weather-info-now {
@@ -132,14 +131,9 @@ body {
   align-items: center;
 }
 
-.weather-info div, .extra-info div {
-  box-shadow: 1px 1px 1px #6b7280;
-}
-
 .badge {
   font-size: 1rem;
   padding: .25rem .5rem;
-  border-radius: .5rem;
   display: inline-block;
   word-wrap: break-word;
   hyphens: auto;
@@ -165,7 +159,6 @@ body {
 
 .period-box {
   border: 1px solid #d1d5db;
-  border-radius: .5rem;
   padding: .75rem;
   background: #f9fafb;
   text-align: center;
@@ -185,7 +178,6 @@ body {
 
 .extra-info div {
   padding: .25rem .75rem;
-  border-radius: .5rem;
   font-size: 1rem;
   background: #f3f4f6;
   word-wrap: break-word;
@@ -239,6 +231,16 @@ body {
     font-size: 1rem;
   }
 
+  .weather-info {
+    justify-content: center;
+  }
+
+
+  .extra-info-daily {
+    justify-content: center;
+  }
+
+
 
 }
 
@@ -259,6 +261,17 @@ body {
   .period-box {
     font-size: 0.95rem;
   }
+
+  .weather-info {
+    justify-content: center;
+  }
+
+
+  .extra-info-daily {
+    justify-content: center;
+  }
+
+
 }
 
 
