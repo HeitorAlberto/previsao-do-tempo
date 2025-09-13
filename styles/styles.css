@@ -244,7 +244,7 @@ body {
   }
 
   .weather-card h2 {
-    margin-left: 1rem;
+    text-align: center;
   }
 
   .weather-card h2 span {
@@ -295,7 +295,7 @@ body {
   }
 
   .weather-card h2 {
-    margin-left: 1rem;
+    text-align: center;
   }
 
   .periods {
