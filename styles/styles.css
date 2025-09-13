@@ -262,8 +262,11 @@ body {
 
   #weather-info-now {
     display: grid;
-    grid-template-columns: 1fr;
-    place-items: center;
+    grid-template-columns: auto auto;
+  }
+
+  #weather-info-now div {
+    text-align: center;
   }
 
 
