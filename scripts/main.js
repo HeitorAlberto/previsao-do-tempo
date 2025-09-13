@@ -2,14 +2,9 @@ let latitude = -9.7811;
 let longitude = -36.0936;
 let lastFetchedData = null;
 
-
-
 function getCityName(addr) {
   return addr.city || addr.town || addr.village || addr.hamlet || addr.municipality || addr.county || addr.state || "";
 }
-
-
-
 
 function formatDate(dateStr) {
   const date = new Date(dateStr + "T00:00:00");
@@ -18,12 +13,9 @@ function formatDate(dateStr) {
   tomorrow.setDate(today.getDate() + 1);
 
   const isToday = date.toDateString() === today.toDateString();
-  const isTomorrow = date.toDateString() === tomorrow.toDateString();
-
   const days = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
   let dayName;
   if (isToday) dayName = "Hoje";
-  //else if (isTomorrow) dayName = "Amanhã";
   else dayName = days[date.getDay()];
 
   const dayNum = String(date.getDate()).padStart(2,'0');
@@ -32,20 +24,12 @@ function formatDate(dateStr) {
   return `${dayName}, ${dayNum}/${monthNum}`;
 }
 
-
-
-
-
 function formatHour(str) {
   const d = new Date(str);
   const h = String(d.getHours()).padStart(2,'0');
   const m = String(d.getMinutes()).padStart(2,'0');
   return `${h}h${m}`;
 }
-
-
-
-
 
 const weatherDescriptions = {
   0: "Céu limpo",1: "Poucas nuvens",2: "Muitas nuvens",3: "Nublado",
@@ -58,13 +42,9 @@ const weatherDescriptions = {
   99: "Tempestade com granizo forte"
 };
 
-
 const currentParams = [
   "cloud_cover","temperature_2m","relative_humidity_2m","apparent_temperature","is_day","snowfall","showers","rain","precipitation","weather_code","pressure_msl","surface_pressure","wind_gusts_10m","wind_direction_10m","wind_speed_10m"
 ].join(",");
-
-
-
 
 const dailyParams = [
   "temperature_2m_max","temperature_2m_min","apparent_temperature_max","apparent_temperature_min",
@@ -72,20 +52,11 @@ const dailyParams = [
   "sunrise","sunset","weathercode"
 ].join(",");
 
-
-
-
-
 const hourlyParams = [
   "temperature_2m","apparent_temperature","relative_humidity_2m",
   "precipitation","precipitation_probability","cloud_cover",
   "wind_speed_10m","wind_gusts_10m","weathercode"
 ].join(",");
-
-
-
-
-
 
 async function fetchWeather() {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=${dailyParams}&hourly=${hourlyParams}&current=${currentParams}&timezone=auto&forecast_days=10`;
@@ -94,10 +65,6 @@ async function fetchWeather() {
   lastFetchedData = data;
   renderWeather(data);
 }
-
-
-
-
 
 function getPeriodData(hourly, start, end, dayDate) {
   let chuva = 0, prob = 0, nuvens = 0;
@@ -120,16 +87,7 @@ function getPeriodData(hourly, start, end, dayDate) {
   return { chuva, prob: Math.round(prob), nuvens: Math.round(nuvens / count) };
 }
 
-
-
-
-
-
-
-
-
 function getHumidity(hourly, dayDate) {
-  
   const indices = hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(dayDate)).map(({i})=>i);
   
   if(indices.length===0) return {min:0,max:0};
@@ -143,12 +101,7 @@ function getHumidity(hourly, dayDate) {
   });
   
   return {min: Math.round(minH), max: Math.round(maxH)};
-
 }
-
-
-
-
 
 function formatClouds(nuvens) {
   if (nuvens < 20) return "Céu limpo";
@@ -157,16 +110,9 @@ function formatClouds(nuvens) {
   return "Nublado";
 }
 
-
-
-
-
 // --- Render atual ---
 function renderCurrentWeather(data) {
-  // Dados atuais
-  const current = data.current; // ou data.current_weather, depende da API
-
-  // Pegar índice da hora mais próxima de agora
+  const current = data.current;
   const now = new Date();
   let index = 0;
   let minDiff = Infinity;
@@ -183,7 +129,7 @@ function renderCurrentWeather(data) {
   const appTemp = Math.round(current.apparent_temperature);
   const humidity = Math.round(current.relative_humidity_2m);
   const chuva = current.precipitation.toFixed(1);
-  const prob = data.hourly.precipitation_probability[index]; // pega do hourly
+  const prob = data.hourly.precipitation_probability[index];
   const nuvens = current.cloud_cover;
   const vento = Math.round(current.wind_speed_10m);
   const rajada = Math.round(current.wind_gusts_10m);
@@ -205,15 +151,6 @@ function renderCurrentWeather(data) {
   `;
   document.getElementById("weather-container").appendChild(card);
 }
-
-
-
-
-
-
-
-
-
 
 // --- Render diário ---
 function renderWeather(data) {
@@ -240,12 +177,7 @@ function renderWeather(data) {
     };
 
     const humidity = getHumidity(data.hourly, day);
-
-    const dailyIndices = data.hourly.time
-      .map((t, i) => ({ t, i }))
-      .filter(({ t }) => t.startsWith(day))
-      .map(({ i }) => i);
-
+    const dailyIndices = data.hourly.time.map((t, i) => ({ t, i })).filter(({ t }) => t.startsWith(day)).map(({ i }) => i);
     let chuvaDia = 0;
     dailyIndices.forEach(i => { chuvaDia += data.hourly.precipitation[i]; });
 
@@ -301,11 +233,15 @@ function renderWeather(data) {
 
     const periodsDiv = card.querySelector(".periods");
 
-    // Mobile (<480px) - clique alterna período
     function enableMobilePeriods() {
       if (window.innerWidth >= 480) return;
 
-      periodIndex = 0;
+      const nowHour = new Date().getHours();
+      if (nowHour >= 0 && nowHour < 6) periodIndex = 0;
+      else if (nowHour >= 6 && nowHour < 12) periodIndex = 1;
+      else if (nowHour >= 12 && nowHour < 18) periodIndex = 2;
+      else periodIndex = 3;
+
       periodsDiv.innerHTML = renderSinglePeriod();
 
       periodsDiv.onclick = () => {
@@ -316,10 +252,8 @@ function renderWeather(data) {
 
     enableMobilePeriods();
 
-    // Ajusta no resize
     window.addEventListener("resize", () => {
       if (window.innerWidth >= 480) {
-        // Tablet/desktop: mostra todos os períodos
         periodsDiv.innerHTML = Object.entries(periods).map(([label, d]) => `
           <div class="period-box">
             <h3>${label}</h3>
@@ -337,58 +271,35 @@ function renderWeather(data) {
   });
 }
 
-
-
-
-
-
-
-
-
 // --- Localização ---
 const currentLocationDiv=document.getElementById("current-location");
 
 async function searchLocation(query) {
   try {
-
     const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${query}`);
-    
     const data=await res.json();
     
     if(data && data.length>0){
-
       latitude=parseFloat(data[0].lat);
       longitude=parseFloat(data[0].lon);
-      
       const addr=data[0].address;
-      
       const city=getCityName(addr);
-      
       const state=addr.state||"";
-      
       const country=addr.country||"";
       currentLocationDiv.textContent=`📌 ${city}${city&&state?", ":""}${state}${(city||state)&&country?", ":""}${country}`;
-
       fetchWeather();
-
-    } else { alert("Localização não encontrada!"); currentLocationDiv.textContent=""; }
-
+    } else { 
+      alert("Localização não encontrada!"); 
+      currentLocationDiv.textContent=""; 
+    }
   } catch(e) {
-
     alert("Erro ao buscar localização.");
-
   }
 }
-
-
 
 const input=document.getElementById("location-input");
 input.addEventListener("keydown",(e)=>{if(e.key==="Enter") searchLocation(input.value);});
 document.getElementById("search-button").addEventListener("click",()=>{searchLocation(input.value);});
-
-
-
-
 
 // --- Geolocalização ---
 if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
@@ -399,11 +310,8 @@ if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
     latitude=pos.coords.latitude;
     longitude=pos.coords.longitude;
     try {
-      
       const res=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
-
       const data=await res.json();
-      
       if(data && data.address){
         const addr=data.address;
         const city=getCityName(addr);
@@ -411,15 +319,11 @@ if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
         const country=addr.country||"";
         currentLocationDiv.textContent=`📌 ${city}${city&&state?", ":""}${state}${(city||state)&&country?", ":""}${country}`;
       }
-
     } catch {
       currentLocationDiv.textContent = "📌 Localização desconhecida";
     }
-
     fetchWeather();
-
   },()=>fetchWeather());
-
 } else {
   fetchWeather();
 }
