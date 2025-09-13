@@ -1,5 +1,5 @@
-let latitude = -9.7811;
-let longitude = -36.0936;
+let latitude = -15.7797;
+let longitude = -47.9297;
 let lastFetchedData = null;
 
 function getCityName(addr) {
@@ -185,23 +185,6 @@ function renderWeather(data) {
     const card = document.createElement("div");
     card.className = "weather-card";
 
-    let periodIndex = 0;
-    const periodLabels = Object.keys(periods);
-
-    function renderSinglePeriod() {
-      const label = periodLabels[periodIndex];
-      const d = periods[label];
-      return `
-        <div class="period-box" style="width:100%">
-          <h3>${label}</h3>
-          <p>Chuva acumulada: ${d.chuva.toFixed(1)} mm</p>
-          <p>Probabilidade: ${d.prob}%</p>
-          <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
-          <small style="display:block; margin-top:6px; opacity:0.7">clique para mudar o período</small>
-        </div>
-      `;
-    }
-
     card.innerHTML = `
       <h2>${formatDate(day)}</h2>
       <div class="weather-info weather-info-daily">
@@ -225,7 +208,6 @@ function renderWeather(data) {
 
     function enableMobilePeriods() {
       if (window.innerWidth >= 480) {
-        periodsDiv.onclick = null; // desativa clique em telas grandes
         periodsDiv.innerHTML = Object.entries(periods).map(([label, d]) => `
           <div class="period-box">
             <h3>${label}</h3>
@@ -237,28 +219,53 @@ function renderWeather(data) {
         return;
       }
 
-      const nowHour = new Date().getHours();
-      if (nowHour >= 0 && nowHour < 6) periodIndex = 0;
-      else if (nowHour >= 6 && nowHour < 12) periodIndex = 1;
-      else if (nowHour >= 12 && nowHour < 18) periodIndex = 2;
-      else periodIndex = 3;
+      const periodLabels = Object.keys(periods);
+      let periodIndex = 0;
+
+      function renderSinglePeriod() {
+        const label = periodLabels[periodIndex];
+        const d = periods[label];
+        return `
+          <div class="period-box" style="width:100%; text-align:center; position: relative;">
+            <h3>${label}</h3>
+            <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
+            <p>Prob.: ${d.prob}%</p>
+            <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
+
+            <button id="prev-period" style="position:absolute; left:5px; top:50%; transform:translateY(-50%);">◀️</button>
+            <button id="next-period" style="position:absolute; right:5px; top:50%; transform:translateY(-50%);">▶️</button>
+          </div>
+        `;
+      }
 
       periodsDiv.innerHTML = renderSinglePeriod();
 
-      periodsDiv.onclick = () => {
-        periodIndex = (periodIndex + 1) % periodLabels.length;
-        periodsDiv.innerHTML = renderSinglePeriod();
-      };
+      function attachButtons() {
+        const prevBtn = periodsDiv.querySelector("#prev-period");
+        const nextBtn = periodsDiv.querySelector("#next-period");
+
+        prevBtn.addEventListener("click", () => {
+          periodIndex = (periodIndex - 1 + periodLabels.length) % periodLabels.length;
+          periodsDiv.innerHTML = renderSinglePeriod();
+          attachButtons();
+        });
+
+        nextBtn.addEventListener("click", () => {
+          periodIndex = (periodIndex + 1) % periodLabels.length;
+          periodsDiv.innerHTML = renderSinglePeriod();
+          attachButtons();
+        });
+      }
+
+      attachButtons();
     }
 
     enableMobilePeriods();
-
     window.addEventListener("resize", enableMobilePeriods);
 
     container.appendChild(card);
   });
 }
-
 
 // --- Localização ---
 const currentLocationDiv=document.getElementById("current-location");
@@ -292,7 +299,7 @@ document.getElementById("search-button").addEventListener("click",()=>{searchLoc
 
 // --- Geolocalização ---
 if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-  currentLocationDiv.textContent = "📌 Localização padrão";
+  currentLocationDiv.textContent = "📌 Brasília, Distrito Federal, Brasil";
   fetchWeather();
 } else if(navigator.geolocation){
   navigator.geolocation.getCurrentPosition(async pos=>{
