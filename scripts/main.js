@@ -170,14 +170,15 @@ function renderWeather(data) {
     const por = formatHour(data.daily.sunset[index]);
 
     const periods = {
-      "00h até 6h": getPeriodData(data.hourly, 0, 5, day),
-      "6h até 12h": getPeriodData(data.hourly, 6, 11, day),
-      "12h até 18h": getPeriodData(data.hourly, 12, 17, day),
-      "18h até 00h": getPeriodData(data.hourly, 18, 23, day)
+      "Madrugada": getPeriodData(data.hourly, 0, 5, day),
+      "Manhã": getPeriodData(data.hourly, 6, 11, day),
+      "Tarde": getPeriodData(data.hourly, 12, 17, day),
+      "Noite": getPeriodData(data.hourly, 18, 23, day)
     };
 
     const humidity = getHumidity(data.hourly, day);
-    const dailyIndices = data.hourly.time.map((t, i) => ({ t, i })).filter(({ t }) => t.startsWith(day)).map(({ i }) => i);
+    const dailyIndices = data.hourly.time.map((t, i) => ({ t, i }))
+      .filter(({ t }) => t.startsWith(day)).map(({ i }) => i);
     let chuvaDia = 0;
     dailyIndices.forEach(i => { chuvaDia += data.hourly.precipitation[i]; });
 
@@ -210,18 +211,7 @@ function renderWeather(data) {
         <div class="badge uv">☀️ UV Máx: ${uvMax}</div>
       </div>
 
-      <div class="periods">
-        ${window.innerWidth < 480 ? renderSinglePeriod() :
-          Object.entries(periods).map(([label, d]) => `
-            <div class="period-box">
-              <h3>${label}</h3>
-              <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-              <p>Prob.: ${d.prob}%</p>
-              <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
-            </div>
-          `).join('')
-        }
-      </div>
+      <div class="periods"></div>
 
       <div class="extra-info extra-info-daily">
         <div class="badge rain">☔ Chuva acumulada: ${chuvaDia.toFixed(1)} mm</div>
@@ -234,7 +224,18 @@ function renderWeather(data) {
     const periodsDiv = card.querySelector(".periods");
 
     function enableMobilePeriods() {
-      if (window.innerWidth >= 480) return;
+      if (window.innerWidth >= 480) {
+        periodsDiv.onclick = null; // desativa clique em telas grandes
+        periodsDiv.innerHTML = Object.entries(periods).map(([label, d]) => `
+          <div class="period-box">
+            <h3>${label}</h3>
+            <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
+            <p>Prob.: ${d.prob}%</p>
+            <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
+          </div>
+        `).join('');
+        return;
+      }
 
       const nowHour = new Date().getHours();
       if (nowHour >= 0 && nowHour < 6) periodIndex = 0;
@@ -252,24 +253,12 @@ function renderWeather(data) {
 
     enableMobilePeriods();
 
-    window.addEventListener("resize", () => {
-      if (window.innerWidth >= 480) {
-        periodsDiv.innerHTML = Object.entries(periods).map(([label, d]) => `
-          <div class="period-box">
-            <h3>${label}</h3>
-            <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-            <p>Prob.: ${d.prob}%</p>
-            <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
-          </div>
-        `).join('');
-      } else {
-        enableMobilePeriods();
-      }
-    });
+    window.addEventListener("resize", enableMobilePeriods);
 
     container.appendChild(card);
   });
 }
+
 
 // --- Localização ---
 const currentLocationDiv=document.getElementById("current-location");
