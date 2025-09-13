@@ -191,6 +191,11 @@ body {
 /* Ajustes para smartphones pequenos (~411px) */
 /* ======================= */
 @media (max-width: 480px) {
+
+  body {
+    padding: 0px;
+  }
+
   #search-box {
     flex-direction: column;
     gap: 0.5rem;
@@ -227,6 +232,14 @@ body {
     font-size: 0.86rem;
   }
 
+  .weather-card {
+    padding: 1.5rem 0px;
+  }
+
+  .weather-card h2 {
+    margin-left: 1rem;
+  }
+
   .weather-card h2 span {
     font-size: 1rem;
   }
@@ -248,6 +261,11 @@ body {
 /* Ajustes para smartphones maiores (~412px a 768px) */
 /* ======================= */
 @media (min-width: 481px) and (max-width: 768px) {
+
+  body {
+    padding: 0px;
+  }
+
   #search-box input {
     width: 300px;
     max-width: 80%;
@@ -255,6 +273,15 @@ body {
   #search-box button {
     width: auto;
   }
+
+  .weather-card {
+    padding: 1.5rem 0px;
+  }
+
+  .weather-card h2 {
+    margin-left: 1rem;
+  }
+
   .periods {
     grid-template-columns: repeat(2, 1fr);
   }
