@@ -174,57 +174,26 @@ function renderWeather(data) {
 
     const periodsDiv = card.querySelector(".periods");
 
-    function enableMobilePeriods() {
-      if (window.innerWidth >= 480) {
-        periodsDiv.innerHTML = Object.entries(periods).map(([label, d]) => `
-          <div class="period-box">
-            <h3>${label}</h3>
-            <p>${d.chuva.toFixed(1)} mm (${d.prob}%)</p>
-            <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
-          </div>
-        `).join('');
-        return;
+    function enableGridPeriods() {
+      periodsDiv.innerHTML = Object.entries(periods).map(([label, d]) => `
+        <div class="period-box">
+          <h3>${label}</h3>
+          <p>${d.chuva.toFixed(1)} mm (${d.prob}%)</p>
+          <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
+        </div>
+      `).join('');
+
+      periodsDiv.style.display = "grid";
+      periodsDiv.style.gap = "10px";
+      if(window.innerWidth < 480){
+        periodsDiv.style.gridTemplateColumns = "repeat(2, 1fr)"; // 2x2 mobile
+      } else {
+        periodsDiv.style.gridTemplateColumns = "repeat(4, 1fr)"; // 4 colunas desktop
       }
-
-      const periodLabels = Object.keys(periods);
-      let periodIndex = 0;
-
-      function renderSinglePeriod() {
-        const label = periodLabels[periodIndex];
-        const d = periods[label];
-        return `
-          <div class="period-box" style="width:100%; text-align:center; position: relative;">
-            <h3>${label}</h3>
-            <p>${d.chuva.toFixed(1)} mm (${d.prob}%)</p>
-            <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
-
-            <button id="prev-period" style="position:absolute; left:5px; top:50%; transform:translateY(-50%);">◀️</button>
-            <button id="next-period" style="position:absolute; right:5px; top:50%; transform:translateY(-50%);">▶️</button>
-          </div>
-        `;
-      }
-
-      periodsDiv.innerHTML = renderSinglePeriod();
-
-      function attachButtons() {
-        const prevBtn = periodsDiv.querySelector("#prev-period");
-        const nextBtn = periodsDiv.querySelector("#next-period");
-        prevBtn.addEventListener("click", () => {
-          periodIndex = (periodIndex - 1 + periodLabels.length) % periodLabels.length;
-          periodsDiv.innerHTML = renderSinglePeriod();
-          attachButtons();
-        });
-        nextBtn.addEventListener("click", () => {
-          periodIndex = (periodIndex + 1) % periodLabels.length;
-          periodsDiv.innerHTML = renderSinglePeriod();
-          attachButtons();
-        });
-      }
-      attachButtons();
     }
 
-    enableMobilePeriods();
-    window.addEventListener("resize", enableMobilePeriods);
+    enableGridPeriods();
+    window.addEventListener("resize", enableGridPeriods);
     container.appendChild(card);
   });
 }
