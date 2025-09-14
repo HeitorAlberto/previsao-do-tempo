@@ -1,5 +1,5 @@
-let latitude = -15.7797;
-let longitude = -47.9297;
+let latitude = -9.6658;
+let longitude = -35.7353;
 let lastFetchedData = null;
 
 function getCityName(addr) {
@@ -9,18 +9,11 @@ function getCityName(addr) {
 function formatDate(dateStr) {
   const date = new Date(dateStr + "T00:00:00");
   const today = new Date();
-  const tomorrow = new Date();
-  tomorrow.setDate(today.getDate() + 1);
-
   const isToday = date.toDateString() === today.toDateString();
   const days = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
-  let dayName;
-  if (isToday) dayName = "Hoje";
-  else dayName = days[date.getDay()];
-
+  let dayName = isToday ? "Hoje" : days[date.getDay()];
   const dayNum = String(date.getDate()).padStart(2,'0');
   const monthNum = String(date.getMonth()+1).padStart(2,'0');
-  
   return `${dayName}, ${dayNum}/${monthNum}`;
 }
 
@@ -31,19 +24,10 @@ function formatHour(str) {
   return `${h}h${m}`;
 }
 
-const weatherDescriptions = {
-  0: "Céu limpo",1: "Poucas nuvens",2: "Muitas nuvens",3: "Nublado",
-  45: "Nevoeiro",48: "Nevoeiro congelado",51: "Chuvisco leve",53: "Chuvisco moderado",
-  55: "Chuvisco intenso",56: "Chuvisco congelado leve",57: "Chuvisco congelado intenso",
-  61: "Chuva fraca",63: "Chuva moderada",65: "Chuva forte",66: "Chuva congelada leve",
-  67: "Chuva congelada intensa",71: "Neve fraca",73: "Neve moderada",75: "Neve forte",
-  77: "Grãos de neve",80: "Chuva leve",81: "Chuva moderada",82: "Chuva forte",
-  85: "Neve leve",86: "Neve forte",95: "Tempestade",96: "Tempestade com granizo leve",
-  99: "Tempestade com granizo forte"
-};
-
 const currentParams = [
-  "cloud_cover","temperature_2m","relative_humidity_2m","apparent_temperature","is_day","snowfall","showers","rain","precipitation","weather_code","pressure_msl","surface_pressure","wind_gusts_10m","wind_direction_10m","wind_speed_10m"
+  "cloud_cover","temperature_2m","relative_humidity_2m","apparent_temperature","is_day",
+  "snowfall","showers","rain","precipitation","weather_code","pressure_msl","surface_pressure",
+  "wind_gusts_10m","wind_direction_10m","wind_speed_10m"
 ].join(",");
 
 const dailyParams = [
@@ -67,13 +51,10 @@ async function fetchWeather() {
 }
 
 function getPeriodData(hourly, start, end, dayDate) {
-  let chuva = 0, prob = 0, nuvens = 0;
-  let count = 0;
-
+  let chuva = 0, prob = 0, nuvens = 0, count = 0;
   hourly.time.forEach((t, i) => {
     const date = new Date(t);
     const hour = date.getHours();
-
     if (t.startsWith(dayDate) && hour >= start && hour <= end) {
       chuva += hourly.precipitation[i];
       prob = Math.max(prob, hourly.precipitation_probability[i]);
@@ -81,25 +62,19 @@ function getPeriodData(hourly, start, end, dayDate) {
       count++;
     }
   });
-
   if (count === 0) return { chuva: 0, prob: 0, nuvens: 0 };
-
   return { chuva, prob: Math.round(prob), nuvens: Math.round(nuvens / count) };
 }
 
 function getHumidity(hourly, dayDate) {
   const indices = hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(dayDate)).map(({i})=>i);
-  
   if(indices.length===0) return {min:0,max:0};
-  
   let minH=100,maxH=0;
-  
   indices.forEach(i=>{
     const h=hourly.relative_humidity_2m[i];
     if(h<minH) minH=h;
     if(h>maxH) maxH=h;
   });
-  
   return {min: Math.round(minH), max: Math.round(maxH)};
 }
 
@@ -114,17 +89,11 @@ function formatClouds(nuvens) {
 function renderCurrentWeather(data) {
   const current = data.current;
   const now = new Date();
-  let index = 0;
-  let minDiff = Infinity;
-
+  let index = 0, minDiff = Infinity;
   data.hourly.time.forEach((t, i) => {
     const diff = Math.abs(new Date(t) - now);
-    if (diff < minDiff) {
-      minDiff = diff;
-      index = i;
-    }
+    if (diff < minDiff) { minDiff = diff; index = i; }
   });
-
   const temp = Math.round(current.temperature_2m);
   const appTemp = Math.round(current.apparent_temperature);
   const humidity = Math.round(current.relative_humidity_2m);
@@ -143,8 +112,7 @@ function renderCurrentWeather(data) {
       <div class="badge feels">🌡️ Sensação: ${appTemp}°</div>
       <div class="badge humidity">💧 Umidade: ${humidity}%</div>
       <div class="badge clouds">☁️ <span title="${nuvens}%">${formatClouds(nuvens)}</span></div>
-      <div class="badge rain">☔ Chuva: ${chuva} mm</div>
-      <div class="badge rain">☔ Probabilidade: ${prob}%</div>
+      <div class="badge rain">☔ ${chuva} mm (${prob}%)</div>
       <div class="badge wind">🍃 Vento: ${vento} km/h</div>
       <div class="badge wind">🍃 Rajada: ${rajada} km/h</div>
     </div>
@@ -197,7 +165,7 @@ function renderWeather(data) {
       <div class="periods"></div>
 
       <div class="extra-info extra-info-daily">
-        <div class="badge rain">☔ Chuva acumulada: ${chuvaDia.toFixed(1)} mm</div>
+        <div class="badge rain">☔ Chuva total: ${chuvaDia.toFixed(1)} mm</div>
         <div class="badge wind">🍃 Ventos: ${vento} km/h</div>
         <div class="badge wind">🍃 Rajadas: ${rajada} km/h</div>
         <div class="badge uv">☀️ ${nascer} até ${por}</div>
@@ -211,8 +179,7 @@ function renderWeather(data) {
         periodsDiv.innerHTML = Object.entries(periods).map(([label, d]) => `
           <div class="period-box">
             <h3>${label}</h3>
-            <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-            <p>Prob.: ${d.prob}%</p>
+            <p>${d.chuva.toFixed(1)} mm (${d.prob}%)</p>
             <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
           </div>
         `).join('');
@@ -228,8 +195,7 @@ function renderWeather(data) {
         return `
           <div class="period-box" style="width:100%; text-align:center; position: relative;">
             <h3>${label}</h3>
-            <p>Chuva: ${d.chuva.toFixed(1)} mm</p>
-            <p>Prob.: ${d.prob}%</p>
+            <p>${d.chuva.toFixed(1)} mm (${d.prob}%)</p>
             <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
 
             <button id="prev-period" style="position:absolute; left:5px; top:50%; transform:translateY(-50%);">◀️</button>
@@ -243,46 +209,41 @@ function renderWeather(data) {
       function attachButtons() {
         const prevBtn = periodsDiv.querySelector("#prev-period");
         const nextBtn = periodsDiv.querySelector("#next-period");
-
         prevBtn.addEventListener("click", () => {
           periodIndex = (periodIndex - 1 + periodLabels.length) % periodLabels.length;
           periodsDiv.innerHTML = renderSinglePeriod();
           attachButtons();
         });
-
         nextBtn.addEventListener("click", () => {
           periodIndex = (periodIndex + 1) % periodLabels.length;
           periodsDiv.innerHTML = renderSinglePeriod();
           attachButtons();
         });
       }
-
       attachButtons();
     }
 
     enableMobilePeriods();
     window.addEventListener("resize", enableMobilePeriods);
-
     container.appendChild(card);
   });
 }
 
 // --- Localização ---
-const currentLocationDiv=document.getElementById("current-location");
+const currentLocationDiv = document.getElementById("current-location");
 
 async function searchLocation(query) {
   try {
-    const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${query}`);
-    const data=await res.json();
-    
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${query}`);
+    const data = await res.json();
     if(data && data.length>0){
-      latitude=parseFloat(data[0].lat);
-      longitude=parseFloat(data[0].lon);
-      const addr=data[0].address;
-      const city=getCityName(addr);
-      const state=addr.state||"";
-      const country=addr.country||"";
-      currentLocationDiv.textContent=`📌 ${city}${city&&state?", ":""}${state}${(city||state)&&country?", ":""}${country}`;
+      latitude = parseFloat(data[0].lat);
+      longitude = parseFloat(data[0].lon);
+      const addr = data[0].address;
+      const city = getCityName(addr);
+      const state = addr.state||"";
+      const country = addr.country||"";
+      currentLocationDiv.textContent = `📌 ${city}${city&&state?", ":""}${state}${(city||state)&&country?", ":""}${country}`;
       fetchWeather();
     } else { 
       alert("Localização não encontrada!"); 
@@ -293,27 +254,27 @@ async function searchLocation(query) {
   }
 }
 
-const input=document.getElementById("location-input");
+const input = document.getElementById("location-input");
 input.addEventListener("keydown",(e)=>{if(e.key==="Enter") searchLocation(input.value);});
 document.getElementById("search-button").addEventListener("click",()=>{searchLocation(input.value);});
 
 // --- Geolocalização ---
 if(location.hostname === "localhost" || location.hostname === "127.0.0.1") {
-  currentLocationDiv.textContent = "📌 Brasília, Distrito Federal, Brasil";
+  currentLocationDiv.textContent = "📌 Maceió, Alagoas, Brasil";
   fetchWeather();
 } else if(navigator.geolocation){
   navigator.geolocation.getCurrentPosition(async pos=>{
-    latitude=pos.coords.latitude;
-    longitude=pos.coords.longitude;
+    latitude = pos.coords.latitude;
+    longitude = pos.coords.longitude;
     try {
-      const res=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
-      const data=await res.json();
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`);
+      const data = await res.json();
       if(data && data.address){
-        const addr=data.address;
-        const city=getCityName(addr);
-        const state=addr.state||"";
-        const country=addr.country||"";
-        currentLocationDiv.textContent=`📌 ${city}${city&&state?", ":""}${state}${(city||state)&&country?", ":""}${country}`;
+        const addr = data.address;
+        const city = getCityName(addr);
+        const state = addr.state||"";
+        const country = addr.country||"";
+        currentLocationDiv.textContent = `📌 ${city}${city&&state?", ":""}${state}${(city||state)&&country?", ":""}${country}`;
       }
     } catch {
       currentLocationDiv.textContent = "📌 Localização desconhecida";
