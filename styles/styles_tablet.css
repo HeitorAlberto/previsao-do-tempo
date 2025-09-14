@@ -1,0 +1,17 @@
+@media (min-width: 480px) and (max-width: 843px) {
+  body { padding: 0; }
+
+  #search-box input { width: 300px; max-width: 80%; }
+  #search-box button { width: auto; }
+
+  .weather-card { padding: 1.5rem 0; }
+  .weather-card h2 { text-align: center; }
+
+  /* Grid de períodos no tablet: 4 colunas */
+  .periods { grid-template-columns: repeat(4, 1fr); }
+
+  .period-box { font-size: 0.95rem; }
+  .weather-info { display: grid; grid-template-columns: 1fr 1fr; }
+  #weather-info-now { display: grid; grid-template-columns: 1fr 1fr; }
+  .extra-info-daily { display: grid; grid-template-columns: 1fr 1fr; }
+}
