@@ -136,6 +136,7 @@ function renderWeather(data) {
     const rajada = Math.round(data.daily.wind_gusts_10m_max[index]);
     const nascer = formatHour(data.daily.sunrise[index]);
     const por = formatHour(data.daily.sunset[index]);
+    const probDia = Math.round(data.daily.precipitation_probability_max[index]);
 
     const periods = {
       "Madrugada": getPeriodData(data.hourly, 0, 5, day),
@@ -157,15 +158,15 @@ function renderWeather(data) {
       <h2>${formatDate(day)}</h2>
       <div class="weather-info weather-info-daily">
         <div class="badge temp">🌡️ Temperatura: ${tempMin}° a ${tempMax}°</div>
-        <div class="badge feels">🌡️ Sensação: ${appMin}° a ${appMax}°</div>
-        <div class="badge humidity">💧 Umidade: ${humidity.min}% a ${humidity.max}%</div>
+        <div class="badge rain">☔ Chuva total: ${chuvaDia.toFixed(1)} mm</div>
+        <div class="badge rain-prob">☔ Probabilidade: ${probDia}%</div>
         <div class="badge uv">☀️ UV Máx: ${uvMax}</div>
       </div>
 
       <div class="periods"></div>
 
       <div class="extra-info extra-info-daily">
-        <div class="badge rain">☔ Chuva total: ${chuvaDia.toFixed(1)} mm</div>
+        <div class="badge humidity">💧 Umidade: ${humidity.min}% a ${humidity.max}%</div>
         <div class="badge wind">🍃 Ventos: ${vento} km/h</div>
         <div class="badge wind">🍃 Rajadas: ${rajada} km/h</div>
         <div class="badge uv">☀️ ${nascer} até ${por}</div>
@@ -178,7 +179,7 @@ function renderWeather(data) {
       periodsDiv.innerHTML = Object.entries(periods).map(([label, d]) => `
         <div class="period-box">
           <h3>${label}</h3>
-          <p>${d.chuva.toFixed(1)} mm (${d.prob}%)</p>
+          <p>${d.chuva.toFixed(1)} mm</p>
           <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
         </div>
       `).join('');
