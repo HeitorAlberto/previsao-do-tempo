@@ -123,7 +123,8 @@ div {
 .badge.rain { background: #bae6fd;}
 .badge.wind { background: #bbf7d0;}
 .badge.uv { background: #fef9c3; }
-.badge.rain-prob { background: #bae6fd;}
+
+#span-prob {color: #6b7280; margin-left: 4px;}
 
 /* ======================= */
 /* Grid padrão (desktop)   */

@@ -112,7 +112,7 @@ function renderCurrentWeather(data) {
       <div class="badge feels">🌡️ Sensação: ${appTemp}°</div>
       <div class="badge humidity">💧 Umidade: ${humidity}%</div>
       <div class="badge clouds">☁️ <span title="${nuvens}%">${formatClouds(nuvens)}</span></div>
-      <div class="badge rain">☔ ${chuva} mm (${prob}%)</div>
+      <div class="badge rain">☔ ${chuva} mm <span id = "span-prob">${prob}%</span></div>
       <div class="badge wind">🍃 Vento: ${vento} km/h</div>
       <div class="badge wind">🍃 Rajada: ${rajada} km/h</div>
     </div>
@@ -158,8 +158,7 @@ function renderWeather(data) {
       <h2>${formatDate(day)}</h2>
       <div class="weather-info weather-info-daily">
         <div class="badge temp">🌡️ Temperatura: ${tempMin}° a ${tempMax}°</div>
-        <div class="badge rain">☔ Chuva total: ${chuvaDia.toFixed(1)} mm</div>
-        <div class="badge rain-prob">☔ Probabilidade: ${probDia}%</div>
+        <div class="badge rain">☔ Chuva total: ${chuvaDia.toFixed(1)} mm <span id = "span-prob">${probDia}%</span></div>
         <div class="badge uv">☀️ UV Máx: ${uvMax}</div>
       </div>
 
