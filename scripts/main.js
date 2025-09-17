@@ -113,8 +113,8 @@ function renderCurrentWeather(data) {
       <div class="badge humidity">💧 Umidade: ${humidity}%</div>
       <div class="badge clouds">☁️ <span title="${nuvens}%">${formatClouds(nuvens)}</span></div>
       <div class="badge rain">☔ ${chuva} mm <span id = "span-prob">${prob}%</span></div>
-      <div class="badge wind">🍃 Vento: ${vento} km/h</div>
-      <div class="badge wind">🍃 Rajada: ${rajada} km/h</div>
+      <div class="badge wind">🍃 Ventos: ${vento} km/h</div>
+      <div class="badge wind">🍃 Rajadas: ${rajada} km/h</div>
     </div>
   `;
   document.getElementById("weather-container").appendChild(card);
