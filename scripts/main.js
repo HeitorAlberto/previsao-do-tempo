@@ -157,7 +157,7 @@ function renderWeather(data) {
     card.innerHTML = `
       <h2>${formatDate(day)}</h2>
       <div class="weather-info weather-info-daily">
-        <div class="badge temp">🌡️ Temperatura: ${tempMin}° a ${tempMax}°</div>
+        <div class="badge temp">🌡️ Temperatura: ${tempMin}° até ${tempMax}°</div>
         <div class="badge rain">☔ Chuva total: ${chuvaDia.toFixed(1)} mm <span id = "span-prob">${probDia}%</span></div>
         <div class="badge uv">☀️ UV Máx: ${uvMax}</div>
       </div>
