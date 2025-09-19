@@ -150,10 +150,10 @@ async function fetchWeather(lat, lon, locationName = "Maceió, AL, Brasil") {
 
                  <div class="info"><div class="texto">Sol</div><div class="dados">${sunrise} a ${sunset}</div></div>
 
-                <div class="info"><div class="texto">Madrugada</div><div class="dados">${periodCloudDescription("madrugada")} - ${periodRain("madrugada")}</div></div>
-                <div class="info"><div class="texto">Manhã</div><div class="dados">${periodCloudDescription("manha")} - ${periodRain("manha")}</div></div>
-                <div class="info"><div class="texto">Tarde</div><div class="dados">${periodCloudDescription("tarde")} - ${periodRain("tarde")}</div></div>
-                <div class="info"><div class="texto">Noite</div><div class="dados">${periodCloudDescription("noite")} - ${periodRain("noite")}</div></div>
+                <div class="info"><div class="texto">Madrugada</div><div class="dados">${periodCloudDescription("madrugada")} (${periodRain("madrugada")})</div></div>
+                <div class="info"><div class="texto">Manhã</div><div class="dados">${periodCloudDescription("manha")} (${periodRain("manha")})</div></div>
+                <div class="info"><div class="texto">Tarde</div><div class="dados">${periodCloudDescription("tarde")} (${periodRain("tarde")})</div></div>
+                <div class="info"><div class="texto">Noite</div><div class="dados">${periodCloudDescription("noite")} (${periodRain("noite")})</div></div>
 
             `;
             container.appendChild(card);
