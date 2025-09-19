@@ -17,11 +17,17 @@ function formatDate(dateStr) {
   return `${dayName}, ${dayNum}/${monthNum}`;
 }
 
-function formatHour(str) {
-  const d = new Date(str);
-  const h = String(d.getHours()).padStart(2,'0');
-  const m = String(d.getMinutes()).padStart(2,'0');
+// --- Função para hora local do card "Agora" ---
+function formatHourLocal(date = new Date()) {
+  const h = String(date.getHours()).padStart(2, "0");
+  const m = String(date.getMinutes()).padStart(2, "0");
   return `${h}h${m}`;
+}
+
+// --- Função para pegar só a hora (HHh) das previsões ---
+function getHourOnly(str) {
+  const d = new Date(str);
+  return d.getHours() + "h";
 }
 
 const currentParams = [
@@ -50,22 +56,6 @@ async function fetchWeather() {
   renderWeather(data);
 }
 
-function getPeriodData(hourly, start, end, dayDate) {
-  let chuva = 0, prob = 0, nuvens = 0, count = 0;
-  hourly.time.forEach((t, i) => {
-    const date = new Date(t);
-    const hour = date.getHours();
-    if (t.startsWith(dayDate) && hour >= start && hour <= end) {
-      chuva += hourly.precipitation[i];
-      prob = Math.max(prob, hourly.precipitation_probability[i]);
-      nuvens += hourly.cloud_cover[i];
-      count++;
-    }
-  });
-  if (count === 0) return { chuva: 0, prob: 0, nuvens: 0 };
-  return { chuva, prob: Math.round(prob), nuvens: Math.round(nuvens / count) };
-}
-
 function getHumidity(hourly, dayDate) {
   const indices = hourly.time.map((t,i)=>({t,i})).filter(({t})=>t.startsWith(dayDate)).map(({i})=>i);
   if(indices.length===0) return {min:0,max:0};
@@ -81,8 +71,8 @@ function getHumidity(hourly, dayDate) {
 function formatClouds(nuvens) {
   if (nuvens < 20) return "Céu limpo";
   if (nuvens < 55) return "Algumas nuvens";
-  if (nuvens < 75) return "Muitas nuvens";
-  return "Nublado";
+  if (nuvens < 75) return "Nublado";
+  return "Muitas nuvens";
 }
 
 // --- Render atual ---
@@ -108,11 +98,12 @@ function renderCurrentWeather(data) {
   card.innerHTML = `
     <h2>Agora</h2>
     <div class="weather-info" id="weather-info-now">
+      <div class="badge time">⌚ ${formatHourLocal()}</div>
       <div class="badge temp">🌡️ Temperatura: ${temp}°</div>
       <div class="badge feels">🌡️ Sensação: ${appTemp}°</div>
       <div class="badge humidity">💧 Umidade: ${humidity}%</div>
-      <div class="badge clouds">☁️ <span title="${nuvens}%">${formatClouds(nuvens)}</span></div>
-      <div class="badge rain">☔ ${chuva} mm <span id = "span-prob">${prob}%</span></div>
+      <div class="badge clouds">${formatClouds(nuvens)} <span title="${nuvens}%">${nuvens}%</span></div>
+      <div class="badge rain">☔ ${chuva} mm <span id="span-prob">${prob}%</span></div>
       <div class="badge wind">🍃 Ventos: ${vento} km/h</div>
       <div class="badge wind">🍃 Rajadas: ${rajada} km/h</div>
     </div>
@@ -129,21 +120,12 @@ function renderWeather(data) {
   data.daily.time.forEach((day, index) => {
     const tempMin = Math.round(data.daily.temperature_2m_min[index]);
     const tempMax = Math.round(data.daily.temperature_2m_max[index]);
-    const appMin = Math.round(data.daily.apparent_temperature_min[index]);
-    const appMax = Math.round(data.daily.apparent_temperature_max[index]);
     const uvMax = Math.round(data.daily.uv_index_max[index]);
     const vento = Math.round(data.daily.wind_speed_10m_max[index]);
     const rajada = Math.round(data.daily.wind_gusts_10m_max[index]);
-    const nascer = formatHour(data.daily.sunrise[index]);
-    const por = formatHour(data.daily.sunset[index]);
+    const nascer = getHourOnly(data.daily.sunrise[index]);
+    const por = getHourOnly(data.daily.sunset[index]);
     const probDia = Math.round(data.daily.precipitation_probability_max[index]);
-
-    const periods = {
-      "Madrugada": getPeriodData(data.hourly, 0, 5, day),
-      "Manhã": getPeriodData(data.hourly, 6, 11, day),
-      "Tarde": getPeriodData(data.hourly, 12, 17, day),
-      "Noite": getPeriodData(data.hourly, 18, 23, day)
-    };
 
     const humidity = getHumidity(data.hourly, day);
     const dailyIndices = data.hourly.time.map((t, i) => ({ t, i }))
@@ -158,11 +140,11 @@ function renderWeather(data) {
       <h2>${formatDate(day)}</h2>
       <div class="weather-info weather-info-daily">
         <div class="badge temp">🌡️ Temperatura: ${tempMin}° até ${tempMax}°</div>
-        <div class="badge rain">☔ Chuva total: ${chuvaDia.toFixed(1)} mm <span id = "span-prob">${probDia}%</span></div>
+        <div class="badge rain">☔ Chuva total: ${chuvaDia.toFixed(1)} mm <span id="span-prob">${probDia}%</span></div>
         <div class="badge uv">☀️ UV Máx: ${uvMax}</div>
       </div>
 
-      <div class="periods"></div>
+      <div class="hourly-carousel"></div>
 
       <div class="extra-info extra-info-daily">
         <div class="badge humidity">💧 Umidade: ${humidity.min}% a ${humidity.max}%</div>
@@ -172,29 +154,77 @@ function renderWeather(data) {
       </div>
     `;
 
-    const periodsDiv = card.querySelector(".periods");
+    const hourlyDiv = card.querySelector(".hourly-carousel");
 
-    function enableGridPeriods() {
-      periodsDiv.innerHTML = Object.entries(periods).map(([label, d]) => `
-        <div class="period-box">
-          <h3>${label}</h3>
-          <p>${d.chuva.toFixed(1)} mm</p>
-          <p><span title="${d.nuvens}%">${formatClouds(d.nuvens)}</span></p>
-        </div>
-      `).join('');
+    const now = new Date();
+    const currentHourIndex = dailyIndices.findIndex(i => {
+      const hour = new Date(data.hourly.time[i]).getHours();
+      return hour === now.getHours();
+    });
 
-      periodsDiv.style.display = "grid";
-      periodsDiv.style.gap = "10px";
-      if(window.innerWidth < 480){
-        periodsDiv.style.gridTemplateColumns = "repeat(2, 1fr)"; // 2x2 mobile
-      } else {
-        periodsDiv.style.gridTemplateColumns = "repeat(4, 1fr)"; // 4 colunas desktop
-      }
-    }
+    dailyIndices.forEach((i, idx) => {
+      let hour = getHourOnly(data.hourly.time[i]);
+      if (idx === currentHourIndex) hour += " (Agora)";
 
-    enableGridPeriods();
-    window.addEventListener("resize", enableGridPeriods);
+      const temp = Math.round(data.hourly.temperature_2m[i]);
+      const prob = data.hourly.precipitation_probability[i];
+      const nuvens = data.hourly.cloud_cover[i];
+
+      const hourBox = document.createElement("div");
+      hourBox.className = "hour-box";
+      hourBox.innerHTML = `
+        <div class="hour-time">${hour}</div>
+        <div class="hour-icon">${formatClouds(nuvens)}</div>
+        <div class="hour-temp">${temp}°C</div>
+        <div class="hour-rain">☔ ${prob}%</div>
+      `;
+      hourlyDiv.appendChild(hourBox);
+    });
+
     container.appendChild(card);
+
+    if (currentHourIndex >= 0) {
+      const boxWidth = hourlyDiv.querySelector(".hour-box")?.offsetWidth || 50;
+      hourlyDiv.scrollLeft = boxWidth * currentHourIndex;
+    }
+  });
+
+  enableDragScroll();
+}
+
+// --- Drag-scroll ---
+function enableDragScroll() {
+  document.querySelectorAll(".hourly-carousel").forEach(carousel => {
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    carousel.addEventListener("mousedown", e => {
+      isDown = true;
+      startX = e.pageX - carousel.offsetLeft;
+      scrollLeft = carousel.scrollLeft;
+      carousel.style.cursor = "grabbing";
+    });
+
+    carousel.addEventListener("mouseleave", () => {
+      isDown = false;
+      carousel.style.cursor = "grab";
+    });
+
+    carousel.addEventListener("mouseup", () => {
+      isDown = false;
+      carousel.style.cursor = "grab";
+    });
+
+    carousel.addEventListener("mousemove", e => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - carousel.offsetLeft;
+      const walk = (x - startX) * 1.2;
+      carousel.scrollLeft = scrollLeft - walk;
+    });
+
+    carousel.style.cursor = "grab";
   });
 }
 

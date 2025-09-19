@@ -107,6 +107,58 @@ div {
 }
 
 /* ======================= */
+/* Carrossel horários      */
+/* ======================= */
+.hourly-carousel {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 10px;
+  overflow-x: auto;
+  padding: 0.5rem 0;
+  scrollbar-width: none;      /* Firefox */
+}
+
+.hourly-carousel::-webkit-scrollbar {
+  display: none;              /* Chrome, Safari */
+}
+
+.hour-box {
+  width: 150px;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px;
+  flex-shrink: 0;
+  border: 1px solid #d1d5db;
+  box-shadow: 0 2px 6px rgba(0,0,0,.1);
+}
+
+.hour-time {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.hour-icon {
+  font-size: 1rem;
+  margin: 8px 0;
+}
+
+.hour-temp {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #000000;
+  margin: 8px 0;
+}
+
+.hour-rain {
+  font-size: 0.9rem;
+  color: #000000;
+}
+
+
+
+/* ======================= */
 /* Badges                  */
 /* ======================= */
 .badge {
@@ -127,33 +179,8 @@ div {
 #span-prob {color: #6b7280; margin-left: 4px;}
 
 /* ======================= */
-/* Grid padrão (desktop)   */
+/* Layout infos            */
 /* ======================= */
-.periods {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-.period-box {
-  border: 1px solid #d1d5db;
-  padding: .75rem;
-  background: #f9fafb;
-  text-align: center;
-  line-height: 1.6rem;
-  word-wrap: break-word;
-  hyphens: auto;
-  cursor: default;
-}
-
-.period-box h3 {
-  font-weight: 600;
-  margin-bottom: .25rem;
-}
-
-.period-box small { display: none; }
-
 .weather-info {
   display: flex;
   flex-wrap: wrap;
