@@ -168,6 +168,7 @@ function renderWeather(data) {
 
       const temp = Math.round(data.hourly.temperature_2m[i]);
       const prob = data.hourly.precipitation_probability[i];
+      const chuvaHora = data.hourly.precipitation[i].toFixed(1);
       const nuvens = data.hourly.cloud_cover[i];
 
       const hourBox = document.createElement("div");
@@ -176,7 +177,7 @@ function renderWeather(data) {
         <div class="hour-time">${hour}</div>
         <div class="hour-icon">${formatClouds(nuvens)}</div>
         <div class="hour-temp">${temp}°C</div>
-        <div class="hour-rain">☔ ${prob}%</div>
+        <div class="hour-rain">☔ ${chuvaHora}mm (${prob}%)</div>
       `;
       hourlyDiv.appendChild(hourBox);
     });
