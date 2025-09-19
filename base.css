@@ -1,0 +1,103 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  font-family: sans-serif;
+}
+
+/* Barra de busca */
+.top-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.search-box input {
+  padding: 8px;
+  width: 250px;
+}
+
+.search-box button {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+#location-display {
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Container dos cards */
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Estilo do card */
+.cards-dia-a-dia {
+  border: 1px solid #000;
+  padding: 15px;
+  width: 320px; /* largura padrão */
+  padding-bottom: 0;
+}
+
+.cards-dia-a-dia div {
+  margin-bottom: 10px;
+}
+
+/* Layout interno do card */
+.info {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px 0;
+}
+
+.dados {
+  color: #4a4a4a;
+}
+
+/* Responsivo: celulares e tablets */
+@media (max-width: 899px) {
+  .cards-dia-a-dia {
+    width: 100%;
+  }
+
+  .search-box {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top-bar {
+    display:flex;
+    flex-direction: column;
+  }
+}
+
+
+/* Desktop grande: 3 cards lado a lado */
+@media (min-width: 1200px) {
+  .cards-dia-a-dia {
+    width: 30%;
+  }
+}

@@ -4,43 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Previsão do Tempo</title>
-  <link rel="icon" href="img/favicon.ico" type="image/x-icon">
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-
-  <!-- CSS Base -->
-  <link rel="stylesheet" href="styles/styles_base.css">
-
-  <!-- CSS Mobile (<480px) -->
-  <link rel="stylesheet" href="styles/styles_mobile.css">
-
-  <!-- CSS Tablet (480px a 767px) -->
-  <link rel="stylesheet" href="styles/styles_tablet.css">
-
+  <link rel="stylesheet" href="base.css">
 </head>
 <body>
-  
-  <!-- Caixa de busca -->
-  <div id="search-box">
-    <div>
-      <input id="location-input" type="text" placeholder="Digite uma cidade" />
-      <button id="search-button">Buscar</button>
+  <div class="top-bar">
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Digite uma cidade...">
+      <button id="search-btn">Buscar</button>
+      <button id="loc-btn">📍 Usar minha localização</button>
     </div>
+    <div id="location-display"></div>
   </div>
 
-  <!-- Localização -->
-  <div id="location-info">
-    <div id="current-location"></div>
-    <div id="open-meteo-reference">
-      Dados meteorológicos fornecidos por 
-      <a href="https://open-meteo.com/" target="_blank">Open-Meteo</a>
-    </div>
-  </div>
+  <div class="cards-container" id="cards-container"></div>
 
-  <div id="weather-container"></div>
-
-
-  <script type="module" src="./scripts/main.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
