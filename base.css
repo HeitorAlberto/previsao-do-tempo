@@ -60,7 +60,7 @@ body {
 
 /* Estilo do card */
 .cards-dia-a-dia {
-  border: 1px solid #000;
+  background-color: #fff0db;
   padding: 15px;
   width: 320px; /* largura padrão */
   padding-bottom: 0;
@@ -69,6 +69,7 @@ body {
 .cards-dia-a-dia div {
   margin-bottom: 10px;
 }
+
 
 .cards-dia-a-dia .dia {
   margin-bottom: 15px;
