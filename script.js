@@ -1,5 +1,34 @@
 const DEFAULT_COORDS = { lat: -9.6658, lon: -35.7353 }; // Maceió, AL
 
+// Função para obter coordenadas pelo nome da cidade usando Nominatim
+async function getCoordinates(city) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`;
+
+    try {
+        const res = await fetch(url, {
+            headers: {
+                "User-Agent": "SeuApp/1.0 (seuemail@dominio.com)",
+                "Accept-Language": "pt-BR"
+            }
+        });
+        const data = await res.json();
+        if (data && data.length > 0) {
+            const coords = data[0];
+            // Extrai apenas "Cidade, Estado" para exibição
+            const shortName = coords.display_name.split(',').slice(0,2).join(',');
+            return { lat: parseFloat(coords.lat), lon: parseFloat(coords.lon), name: shortName };
+        } else {
+            alert("Cidade não encontrada.");
+            return null;
+        }
+    } catch (err) {
+        console.error("Erro ao buscar coordenadas:", err);
+        alert("Erro ao buscar a cidade. Usando padrão (Maceió).");
+        return { lat: DEFAULT_COORDS.lat, lon: DEFAULT_COORDS.lon, name: "Maceió, AL, Brasil" };
+    }
+}
+
+// Função principal para buscar o clima
 async function fetchWeather(lat, lon, locationName = "Maceió, AL, Brasil") {
     const API_URL = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,cloud_cover&daily=sunrise,sunset&models=ecmwf_aifs025_single&timezone=auto&forecast_days=15`;
 
@@ -61,7 +90,7 @@ async function fetchWeather(lat, lon, locationName = "Maceió, AL, Brasil") {
         });
 
         const container = document.getElementById("cards-container");
-        container.innerHTML = ""; // limpa antes de renderizar
+        container.innerHTML = "";
 
         Object.keys(days).forEach(date => {
             const dayData = days[date];
@@ -91,7 +120,7 @@ async function fetchWeather(lat, lon, locationName = "Maceió, AL, Brasil") {
 
                 if (pctSunny > 0.5) return "Ensolarado";
                 if (pctCloudy > 0.5) return "Nublado";
-                if (pctPartly > 0.5) return "Parcialmente nublado";
+                if (pctPartly > 0.5) return "Muitas nuvens";
                 if (pctSunny >= 0.3 && pctPartly >= 0.3) return "Sol com nuvens";
                 if (pctPartly >= 0.3 && pctCloudy >= 0.3) return "Rápidas aberturas de sol";
                 return "Variável";
@@ -113,18 +142,19 @@ async function fetchWeather(lat, lon, locationName = "Maceió, AL, Brasil") {
             const card = document.createElement("div");
             card.className = "cards-dia-a-dia";
             card.innerHTML = `
-                <div class="dia"><h4>${formatDate(date)}</h4></div>
+                <div class="dia"><h2>${formatDate(date)}</h2></div>
                 <div class="info"><div class="texto">Temperatura</div><div class="dados">${minTemp}° a ${maxTemp}°</div></div>
                 <div class="info"><div class="texto">Umidade</div><div class="dados">${minHumidity}% a ${maxHumidity}%</div></div>
                 <div class="info"><div class="texto">Chuva total</div><div class="dados">${totalPrecipitation}mm</div></div>
                 <div class="info"><div class="texto">Vento</div><div class="dados">${avgWind} km/h</div></div>
+
+                 <div class="info"><div class="texto">Sol</div><div class="dados">${sunrise} a ${sunset}</div></div>
 
                 <div class="info"><div class="texto">Madrugada</div><div class="dados">${periodCloudDescription("madrugada")} - ${periodRain("madrugada")}</div></div>
                 <div class="info"><div class="texto">Manhã</div><div class="dados">${periodCloudDescription("manha")} - ${periodRain("manha")}</div></div>
                 <div class="info"><div class="texto">Tarde</div><div class="dados">${periodCloudDescription("tarde")} - ${periodRain("tarde")}</div></div>
                 <div class="info"><div class="texto">Noite</div><div class="dados">${periodCloudDescription("noite")} - ${periodRain("noite")}</div></div>
 
-                <div class="info"><div class="texto">Sol</div><div class="dados">${sunrise} a ${sunset}</div></div>
             `;
             container.appendChild(card);
         });
@@ -134,6 +164,7 @@ async function fetchWeather(lat, lon, locationName = "Maceió, AL, Brasil") {
     }
 }
 
+// Formata a data
 function formatDate(dateStr) {
     const parts = dateStr.split('-');
     const date = new Date(parts[0], parts[1]-1, parts[2]);
@@ -141,16 +172,13 @@ function formatDate(dateStr) {
 }
 
 // Eventos
-document.getElementById("search-btn").addEventListener("click", () => {
+document.getElementById("search-btn").addEventListener("click", async () => {
     const city = document.getElementById("search-input").value.trim();
     if (!city) return;
 
-    // Como Nominatim dá problema de CORS, deixamos fixo por enquanto
-    // Exemplo prático: se usuário digitar "Maceió"
-    if (city.toLowerCase().includes("maceio")) {
-        fetchWeather(-9.6658, -35.7353, "Maceió, AL, Brasil");
-    } else {
-        alert("Por enquanto, apenas 'Maceió' está disponível devido a restrição de CORS.");
+    const coords = await getCoordinates(city);
+    if (coords) {
+        fetchWeather(coords.lat, coords.lon, coords.name);
     }
 });
 

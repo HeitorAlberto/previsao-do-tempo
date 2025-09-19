@@ -1,3 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+
+
 * {
   padding: 0;
   margin: 0;
@@ -9,7 +13,7 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  font-family: sans-serif;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Barra de busca */
@@ -66,15 +70,18 @@ body {
   margin-bottom: 10px;
 }
 
+.cards-dia-a-dia .dia {
+  margin-bottom: 15px;
+}
+
 /* Layout interno do card */
 .info {
   display: flex;
   justify-content: space-between;
-  margin: 5px 0;
 }
 
 .dados {
-  color: #4a4a4a;
+  font-weight: bold;
 }
 
 /* Responsivo: celulares e tablets */
