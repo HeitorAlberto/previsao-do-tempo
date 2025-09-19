@@ -117,6 +117,9 @@ function renderWeather(data) {
   container.innerHTML = "";
   renderCurrentWeather(data);
 
+  const now = new Date();
+  const todayStr = now.toISOString().split("T")[0]; // yyyy-mm-dd
+
   data.daily.time.forEach((day, index) => {
     const tempMin = Math.round(data.daily.temperature_2m_min[index]);
     const tempMax = Math.round(data.daily.temperature_2m_max[index]);
@@ -156,15 +159,14 @@ function renderWeather(data) {
 
     const hourlyDiv = card.querySelector(".hourly-carousel");
 
-    const now = new Date();
-    const currentHourIndex = dailyIndices.findIndex(i => {
-      const hour = new Date(data.hourly.time[i]).getHours();
-      return hour === now.getHours();
-    });
+    const isToday = day === todayStr;
+    const currentHourIndex = isToday
+      ? dailyIndices.findIndex(i => new Date(data.hourly.time[i]).getHours() === now.getHours())
+      : -1;
 
     dailyIndices.forEach((i, idx) => {
       let hour = getHourOnly(data.hourly.time[i]);
-      if (idx === currentHourIndex) hour += " (Agora)";
+      if (isToday && idx === currentHourIndex) hour += " (Agora)";
 
       const temp = Math.round(data.hourly.temperature_2m[i]);
       const prob = data.hourly.precipitation_probability[i];
