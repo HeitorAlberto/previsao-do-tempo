@@ -118,11 +118,11 @@ async function fetchWeather(lat, lon, locationName = "Maceió, AL, Brasil") {
                 const pctPartly = partly / total;
                 const pctCloudy = cloudy / total;
 
-                if (pctSunny > 0.5) return "Ensolarado";
+                if (pctSunny > 0.5) return "Céu aberto";
                 if (pctCloudy > 0.5) return "Nublado";
                 if (pctPartly > 0.5) return "Muitas nuvens";
-                if (pctSunny >= 0.3 && pctPartly >= 0.3) return "Sol com nuvens";
-                if (pctPartly >= 0.3 && pctCloudy >= 0.3) return "Muitas nuvens";
+                if (pctSunny >= 0.3 && pctPartly >= 0.3) return "Nuvens esparsas";
+                if (pctPartly >= 0.3 && pctCloudy >= 0.3) return "Variação de nuvens";
                 return "Variável";
             };
 
