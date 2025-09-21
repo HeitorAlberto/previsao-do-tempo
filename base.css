@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 
 * {
   padding: 0;
@@ -7,7 +7,7 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: "Montserrat", sans-serif;
   background: #e0e0e0; /* laranja claro */
   display: flex;
   flex-direction: column;
@@ -43,7 +43,7 @@ body {
   padding: 10px 15px;
   border-radius: 8px;
   border: none;
-  background: #000000; /* laranja principal */
+  background: #000000; 
   color: white;
   font-weight: 600;
   cursor: pointer;
@@ -51,14 +51,14 @@ body {
 }
 
 .search-box button:hover {
-  background: #2c2c2c; /* laranja mais escuro */
+  background: #2c2c2c; 
 }
 
 #location-display {
   margin-top: 10px;
   font-size: 18px;
   font-weight: 600;
-  color: #000000; /* laranja escuro */
+  color: #000000; 
   display: flex;
   align-items: center;
   gap: 6px;
@@ -75,7 +75,7 @@ body {
 
 /* Card moderno */
 .cards-dia-a-dia {
-  background: #ffffff; /* amarelo muito suave */
+  background: #ffffff; 
   border-radius: 12px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.08);
   padding: 20px;
@@ -84,7 +84,7 @@ body {
 }
 
 .cards-dia-a-dia .dia h2 {
-  color: #f57c00; /* laranja médio */
+  color: #f57c00; 
   margin-bottom: 15px;
   text-transform: capitalize;
 }
@@ -111,12 +111,12 @@ body {
 
 .texto {
   font-weight: 500;
-  color: #000000; /* laranja escuro */
+  color: #000000; 
 }
 
 .dados {
   font-weight: 700;
-  color: #000000; /* laranja profundo */
+  color: #000000; 
 }
 
 /* Mobile */
