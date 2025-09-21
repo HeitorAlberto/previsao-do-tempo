@@ -1,7 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-
-
 * {
   padding: 0;
   margin: 0;
@@ -9,11 +7,12 @@
 }
 
 body {
+  font-family: 'Inter', sans-serif;
+  background: #e0e0e0; /* laranja claro */
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  font-family: 'Inter', sans-serif;
 }
 
 /* Barra de busca */
@@ -21,29 +20,45 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
   width: 100%;
+  max-width: 800px;
+  margin-bottom: 30px;
 }
 
 .search-box {
   display: flex;
   gap: 10px;
-  margin-bottom: 10px;
+  width: 100%;
 }
 
 .search-box input {
-  padding: 8px;
-  width: 250px;
+  flex: 1;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid #000000; /* laranja suave */
+  font-size: 16px;
 }
 
 .search-box button {
-  padding: 8px 12px;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  background: #000000; /* laranja principal */
+  color: white;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.3s;
+}
+
+.search-box button:hover {
+  background: #2c2c2c; /* laranja mais escuro */
 }
 
 #location-display {
-  font-size: 16px;
-  font-weight: bold;
+  margin-top: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #000000; /* laranja escuro */
   display: flex;
   align-items: center;
   gap: 6px;
@@ -52,60 +67,66 @@ body {
 /* Container dos cards */
 .cards-container {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
   gap: 20px;
   width: 100%;
+  max-width: 1200px;
 }
 
-/* Estilo do card */
+/* Card moderno */
 .cards-dia-a-dia {
-  background-color: #b7f9ff;
-  padding: 15px;
-  width: 320px; /* largura padrão */
-  padding-bottom: 0;
+  background: #ffffff; /* amarelo muito suave */
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  padding: 20px;
+  width: 100%;
+  overflow: hidden;
 }
 
-.cards-dia-a-dia div {
-  margin-bottom: 10px;
-}
-
-
-.cards-dia-a-dia .dia {
+.cards-dia-a-dia .dia h2 {
+  color: #f57c00; /* laranja médio */
   margin-bottom: 15px;
+  text-transform: capitalize;
 }
 
-/* Layout interno do card */
+/* Grid interno do card */
+.cards-dia-a-dia .content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.coluna-esquerda,
+.coluna-direita {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .info {
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.texto {
+  font-weight: 500;
+  color: #000000; /* laranja escuro */
 }
 
 .dados {
-  font-weight: bold;
+  font-weight: 700;
+  color: #000000; /* laranja profundo */
 }
 
-/* Responsivo: celulares e tablets */
-@media (max-width: 899px) {
-  .cards-dia-a-dia {
-    width: 100%;
+/* Mobile */
+@media (max-width: 700px) {
+  .cards-dia-a-dia .content {
+    grid-template-columns: 1fr; /* uma coluna no celular */
+    gap: 20px;
   }
 
   .search-box {
-    display: flex;
     flex-direction: column;
-  }
-
-  .top-bar {
-    display:flex;
-    flex-direction: column;
-  }
-}
-
-
-/* Desktop grande: 3 cards lado a lado */
-@media (min-width: 1200px) {
-  .cards-dia-a-dia {
-    width: 30%;
   }
 }

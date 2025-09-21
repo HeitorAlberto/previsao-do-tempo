@@ -3,7 +3,6 @@ const DEFAULT_COORDS = { lat: -9.6658, lon: -35.7353 }; // Maceió, AL
 // Função para obter coordenadas pelo nome da cidade usando Nominatim
 async function getCoordinates(city) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`;
-
     try {
         const res = await fetch(url, {
             headers: {
@@ -14,7 +13,6 @@ async function getCoordinates(city) {
         const data = await res.json();
         if (data && data.length > 0) {
             const coords = data[0];
-            // Extrai apenas "Cidade, Estado" para exibição
             const shortName = coords.display_name.split(',').slice(0,2).join(',');
             return { lat: parseFloat(coords.lat), lon: parseFloat(coords.lon), name: shortName };
         } else {
@@ -143,18 +141,23 @@ async function fetchWeather(lat, lon, locationName = "Maceió, AL, Brasil") {
             card.className = "cards-dia-a-dia";
             card.innerHTML = `
                 <div class="dia"><h2>${formatDate(date)}</h2></div>
-                <div class="info"><div class="texto">Temperatura</div><div class="dados">${minTemp}° a ${maxTemp}°</div></div>
-                <div class="info"><div class="texto">Umidade</div><div class="dados">${minHumidity}% a ${maxHumidity}%</div></div>
-                <div class="info"><div class="texto">Chuva total</div><div class="dados">${totalPrecipitation}mm</div></div>
-                <div class="info"><div class="texto">Vento</div><div class="dados">${avgWind} km/h</div></div>
-
-                 <div class="info"><div class="texto">Sol</div><div class="dados">${sunrise} a ${sunset}</div></div>
-
-                <div class="info"><div class="texto">Madrugada</div><div class="dados">${periodCloudDescription("madrugada")} (${periodRain("madrugada")})</div></div>
-                <div class="info"><div class="texto">Manhã</div><div class="dados">${periodCloudDescription("manha")} (${periodRain("manha")})</div></div>
-                <div class="info"><div class="texto">Tarde</div><div class="dados">${periodCloudDescription("tarde")} (${periodRain("tarde")})</div></div>
-                <div class="info"><div class="texto">Noite</div><div class="dados">${periodCloudDescription("noite")} (${periodRain("noite")})</div></div>
-
+                <div class="content">
+                    <div class="coluna-esquerda">
+                        <div class="info"><div class="texto">Temperatura</div><div class="dados">${minTemp}° a ${maxTemp}°</div></div>
+                        <div class="info"><div class="texto">Umidade</div><div class="dados">${minHumidity}% a ${maxHumidity}%</div></div>
+                        <div class="info"><div class="texto">Chuva total</div><div class="dados">${totalPrecipitation}mm</div></div>
+                        <div class="info"><div class="texto">Vento</div><div class="dados">${avgWind} km/h</div></div>
+                        <div class="info"><div class="texto">Sol</div><div class="dados">${sunrise} a ${sunset}</div></div>
+                    </div>
+                    <div class="coluna-direita">
+                        ${["madrugada","manha","tarde","noite"].map(period => `
+                            <div class="info">
+                                <div class="texto">${capitalize(period)}</div>
+                                <div class="dados">${periodCloudDescription(period)} • ${periodRain(period)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
             `;
             container.appendChild(card);
         });
@@ -169,6 +172,11 @@ function formatDate(dateStr) {
     const parts = dateStr.split('-');
     const date = new Date(parts[0], parts[1]-1, parts[2]);
     return date.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" });
+}
+
+// Capitaliza a primeira letra
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 // Eventos
