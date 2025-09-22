@@ -191,7 +191,7 @@ function createCard(day, tempMin, tempMax, precipitation, windSpeed, windGusts, 
   card.appendChild(dateEl);
 
   const row1 = document.createElement("div"); row1.className="metrics-row";
-  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-min", textContent:`🌡️$ {tempMin} °C` }));
+  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-min", textContent:`🌡️ ${tempMin} °C` }));
   row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-max", textContent:`🌡️ ${tempMax} °C` }));
   card.appendChild(row1);
 
@@ -263,4 +263,5 @@ renderDashboard();
 
 </body>
 </html>
+
 
