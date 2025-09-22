@@ -223,11 +223,11 @@ async function fetchLocationName(lat, lon) {
 // Função que decide a descrição do CAPE + LI
 function describeCAPE_LI(cape, li) {
   if (cape >= 2500 || li <= -6) {
-    return "🌩️ Possível tempestade forte";
+    return "🌩️ Possível trovoadas fortes";
   } else if (cape >= 1000 && li <= -2) {
-    return "🌩️ Risco de tempestades isoladas";
+    return "🌩️ Risco de trovoadas moderadas";
   } else if (cape >= 100 && li < 0) {
-    return "🌩️ Risco de tempestades isoladas";
+    return "🌩️ Risco de trovoadas isoladas";
   }
   return null; // estável, não exibe
 }
