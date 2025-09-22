@@ -9,9 +9,13 @@
     font-family: Arial, sans-serif; 
     background: #f0f0f0; 
     padding: 20px; 
+    margin: 0;
   }
 
-  h1 { text-align: center; margin-bottom: 20px; }
+  h1 { 
+    text-align: center; 
+    margin-bottom: 20px; 
+  }
 
   /* Barra de busca */
   .search-bar {
@@ -28,6 +32,8 @@
     border-radius: 8px;
     border: 1px solid #ccc;
     min-width: 200px;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .search-bar button {
@@ -36,17 +42,114 @@
     border-radius: 8px;
     border: none;
     cursor: pointer;
-    background-color: #1f77b4;
+    background-color: #000000;
     color: white;
     font-weight: bold;
+    flex-shrink: 0;
   }
 
   .search-bar button:hover {
-    background-color: #155d8b;
+    background-color: #434343;
   }
 
-  /* Responsivo: empilha os botões abaixo da caixa de busca */
-  @media (max-width: 480px) {
+  /* Dashboard: 1 card por linha, centralizado */
+  .dashboard { 
+    display: flex; 
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+
+  /* Cards */
+  .card { 
+    background: #ffffff; 
+    border-radius: 12px; 
+    padding: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    border: 2px solid black;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Data do card */
+  .card-date { 
+    font-weight: bold; 
+    margin-bottom: 15px; 
+    font-size: 20px; 
+    text-align: center;
+  }
+
+  /* Linhas de métricas */
+  .metrics-row { 
+    display: flex; 
+    justify-content: center; 
+    margin: 8px 0; 
+    gap: 12px; 
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  /* Retângulos de métricas */
+  .metric-rect {
+    border-radius: 12px;  
+    padding: 5px 12px;  
+    color: #000; 
+    font-weight: bold;
+    font-size: 16px;    
+    text-align: center;
+    min-width: 60px;
+    flex: 1 1 auto;
+  }
+
+  /* Weather code */
+  .weather-code {
+    background: #e0e0e0; 
+    color: #000;
+    border-radius: 12px;
+    padding: 10px 14px;
+    text-align: center;
+    width: 100%;
+    font-weight: bold;
+  }
+
+  /* CAPE + LI card */
+  .cape-li {
+    background: #ffeb3b; /* amarelo */
+    color: #000;
+    border-radius: 12px;
+    padding: 10px 14px;
+    text-align: center;
+    width: 100%;
+    font-weight: bold;
+  }
+
+  .wind-speed, .wind-gusts {
+    background-color: #9fff9c;
+  }
+
+  .temp-min {
+    background-color: lightskyblue;
+  }
+
+  .temp-max {
+    background-color: lightcoral;
+  }
+
+  .precipitation {
+    background-color: lightskyblue;
+  }
+
+  .sensacao-termica, .temperatura-agora {
+    background-color: lightcoral;
+  }
+
+  @media (max-width: 600px) {
     .search-bar {
       flex-direction: column;
       align-items: center;
@@ -56,62 +159,6 @@
       width: 90%;
       max-width: 300px;
     }
-  }
-
-  .dashboard { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px; 
-    justify-content: center;
-  }
-
-  .card { 
-    background: #fff; 
-    border-radius: 12px; 
-    padding: 20px; 
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-  }
-
-  .card-date { 
-    font-weight: bold; 
-    margin-bottom: 15px; 
-    font-size: 20px; 
-  }
-
-  .metrics-row { 
-    display: flex; 
-    justify-content: center; 
-    margin: 8px 0; 
-    gap: 12px; 
-    flex-wrap: wrap;
-  }
-
-  .metric-rect {
-    border-radius: 12px;  
-    padding: 5px 18px;  
-    color: white;
-    font-weight: bold;
-    font-size: 18px;    
-    text-align: center;
-    min-width: 70px;    
-  }
-
-  .temp-min { background: #1f77b4; }       
-  .temp-max { background: #d62728; }       
-  .precipitation { background: #17becf; }  
-  .wind-speed { background: #2ca02c; }     
-  .wind-gusts { background: #ff7f0e; }     
-  .weather-code {
-    background: #d3d3d3;
-    color: #000;
-    border-radius: 12px;
-    padding: 10px 14px;
-    text-align: center;
-    min-width: 200px;
-    font-weight: bold;
   }
 </style>
 </head>
@@ -140,7 +187,7 @@ const weatherCodes = {
   99: "Tempestade com granizo forte"
 };
 
-// Geocoding: obtém coordenadas pelo nome da cidade
+// Geocoding
 async function getCoordinates(cityName) {
   const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(cityName)}&format=json&limit=1&accept-language=pt`;
   const resp = await fetch(url);
@@ -151,10 +198,11 @@ async function getCoordinates(cityName) {
 
 // API Open-Meteo
 async function fetchWeather(lat=-9.7811, lon=-36.0936) {
-  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,weather_code&timezone=auto&forecast_days=16`;
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_clear_sky_max,uv_index_max,sunshine_duration,daylight_duration,sunset,sunrise,rain_sum,showers_sum,snowfall_sum,precipitation_sum,precipitation_hours,precipitation_probability_max,et0_fao_evapotranspiration,shortwave_radiation_sum,wind_direction_10m_dominant,wind_gusts_10m_max,wind_speed_10m_max&hourly=cape,lifted_index,uv_index,uv_index_clear_sky,is_day,sunshine_duration,wet_bulb_temperature_2m,total_column_integrated_water_vapour,boundary_layer_height,freezing_level_height,convective_inhibition,cloud_cover,temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation,precipitation_probability,rain,snowfall,snow_depth,showers,vapour_pressure_deficit,et0_fao_evapotranspiration,evapotranspiration,visibility,cloud_cover_high,cloud_cover_mid,cloud_cover_low,surface_pressure,pressure_msl,weather_code,wind_speed_10m,wind_speed_80m,wind_speed_180m,wind_speed_120m,wind_direction_10m,wind_direction_80m,wind_direction_120m,wind_direction_180m,wind_gusts_10m,temperature_80m,temperature_120m,temperature_180m,soil_moisture_27_to_81cm,soil_moisture_9_to_27cm,soil_moisture_3_to_9cm,soil_moisture_1_to_3cm,soil_moisture_0_to_1cm,soil_temperature_54cm,soil_temperature_18cm,soil_temperature_6cm,soil_temperature_0cm&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m,weather_code&timezone=auto&forecast_days=16
+`;
   const resp = await fetch(apiUrl);
   const data = await resp.json();
-  return data.daily;
+  return data;
 }
 
 // Nome completo da cidade
@@ -172,6 +220,24 @@ async function fetchLocationName(lat, lon) {
   }
 }
 
+// Função que decide a descrição do CAPE + LI
+function describeCAPE_LI(cape, li) {
+  if (cape >= 1000 && li <= -2) {
+    if (cape < 2500 && li > -6) return "Risco de tempestades isoladas";
+    if (cape >= 2500 || li <= -6) return "Possível tempestade forte";
+  }
+  return null; // se for fraco ou estável, não exibe
+}
+
+// Formata data/hora: Segunda, dd/mm, hh:mm
+function formatCurrentDateTime(dateStr) {
+  const date = new Date(dateStr);
+  const weekday = date.toLocaleDateString("pt-BR", { weekday: "long" });
+  const dayMonth = date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  const time = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${dayMonth}, ${time}`;
+}
+
 // Formata data: Segunda, dd/mm
 function formatDateWithWeekday(dateStr) {
   const date = new Date(dateStr + "T00:00:00");
@@ -180,8 +246,47 @@ function formatDateWithWeekday(dateStr) {
   return weekday.charAt(0).toUpperCase() + weekday.slice(1) + ", " + dayMonth;
 }
 
-// Cria card
-function createCard(day, tempMin, tempMax, precipitation, windSpeed, windGusts, weatherCode) {
+// Cria card "Atual"
+function createCurrentCard(current) {
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const dateEl = document.createElement("div");
+  dateEl.className = "card-date";
+  dateEl.textContent = formatCurrentDateTime(current.time);
+  card.appendChild(dateEl);
+
+  const row1 = document.createElement("div"); row1.className="metrics-row";
+  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temperatura-agora", textContent:`🌡️ Temperatura: ${Math.round(current.temperature_2m)}°` }));
+  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect sensacao-termica", textContent:`🌡️ Sensação: ${Math.round(current.apparent_temperature)}°` }));
+  card.appendChild(row1);
+
+  const row2 = document.createElement("div"); row2.className="metrics-row";
+  row2.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect precipitation", textContent:`☔ ${current.precipitation.toFixed(1)} mm` }));
+  card.appendChild(row2);
+
+  const row3 = document.createElement("div"); row3.className="metrics-row";
+  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-speed", textContent:`🍃 Ventos: ${Math.round(current.wind_speed_10m)} km/h` }));
+  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-gusts", textContent:`🍃 Rajadas: ${Math.round(current.wind_gusts_10m)} km/h` }));
+  card.appendChild(row3);
+
+  const row4 = document.createElement("div"); row4.className="metrics-row";
+  row4.appendChild(Object.assign(document.createElement("div"), { className:"weather-code", textContent:weatherCodes[current.weather_code] || "Desconhecido" }));
+  card.appendChild(row4);
+
+  // CAPE + LI
+  const capeDescription = describeCAPE_LI(current.cape, current.lifted_index);
+  if (capeDescription) {
+    const row5 = document.createElement("div"); row5.className="metrics-row";
+    row5.appendChild(Object.assign(document.createElement("div"), { className:"cape-li", textContent: capeDescription }));
+    card.appendChild(row5);
+  }
+
+  return card;
+}
+
+// Cria cards diários
+function createDailyCard(day, tempMin, tempMax, precipitation, windSpeed, windGusts, weatherCode, cape, li) {
   const card = document.createElement("div");
   card.className = "card";
 
@@ -191,49 +296,74 @@ function createCard(day, tempMin, tempMax, precipitation, windSpeed, windGusts, 
   card.appendChild(dateEl);
 
   const row1 = document.createElement("div"); row1.className="metrics-row";
-  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-min", textContent:`🌡️ ${tempMin} °C` }));
-  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-max", textContent:`🌡️ ${tempMax} °C` }));
+  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-min", textContent:`🌡️ Mínima: ${Math.round(tempMin)}°` }));
+  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-max", textContent:`🌡️ Máxima: ${Math.round(tempMax)}°` }));
   card.appendChild(row1);
 
   const row2 = document.createElement("div"); row2.className="metrics-row";
-  row2.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect precipitation", textContent:`☔ ${precipitation} mm` }));
+  row2.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect precipitation", textContent:`☔ ${precipitation.toFixed(1)} mm` }));
   card.appendChild(row2);
 
   const row3 = document.createElement("div"); row3.className="metrics-row";
-  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-speed", textContent:`🍃 ${windSpeed} km/h` }));
-  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-gusts", textContent:`🍃 ${windGusts} km/h` }));
+  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-speed", textContent:`🍃 Ventos: ${Math.round(windSpeed)} km/h` }));
+  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-gusts", textContent:`🍃 Rajadas: ${Math.round(windGusts)} km/h` }));
   card.appendChild(row3);
 
   const row4 = document.createElement("div"); row4.className="metrics-row";
   row4.appendChild(Object.assign(document.createElement("div"), { className:"weather-code", textContent:weatherCodes[weatherCode] || "Desconhecido" }));
   card.appendChild(row4);
 
+  // CAPE + LI
+  const capeDescription = describeCAPE_LI(cape, li);
+  if (capeDescription) {
+    const row5 = document.createElement("div"); row5.className="metrics-row";
+    row5.appendChild(Object.assign(document.createElement("div"), { className:"cape-li", textContent: capeDescription }));
+    card.appendChild(row5);
+  }
+
   return card;
 }
 
-// Renderiza dashboard e cidade
+// Renderiza dashboard
 async function renderDashboard(lat=-9.7811, lon=-36.0936) {
   try {
-    const daily = await fetchWeather(lat, lon);
+    const data = await fetchWeather(lat, lon);
     const dashboard = document.getElementById("dashboard");
     dashboard.innerHTML = "";
 
     document.getElementById("cidade").textContent = await fetchLocationName(lat, lon);
 
+    // Card atual
+    if (data.current) {
+      const currentCard = createCurrentCard(data.current);
+      dashboard.appendChild(currentCard);
+    }
+
+    // Cards diários
+    const daily = data.daily;
+    const hourly = data.hourly;
     for (let i = 0; i < daily.time.length; i++) {
-      const card = createCard(
+      // Pegando CAPE e LI do horário próximo ao meio do dia
+      const hourIndex = i*24 + 12; // aproximadamente meio do dia
+      const cape = hourly.cape[hourIndex] || 0;
+      const li = hourly.lifted_index[hourIndex] || 0;
+
+      const card = createDailyCard(
         daily.time[i],
         daily.temperature_2m_min[i],
         daily.temperature_2m_max[i],
         daily.precipitation_sum[i],
         daily.wind_speed_10m_max[i],
         daily.wind_gusts_10m_max[i],
-        daily.weather_code[i]
+        daily.weather_code[i],
+        cape,
+        li
       );
       dashboard.appendChild(card);
     }
   } catch (err) {
-    alert("Erro ao carregar dados: " + err.message);
+    console.error("Erro ao carregar dados:", err.message);
+    document.getElementById("cidade").textContent = "Localização padrão";
   }
 }
 
@@ -263,5 +393,3 @@ renderDashboard();
 
 </body>
 </html>
-
-
