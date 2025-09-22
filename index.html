@@ -222,12 +222,16 @@ async function fetchLocationName(lat, lon) {
 
 // Função que decide a descrição do CAPE + LI
 function describeCAPE_LI(cape, li) {
-  if (cape >= 1000 && li <= -2) {
-    if (cape < 2500 && li > -6) return "Risco de tempestades isoladas";
-    if (cape >= 2500 || li <= -6) return "Possível tempestade forte";
+  if (cape >= 2500 || li <= -6) {
+    return "🌩️ Possível tempestade forte";
+  } else if (cape >= 1000 && li <= -2) {
+    return "🌩️ Risco de tempestades isoladas";
+  } else if (cape >= 100 && li < 0) {
+    return "🌩️ Risco de tempestades isoladas";
   }
-  return null; // se for fraco ou estável, não exibe
+  return null; // estável, não exibe
 }
+
 
 // Formata data/hora: Segunda, dd/mm, hh:mm
 function formatCurrentDateTime(dateStr) {
