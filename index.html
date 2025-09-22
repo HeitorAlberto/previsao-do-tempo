@@ -17,7 +17,6 @@
     margin-bottom: 20px; 
   }
 
-  /* Barra de busca */
   .search-bar {
     display: flex;
     justify-content: center;
@@ -52,7 +51,6 @@
     background-color: #434343;
   }
 
-  /* Dashboard: 1 card por linha, centralizado */
   .dashboard { 
     display: flex; 
     flex-direction: column;
@@ -64,7 +62,6 @@
     box-sizing: border-box;
   }
 
-  /* Cards */
   .card { 
     background: #ffffff; 
     border-radius: 12px; 
@@ -77,7 +74,6 @@
     box-sizing: border-box;
   }
 
-  /* Data do card */
   .card-date { 
     font-weight: bold; 
     margin-bottom: 15px; 
@@ -85,7 +81,6 @@
     text-align: center;
   }
 
-  /* Linhas de métricas */
   .metrics-row { 
     display: flex; 
     justify-content: center; 
@@ -95,7 +90,6 @@
     width: 100%;
   }
 
-  /* Retângulos de métricas */
   .metric-rect {
     border-radius: 12px;  
     padding: 5px 12px;  
@@ -107,7 +101,6 @@
     flex: 1 1 auto;
   }
 
-  /* Weather code */
   .weather-code {
     background: #e0e0e0; 
     color: #000;
@@ -118,12 +111,21 @@
     font-weight: bold;
   }
 
-  /* CAPE + LI card */
   .cape-li {
     background: #ffd87d;
     color: #000;
     border-radius: 12px;
     padding: 10px 14px;
+    text-align: center;
+    width: 100%;
+    font-weight: bold;
+  }
+
+  .humidity {
+    background-color: lightskyblue;
+    color: #000;
+    border-radius: 12px;
+    padding: 5px 14px;
     text-align: center;
     width: 100%;
     font-weight: bold;
@@ -198,8 +200,7 @@ async function getCoordinates(cityName) {
 
 // API Open-Meteo
 async function fetchWeather(lat=-9.7811, lon=-36.0936) {
-  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_clear_sky_max,uv_index_max,sunshine_duration,daylight_duration,sunset,sunrise,rain_sum,showers_sum,snowfall_sum,precipitation_sum,precipitation_hours,precipitation_probability_max,et0_fao_evapotranspiration,shortwave_radiation_sum,wind_direction_10m_dominant,wind_gusts_10m_max,wind_speed_10m_max&hourly=cape,lifted_index,uv_index,uv_index_clear_sky,is_day,sunshine_duration,wet_bulb_temperature_2m,total_column_integrated_water_vapour,boundary_layer_height,freezing_level_height,convective_inhibition,cloud_cover,temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation,precipitation_probability,rain,snowfall,snow_depth,showers,vapour_pressure_deficit,et0_fao_evapotranspiration,evapotranspiration,visibility,cloud_cover_high,cloud_cover_mid,cloud_cover_low,surface_pressure,pressure_msl,weather_code,wind_speed_10m,wind_speed_80m,wind_speed_180m,wind_speed_120m,wind_direction_10m,wind_direction_80m,wind_direction_120m,wind_direction_180m,wind_gusts_10m,temperature_80m,temperature_120m,temperature_180m,soil_moisture_27_to_81cm,soil_moisture_9_to_27cm,soil_moisture_3_to_9cm,soil_moisture_1_to_3cm,soil_moisture_0_to_1cm,soil_temperature_54cm,soil_temperature_18cm,soil_temperature_6cm,soil_temperature_0cm&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m,weather_code&timezone=auto&forecast_days=16
-`;
+  const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_clear_sky_max,uv_index_max,sunshine_duration,daylight_duration,sunset,sunrise,rain_sum,showers_sum,snowfall_sum,precipitation_sum,precipitation_hours,precipitation_probability_max,et0_fao_evapotranspiration,shortwave_radiation_sum,wind_direction_10m_dominant,wind_gusts_10m_max,wind_speed_10m_max,relative_humidity_2m_min,relative_humidity_2m_max&hourly=cape,lifted_index,uv_index,uv_index_clear_sky,is_day,sunshine_duration,wet_bulb_temperature_2m,total_column_integrated_water_vapour,boundary_layer_height,freezing_level_height,convective_inhibition,cloud_cover,temperature_2m,relative_humidity_2m,dew_point_2m,apparent_temperature,precipitation,precipitation_probability,rain,snowfall,snow_depth,showers,vapour_pressure_deficit,et0_fao_evapotranspiration,evapotranspiration,visibility,cloud_cover_high,cloud_cover_mid,cloud_cover_low,surface_pressure,pressure_msl,weather_code,wind_speed_10m,wind_speed_80m,wind_speed_180m,wind_speed_120m,wind_direction_10m,wind_direction_80m,wind_direction_120m,wind_direction_180m,wind_gusts_10m,temperature_80m,temperature_120m,temperature_180m,soil_moisture_27_to_81cm,soil_moisture_9_to_27cm,soil_moisture_3_to_9cm,soil_moisture_1_to_3cm,soil_moisture_0_to_1cm,soil_temperature_54cm,soil_temperature_18cm,soil_temperature_6cm,soil_temperature_0cm&current=temperature_2m,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m,weather_code,relative_humidity_2m&timezone=auto&forecast_days=16`;
   const resp = await fetch(apiUrl);
   const data = await resp.json();
   return data;
@@ -222,16 +223,11 @@ async function fetchLocationName(lat, lon) {
 
 // Função que decide a descrição do CAPE + LI
 function describeCAPE_LI(cape, li) {
-  if (cape >= 2500 || li <= -6) {
-    return "🌩️ Risco de trovoadas fortes";
-  } else if (cape >= 1000 && li <= -2) {
-    return "🌩️ Risco de trovoadas moderadas";
-  } else if (cape >= 100 && li < 0) {
-    return "🌩️ Risco de trovoadas isoladas";
-  }
-  return null; // estável, não exibe
+  if (cape >= 2500 || li <= -6) return "🌩️ Risco de trovoadas fortes";
+  else if (cape >= 1000 && li <= -2) return "🌩️ Risco de trovoadas moderadas";
+  else if (cape >= 100 && li < 0) return "🌩️ Risco de trovoadas isoladas";
+  return null;
 }
-
 
 // Formata data/hora: Segunda, dd/mm, hh:mm
 function formatCurrentDateTime(dateStr) {
@@ -274,6 +270,17 @@ function createCurrentCard(current) {
   row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-gusts", textContent:`🍃 Rajadas: ${Math.round(current.wind_gusts_10m)} km/h` }));
   card.appendChild(row3);
 
+  // Card de umidade atual
+  if (current.relative_humidity_2m !== undefined) {
+    const rowHumidity = document.createElement("div"); 
+    rowHumidity.className="metrics-row";
+    rowHumidity.appendChild(Object.assign(document.createElement("div"), { 
+      className:"humidity", 
+      textContent: `💧 Umidade: ${Math.round(current.relative_humidity_2m)}%` 
+    }));
+    card.appendChild(rowHumidity);
+  }
+
   const row4 = document.createElement("div"); row4.className="metrics-row";
   row4.appendChild(Object.assign(document.createElement("div"), { className:"weather-code", textContent:weatherCodes[current.weather_code] || "Desconhecido" }));
   card.appendChild(row4);
@@ -290,7 +297,7 @@ function createCurrentCard(current) {
 }
 
 // Cria cards diários
-function createDailyCard(day, tempMin, tempMax, precipitation, windSpeed, windGusts, weatherCode, cape, li) {
+function createDailyCard(day, tempMin, tempMax, precipitation, windSpeed, windGusts, weatherCode, cape, li, humMin, humMax) {
   const card = document.createElement("div");
   card.className = "card";
 
@@ -312,6 +319,17 @@ function createDailyCard(day, tempMin, tempMax, precipitation, windSpeed, windGu
   row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-speed", textContent:`🍃 Ventos: ${Math.round(windSpeed)} km/h` }));
   row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-gusts", textContent:`🍃 Rajadas: ${Math.round(windGusts)} km/h` }));
   card.appendChild(row3);
+
+  // Card de umidade diária
+  if (humMin !== undefined && humMax !== undefined) {
+    const rowHumidity = document.createElement("div"); 
+    rowHumidity.className="metrics-row";
+    rowHumidity.appendChild(Object.assign(document.createElement("div"), { 
+      className:"humidity", 
+      textContent: `💧 Umidade: ${Math.round(humMin)}% a ${Math.round(humMax)}%` 
+    }));
+    card.appendChild(rowHumidity);
+  }
 
   const row4 = document.createElement("div"); row4.className="metrics-row";
   row4.appendChild(Object.assign(document.createElement("div"), { className:"weather-code", textContent:weatherCodes[weatherCode] || "Desconhecido" }));
@@ -347,10 +365,12 @@ async function renderDashboard(lat=-9.7811, lon=-36.0936) {
     const daily = data.daily;
     const hourly = data.hourly;
     for (let i = 0; i < daily.time.length; i++) {
-      // Pegando CAPE e LI do horário próximo ao meio do dia
-      const hourIndex = i*24 + 12; // aproximadamente meio do dia
+      const hourIndex = i*24 + 12;
       const cape = hourly.cape[hourIndex] || 0;
       const li = hourly.lifted_index[hourIndex] || 0;
+
+      const humMin = daily.relative_humidity_2m_min[i];
+      const humMax = daily.relative_humidity_2m_max[i];
 
       const card = createDailyCard(
         daily.time[i],
@@ -361,7 +381,9 @@ async function renderDashboard(lat=-9.7811, lon=-36.0936) {
         daily.wind_gusts_10m_max[i],
         daily.weather_code[i],
         cape,
-        li
+        li,
+        humMin,
+        humMax
       );
       dashboard.appendChild(card);
     }
