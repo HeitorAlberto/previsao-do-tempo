@@ -1,23 +1,197 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Previsão do Tempo</title>
-  <link rel="stylesheet" href="base.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Tempo</title>
+<style>
+  body { 
+    font-family: Arial, sans-serif; 
+    background: #f0f0f0; 
+    padding: 20px; 
+  }
+
+  h1 { text-align: center; margin-bottom: 30px; }
+
+  .dashboard { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); /* cards responsivos */
+    gap: 20px; /* espaço entre cards */
+    justify-content: center;
+  }
+
+  .card { 
+    background: #fff; 
+    border-radius: 12px; 
+    padding: 20px; 
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2); 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+  }
+
+  .card-date { 
+    font-weight: bold; 
+    margin-bottom: 15px; 
+    font-size: 20px; 
+  }
+
+  .metrics-row { 
+    display: flex; 
+    justify-content: center; 
+    margin: 8px 0; 
+    gap: 12px; 
+    flex-wrap: wrap;
+  }
+
+  .metric-rect {
+    border-radius: 12px;  
+    padding: 5px 18px;  
+    color: white;
+    font-weight: bold;
+    font-size: 18px;    
+    text-align: center;
+    min-width: 70px;    
+  }
+
+  .temp-min { background: #1f77b4; }       
+  .temp-max { background: #d62728; }       
+  .precipitation { background: #17becf; }  
+  .wind-speed { background: #2ca02c; }     
+  .wind-gusts { background: #ff7f0e; }     
+  .weather-code {
+    background: #d3d3d3;
+    color: #000;
+    border-radius: 12px;
+    padding: 10px 14px;
+    text-align: center;
+    min-width: 200px;
+    font-weight: bold;
+  }
+</style>
 </head>
 <body>
-  <div class="top-bar">
-    <div class="search-box">
-      <input type="text" id="search-input" placeholder="Digite uma cidade...">
-      <button id="search-btn">Buscar</button>
-      <button id="loc-btn">Minha localização</button>
-    </div>
-    <div id="location-display"></div>
-  </div>
 
-  <div class="cards-container" id="cards-container"></div>
+<h1>Dashboard Previsão do Tempo</h1>
+<div class="dashboard" id="dashboard"></div>
 
-  <script src="script.js"></script>
+<script>
+const weatherCodes = {
+  0: "Céu limpo",
+  1: "Principalmente limpo",
+  2: "Parcialmente nublado",
+  3: "Nublado",
+  45: "Neblina",
+  48: "Nevoeiro com gelo",
+  51: "Chuva fraca",
+  53: "Chuva moderada",
+  55: "Chuva forte",
+  56: "Chuva gelada fraca",
+  57: "Chuva gelada forte",
+  61: "Chuva leve",
+  63: "Chuva moderada",
+  65: "Chuva intensa",
+  66: "Chuva gelada leve",
+  67: "Chuva gelada intensa",
+  71: "Queda de neve leve",
+  73: "Queda de neve moderada",
+  75: "Queda de neve intensa",
+  77: "Neve granulada",
+  80: "Pancadas de chuva leves",
+  81: "Pancadas de chuva moderadas",
+  82: "Pancadas de chuva fortes",
+  85: "Neve leve",
+  86: "Neve intensa",
+  95: "Tempestade",
+  96: "Tempestade com granizo leve",
+  99: "Tempestade com granizo forte"
+};
+
+const apiUrl = "https://api.open-meteo.com/v1/forecast?latitude=-9.7811&longitude=-36.0936&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,weather_code&timezone=auto&forecast_days=16";
+
+async function fetchWeather() {
+  const resp = await fetch(apiUrl);
+  const data = await resp.json();
+  return data.daily;
+}
+
+function createCard(day, tempMin, tempMax, precipitation, windSpeed, windGusts, weatherCode) {
+  const card = document.createElement("div");
+  card.className = "card";
+
+  const dateEl = document.createElement("div");
+  dateEl.className = "card-date";
+  const dateStr = new Date(day).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  dateEl.textContent = dateStr;
+  card.appendChild(dateEl);
+
+  // Linha 1: Temp Min e Max
+  const row1 = document.createElement("div");
+  row1.className = "metrics-row";
+  const tempMinEl = document.createElement("div");
+  tempMinEl.className = "metric-rect temp-min";
+  tempMinEl.textContent = `${tempMin} °C`;
+  const tempMaxEl = document.createElement("div");
+  tempMaxEl.className = "metric-rect temp-max";
+  tempMaxEl.textContent = `${tempMax} °C`;
+  row1.appendChild(tempMinEl);
+  row1.appendChild(tempMaxEl);
+  card.appendChild(row1);
+
+  // Linha 2: Chuva
+  const row2 = document.createElement("div");
+  row2.className = "metrics-row";
+  const precipEl = document.createElement("div");
+  precipEl.className = "metric-rect precipitation";
+  precipEl.textContent = `${precipitation} mm`;
+  row2.appendChild(precipEl);
+  card.appendChild(row2);
+
+  // Linha 3: Vento e Rajadas
+  const row3 = document.createElement("div");
+  row3.className = "metrics-row";
+  const windEl = document.createElement("div");
+  windEl.className = "metric-rect wind-speed";
+  windEl.textContent = `${windSpeed} km/h`;
+  const gustEl = document.createElement("div");
+  gustEl.className = "metric-rect wind-gusts";
+  gustEl.textContent = `${windGusts} km/h`;
+  row3.appendChild(windEl);
+  row3.appendChild(gustEl);
+  card.appendChild(row3);
+
+  // Linha 4: Weather Code
+  const row4 = document.createElement("div");
+  row4.className = "metrics-row";
+  const weatherEl = document.createElement("div");
+  weatherEl.className = "weather-code";
+  weatherEl.textContent = weatherCodes[weatherCode] || "Desconhecido";
+  row4.appendChild(weatherEl);
+  card.appendChild(row4);
+
+  return card;
+}
+
+async function renderDashboard() {
+  const daily = await fetchWeather();
+  const dashboard = document.getElementById("dashboard");
+
+  for (let i = 0; i < daily.time.length; i++) {
+    const card = createCard(
+      daily.time[i],
+      daily.temperature_2m_min[i],
+      daily.temperature_2m_max[i],
+      daily.precipitation_sum[i],
+      daily.wind_speed_10m_max[i],
+      daily.wind_gusts_10m_max[i],
+      daily.weather_code[i]
+    );
+    dashboard.appendChild(card);
+  }
+}
+
+renderDashboard();
+</script>
+
 </body>
 </html>
