@@ -191,17 +191,17 @@ function createCard(day, tempMin, tempMax, precipitation, windSpeed, windGusts, 
   card.appendChild(dateEl);
 
   const row1 = document.createElement("div"); row1.className="metrics-row";
-  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-min", textContent:`${tempMin} °C` }));
-  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-max", textContent:`${tempMax} °C` }));
+  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-min", textContent:`🌡️$ {tempMin} °C` }));
+  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-max", textContent:`🌡️ ${tempMax} °C` }));
   card.appendChild(row1);
 
   const row2 = document.createElement("div"); row2.className="metrics-row";
-  row2.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect precipitation", textContent:`${precipitation} mm` }));
+  row2.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect precipitation", textContent:`☔ ${precipitation} mm` }));
   card.appendChild(row2);
 
   const row3 = document.createElement("div"); row3.className="metrics-row";
-  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-speed", textContent:`${windSpeed} km/h` }));
-  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-gusts", textContent:`${windGusts} km/h` }));
+  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-speed", textContent:`🍃 ${windSpeed} km/h` }));
+  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-gusts", textContent:`🍃 ${windGusts} km/h` }));
   card.appendChild(row3);
 
   const row4 = document.createElement("div"); row4.className="metrics-row";
@@ -263,3 +263,4 @@ renderDashboard();
 
 </body>
 </html>
+
