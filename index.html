@@ -68,10 +68,10 @@
     padding: 20px; 
     display: flex; 
     flex-direction: column; 
-    align-items: center; 
-    border: 2px solid black;
+    align-items: center;
     width: 100%;
     box-sizing: border-box;
+    box-shadow: 1px 1px rgb(89, 89, 89);
   }
 
   .card-date { 
@@ -105,7 +105,7 @@
     background: #e0e0e0; 
     color: #000;
     border-radius: 12px;
-    padding: 10px 14px;
+    padding: 5px 14px;
     text-align: center;
     width: 100%;
     font-weight: bold;
@@ -115,7 +115,7 @@
     background: #ffd87d;
     color: #000;
     border-radius: 12px;
-    padding: 10px 14px;
+    padding: 5px 14px;
     text-align: center;
     width: 100%;
     font-weight: bold;
@@ -133,22 +133,27 @@
 
   .wind-speed, .wind-gusts {
     background-color: #9fff9c;
+    padding: 5px 14px;
   }
 
   .temp-min {
-    background-color: lightskyblue;
+    background-color: lightsalmon;
+    padding: 5px 14px;
   }
 
   .temp-max {
-    background-color: lightcoral;
+    background-color: lightsalmon;
+    padding: 5px 14px;
   }
 
   .precipitation {
     background-color: lightskyblue;
+    padding: 5px 14px;
   }
 
   .sensacao-termica, .temperatura-agora {
-    background-color: lightcoral;
+    background-color: lightsalmon;
+    padding: 5px 14px;
   }
 
   @media (max-width: 600px) {
@@ -223,10 +228,14 @@ async function fetchLocationName(lat, lon) {
 
 // Função que decide a descrição do CAPE + LI
 function describeCAPE_LI(cape, li) {
-  if (cape >= 2500 || li <= -6) return "🌩️ Risco de trovoadas fortes";
-  else if (cape >= 1000 && li <= -2) return "🌩️ Risco de trovoadas moderadas";
-  else if (cape >= 100 && li < 0) return "🌩️ Risco de trovoadas isoladas";
-  return null;
+  if (cape >= 4000 && li <= -6) {
+    return "🌪️ Risco de tempestades severas";
+  } else if (cape >= 2500 && li <= -4) {
+    return "⛈️ Risco de trovoadas fortes";
+  } else if (cape >= 1000 && li <= -2) {
+    return "🌩️ Risco de trovoadas moderadas";
+  }
+  return null; // sem risco relevante
 }
 
 // Formata data/hora: Segunda, dd/mm, hh:mm
@@ -256,21 +265,51 @@ function createCurrentCard(current) {
   dateEl.textContent = formatCurrentDateTime(current.time);
   card.appendChild(dateEl);
 
-  const row1 = document.createElement("div"); row1.className="metrics-row";
-  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temperatura-agora", textContent:`🌡️ Temperatura: ${Math.round(current.temperature_2m)}°` }));
-  row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect sensacao-termica", textContent:`🌡️ Sensação: ${Math.round(current.apparent_temperature)}°` }));
+  // 🔹 Primeira linha: weather code
+  const row0 = document.createElement("div"); 
+  row0.className="metrics-row";
+  row0.appendChild(Object.assign(document.createElement("div"), { 
+    className:"weather-code", 
+    textContent: weatherCodes[current.weather_code] || "Desconhecido"
+  }));
+  card.appendChild(row0);
+
+  // Segunda linha: temperaturas
+  const row1 = document.createElement("div"); 
+  row1.className="metrics-row";
+  row1.appendChild(Object.assign(document.createElement("div"), { 
+    className:"metric-rect temperatura-agora", 
+    textContent:`🌡️ Temperatura: ${Math.round(current.temperature_2m)}°` 
+  }));
+  row1.appendChild(Object.assign(document.createElement("div"), { 
+    className:"metric-rect sensacao-termica", 
+    textContent:`🌡️ Sensação: ${Math.round(current.apparent_temperature)}°` 
+  }));
   card.appendChild(row1);
 
-  const row2 = document.createElement("div"); row2.className="metrics-row";
-  row2.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect precipitation", textContent:`☔ ${current.precipitation.toFixed(1)} mm` }));
+  // Precipitação
+  const row2 = document.createElement("div"); 
+  row2.className="metrics-row";
+  row2.appendChild(Object.assign(document.createElement("div"), { 
+    className:"metric-rect precipitation", 
+    textContent:`☔ ${current.precipitation.toFixed(1)} mm` 
+  }));
   card.appendChild(row2);
 
-  const row3 = document.createElement("div"); row3.className="metrics-row";
-  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-speed", textContent:`🍃 Ventos: ${Math.round(current.wind_speed_10m)} km/h` }));
-  row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-gusts", textContent:`🍃 Rajadas: ${Math.round(current.wind_gusts_10m)} km/h` }));
+  // Ventos
+  const row3 = document.createElement("div"); 
+  row3.className="metrics-row";
+  row3.appendChild(Object.assign(document.createElement("div"), { 
+    className:"metric-rect wind-speed", 
+    textContent:`🍃 Ventos: ${Math.round(current.wind_speed_10m)} km/h` 
+  }));
+  row3.appendChild(Object.assign(document.createElement("div"), { 
+    className:"metric-rect wind-gusts", 
+    textContent:`🍃 Rajadas: ${Math.round(current.wind_gusts_10m)} km/h` 
+  }));
   card.appendChild(row3);
 
-  // Card de umidade atual
+  // Umidade
   if (current.relative_humidity_2m !== undefined) {
     const rowHumidity = document.createElement("div"); 
     rowHumidity.className="metrics-row";
@@ -281,15 +320,15 @@ function createCurrentCard(current) {
     card.appendChild(rowHumidity);
   }
 
-  const row4 = document.createElement("div"); row4.className="metrics-row";
-  row4.appendChild(Object.assign(document.createElement("div"), { className:"weather-code", textContent:weatherCodes[current.weather_code] || "Desconhecido" }));
-  card.appendChild(row4);
-
   // CAPE + LI
   const capeDescription = describeCAPE_LI(current.cape, current.lifted_index);
   if (capeDescription) {
-    const row5 = document.createElement("div"); row5.className="metrics-row";
-    row5.appendChild(Object.assign(document.createElement("div"), { className:"cape-li", textContent: capeDescription }));
+    const row5 = document.createElement("div"); 
+    row5.className="metrics-row";
+    row5.appendChild(Object.assign(document.createElement("div"), { 
+      className:"cape-li", 
+      textContent: capeDescription 
+    }));
     card.appendChild(row5);
   }
 
@@ -306,21 +345,33 @@ function createDailyCard(day, tempMin, tempMax, precipitation, windSpeed, windGu
   dateEl.textContent = formatDateWithWeekday(day);
   card.appendChild(dateEl);
 
+  // 🔹 Primeira linha: weather code
+  const row0 = document.createElement("div"); 
+  row0.className="metrics-row";
+  row0.appendChild(Object.assign(document.createElement("div"), { 
+    className:"weather-code", 
+    textContent: weatherCodes[weatherCode] || "Desconhecido"
+  }));
+  card.appendChild(row0);
+
+  // Segunda linha: temperaturas
   const row1 = document.createElement("div"); row1.className="metrics-row";
   row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-min", textContent:`🌡️ Mínima: ${Math.round(tempMin)}°` }));
   row1.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect temp-max", textContent:`🌡️ Máxima: ${Math.round(tempMax)}°` }));
   card.appendChild(row1);
 
+  // Precipitação
   const row2 = document.createElement("div"); row2.className="metrics-row";
   row2.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect precipitation", textContent:`☔ ${precipitation.toFixed(1)} mm` }));
   card.appendChild(row2);
 
+  // Ventos
   const row3 = document.createElement("div"); row3.className="metrics-row";
   row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-speed", textContent:`🍃 Ventos: ${Math.round(windSpeed)} km/h` }));
   row3.appendChild(Object.assign(document.createElement("div"), { className:"metric-rect wind-gusts", textContent:`🍃 Rajadas: ${Math.round(windGusts)} km/h` }));
   card.appendChild(row3);
 
-  // Card de umidade diária
+  // Umidade
   if (humMin !== undefined && humMax !== undefined) {
     const rowHumidity = document.createElement("div"); 
     rowHumidity.className="metrics-row";
@@ -331,14 +382,11 @@ function createDailyCard(day, tempMin, tempMax, precipitation, windSpeed, windGu
     card.appendChild(rowHumidity);
   }
 
-  const row4 = document.createElement("div"); row4.className="metrics-row";
-  row4.appendChild(Object.assign(document.createElement("div"), { className:"weather-code", textContent:weatherCodes[weatherCode] || "Desconhecido" }));
-  card.appendChild(row4);
-
   // CAPE + LI
   const capeDescription = describeCAPE_LI(cape, li);
   if (capeDescription) {
-    const row5 = document.createElement("div"); row5.className="metrics-row";
+    const row5 = document.createElement("div"); 
+    row5.className="metrics-row";
     row5.appendChild(Object.assign(document.createElement("div"), { className:"cape-li", textContent: capeDescription }));
     card.appendChild(row5);
   }
@@ -355,13 +403,11 @@ async function renderDashboard(lat=-9.7811, lon=-36.0936) {
 
     document.getElementById("cidade").textContent = await fetchLocationName(lat, lon);
 
-    // Card atual
     if (data.current) {
       const currentCard = createCurrentCard(data.current);
       dashboard.appendChild(currentCard);
     }
 
-    // Cards diários
     const daily = data.daily;
     const hourly = data.hourly;
     for (let i = 0; i < daily.time.length; i++) {
@@ -380,42 +426,41 @@ async function renderDashboard(lat=-9.7811, lon=-36.0936) {
         daily.wind_speed_10m_max[i],
         daily.wind_gusts_10m_max[i],
         daily.weather_code[i],
-        cape,
-        li,
-        humMin,
-        humMax
+        cape, li,
+        humMin, humMax
       );
       dashboard.appendChild(card);
     }
   } catch (err) {
     console.error("Erro ao carregar dados:", err.message);
-    document.getElementById("cidade").textContent = "Localização padrão";
+    document.getElementById("cidade").textContent = await fetchLocationName(lat, lon);
   }
 }
 
-// Botão buscar
+// Eventos
 document.getElementById("searchBtn").addEventListener("click", async () => {
   const input = document.getElementById("locationInput").value.trim();
-  if (!input) return alert("Digite uma cidade!");
+  if (!input) return;
   try {
     const coords = await getCoordinates(input);
     renderDashboard(coords.lat, coords.lon);
-  } catch {
-    alert("Cidade não encontrada.");
+  } catch (err) {
+    alert(err.message);
   }
 });
 
-// Botão usar localização
 document.getElementById("geoBtn").addEventListener("click", () => {
-  if (!navigator.geolocation) return alert("Geolocalização não suportada neste navegador.");
-  navigator.geolocation.getCurrentPosition((pos) => {
-    renderDashboard(pos.coords.latitude, pos.coords.longitude);
-  }, () => alert("Não foi possível obter a localização."));
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      renderDashboard(pos.coords.latitude, pos.coords.longitude);
+    }, () => alert("Não foi possível obter localização"));
+  } else {
+    alert("Geolocalização não suportada");
+  }
 });
 
 // Inicial
 renderDashboard();
 </script>
-
 </body>
 </html>
