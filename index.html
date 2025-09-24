@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Previsão do Tempo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,10 +13,12 @@
       display: flex;
       justify-content: center;
     }
+
     .container {
       max-width: 900px;
       width: 100%;
     }
+
     h1 {
       text-align: center;
       margin-bottom: 20px;
@@ -49,6 +52,7 @@
       grid-template-columns: 1fr;
       gap: 20px;
     }
+
     .day {
       display: flex;
       flex-direction: row;
@@ -59,6 +63,7 @@
       text-align: center;
       transition: transform 0.2s;
       padding: 20px;
+      align-items: center; /* mantém alinhamento vertical no desktop */
     }
 
     .day h2 {
@@ -66,31 +71,59 @@
       color: #333;
     }
 
-    .day > h2, p {
+    /* CORREÇÃO: aplicar margin:0 apenas aos elementos dentro de .day */
+    .day > h2,
+    .day p {
       margin: 0;
     }
 
+    /* --- Responsividade: tablets e celulares --- */
     @media (max-width: 768px) {
-      .day {
-        flex-direction: column; 
-        gap: 15px;
-        align-items: center;
-        text-align: center;
+      body {
+        padding: 10px;
       }
 
-      .search {
+      /* container usa toda a largura disponível */
+      .container {
+        max-width: 100%;
+      }
+
+      /* empilha e centraliza conteúdo dentro do card */
+      .day {
         flex-direction: column;
         gap: 10px;
         align-items: center;
-        width: 100%;
+        text-align: center;
+        padding: 16px;
       }
 
+      /* faz cada filho do card ocupar toda a largura do card e centraliza o texto */
+      .day > * {
+        width: 100%;
+        box-sizing: border-box;
+        text-align: center;
+      }
+
+      /* ajuste da área de busca para ficar compacto e centralizado */
+      .search {
+        flex-direction: column;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+      }
       .search input,
       .search button {
-        width: 90%;
-        max-width: 300px;
+        width: 95%;
+        max-width: 420px;
         box-sizing: border-box;
       }
+    }
+
+    /* opcional: pequenos ajustes para muito pequenas larguras */
+    @media (max-width: 420px) {
+      h1 { font-size: 1.2rem; }
+      .day { padding: 12px; gap: 8px; }
+      .search input, .search button { padding: 10px; }
     }
   </style>
 </head>
@@ -99,7 +132,7 @@
     <h1>Previsão do Tempo</h1>
 
     <div class="search">
-      <input type="text" id="cityInput" placeholder="Digite o nome da cidade">
+      <input type="text" id="cityInput" placeholder="Digite o nome da cidade" />
       <button id="searchBtn">Buscar</button>
     </div>
 
@@ -113,11 +146,8 @@
       const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=pt`;
       const response = await fetch(geoUrl);
       const data = await response.json();
-      if (data.results && data.results.length > 0) {
-        return data.results[0];
-      } else {
-        return null;
-      }
+      if (data.results && data.results.length > 0) return data.results[0];
+      return null;
     }
 
     function formatDateManual(dateStr) {
@@ -134,7 +164,7 @@
       else if (day.cloud_cover_mean >= 50) alerts.push("Muitas nuvens");
       else alerts.push("Poucas nuvens");
 
-      if (day.cape_max && day.cape_max > 1000) alerts.push("Alerta de trovoadas");
+      if (day.cape_max > 1000) alerts.push("Alerta de trovoadas");
 
       if (day.precipitation_sum > 10) alerts.push("Chuvas");
       else if (day.precipitation_sum > 0) alerts.push("Chuva isolada");
@@ -145,7 +175,6 @@
     async function loadForecast(lat, lon) {
       try {
         const url = `https://ensemble-api.open-meteo.com/v1/ensemble?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,wind_speed_10m_max,precipitation_sum,cloud_cover_mean,cape_max&models=ecmwf_aifs025&timezone=America%2FSao_Paulo&forecast_days=16`;
-
         const response = await fetch(url);
         const data = await response.json();
 
@@ -161,11 +190,7 @@
           const cloud = daily.cloud_cover_mean[i];
           const cape = daily.cape_max[i];
 
-          const dayData = {
-            cloud_cover_mean: cloud,
-            precipitation_sum: rain,
-            cape_max: cape
-          };
+          const dayData = { cloud_cover_mean: cloud, precipitation_sum: rain, cape_max: cape };
 
           const dayDiv = document.createElement("div");
           dayDiv.className = "day";
@@ -180,7 +205,6 @@
 
           forecastDiv.appendChild(dayDiv);
         });
-
       } catch (error) {
         console.error("Erro ao carregar previsão:", error);
       }
@@ -193,12 +217,17 @@
       const result = await getCoordinates(city);
       const locationDiv = document.getElementById("location");
       if (result) {
-        locationDiv.textContent = `${result.name}, ${result.admin1 || ''}, ${result.country}`;
+        locationDiv.textContent = `${result.name}, ${result.admin1 || ""}, ${result.country}`;
         await loadForecast(result.latitude, result.longitude);
       } else {
         locationDiv.textContent = "Cidade não encontrada.";
         document.getElementById("forecast").innerHTML = "";
       }
+    });
+
+    // opcional: permite buscar ao apertar Enter
+    document.getElementById("cityInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("searchBtn").click();
     });
   </script>
 </body>
