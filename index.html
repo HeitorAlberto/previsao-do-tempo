@@ -105,7 +105,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Previsão do Tempo</h1>
+    <h1>Previsão do Tempo 15 dias - ECMWF IA - Ensemble </h1>
 
     <div class="search">
       <input type="text" id="cityInput" placeholder="Digite o nome da cidade" />
@@ -185,7 +185,7 @@
               <div class="info">💨 ${fmt(wind,0)} km/h</div>
               <div class="info">💧 ${fmt(minHum,0)}% a ${fmt(maxHum,0)}%</div>
             </div>
-            <div class="alerts">${generateAlerts(dayData)}</div>
+            <div class="alerts"><b>${generateAlerts(dayData)}</b></div>
           `;
 
           forecastDiv.appendChild(dayDiv);
