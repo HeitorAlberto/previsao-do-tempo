@@ -73,7 +73,7 @@
       flex-wrap: wrap;
       justify-content: flex-start; /* esquerda no desktop */
       gap: 15px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .info {
@@ -81,7 +81,7 @@
     }
 
     .alerts {
-      color: #171391;
+      color: #787878;
     }
 
     /* --- Responsividade: tablets e celulares --- */
@@ -126,7 +126,7 @@
     }
 
     function formatDateManual(dateStr) {
-      const dias = ["Dom.", "Seg.", "Ter.", "Qua.", "Qui.", "Sex.", "Sáb."];
+      const dias = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
       const [year, month, day] = dateStr.split("-");
       const dt = new Date(`${year}-${month}-${day}T12:00:00`);
       const weekday = dias[dt.getDay()];
@@ -149,7 +149,7 @@
       if (day.precipitation_sum > 10) alerts.push("Chuvas");
       else if (day.precipitation_sum > 0) alerts.push("Chuva isolada");
 
-      return alerts.join(" / ");
+      return alerts.join(" • ");
     }
 
     async function loadForecast(lat, lon) {
@@ -167,6 +167,7 @@
           const max = daily.temperature_2m_max[i];
           const rain = daily.precipitation_sum[i];
           const wind = daily.wind_speed_10m_max[i];
+          const windGusts = daily.wind_gusts_10m_max[i];
           const minHum = daily.relative_humidity_2m_min ? daily.relative_humidity_2m_min[i] : null;
           const maxHum = daily.relative_humidity_2m_max ? daily.relative_humidity_2m_max[i] : null;
           const cloud = daily.cloud_cover_mean[i];
@@ -181,8 +182,9 @@
             <h2>${formatDateManual(date)}</h2>
             <div class="info-row">
               <div class="info">🌡️ ${fmt(min,0)}° a ${fmt(max,0)}°</div>
-              <div class="info">🌧️ ${fmt(rain,1)} mm</div>
-              <div class="info">💨 ${fmt(wind,0)} km/h</div>
+              <div class="info">☔ ${fmt(rain,1)} mm</div>
+              <div class="info">🍃 ${fmt(wind,0)} km/h</div>
+              <div class="info">🍃 ${fmt(windGusts,0)} km/h (rajadas)</div>
               <div class="info">💧 ${fmt(minHum,0)}% a ${fmt(maxHum,0)}%</div>
             </div>
             <div class="alerts"><b>${generateAlerts(dayData)}</b></div>
