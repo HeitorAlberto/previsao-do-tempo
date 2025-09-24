@@ -105,7 +105,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>Previsão do Tempo 15 dias - ECMWF IA - Ensemble </h1>
+    <h1>Previsão do Tempo 14 dias</h1>
 
     <div class="search">
       <input type="text" id="cityInput" placeholder="Digite o nome da cidade" />
@@ -154,7 +154,7 @@
 
     async function loadForecast(lat, lon) {
       try {
-        const url = `https://ensemble-api.open-meteo.com/v1/ensemble?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,wind_speed_10m_min,wind_speed_10m_max,wind_direction_10m_dominant,wind_gusts_10m_max,cloud_cover_mean,precipitation_sum,cape_max,relative_humidity_2m_min,relative_humidity_2m_max&models=ecmwf_aifs025&forecast_days=15`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_clear_sky_max,uv_index_max,sunshine_duration,daylight_duration,sunset,sunrise,rain_sum,showers_sum,snowfall_sum,precipitation_sum,precipitation_hours,precipitation_probability_max,et0_fao_evapotranspiration,shortwave_radiation_sum,wind_direction_10m_dominant,wind_gusts_10m_max,wind_speed_10m_max,temperature_2m_mean,apparent_temperature_mean,cape_mean,cape_max,cape_min,cloud_cover_mean,cloud_cover_max,cloud_cover_min,dew_point_2m_mean,dew_point_2m_max,dew_point_2m_min,pressure_msl_min,pressure_msl_max,pressure_msl_mean,snowfall_water_equivalent_sum,relative_humidity_2m_min,relative_humidity_2m_max,relative_humidity_2m_mean,precipitation_probability_min,precipitation_probability_mean,leaf_wetness_probability_mean,growing_degree_days_base_0_limit_50,et0_fao_evapotranspiration_sum,surface_pressure_mean,surface_pressure_max,surface_pressure_min,updraft_max,visibility_mean,visibility_min,visibility_max,winddirection_10m_dominant,wind_gusts_10m_mean,wind_speed_10m_mean,wind_gusts_10m_min,wind_speed_10m_min,vapour_pressure_deficit_max,wet_bulb_temperature_2m_min,wet_bulb_temperature_2m_max,wet_bulb_temperature_2m_mean&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,showers,snowfall,rain,precipitation,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_gusts_10m,wind_direction_10m,wind_speed_10m&timezone=auto&forecast_days=14`;
         const response = await fetch(url);
         const data = await response.json();
 
