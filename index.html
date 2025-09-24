@@ -54,76 +54,52 @@
     }
 
     .day {
-      display: flex;
-      flex-direction: row;
-      gap: 25px;
       background: white;
       border-radius: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      text-align: center;
-      transition: transform 0.2s;
+      text-align: left;  /* desktop: alinhado à esquerda */
       padding: 20px;
-      align-items: center; /* mantém alinhamento vertical no desktop */
+      gap: 30px;
     }
 
     .day h2 {
       font-size: 1.2em;
       color: #333;
+      margin: 0 0 10px 0;
     }
 
-    /* CORREÇÃO: aplicar margin:0 apenas aos elementos dentro de .day */
-    .day > h2,
-    .day p {
-      margin: 0;
+    .info-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start; /* esquerda no desktop */
+      gap: 15px;
+      margin-bottom: 8px;
+    }
+
+    .info {
+      white-space: nowrap;
+    }
+
+    .alerts {
+      color: #171391;
     }
 
     /* --- Responsividade: tablets e celulares --- */
     @media (max-width: 768px) {
-      body {
-        padding: 10px;
-      }
+      body { padding: 10px; }
+      .container { max-width: 100%; }
+      .day { padding: 16px; text-align: center; }
 
-      /* container usa toda a largura disponível */
-      .container {
-        max-width: 100%;
-      }
-
-      /* empilha e centraliza conteúdo dentro do card */
-      .day {
-        flex-direction: column;
-        gap: 10px;
-        align-items: center;
-        text-align: center;
-        padding: 16px;
-      }
-
-      /* faz cada filho do card ocupar toda a largura do card e centraliza o texto */
-      .day > * {
-        width: 100%;
-        box-sizing: border-box;
-        text-align: center;
-      }
-
-      /* ajuste da área de busca para ficar compacto e centralizado */
-      .search {
-        flex-direction: column;
-        gap: 8px;
-        align-items: center;
-        width: 100%;
-      }
-      .search input,
-      .search button {
-        width: 95%;
-        max-width: 420px;
-        box-sizing: border-box;
+      .info-row {
+        flex-direction: column;   /* cada info embaixo do outro */
+        align-items: center;      /* centraliza no eixo X */
+        gap: 6px;
       }
     }
 
-    /* opcional: pequenos ajustes para muito pequenas larguras */
     @media (max-width: 420px) {
       h1 { font-size: 1.2rem; }
-      .day { padding: 12px; gap: 8px; }
-      .search input, .search button { padding: 10px; }
+      .day { padding: 12px; }
     }
   </style>
 </head>
@@ -137,7 +113,6 @@
     </div>
 
     <div id="location"></div>
-
     <div id="forecast" class="forecast"></div>
   </div>
 
@@ -151,11 +126,16 @@
     }
 
     function formatDateManual(dateStr) {
-      const dias = ["dom.", "seg.", "ter.", "qua.", "qui.", "sex.", "sáb."];
+      const dias = ["Dom.", "Seg.", "Ter.", "Qua.", "Qui.", "Sex.", "Sáb."];
       const [year, month, day] = dateStr.split("-");
       const dt = new Date(`${year}-${month}-${day}T12:00:00`);
       const weekday = dias[dt.getDay()];
       return `${weekday}, ${day}/${month}`;
+    }
+
+    function fmt(v, decimals = 0) {
+      if (v === null || v === undefined || Number.isNaN(Number(v))) return "—";
+      return Number(v).toFixed(decimals);
     }
 
     function generateAlerts(day) {
@@ -164,7 +144,7 @@
       else if (day.cloud_cover_mean >= 50) alerts.push("Muitas nuvens");
       else alerts.push("Poucas nuvens");
 
-      if (day.cape_max > 1000) alerts.push("Alerta de trovoadas");
+      if (typeof day.cape_max === "number" && day.cape_max > 1000) alerts.push("Alerta de trovoadas");
 
       if (day.precipitation_sum > 10) alerts.push("Chuvas");
       else if (day.precipitation_sum > 0) alerts.push("Chuva isolada");
@@ -174,7 +154,7 @@
 
     async function loadForecast(lat, lon) {
       try {
-        const url = `https://ensemble-api.open-meteo.com/v1/ensemble?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,wind_speed_10m_max,precipitation_sum,cloud_cover_mean,cape_max&models=ecmwf_aifs025&timezone=America%2FSao_Paulo&forecast_days=16`;
+        const url = `https://ensemble-api.open-meteo.com/v1/ensemble?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,wind_speed_10m_min,wind_speed_10m_max,wind_direction_10m_dominant,wind_gusts_10m_max,cloud_cover_mean,precipitation_sum,cape_max,relative_humidity_2m_min,relative_humidity_2m_max&models=ecmwf_aifs025&forecast_days=15`;
         const response = await fetch(url);
         const data = await response.json();
 
@@ -187,6 +167,8 @@
           const max = daily.temperature_2m_max[i];
           const rain = daily.precipitation_sum[i];
           const wind = daily.wind_speed_10m_max[i];
+          const minHum = daily.relative_humidity_2m_min ? daily.relative_humidity_2m_min[i] : null;
+          const maxHum = daily.relative_humidity_2m_max ? daily.relative_humidity_2m_max[i] : null;
           const cloud = daily.cloud_cover_mean[i];
           const cape = daily.cape_max[i];
 
@@ -197,10 +179,13 @@
 
           dayDiv.innerHTML = `
             <h2>${formatDateManual(date)}</h2>
-            <p>🌡️ ${min.toFixed(0)}° a ${max.toFixed(0)}°</p>
-            <p>🌧️ ${rain.toFixed(1)} mm</p>
-            <p>💨 ${wind.toFixed(0)} km/h</p>
-            <p style="color:#171391">${generateAlerts(dayData)}</p>
+            <div class="info-row">
+              <div class="info">🌡️ ${fmt(min,0)}° a ${fmt(max,0)}°</div>
+              <div class="info">🌧️ ${fmt(rain,1)} mm</div>
+              <div class="info">💨 ${fmt(wind,0)} km/h</div>
+              <div class="info">💧 ${fmt(minHum,0)}% a ${fmt(maxHum,0)}%</div>
+            </div>
+            <div class="alerts">${generateAlerts(dayData)}</div>
           `;
 
           forecastDiv.appendChild(dayDiv);
@@ -225,7 +210,6 @@
       }
     });
 
-    // opcional: permite buscar ao apertar Enter
     document.getElementById("cityInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") document.getElementById("searchBtn").click();
     });
