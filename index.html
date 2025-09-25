@@ -49,7 +49,7 @@
 
     .forecast {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr; /* 2 dias por linha em telas grandes */
       width: 99%;
       gap: 20px;
     }
@@ -84,16 +84,20 @@
       color: #787878;
     }
 
+    #temp {background-color: salmon; display: inline; padding: 2px 10px; border-radius: 8px;}
+    #chuva {background-color: lightskyblue; display: inline; padding: 2px 10px; border-radius: 8px;}
+    #vento {background-color: lightgreen; display: inline; padding: 2px 10px; border-radius: 8px;}
+    #rajadas {background-color: lightgreen; display: inline; padding: 2px 10px; border-radius: 8px;}
+    #umidade {background-color: lightskyblue; display: inline; padding: 2px 10px; border-radius: 8px;}
+
     /* --- Responsividade: tablets e celulares --- */
     @media (max-width: 1024px) {
-      
       .container {
         width: 98%;
       }
 
       .forecast {
-        display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr; /* 1 dia por linha em telas menores */
         width: 98%;
         gap: 20px;
       }
@@ -101,10 +105,9 @@
       .info-row {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 8px;
+        gap: 15px;
       }
     }
-
 
   </style>
 </head>
@@ -159,7 +162,7 @@
 
     async function loadForecast(lat, lon) {
       try {
-        const url = `https://ensemble-api.open-meteo.com/v1/ensemble?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,apparent_temperature_mean,temperature_2m_mean,apparent_temperature_min,apparent_temperature_max,wind_speed_10m_mean,wind_speed_10m_min,wind_speed_10m_max,wind_direction_10m_dominant,cloud_cover_max,cloud_cover_min,cloud_cover_mean,wind_direction_100m_dominant,wind_speed_100m_max,wind_speed_100m_min,wind_speed_100m_mean,wind_gusts_10m_max,wind_gusts_10m_min,wind_gusts_10m_mean,precipitation_sum,precipitation_hours,rain_sum,snowfall_sum,pressure_msl_mean,pressure_msl_min,pressure_msl_max,surface_pressure_mean,surface_pressure_min,surface_pressure_max,shortwave_radiation_sum,et0_fao_evapotranspiration,dew_point_2m_max,dew_point_2m_min,dew_point_2m_mean,cape_max,cape_min,cape_mean,relative_humidity_2m_max,relative_humidity_2m_min,relative_humidity_2m_mean&hourly=cape&models=ecmwf_aifs025&timezone=auto&forecast_days=14`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_clear_sky_max,uv_index_max,sunshine_duration,daylight_duration,sunset,sunrise,showers_sum,snowfall_sum,precipitation_sum,precipitation_hours,precipitation_probability_max,rain_sum,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant,shortwave_radiation_sum,et0_fao_evapotranspiration,cape_max,cape_mean,cape_min,temperature_2m_mean,apparent_temperature_mean,cloud_cover_mean,cloud_cover_max,cloud_cover_min,dew_point_2m_max,dew_point_2m_min,pressure_msl_max,dew_point_2m_mean,pressure_msl_mean,pressure_msl_min,snowfall_water_equivalent_sum,relative_humidity_2m_min,relative_humidity_2m_max,precipitation_probability_min,relative_humidity_2m_mean,et0_fao_evapotranspiration_sum,growing_degree_days_base_0_limit_50,leaf_wetness_probability_mean,precipitation_probability_mean,updraft_max,surface_pressure_min,surface_pressure_max,surface_pressure_mean,visibility_mean,visibility_min,visibility_max,winddirection_10m_dominant,wind_speed_10m_mean,wind_gusts_10m_min,wind_speed_10m_min,wind_gusts_10m_mean,vapour_pressure_deficit_max,wet_bulb_temperature_2m_min,wet_bulb_temperature_2m_max,wet_bulb_temperature_2m_mean&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,snowfall,showers,rain,precipitation,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_gusts_10m,wind_speed_10m,wind_direction_10m&timezone=auto&forecast_days=16`;
         const response = await fetch(url);
         const data = await response.json();
 
@@ -186,10 +189,11 @@
           dayDiv.innerHTML = `
             <h2>${formatDateManual(date)}</h2>
             <div class="info-row">
-              <div class="info">🌡️ Temperatura: ${fmt(min,0)}° a ${fmt(max,0)}°</div>
-              <div class="info">☔ Chuva acumulada: ${fmt(rain,1)} mm</div>
-              <div class="info">🍃 Vento: ${fmt(wind,0)} km/h</div>
-              <div class="info">💧 Umidade: ${fmt(minHum,0)}% a ${fmt(maxHum,0)}%</div>
+              <div class="info"><p id="temp">Temperatura: ${fmt(min,0)}° a ${fmt(max,0)}°</p></div>
+              <div class="info"><p id="chuva">Chuva: ${fmt(rain,1)} mm</p></div>
+              <div class="info"><p id="vento">Vento: ${fmt(wind,0)} km/h</p></div>
+              <div class="info"><p id="rajadas">Rajadas: ${fmt(windGusts,0)} km/h</p></div>
+              <div class="info"><p id="umidade">Umidade: ${fmt(minHum,0)}% a ${fmt(maxHum,0)}%</p></div>
             </div>
             <div class="alerts"><b>${generateAlerts(dayData)}</b></div>
           `;
