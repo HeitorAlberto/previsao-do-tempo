@@ -51,7 +51,7 @@
 
     .forecast {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr; /* padrão desktop: 1 coluna */
       gap: 20px;
     }
 
@@ -59,7 +59,7 @@
       background: white;
       border-radius: 12px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      text-align: left;  /* desktop: alinhado à esquerda */
+      text-align: left;
       padding: 20px;
       gap: 30px;
     }
@@ -70,10 +70,12 @@
       margin: 0 0 20px 0;
     }
 
+    /* --- Bloco de informações --- */
+    /* Desktop: em linha */
     .info-row {
       display: flex;
       flex-wrap: wrap;
-      justify-content: flex-start; /* esquerda no desktop */
+      justify-content: flex-start;
       gap: 15px;
       margin-bottom: 20px;
     }
@@ -87,31 +89,21 @@
     }
 
     /* --- Responsividade: tablets e celulares --- */
-    @media (max-width: 768px) {
-      body { padding: 10px; }
-      .container { max-width: 100%; }
-      .day { padding: 16px; text-align: center; }
-      .day > h2 {text-align: left;}
-      .alerts {text-align: left;}
-
+    @media (max-width: 1024px) {
+      /* info em duas colunas */
       .info-row {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 6px;
+        gap: 8px;
       }
-
-      .info {text-align: left;}
     }
 
-    @media (max-width: 420px) {
-      h1 { font-size: 1.2rem; }
-      .day { padding: 12px; display: grid; grid-template-columns: 1fr 1fr; }
-    }
+
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Previsão do Tempo 14 dias</h1>
+    <h1>Previsão do Tempo - 14 dias</h1>
 
     <div class="search">
       <input type="text" id="cityInput" placeholder="Digite o nome da cidade" />
