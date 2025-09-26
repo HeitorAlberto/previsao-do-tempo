@@ -1,320 +1,205 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Previsão do Tempo — Novo Layout</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#0f1724; /* deep navy */
-      --card:#0b1220;
-      --muted:#9aa4b2;
-      --accent:linear-gradient(135deg,#6dd3f7 0%, #6ce6b6 100%);
-      --glass: rgba(255,255,255,0.04);
-      --danger:#ff6b6b;
-      --radius:14px;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clima Visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f9fafb;
+    --primary:#0ea5e9;
+    --danger:#ef4444;
+    --alert:#facc15;
+    --radius:12px;
+    --text:#1f2937;
+    --secondary:#64748b;
+    --card-bg:#ffffff;
+    --shadow:0 4px 12px rgba(0,0,0,0.1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:Inter, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    padding:20px;
+  }
 
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+  header{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap;
+  }
+  header h1{
+    font-size:28px; color:var(--primary);
+  }
+  .searchbox{display:flex;gap:10px; margin-top:10px;}
+  .searchbox input{padding:10px 14px;border-radius:var(--radius);border:1px solid var(--secondary); flex:1; background:#fff;color:var(--text);}
+  .searchbox button{padding:10px 16px;border:none;border-radius:var(--radius);background:var(--primary);color:#fff;font-weight:600;cursor:pointer;}
 
-    body{
-      background: radial-gradient(1200px 600px at 10% 10%, rgba(92, 104, 255, 0.12), transparent),
-                  radial-gradient(1000px 500px at 95% 90%, rgba(76, 255, 199, 0.06), transparent),
-                  var(--bg);
-      color:#e6eef7;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      padding:28px;
-      display:flex;align-items:flex-start;justify-content:center;
-    }
+  .days-container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+  }
 
-    .app{
-      width:1100px;
-      max-width:98vw;
-      display:grid;
-      grid-template-columns: 380px 1fr;
-      gap:22px;
-      align-items:start;
-    }
+  .day-card{
+    border-radius:var(--radius);
+    padding:16px;
+    background:var(--card-bg);
+    box-shadow:var(--shadow);
+    transition:transform 0.3s;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .day-card:hover{
+    transform:scale(1.03);
+  }
 
-    /* left column (controls + summary) */
-    .panel{
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:var(--radius);
-      padding:22px;
-      box-shadow: 0 8px 30px rgba(2,6,23,0.6);
-      min-height:420px;
-    }
+  .day-header{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;
+  }
+  .day-date{font-weight:700; font-size:16px;}
+  .temp-range{font-weight:800; font-size:20px; color:var(--primary);}
+  
+  .metrics{
+    display:flex; flex-direction:column; gap:6px;
+    font-size:14px;
+    color:var(--secondary);
+  }
 
-    .brand{display:flex;gap:10px;align-items:center;margin-bottom:18px}
-    .logo{width:44px;height:44px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:#023047}
-    .brand h1{font-size:18px;margin:0}
-    .brand p{margin:0;color:var(--muted);font-size:13px}
+  .alert-bubble{
+    align-self:flex-start;
+    background:var(--alert);
+    color:#000;
+    padding:6px 10px;
+    border-radius:50px;
+    font-size:12px;
+    font-weight:600;
+    margin-top:10px;
+  }
 
-    .searchbox{display:flex;gap:10px;margin:16px 0}
-    .searchbox input{flex:1;padding:12px 14px;border-radius:12px;border:0;background:rgba(255,255,255,0.03);color:inherit;outline:none;font-size:15px}
-    .searchbox button{background:linear-gradient(90deg,#2dd4bf,#60a5fa);border:0;padding:10px 14px;border-radius:12px;color:#04111a;font-weight:700;cursor:pointer}
-
-    .meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
-    .chip{background:var(--glass);padding:8px 12px;border-radius:999px;color:var(--muted);font-size:13px}
-
-    .summary{
-      margin-top:8px;padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    }
-    .summary h2{margin:0;font-size:20px}
-    .summary p{margin:6px 0 0;color:var(--muted)}
-
-    .unit-toggle{display:flex;gap:8px;margin-top:14px}
-    .unit-toggle button{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:10px;color:var(--muted);cursor:pointer}
-    .unit-toggle button.active{background:rgba(255,255,255,0.06);color:#e6eef7;border-color:transparent}
-
-    /* right column (forecast grid) */
-    .forecast-wrap{display:flex;flex-direction:column;gap:18px}
-    .topbar{display:flex;justify-content:space-between;align-items:center}
-    .location-big{font-size:18px;font-weight:700}
-    .last-updated{color:var(--muted);font-size:13px}
-
-    .cards{
-      display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap:14px;
-    }
-
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius:14px;padding:14px;min-height:120px;display:flex;flex-direction:column;justify-content:space-between;box-shadow: 0 6px 18px rgba(2,6,23,0.5);
-    }
-
-    .date{font-size:14px;font-weight:600}
-    .big-temp{font-size:26px;font-weight:800;margin-top:6px}
-    .meta-row{display:flex;justify-content:space-between;align-items:center;margin-top:8px;color:var(--muted);font-size:13px}
-
-    .alert{font-size:12px;color:var(--danger);font-weight:700;margin-top:8px}
-
-    /* empty / error state */
-    .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px;border-radius:12px;background:rgba(255,255,255,0.02);color:var(--muted)}
-
-    /* loader */
-    .loader{height:48px;width:48px;border-radius:50%;border:4px solid rgba(255,255,255,0.04);border-top-color:rgba(255,255,255,0.18);animation:spin 1s linear infinite;margin:18px auto}
-    @keyframes spin{to{transform:rotate(360deg)}}
-
-    /* responsive */
-    @media (max-width:920px){
-      .app{grid-template-columns:1fr;}
-      .panel{order:2}
-      .forecast-wrap{order:1}
-    }
-  </style>
+  @media(max-width:768px){
+    .days-container{grid-template-columns:1fr;}
+    .searchbox{width:100%;}
+  }
+</style>
 </head>
 <body>
-  <main class="app" role="main">
-    <aside class="panel" aria-label="Controles e resumo">
-      <div class="brand">
-        <div class="logo">T</div>
-        <div>
-          <h1>Previsão</h1>
-          <p>14 dias — dados via Open-Meteo</p>
+<header>
+  <h1>Previsão do tempo</h1>
+  <div class="searchbox">
+    <input id="cityInput" placeholder="Digite uma cidade">
+    <button id="searchBtn">Buscar</button>
+  </div>
+</header>
+
+<main>
+  <div id="cardsContainer" class="days-container">
+    <div class="day-card">
+      <div class="day-header">
+        <div class="day-date">—</div>
+        <div class="temp-range">—° / —°</div>
+      </div>
+      <div class="metrics">Pesquise uma cidade para ver a previsão</div>
+    </div>
+  </div>
+</main>
+
+<script>
+const $ = id=>document.getElementById(id);
+let currentUnits='metric';
+
+function fmt(v){return v==null?'—':Math.round(v);}
+function toF(c){return (c*9/5)+32;}
+function formatDate(d){const dias=["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"]; const [y,m,day]=d.split('-'); const dt=new Date(`${y}-${m}-${day}T12:00:00`); return `${day}/${m} • ${dias[dt.getDay()]}`;}
+
+async function getCoordinates(city){
+  const res=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=pt`);
+  if(!res.ok)throw new Error('Erro na geocodificação');
+  const data=await res.json();
+  return data.results&&data.results.length>0?data.results[0]:null;
+}
+
+function generateAlerts(day){
+  const alerts=[];
+  if(day.precipitation_sum>=20)alerts.push('Chuva intensa');
+  if(day.wind_gusts_10m_max>=40)alerts.push('Atenção a rajadas de vento');
+  if(day.relative_humidity_2m_min<=30)alerts.push('Umidade baixa');
+  return alerts;
+}
+
+function cloudDescription(percent){
+  if(percent<20)return 'Poucas nuvens';
+  if(percent<50)return 'Parcialmente nublado';
+  if(percent<80)return 'Muitas nuvens';
+  return 'Nublado';
+}
+
+function uvDescription(index){
+  if(index<=2)return 'UV Baixo';
+  if(index<=5)return 'UV Moderado';
+  if(index<=7)return 'UV Alto';
+  if(index<=10)return 'UV Muito Alto';
+  return 'UV Extremo';
+}
+
+async function loadForecast(lat,lon){
+  const container=$('cardsContainer');
+  container.innerHTML='<div class="day-card"><div class="metrics">Carregando...</div></div>';
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,relative_humidity_2m_min,relative_humidity_2m_max,cloud_cover_mean,uv_index_max&timezone=auto&forecast_days=14`;
+    const r=await fetch(url);
+    if(!r.ok)throw new Error('Erro ao obter previsão');
+    const data=await r.json();
+    if(!data.daily||!data.daily.time){container.innerHTML='<div class="day-card">Sem dados</div>';return;}
+
+    container.innerHTML='';
+    const days=data.daily.time;
+    for(let i=0;i<days.length;i++){
+      let tMin=data.daily.temperature_2m_min[i];
+      let tMax=data.daily.temperature_2m_max[i];
+      if(currentUnits==='imperial'){tMin=toF(tMin);tMax=toF(tMax);}
+      const dayData={
+        precipitation_sum:data.daily.precipitation_sum[i],
+        wind_speed_10m_max:data.daily.wind_speed_10m_max[i],
+        wind_gusts_10m_max:data.daily.wind_gusts_10m_max[i],
+        relative_humidity_2m_min:data.daily.relative_humidity_2m_min[i],
+        relative_humidity_2m_max:data.daily.relative_humidity_2m_max[i],
+        cloud_cover_mean:data.daily.cloud_cover_mean[i],
+        uv_index_max:data.daily.uv_index_max[i]
+      };
+      const card=document.createElement('div');
+      card.className='day-card';
+      const alerts=generateAlerts(dayData);
+      card.innerHTML=`
+        <div class="day-header">
+          <div class="day-date">${formatDate(days[i])}</div>
+          <div class="temp-range">${fmt(tMin)}° / ${fmt(tMax)}°</div>
         </div>
-      </div>
-
-      <div class="searchbox" role="search">
-        <input id="cityInput" type="text" placeholder="Digite uma cidade (ex: Fortaleza, BR)" aria-label="Pesquisar cidade">
-        <button id="searchBtn" aria-label="Buscar">Buscar</button>
-      </div>
-
-      <div class="meta">
-        <div class="chip" id="timezoneChip">Timezone: —</div>
-        <div class="chip" id="coordsChip">Lat, Lon: —</div>
-        <div class="chip" id="daysChip">14 dias</div>
-      </div>
-
-      <div class="summary" id="summary">
-        <h2 id="locationName">Nenhuma cidade selecionada</h2>
-        <p id="summaryText">Digite uma cidade no campo acima e pressione Buscar (ou Enter). A previsão aparecerá ao lado.</p>
-        <div class="unit-toggle" role="tablist" aria-label="Unidades">
-          <button id="cBtn" class="active" aria-pressed="true">°C</button>
-          <button id="fBtn" aria-pressed="false">°F</button>
+        <div class="metrics">
+          ☔ Chuva: ${fmt(dayData.precipitation_sum)} mm<br>
+          🍃 Vento: ${fmt(dayData.wind_speed_10m_max)} km/h<br>
+          🍃 Rajadas: ${fmt(dayData.wind_gusts_10m_max)} km/h<br>
+          💧 Umidade: ${fmt(dayData.relative_humidity_2m_min)}% a ${fmt(dayData.relative_humidity_2m_max)}%<br>
+          ☁️ ${cloudDescription(dayData.cloud_cover_mean)}<br>
+          🔆 ${uvDescription(dayData.uv_index_max)}
         </div>
-      </div>
-
-    </aside>
-
-    <section class="forecast-wrap" aria-label="Previsão">
-      <div class="topbar">
-        <div>
-          <div class="location-big" id="locationBig">—</div>
-          <div class="last-updated" id="updatedAt">Última atualização: —</div>
-        </div>
-        <div id="controlsRight">
-          <!-- reserved for future controls like export, share -->
-        </div>
-      </div>
-
-      <div id="cardsContainer" class="cards">
-        <div class="empty" id="placeholder">
-          <svg width="80" height="80" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 15a4 4 0 0 1 4-4h1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div style="height:8px"></div>
-          <div>Sem dados — faça uma busca</div>
-        </div>
-      </div>
-
-    </section>
-  </main>
-
-  <script>
-    // UTILIDADES
-    const $ = (id) => document.getElementById(id);
-    let currentUnits = 'metric'; // 'metric' = °C, 'imperial' = °F
-
-    function fmtNumber(v, decimals=0){ if (v===null||v===undefined||Number.isNaN(Number(v))) return '—'; return Number(v).toFixed(decimals); }
-
-    function toF(c){ return c===null||c===undefined||isNaN(c)?null: (c*9/5)+32; }
-
-    function formatDateShort(dateStr){ // YYYY-MM-DD -> Dia 01/01 (Seg)
-      const dias = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"]; const [y,m,d] = dateStr.split('-'); const dt = new Date(`${y}-${m}-${d}T12:00:00`); return `${d}/${m} • ${dias[dt.getDay()]}`; 
+        ${alerts.length?`<div class="alert-bubble">${alerts.join(' • ')}</div>`:''}
+      `;
+      container.appendChild(card);
     }
+  }catch(e){container.innerHTML=`<div class="day-card">Erro: ${e.message}</div>`;}
+}
 
-    function generateAlerts(day){
-      const alerts = [];
-      
-      if (day.cloud_cover_mean >= 80) alerts.push('Nublado');
-      else if (day.cloud_cover_mean >= 50) alerts.push('Muitas nuvens');
-      else alerts.push('Poucas nuvens');
-      
-      if (typeof day.cape_max === 'number' && day.cape_max > 1000) alerts.push('Possível trovoada');
-      
-      if (day.precipitation_sum == 0){
-        alerts.push('Não chove')
-      } else if (day.precipitation_sum <= 2.5) {
-        alerts.push('Chuva isolada');
-      } else if (day.precipitation_sum <= 10) {
-        alerts.push('Chuva fraca');
-      } else if (day.precipitation_sum <= 20) {
-        alerts.push('Chuva moderada');
-      } else if (day.precipitation_sum < 50) {
-        alerts.push('Chuva forte');
-      } else {
-        alerts.push('Chuva muito forte');
-      }
-
-      return alerts;
-    }
-
-    // API: geocoding + forecast (Open-Meteo)
-    async function getCoordinates(city){
-      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=pt`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Erro na geocodificação');
-      const data = await res.json();
-      return (data.results && data.results.length>0) ? data.results[0] : null;
-    }
-
-    async function loadForecast(lat, lon){
-      const forecastEl = $('cardsContainer');
-      forecastEl.innerHTML = '';
-      const loading = document.createElement('div'); loading.className='loader'; forecastEl.appendChild(loading);
-
-      try{
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,relative_humidity_2m_min,relative_humidity_2m_max,cloud_cover_mean,cape_max&current_weather=true&timezone=auto&forecast_days=14`;
-        const r = await fetch(url);
-        if (!r.ok) throw new Error('Erro ao obter previsão');
-        const data = await r.json();
-
-        if (!data.daily || !data.daily.time){
-          forecastEl.innerHTML = '<div class="empty">Sem dados disponíveis para as coordenadas.</div>';
-          return;
-        }
-
-        // update meta
-        $('timezoneChip').textContent = 'Timezone: ' + (data.timezone || '—');
-        $('coordsChip').textContent = `Lat, Lon: ${lat.toFixed(3)}, ${lon.toFixed(3)}`;
-
-        // header
-        $('locationBig').textContent = $('locationName').textContent;
-        $('updatedAt').textContent = 'Última atualização: ' + new Date().toLocaleString();
-
-        // build cards
-        forecastEl.innerHTML = '';
-        const days = data.daily.time;
-        for (let i=0;i<days.length;i++){
-          const date = days[i];
-          const tMin = data.daily.temperature_2m_min[i];
-          const tMax = data.daily.temperature_2m_max[i];
-          const rain = data.daily.precipitation_sum[i];
-          const wind = data.daily.wind_speed_10m_max[i];
-          const gusts = data.daily.wind_gusts_10m_max[i];
-          const humMin = data.daily.relative_humidity_2m_min ? data.daily.relative_humidity_2m_min[i] : null;
-          const humMax = data.daily.relative_humidity_2m_max ? data.daily.relative_humidity_2m_max[i] : null;
-          const cloud = data.daily.cloud_cover_mean[i];
-          const cape = data.daily.cape_max ? data.daily.cape_max[i] : null;
-
-          const card = document.createElement('article'); card.className='card'; card.setAttribute('role','article');
-          const alerts = generateAlerts({cloud_cover_mean:cloud,precipitation_sum:rain,cape_max: cape});
-
-          // temperature formatting according to units
-          let displayMin = tMin, displayMax = tMax;
-          if (currentUnits === 'imperial'){ displayMin = toF(tMin); displayMax = toF(tMax); }
-
-          card.innerHTML = `
-            <div>
-              <div class="date">${formatDateShort(date)}</div>
-              <div class="big-temp">${fmtNumber(displayMin,0)}° a ${fmtNumber(displayMax,0)}°</div>
-            </div>
-            <div>
-              <div class="meta-row">
-                <div>☔ ${fmtNumber(rain,1)} mm</div>
-                <div>💨 ${fmtNumber(wind,0)} km/h</div>
-              </div>
-              <div class="meta-row" style="margin-top:6px;color:var(--muted);font-size:12px">
-                <div>💧 ${fmtNumber(humMin,0)}% a ${fmtNumber(humMax,0)}%</div>
-                <div>💨 Rajadas: ${fmtNumber(gusts,0)} km/h</div>
-              </div>
-              ${alerts.length?`<div class="alert">${alerts.join(' . ')}</div>`: ''}
-            </div>
-          `;
-
-          forecastEl.appendChild(card);
-        }
-
-      }catch(err){
-        forecastEl.innerHTML = `<div class="empty">Erro ao carregar previsão — ${err.message}</div>`;
-        console.error(err);
-      }
-    }
-
-    // UI events
-    $('searchBtn').addEventListener('click', async ()=>{
-      const city = $('cityInput').value.trim(); if (!city) return; 
-      try{
-        $('placeholder')?.remove();
-        const geo = await getCoordinates(city);
-        if (!geo){
-          $('locationName').textContent = 'Cidade não encontrada';
-          $('summaryText').textContent = 'Tente outra cidade.';
-          $('cardsContainer').innerHTML = '<div class="empty">Cidade não localizada.</div>';
-          return;
-        }
-        // update summary
-        $('locationName').textContent = `${geo.name}${geo.admin1?(', '+geo.admin1):''}, ${geo.country}`;
-        $('summaryText').textContent = `Previsão detalhada para os próximos 14 dias.`;
-        await loadForecast(Number(geo.latitude), Number(geo.longitude));
-      }catch(e){
-        $('cardsContainer').innerHTML = `<div class="empty">Erro: ${e.message}</div>`;
-        console.error(e);
-      }
-    });
-
-    $('cityInput').addEventListener('keydown', (e)=>{ if (e.key === 'Enter') $('searchBtn').click(); });
-
-    // units
-    $('cBtn').addEventListener('click', ()=>{ currentUnits='metric'; $('cBtn').classList.add('active'); $('fBtn').classList.remove('active'); $('cBtn').setAttribute('aria-pressed','true'); $('fBtn').setAttribute('aria-pressed','false'); $('searchBtn').click(); });
-    $('fBtn').addEventListener('click', ()=>{ currentUnits='imperial'; $('fBtn').classList.add('active'); $('cBtn').classList.remove('active'); $('fBtn').setAttribute('aria-pressed','true'); $('cBtn').setAttribute('aria-pressed','false'); $('searchBtn').click(); });
-
-    // initial sample (optional): show Fortaleza as placeholder
-    // $('cityInput').value = 'Fortaleza, BR';
-    // $('searchBtn').click();
-  </script>
+$('searchBtn').addEventListener('click',async ()=>{
+  const city=$('cityInput').value.trim();
+  if(!city)return;
+  try{
+    const geo=await getCoordinates(city);
+    if(!geo){alert('Cidade não encontrada'); return;}
+    await loadForecast(geo.latitude,geo.longitude);
+  }catch(e){alert('Erro: '+e.message);}
+});
+</script>
 </body>
 </html>
