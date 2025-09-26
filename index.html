@@ -78,7 +78,7 @@
 
     .cards{
       display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap:14px;
     }
 
@@ -112,7 +112,7 @@
   <main class="app" role="main">
     <aside class="panel" aria-label="Controles e resumo">
       <div class="brand">
-        <div class="logo">PT</div>
+        <div class="logo">T</div>
         <div>
           <h1>Previsão</h1>
           <p>14 dias — dados via Open-Meteo</p>
@@ -173,7 +173,7 @@
     function toF(c){ return c===null||c===undefined||isNaN(c)?null: (c*9/5)+32; }
 
     function formatDateShort(dateStr){ // YYYY-MM-DD -> Dia 01/01 (Seg)
-      const dias = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"]; const [y,m,d] = dateStr.split('-'); const dt = new Date(`${y}-${m}-${d}T12:00:00`); return `${d}/${m} • ${dias[dt.getDay()]}`; 
+      const dias = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"]; const [y,m,d] = dateStr.split('-'); const dt = new Date(`${y}-${m}-${d}T12:00:00`); return `${d}/${m} • ${dias[dt.getDay()]}`; 
     }
 
     function generateAlerts(day){
@@ -269,7 +269,7 @@
               </div>
               <div class="meta-row" style="margin-top:6px;color:var(--muted);font-size:12px">
                 <div>💧 ${fmtNumber(humMin,0)}% a ${fmtNumber(humMax,0)}%</div>
-                <div>💨 ${fmtNumber(gusts,0)} km/h (Raj)</div>
+                <div>💨 Rajadas: ${fmtNumber(gusts,0)} km/h</div>
               </div>
               ${alerts.length?`<div class="alert">${alerts.join(' • ')}</div>`: ''}
             </div>
