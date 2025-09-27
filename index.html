@@ -87,11 +87,11 @@
     const cidadeInfo = document.getElementById("cidade-info");
 
     function descricaoUV(uv) {
-      if (uv <= 2) return "Baixos";
-      if (uv <= 5) return "Moderados";
-      if (uv <= 8) return "Altos";
-      if (uv <= 10) return "Muito altos";
-      return "Extremos";
+      if (uv <= 2) return "Baixo";
+      if (uv <= 5) return "Moderado";
+      if (uv <= 8) return "Alto";
+      if (uv <= 10) return "Muito alto";
+      return "Extremo";
     }
 
     async function carregarPrevisao(lat, lon) {
@@ -139,6 +139,9 @@
           else if (chuva <= 20) descricao.push(`<p class="aviso-chuva-neve">Atenção a chuva moderada!</p>`);
           else descricao.push(`<p class="aviso-chuva-neve">Alerta de chuva forte!</p>`);
 
+          // Índice UV
+          descricao.push(`<p class="aviso-alerta">Índice UV ${descricaoUV(uv)}</p>`);
+
           // Baixa umidade
           if (umidadeMin < 30) descricao.push(`<p class="aviso-alerta">Alerta de baixa umidade do ar (${umidadeMin}%)</p>`);
 
@@ -163,14 +166,13 @@
             <h2>${titulo.charAt(0).toUpperCase() + titulo.slice(1)}</h2>
             <div class="dados-diarios">
               <div>
-                <p>🌡️ Temperatura: ${tempMin}° a ${tempMax}°</p>
+                <p>🌡️ Temp.: ${tempMin}° a ${tempMax}°</p>
                 <p>☔ Chuva: ${chuva} mm</p>
-                <p>💧 Umidade: ${umidadeMin}% a ${umidadeMax}%</p>
-                <p>🍃 Vento máx.: ${vento} km/h</p>
+                <p>💧 Umid.: ${umidadeMin}% a ${umidadeMax}%</p>
               </div>
               <div>
-                <p>🍃 Rajada máx.: ${ventoRajada} km/h</p>
-                <p>🔅 UV ${descricaoUV(uv)}</p>
+                <p>🍃 Vento: ${vento} km/h</p>
+                <p>🍃 Rajadas: ${ventoRajada} km/h</p>
                 <p>☀️ Sol: ${nascer} a ${por}</p>
               </div>
               <div class="descricao-diaria">
