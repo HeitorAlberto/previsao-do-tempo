@@ -87,11 +87,11 @@
     const cidadeInfo = document.getElementById("cidade-info");
 
     function descricaoUV(uv) {
-      if (uv <= 2) return "Baixo";
-      if (uv <= 5) return "Moderado";
-      if (uv <= 7) return "Alto";
-      if (uv <= 10) return "Muito alto";
-      return "Extremo";
+      if (uv <= 2) return "Baixos";
+      if (uv <= 5) return "Moderados";
+      if (uv <= 8) return "Altos";
+      if (uv <= 10) return "Muito altos";
+      return "Extremos";
     }
 
     async function carregarPrevisao(lat, lon) {
@@ -170,7 +170,7 @@
               </div>
               <div>
                 <p>🍃 Rajada máx.: ${ventoRajada} km/h</p>
-                <p>🔅 Índice UV: ${uv} (${descricaoUV(uv)})</p>
+                <p>🔅 UV ${descricaoUV(uv)}</p>
                 <p>☀️ Sol: ${nascer} a ${por}</p>
               </div>
               <div class="descricao-diaria">
