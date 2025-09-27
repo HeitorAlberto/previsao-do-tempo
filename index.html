@@ -183,7 +183,7 @@
         const cidade = displayName[0].trim();
         const estado = displayName[displayName.length - 3].trim();
         const pais = displayName[displayName.length - 1].trim();
-        cidadeInfo.textContent = `${cidade}, ${estado}, ${pais}`;
+        cidadeInfo.textContent = `📌 ${cidade}, ${estado}, ${pais}`;
 
         const { lat, lon } = results[0];
         carregarPrevisao(lat, lon);
@@ -194,13 +194,37 @@
     }
 
     function detectarLocalizacao() {
-      if (!navigator.geolocation) return carregarPrevisao(-9.7811, -36.0936);
-      navigator.geolocation.getCurrentPosition(pos => {
-        const { latitude, longitude } = pos.coords;
-        carregarPrevisao(latitude, longitude);
-      }, () => {
-        carregarPrevisao(-9.7811, -36.0936);
-      });
+      const defaultCidadeInfo = "📌 Maceió, Alagoas, Brasil"; // info padrão
+      if (!navigator.geolocation) {
+        cidadeInfo.textContent = defaultCidadeInfo;
+        return carregarPrevisao(-9.6658, -35.7353);
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const { latitude, longitude } = pos.coords;
+
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`)
+            .then(resp => resp.json())
+            .then(data => {
+              if (data.address) {
+                const cidade = data.address.city || data.address.town || data.address.village || data.address.hamlet || "Localidade";
+                const estado = data.address.state || "";
+                const pais = data.address.country || "";
+                cidadeInfo.textContent = `📌 ${cidade}, ${estado}, ${pais}`;
+              } else {
+                cidadeInfo.textContent = defaultCidadeInfo;
+              }
+            })
+            .catch(() => cidadeInfo.textContent = defaultCidadeInfo);
+
+          carregarPrevisao(latitude, longitude);
+        },
+        () => {
+          cidadeInfo.textContent = defaultCidadeInfo;
+          carregarPrevisao(-9.6658, -35.7353);
+        }
+      );
     }
 
     btnBuscar.addEventListener("click", () => {
