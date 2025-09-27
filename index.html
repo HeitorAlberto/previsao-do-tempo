@@ -1,25 +1,215 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Previsão do Tempo (Open-Meteo Ensemble)</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Previsão do Tempo (Open-Meteo Ensemble)</title>
+  <style>
+    * {padding: 0; margin: 0; box-sizing: border-box;}
+    body { font-family: Arial, sans-serif; }
+
+    .busca-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 15px 0;
+    }
+
+    .busca {
+      display: flex;
+      gap: 10px;
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .cidade-info {
+      margin-top: 8px;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .busca input { flex: 1; padding: 5px; font-size: 1rem; }
+    .busca button { padding: 5px 10px; font-size: 1rem; }
+
+    .cartoes-diarios { padding-left: 15px; max-width: 500px; margin: 0 auto 30px auto; }
+    .cartoes-diarios h2 { margin-bottom: 15px; font-size: 1.2rem; }
+    .dados-diarios { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .dados-diarios p { margin-bottom: 15px; border: 2px solid black; border-radius: 8px; padding: 5px 10px; font-size: 1rem; word-wrap: break-word; }
+    .descricao-diaria { grid-column: 1 / -1; }
+    .descricao-diaria p { margin-bottom: 15px; border: 2px solid black; border-radius: 8px; padding: 5px 10px; font-size: 1rem; word-wrap: break-word; }
+
+    .aviso-nuvens { background-color: #dadada; } /* fundo cinza */
+    .aviso-alerta { background-color: #ffe77a; }  /* amarelo para outros alertas */
+    .aviso-temperatura-max { background-color: #ff8383; }
+    .aviso-chuva-neve { background-color: #c9e6ff;}
+    .aviso-temperatura-min { background-color: #c9e6ff;}
+
+    @media (max-width: 600px) {
+      .dados-diarios { grid-template-columns: 1fr; }
+      .cartoes-diarios { max-width: 100%; padding-left: 10px; padding-right: 10px; }
+      .dados-diarios p, .descricao-diaria p { font-size: 0.95rem; padding: 4px 8px; }
+      .busca { max-width: 100%; padding-left: 10px; padding-right: 10px; }
+      .dados-diarios { gap: 0px; }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Previsão do Tempo para 30 Dias</h1>
-        <p>Dados de São Miguel dos Campos/AL, Brasil</p>
-    </header>
 
-    <main id="previsao-container"></main>
+  <div class="busca-container">
+    <div class="busca">
+      <input type="text" id="cidade-input" placeholder="Digite o nome da cidade">
+      <button id="buscar-btn">Buscar</button>
+    </div>
+    <div id="cidade-info" class="cidade-info"></div>
+  </div>
 
-    <section id="acumulado-container"></section>
+  <main id="previsao-container"></main>
 
-    <footer>
-        <p>&copy; 2024 Parceiro de Programação</p>
-    </footer>
+  <script>
+    const container = document.getElementById("previsao-container");
+    const inputCidade = document.getElementById("cidade-input");
+    const btnBuscar = document.getElementById("buscar-btn");
+    const cidadeInfo = document.getElementById("cidade-info");
 
-    <script src="script.js"></script>
+    function descricaoUV(uv) {
+      if (uv <= 2) return "Baixo";
+      if (uv <= 5) return "Moderado";
+      if (uv <= 7) return "Alto";
+      if (uv <= 10) return "Muito alto";
+      return "Extremo";
+    }
+
+    async function carregarPrevisao(lat, lon) {
+      container.innerHTML = "<p>Carregando previsão...</p>";
+
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,uv_index_clear_sky_max,uv_index_max,sunshine_duration,daylight_duration,sunset,sunrise,rain_sum,showers_sum,snowfall_sum,precipitation_sum,precipitation_hours,precipitation_probability_max,et0_fao_evapotranspiration,shortwave_radiation_sum,wind_direction_10m_dominant,wind_gusts_10m_max,wind_speed_10m_max,temperature_2m_mean,apparent_temperature_mean,cape_mean,cape_max,cape_min,cloud_cover_mean,cloud_cover_max,cloud_cover_min,dew_point_2m_mean,dew_point_2m_max,dew_point_2m_min,pressure_msl_min,pressure_msl_max,pressure_msl_mean,snowfall_water_equivalent_sum,relative_humidity_2m_min,relative_humidity_2m_max,relative_humidity_2m_mean,precipitation_probability_min,precipitation_probability_mean,leaf_wetness_probability_mean,growing_degree_days_base_0_limit_50,et0_fao_evapotranspiration_sum,surface_pressure_mean,surface_pressure_max,surface_pressure_min,updraft_max,visibility_mean,visibility_min,visibility_max,winddirection_10m_dominant,wind_speed_10m_mean,wind_gusts_10m_mean,wind_gusts_10m_min,wind_speed_10m_min,wet_bulb_temperature_2m_mean,wet_bulb_temperature_2m_max,wet_bulb_temperature_2m_min,vapour_pressure_deficit_max&hourly=temperature_2m,relative_humidity_2m,dew_point_2m,precipitation_probability,apparent_temperature,precipitation,rain,showers,snowfall,snow_depth,vapour_pressure_deficit,et0_fao_evapotranspiration,evapotranspiration,cloud_cover_high,visibility,cloud_cover_mid,surface_pressure,cloud_cover,cloud_cover_low,pressure_msl,weather_code,wind_speed_10m,wind_speed_80m,wind_speed_120m,wind_speed_180m,wind_direction_10m,wind_direction_80m,wind_direction_120m,wind_direction_180m,wind_gusts_10m,temperature_120m,temperature_80m,temperature_180m,soil_temperature_0cm,soil_temperature_6cm,soil_temperature_18cm,soil_temperature_54cm,soil_moisture_0_to_1cm,soil_moisture_1_to_3cm,soil_moisture_3_to_9cm,soil_moisture_9_to_27cm,soil_moisture_27_to_81cm,uv_index,cape&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,snowfall,showers,rain,precipitation,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&timezone=auto`;
+
+      try {
+        const resp = await fetch(url);
+        const data = await resp.json();
+        const daily = data.daily;
+
+        container.innerHTML = "";
+
+        daily.time.forEach((dia, i) => {
+          const date = new Date(dia + "T12:00:00");
+          const options = { weekday: "long", day: "2-digit", month: "2-digit", timeZone: "America/Recife" };
+          const titulo = date.toLocaleDateString("pt-BR", options);
+
+          const tempMin = Math.round(daily.temperature_2m_min[i]);
+          const tempMax = Math.round(daily.temperature_2m_max[i]);
+          const chuva = Math.round(daily.precipitation_sum[i]);
+          const cape = daily.cape_max[i];
+          const vento = Math.round(daily.wind_speed_10m_max[i]);
+          const ventoRajada = Math.round(daily.wind_gusts_10m_max[i]);
+          const umidadeMax = Math.round(daily.relative_humidity_2m_max[i]);
+          const umidadeMin = Math.round(daily.relative_humidity_2m_min[i]);
+          const uv = Math.round(daily.uv_index_max[i]);
+          const nuvens = Math.round(daily.cloud_cover_mean[i]);
+          const neve = Math.round(daily.snowfall_sum[i]);
+          const nascer = new Date(daily.sunrise[i]).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit', timeZone:'America/Recife'});
+          const por = new Date(daily.sunset[i]).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit', timeZone:'America/Recife'});
+
+          let descricao = [];
+
+          // Cobertura de nuvens detalhada
+          if (nuvens <= 10) descricao.push(`<p class="aviso-nuvens">Céu limpo (${nuvens}%)</p>`);
+          else if (nuvens <= 30) descricao.push(`<p class="aviso-nuvens">Poucas nuvens (${nuvens}%)</p>`);
+          else if (nuvens <= 70) descricao.push(`<p class="aviso-nuvens">Parcialmente nublado (${nuvens}%)</p>`);
+          else descricao.push(`<p class="aviso-nuvens">Nublado (${nuvens}%)</p>`);
+
+          // Chuva detalhada
+          if (chuva === 0) descricao.push(`<p class="aviso-chuva-neve">Sem chuva</p>`);
+          else if (chuva <= 10) descricao.push(`<p class="aviso-chuva-neve">Chuva leve</p>`);
+          else if (chuva <= 20) descricao.push(`<p class="aviso-chuva-neve">Atenção a chuva moderada!</p>`);
+          else descricao.push(`<p class="aviso-chuva-neve">Alerta de chuva forte!</p>`);
+
+          // Baixa umidade
+          if (umidadeMin < 30) descricao.push(`<p class="aviso-alerta">Alerta de baixa umidade do ar (${umidadeMin}%)</p>`);
+
+          // Trovoadas
+          if (cape >= 1000) descricao.push(`<p class="aviso-alerta">Risco de trovoadas!</p>`);
+
+          // Neve
+          if (neve > 0) descricao.push(`<p class="aviso-chuva-neve">Alerta de neve (${neve} cm)</p>`);
+
+          // Ventania
+          if (ventoRajada > 45) descricao.push(`<p class="aviso-alerta">Atenção a rajadas de vento!</p>`);
+
+          // Temperatura alta
+          if (tempMax > 32) descricao.push(`<p class="aviso-temperatura-max">Alerta de temperatura alta: (${tempMax}°C)</p>`);
+
+          // Temperatura baixa
+          if (tempMin < 10) descricao.push(`<p class="aviso-temperatura-min">Alerta de temperatura baixa: (${tempMin}°C)</p>`);
+
+          const card = document.createElement("div");
+          card.className = "cartoes-diarios";
+          card.innerHTML = `
+            <h2>${titulo.charAt(0).toUpperCase() + titulo.slice(1)}</h2>
+            <div class="dados-diarios">
+              <div>
+                <p>🌡️ Temperatura: ${tempMin}° a ${tempMax}°</p>
+                <p>☔ Chuva: ${chuva} mm</p>
+                <p>💧 Umidade: ${umidadeMin}% a ${umidadeMax}%</p>
+                <p>🍃 Vento máx.: ${vento} km/h</p>
+              </div>
+              <div>
+                <p>🍃 Rajada máx.: ${ventoRajada} km/h</p>
+                <p>🔅 Índice UV: ${uv} (${descricaoUV(uv)})</p>
+                <p>☀️ Sol: ${nascer} a ${por}</p>
+              </div>
+              <div class="descricao-diaria">
+                ${descricao.join("")}
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = "<p>Erro ao carregar previsão.</p>";
+      }
+    }
+
+    async function buscarCidade(nome) {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(nome)}`;
+      try {
+        const resp = await fetch(url);
+        const results = await resp.json();
+        if (!results.length) return alert("Cidade não encontrada");
+
+        // Exibir cidade, estado, país
+        const displayName = results[0].display_name.split(',');
+        const cidade = displayName[0].trim();
+        const estado = displayName[displayName.length - 3].trim();
+        const pais = displayName[displayName.length - 1].trim();
+        cidadeInfo.textContent = `${cidade}, ${estado}, ${pais}`;
+
+        const { lat, lon } = results[0];
+        carregarPrevisao(lat, lon);
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao buscar cidade");
+      }
+    }
+
+    function detectarLocalizacao() {
+      if (!navigator.geolocation) return carregarPrevisao(-9.7811, -36.0936);
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        carregarPrevisao(latitude, longitude);
+      }, () => {
+        carregarPrevisao(-9.7811, -36.0936);
+      });
+    }
+
+    btnBuscar.addEventListener("click", () => {
+      const cidade = inputCidade.value.trim();
+      if (cidade) buscarCidade(cidade);
+    });
+
+    detectarLocalizacao();
+  </script>
+
 </body>
 </html>
