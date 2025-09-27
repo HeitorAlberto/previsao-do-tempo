@@ -137,10 +137,10 @@
           if (ventoRajada > 45) descricao.push(`<p class="aviso-alerta">Atenção a rajadas de vento!</p>`);
 
           // Temperatura alta
-          if (tempMax > 32) descricao.push(`<p class="aviso-temperatura-max">Alerta de temperatura alta: (${tempMax}°C)</p>`);
+          if (tempMax > 32) descricao.push(`<p class="aviso-temperatura-max">Alerta de temperatura alta (${tempMax}°C)</p>`);
 
           // Temperatura baixa
-          if (tempMin < 10) descricao.push(`<p class="aviso-temperatura-min">Alerta de temperatura baixa: (${tempMin}°C)</p>`);
+          if (tempMin < 10) descricao.push(`<p class="aviso-temperatura-min">Alerta de temperatura baixa (${tempMin}°C)</p>`);
 
           const card = document.createElement("div");
           card.className = "cartoes-diarios";
