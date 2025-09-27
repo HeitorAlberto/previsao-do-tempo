@@ -45,12 +45,27 @@
     .aviso-temperatura-min { background-color: #c9e6ff;}
 
     @media (max-width: 600px) {
-      .dados-diarios { grid-template-columns: 1fr; }
-      .cartoes-diarios { max-width: 100%; padding-left: 10px; padding-right: 10px; }
-      .dados-diarios p, .descricao-diaria p { font-size: 0.95rem; padding: 8px 10px; border: 2px solid #c0c0c0;}
-      .busca { max-width: 100%; padding-left: 10px; padding-right: 10px; }
-      .dados-diarios { gap: 0px; }
-    }
+  .cartoes-diarios { 
+    max-width: 100%; 
+    padding: 10px;
+  }
+
+  .dados-diarios { 
+    grid-template-columns: 1fr 1fr; /* mantém as duas colunas */
+    gap: 5px; /* reduz o espaçamento entre os cartões */
+  }
+
+  .dados-diarios p, .descricao-diaria p { 
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .busca { 
+    max-width: 100%; 
+    padding: 0 10px; 
+  }
+}
+
   </style>
 </head>
 <body>
