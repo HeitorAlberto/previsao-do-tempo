@@ -110,6 +110,7 @@
       padding: 5px 10px;
       font-size: 1rem;
       word-wrap: break-word;
+      text-align: center;
     }
 
     .aviso-nuvens {
@@ -291,19 +292,13 @@
           if (umidadeMin < 30) descricao.push(`<p class="aviso-alerta">Alerta de baixa umidade do ar (${umidadeMin}%)</p>`);
 
           // Trovoadas
-          if (cape >= 1000) descricao.push(`<p class="aviso-alerta">Risco de trovoadas!</p>`);
+          if (cape >= 1000) descricao.push(`<p class="aviso-alerta">⚡ Risco de trovoadas! ⚡</p>`);
 
           // Neve
           if (neve > 0) descricao.push(`<p class="aviso-chuva-neve">Alerta de neve (${neve} cm)</p>`);
 
           // Ventania
           if (ventoRajada > 45) descricao.push(`<p class="aviso-alerta">Atenção a rajadas de vento!</p>`);
-
-          // Temperatura alta
-          if (tempMax > 32) descricao.push(`<p class="aviso-temperatura-max">Alerta de temperatura alta (${tempMax}°C)</p>`);
-
-          // Temperatura baixa
-          if (tempMin < 10) descricao.push(`<p class="aviso-temperatura-min">Alerta de temperatura baixa (${tempMin}°C)</p>`);
 
           const card = document.createElement("div");
           card.className = "cartoes-diarios";
