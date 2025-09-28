@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Previsão do Tempo (Open-Meteo Ensemble)</title>
   <style>
-    * {padding: 0; margin: 0; box-sizing: border-box;}
-    body { font-family: Arial, sans-serif; }
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+    }
 
     .busca-container {
       display: flex;
@@ -28,46 +36,104 @@
       text-align: center;
     }
 
-    .busca input { flex: 1; padding: 5px; font-size: 1rem; border: 2px solid #c0c0c0;}
-    .busca button { padding: 5px 10px; font-size: 1rem; border: 2px solid #c0c0c0;}
+    .busca input {
+      flex: 1;
+      padding: 5px;
+      font-size: 1rem;
+      border: 2px solid #c0c0c0;
+    }
 
-    .cartoes-diarios { max-width: 500px; margin: 0 auto 30px auto; }
-    .cartoes-diarios h2 { margin-bottom: 15px; font-size: 1.2rem; }
-    .dados-diarios { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .dados-diarios p { margin-bottom: 15px; border: 2px solid #c0c0c0; border-radius: 8px; padding: 5px 10px; font-size: 1rem; word-wrap: break-word; }
-    .descricao-diaria { grid-column: 1 / -1; }
-    .descricao-diaria p { margin-bottom: 15px; border: 2px solid #c0c0c0; border-radius: 8px; padding: 5px 10px; font-size: 1rem; word-wrap: break-word; }
+    .busca button {
+      padding: 5px 10px;
+      font-size: 1rem;
+      border: 2px solid #c0c0c0;
+    }
 
-    .aviso-nuvens { background-color: #dadada; }
-    .aviso-alerta { background-color: #ffe77a; } 
-    .aviso-temperatura-max { background-color: #ff8383; }
-    .aviso-chuva-neve { background-color: #c9e6ff;}
-    .aviso-temperatura-min { background-color: #c9e6ff;}
+    .cartoes-diarios {
+      max-width: 500px;
+      margin: 0 auto 30px auto;
+    }
+
+    .cartoes-diarios h2 {
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+    }
+
+    .dados-diarios {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .dados-diarios p {
+      margin-bottom: 15px;
+      border: 2px solid #c0c0c0;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 1rem;
+      word-wrap: break-word;
+    }
+
+    .descricao-diaria {
+      grid-column: 1 / -1;
+    }
+
+    .descricao-diaria p {
+      margin-bottom: 15px;
+      border: 2px solid #c0c0c0;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 1rem;
+      word-wrap: break-word;
+    }
+
+    .aviso-nuvens {
+      background-color: #dadada;
+    }
+
+    .aviso-alerta {
+      background-color: #ffe77a;
+    }
+
+    .aviso-temperatura-max {
+      background-color: #ff8383;
+    }
+
+    .aviso-chuva-neve {
+      background-color: #c9e6ff;
+    }
+
+    .aviso-temperatura-min {
+      background-color: #c9e6ff;
+    }
 
     @media (max-width: 600px) {
-  .cartoes-diarios { 
-    max-width: 100%; 
-    padding: 10px;
-  }
+      .cartoes-diarios {
+        max-width: 100%;
+        padding: 10px;
+      }
 
-  .dados-diarios { 
-    grid-template-columns: 1fr 1fr; /* mantém as duas colunas */
-    gap: 5px; /* reduz o espaçamento entre os cartões */
-  }
+      .dados-diarios {
+        grid-template-columns: 1fr 1fr;
+        /* mantém as duas colunas */
+        gap: 5px;
+        /* reduz o espaçamento entre os cartões */
+      }
 
-  .dados-diarios p, .descricao-diaria p { 
-    font-size: 12px;
-    padding: 6px 8px;
-  }
+      .dados-diarios p,
+      .descricao-diaria p {
+        font-size: 12px;
+        padding: 6px 8px;
+      }
 
-  .busca { 
-    max-width: 100%; 
-    padding: 0 10px; 
-  }
-}
-
+      .busca {
+        max-width: 100%;
+        padding: 0 10px;
+      }
+    }
   </style>
 </head>
+
 <body>
 
   <div class="busca-container">
@@ -122,8 +188,8 @@
           const uv = Math.round(daily.uv_index_max[i]);
           const nuvens = Math.round(daily.cloud_cover_mean[i]);
           const neve = Math.round(daily.snowfall_sum[i]);
-          const nascer = new Date(daily.sunrise[i]).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit', timeZone:'America/Recife'});
-          const por = new Date(daily.sunset[i]).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit', timeZone:'America/Recife'});
+          const nascer = new Date(daily.sunrise[i]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Recife' });
+          const por = new Date(daily.sunset[i]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Recife' });
 
           let descricao = [];
 
@@ -253,4 +319,5 @@
   </script>
 
 </body>
+
 </html>
