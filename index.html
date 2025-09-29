@@ -133,24 +133,23 @@
       background-color: #c9e6ff;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 500px) {
       .cartoes-diarios, .cartao-agora {
         max-width: 100%;
         padding: 10px;
       }
 
-      .dados-diarios {
-        grid-template-columns: 1fr 1fr;
-        /* mantém as duas colunas */
+      .dados-diarios, .dados-agora {
+        grid-template-columns: 1fr;
         gap: 5px;
-        /* reduz o espaçamento entre os cartões */
       }
 
       .dados-diarios p,
       .descricao-diaria p,
       .dados-agora p {
-        font-size: 12px;
+        text-align: center;
         padding: 6px 8px;
+        font-size: 18px;
       }
 
       .busca {
@@ -233,7 +232,7 @@
           <div class="dados-agora">
             <div>
               <p>🌡️ Temperatura: ${tempagora}°</p>
-              <p>☔ Chuva: ${chuvaagora} mm</p>
+              <p>☔ Chuva acumulada: ${chuvaagora} mm</p>
               <p>💧 Umidade: ${umidadeagora}%</p>
             </div>
             <div>
@@ -306,9 +305,9 @@
             <h2>${titulo.charAt(0).toUpperCase() + titulo.slice(1)}</h2>
             <div class="dados-diarios">
               <div>
-                <p>🌡️ Temp.: ${tempMin}° a ${tempMax}°</p>
-                <p>☔ Chuva: ${chuva} mm</p>
-                <p>💧 Umid.: ${umidadeMin}% a ${umidadeMax}%</p>
+                <p>🌡️ Temperatura: ${tempMin}° a ${tempMax}°</p>
+                <p>☔ Chuva acumulada: ${chuva} mm</p>
+                <p>💧 Umidade: ${umidadeMin}% a ${umidadeMax}%</p>
               </div>
               <div>
                 <p>🍃 Vento: ${vento} km/h</p>
