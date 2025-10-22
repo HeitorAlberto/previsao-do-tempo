@@ -100,7 +100,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 12px 8px;
-            border-top: 1px dashed rgba(0, 0, 0, 0.08);
+            border-top: 1px dashed #848484;
             font-size: 24px;
         }
 
@@ -173,12 +173,12 @@
 <body>
     <h1>Previsão (14 dias) - ECMWF Ensemble com IA</h1>
     <div class="search">
-        <input id="q" type="search" placeholder="Digite cidade, bairro ou endereço (ex: Maceió, AL)"
-            value="Maceió, AL, Brazil" />
+        <input id="q" type="search" placeholder="Digite cidade"
+            value="" />
         <button id="buscar">Buscar</button>
         <button id="use-coords">Usar localidade atual</button>
     </div>
-    <div class="meta" id="meta">📍 Maceió, AL, Brasil</div>
+    <div class="meta" id="meta">📍 São Paulo, São Paulo, Brasil</div>
 
     <div class="layout">
         <div class="card" id="card-prec">
@@ -208,7 +208,7 @@
     </div>
 
     <script>
-        const DEFAULT = { lat: -9.7811, lon: -36.0936 };
+        const DEFAULT = { lat: -23.5475, lon: -46.6361 };
         const dailyParams = [
             'temperature_2m_min', 'temperature_2m_max',
             'wind_speed_10m_max', 'precipitation_sum',
@@ -319,7 +319,7 @@
             return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) };
         }
 
-        // ✅ Função reverseGeocode atualizada com mais fallbacks
+        // ✅ reverseGeocode melhorado
         async function reverseGeocode(lat, lon) {
             const url = new URL('https://nominatim.openstreetmap.org/reverse');
             url.searchParams.set('lat', lat);
@@ -332,20 +332,30 @@
             const data = await res.json();
             if (!data.address) return 'Localização desconhecida';
 
-            const cidade = data.address.city || data.address.town || data.address.village || data.address.hamlet || data.address.county || '—';
-            const estado = data.address.state || data.address.region || data.address.county || '';
-            const pais = data.address.country || '';
+            const a = data.address;
+            const cidade = a.city || a.town || a.village || a.municipality || a.hamlet || a.county || '—';
+            const estado = a.state || a.region || a.province || '';
+            const pais = a.country || '';
             return `${cidade}${estado ? ', ' + estado : ''}${pais ? ', ' + pais : ''}`;
         }
 
+        // ✅ Agora busca sempre mostra cidade, estado e país
         async function doSearch(q) {
             try {
-                ['prec', 'temp', 'wind', 'hum', 'cloud'].forEach(id => document.getElementById(`${id}-list`).textContent = 'Carregando...');
+                ['prec', 'temp', 'wind', 'hum', 'cloud'].forEach(id =>
+                    document.getElementById(`${id}-list`).textContent = 'Carregando...'
+                );
+
                 const coords = await geocode(q);
-                setMeta(q);
+                const placeName = await reverseGeocode(coords.lat, coords.lon);
+                setMeta(placeName);
+
                 const data = await fetchWeather(coords.lat, coords.lon);
                 render(data);
-            } catch (err) { alert(err.message || err); console.error(err); }
+            } catch (err) {
+                alert(err.message || err);
+                console.error(err);
+            }
         }
 
         (async function init() {
@@ -392,6 +402,7 @@
             }
         });
     </script>
+
 </body>
 
 </html>
