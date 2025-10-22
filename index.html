@@ -19,12 +19,18 @@
             color: #111;
         }
 
+        h1 {
+            text-align: center;
+        }
+
         /* Busca */
         .search {
             display: flex;
             gap: 8px;
             align-items: center;
             margin-bottom: 18px;
+            justify-self: center;
+            width: 700px;
         }
 
         input[type="search"] {
@@ -35,6 +41,7 @@
             border-radius: 0;
             text-align: center;
             font-family: 'Ubuntu', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+            width: 700px;
         }
 
         button {
@@ -58,7 +65,7 @@
             gap: 6px;
             margin: 0 auto 20px auto;
             text-align: center;
-            max-width: 100%;
+            max-width: 500px;
             box-sizing: border-box;
             overflow-wrap: break-word;
         }
@@ -144,6 +151,7 @@
             .search {
                 flex-direction: column;
                 gap: 6px;
+                width: 100%;
             }
 
             .search input[type="search"],
@@ -183,7 +191,7 @@
         </div>
 
         <div class="card" id="card-wind">
-            <h3>Vento</h3>
+            <h3>Vento máximo</h3>
             <div class="days" id="wind-list">Carregando...</div>
         </div>
 
