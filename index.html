@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Previsão do tempo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap');
+
+        :root {
+            font-family: 'Ubuntu', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+            margin: 0;
+        }
+
+        body {
+            padding: 20px;
+            background: #fff;
+            color: #111;
+        }
+
+        /* Busca */
+        .search {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        input[type="search"] {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #000;
+            outline: none;
+            border-radius: 0;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: 1px solid #000;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        /* Caixa da localização centralizada com pin */
+        .meta {
+            font-size: 14px;
+            border: 1px solid #000;
+            padding: 8px 12px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin: 0 auto 20px auto;
+            text-align: center;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
+        }
+
+        /* Layout dos cards */
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .card {
+            border: 1px solid #000;
+            padding: 10px;
+            box-sizing: border-box;
+            min-width: 0;
+        }
+
+        .card h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+
+        .days {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .day {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-top: 1px dashed rgba(0, 0, 0, 0.08);
+        }
+
+        .day:first-child {
+            border-top: 0;
+        }
+
+        /* Card de nuvens: duas divs lado a lado */
+        .day.cloud {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .day.cloud div {
+            flex: 1 1 auto;
+        }
+
+        /* A segunda div (descrição) alinhada à direita em telas grandes */
+        .day.cloud div:last-child {
+            text-align: right;
+        }
+
+        .small {
+            font-size: 12px;
+            color: #333;
+        }
+
+        /* RESPONSIVIDADE */
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .day.cloud {
+                flex-direction: column;
+            }
+
+            .day.cloud div:last-child {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            /* Input e botões empilhados e com largura total */
+            .search {
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .search input[type="search"],
+            .search button {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            /* Caixa da cidade ocupa largura total */
+            .meta {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Previsão (14 dias) - ECMWF Ens IA</h1>
+    <div class="search">
+        <input id="q" type="search" placeholder="Digite cidade, bairro ou endereço (ex: Maceió, AL)"
+            value="Maceió, AL, Brazil" />
+        <button id="buscar">Buscar</button>
+        <button id="use-coords">Usar coords</button>
+    </div>
+    <div class="meta" id="meta">📍 Maceió, AL, Brasil</div>
+
+    <div class="layout">
+        <div class="card" id="card-prec">
+            <h3>Chuva acumulada (24h)</h3>
+            <div class="days" id="prec-list">Carregando...</div>
+        </div>
+
+        <div class="card" id="card-temp">
+            <h3>Temperatura (mín / máx)</h3>
+            <div class="days" id="temp-list">Carregando...</div>
+        </div>
+
+        <div class="card" id="card-wind">
+            <h3>Vento</h3>
+            <div class="days" id="wind-list">Carregando...</div>
+        </div>
+
+        <div class="card" id="card-hum">
+            <h3>Umidade (mín / máx)</h3>
+            <div class="days" id="hum-list">Carregando...</div>
+        </div>
+
+        <div class="card" id="card-clouds">
+            <h3>Cobertura de nuvens (descrição)</h3>
+            <div class="days" id="cloud-list">Carregando...</div>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT = { lat: -9.7811, lon: -36.0936 };
+        const dailyParams = [
+            'temperature_2m_min', 'temperature_2m_max',
+            'wind_speed_10m_max', 'precipitation_sum',
+            'relative_humidity_2m_min', 'relative_humidity_2m_max', 'cloud_cover_mean'
+        ];
+
+        function setMeta(info) {
+            document.getElementById('meta').textContent = "📍 " + info;
+        }
+
+        async function fetchWeather(lat, lon) {
+            const base = 'https://ensemble-api.open-meteo.com/v1/ensemble';
+            const url = new URL(base);
+            url.searchParams.set('latitude', lat);
+            url.searchParams.set('longitude', lon);
+            url.searchParams.set('daily', dailyParams.join(','));
+            url.searchParams.set('models', 'ecmwf_aifs025');
+            url.searchParams.set('timezone', 'auto');
+            url.searchParams.set('forecast_days', '14');
+
+            const res = await fetch(url.toString());
+            if (!res.ok) throw new Error('Falha ao obter dados: ' + res.status);
+            return res.json();
+        }
+
+        function formatDate(d) {
+            const [ano, mes, dia] = d.split('-').map(Number);
+            const dataObj = new Date(ano, mes - 1, dia);
+            const diasSemana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+            const diaSemana = diasSemana[dataObj.getDay()];
+            return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')} - ${diaSemana}`;
+        }
+
+        function cloudDescription(value) {
+            if (value < 20) return 'Céu limpo';
+            if (value < 60) return 'Parcialmente nublado';
+            if (value < 80) return 'Predominantemente Nublado';
+            return 'Encoberto';
+        }
+
+        function render(data) {
+            const daily = data.daily;
+            const dates = daily.time;
+            const n = dates.length;
+
+            const precList = document.getElementById('prec-list');
+            const tempList = document.getElementById('temp-list');
+            const windList = document.getElementById('wind-list');
+            const humList = document.getElementById('hum-list');
+            const cloudList = document.getElementById('cloud-list');
+
+            precList.innerHTML = tempList.innerHTML = windList.innerHTML = humList.innerHTML = cloudList.innerHTML = '';
+
+            for (let i = 0; i < n; i++) {
+                const dateLabel = formatDate(dates[i]);
+
+                // Chuva
+                const prec = daily.precipitation_sum[i] ?? '—';
+                const divP = document.createElement('div');
+                divP.className = 'day';
+                divP.innerHTML = `<div><strong>${dateLabel}</strong></div><div>${prec.toFixed(0)} mm</div>`;
+                precList.appendChild(divP);
+
+                // Temperatura
+                const tmin = daily.temperature_2m_min[i] ?? '—';
+                const tmax = daily.temperature_2m_max[i] ?? '—';
+                const divT = document.createElement('div');
+                divT.className = 'day';
+                divT.innerHTML = `<div><strong>${dateLabel}</strong></div><div>${tmin.toFixed(0)}° a ${tmax.toFixed(0)}°</div>`;
+                tempList.appendChild(divT);
+
+                // Vento
+                const wind = daily.wind_speed_10m_max[i] ?? '—';
+                const divW = document.createElement('div');
+                divW.className = 'day';
+                divW.innerHTML = `<div><strong>${dateLabel}</strong></div><div>${wind.toFixed(0)} km/h</div>`;
+                windList.appendChild(divW);
+
+                // Umidade
+                const humMin = daily.relative_humidity_2m_min[i] ?? '—';
+                const humMax = daily.relative_humidity_2m_max[i] ?? '—';
+                const divH = document.createElement('div');
+                divH.className = 'day';
+                divH.innerHTML = `<div><strong>${dateLabel}</strong></div><div>${humMin} a ${humMax}</div>`;
+                humList.appendChild(divH);
+
+                // Nuvens
+                const cloudVal = daily.cloud_cover_mean[i] ?? '—';
+                const cloudDesc = (cloudVal === '—') ? '—' : `${cloudDescription(cloudVal)}`;
+                const divC = document.createElement('div');
+                divC.className = 'day cloud';
+                divC.innerHTML = `<div><strong>${dateLabel}</strong></div><div>${cloudDesc}</div>`;
+                cloudList.appendChild(divC);
+            }
+        }
+
+        async function geocode(q) {
+            const url = new URL('https://nominatim.openstreetmap.org/search');
+            url.searchParams.set('q', q);
+            url.searchParams.set('format', 'json');
+            url.searchParams.set('limit', '1');
+            url.searchParams.set('addressdetails', '0');
+
+            const res = await fetch(url.toString(), { headers: { 'Accept-Language': 'pt' } });
+            if (!res.ok) throw new Error('Falha no geocoding: ' + res.status);
+            const arr = await res.json();
+            if (!arr || arr.length === 0) throw new Error('Localidade não encontrada');
+            return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) };
+        }
+
+        // ✅ Função reverseGeocode atualizada com mais fallbacks
+        async function reverseGeocode(lat, lon) {
+            const url = new URL('https://nominatim.openstreetmap.org/reverse');
+            url.searchParams.set('lat', lat);
+            url.searchParams.set('lon', lon);
+            url.searchParams.set('format', 'json');
+            url.searchParams.set('accept-language', 'pt');
+
+            const res = await fetch(url);
+            if (!res.ok) throw new Error('Falha no reverse geocoding');
+            const data = await res.json();
+            if (!data.address) return 'Localização desconhecida';
+
+            const cidade = data.address.city || data.address.town || data.address.village || data.address.hamlet || data.address.county || '—';
+            const estado = data.address.state || data.address.region || data.address.county || '';
+            const pais = data.address.country || '';
+            return `${cidade}${estado ? ', ' + estado : ''}${pais ? ', ' + pais : ''}`;
+        }
+
+        async function doSearch(q) {
+            try {
+                ['prec', 'temp', 'wind', 'hum', 'cloud'].forEach(id => document.getElementById(`${id}-list`).textContent = 'Carregando...');
+                const coords = await geocode(q);
+                setMeta(q);
+                const data = await fetchWeather(coords.lat, coords.lon);
+                render(data);
+            } catch (err) { alert(err.message || err); console.error(err); }
+        }
+
+        (async function init() {
+            try {
+                const data = await fetchWeather(DEFAULT.lat, DEFAULT.lon);
+                render(data);
+            } catch (err) { console.error(err); }
+        })();
+
+        document.getElementById('buscar').addEventListener('click', () => {
+            const q = document.getElementById('q').value.trim();
+            if (!q) return alert('Digite uma localidade para buscar');
+            doSearch(q);
+        });
+
+        document.getElementById('use-coords').addEventListener('click', async () => {
+            if (!navigator.geolocation) {
+                alert('Geolocalização não é suportada neste navegador.');
+                return;
+            }
+
+            setMeta('Obtendo localização...');
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                try {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+                    const nomeLugar = await reverseGeocode(lat, lon);
+                    setMeta(nomeLugar);
+                    const data = await fetchWeather(lat, lon);
+                    render(data);
+                } catch (err) {
+                    alert('Erro ao obter dados: ' + err.message);
+                    console.error(err);
+                }
+            }, (err) => {
+                alert('Erro ao obter localização: ' + err.message);
+            });
+        });
+
+        document.getElementById('q').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('buscar').click();
+            }
+        });
+    </script>
+</body>
+
+</html>
