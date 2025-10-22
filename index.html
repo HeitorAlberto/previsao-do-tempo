@@ -33,13 +33,17 @@
             border: 1px solid #000;
             outline: none;
             border-radius: 0;
+            text-align: center;
+            font-family: 'Ubuntu', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
         }
 
         button {
             padding: 8px 12px;
             border: 1px solid #000;
-            background: #fff;
+            background: #2f2f2f;
+            color: white;
             cursor: pointer;
+            font-family: 'Ubuntu', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
         }
 
         /* Caixa da localização centralizada com pin */
@@ -158,12 +162,12 @@
 </head>
 
 <body>
-    <h1>Previsão (14 dias) - ECMWF Ens IA</h1>
+    <h1>Previsão (14 dias) - ECMWF Ensemble com IA</h1>
     <div class="search">
         <input id="q" type="search" placeholder="Digite cidade, bairro ou endereço (ex: Maceió, AL)"
             value="Maceió, AL, Brazil" />
         <button id="buscar">Buscar</button>
-        <button id="use-coords">Usar coords</button>
+        <button id="use-coords">Usar localidade atual</button>
     </div>
     <div class="meta" id="meta">📍 Maceió, AL, Brasil</div>
 
