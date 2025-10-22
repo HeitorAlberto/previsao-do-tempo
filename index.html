@@ -86,7 +86,7 @@
 
         .card h3 {
             margin: 0 0 8px 0;
-            font-size: 16px;
+            font-size: 26px;
         }
 
         .days {
@@ -101,6 +101,7 @@
             align-items: center;
             padding: 12px 8px;
             border-top: 1px dashed rgba(0, 0, 0, 0.08);
+            font-size: 24px;
         }
 
         .day:first-child {
@@ -276,7 +277,7 @@
                 const tmax = daily.temperature_2m_max[i] ?? '—';
                 const divT = document.createElement('div');
                 divT.className = 'day';
-                divT.innerHTML = `<div><strong>${dateLabel}</strong></div><div>${tmin.toFixed(0)}° a ${tmax.toFixed(0)}°</div>`;
+                divT.innerHTML = `<div><strong>${dateLabel}</strong></div><div>${tmin.toFixed(0)} - ${tmax.toFixed(0)}</div>`;
                 tempList.appendChild(divT);
 
                 // Vento
@@ -291,7 +292,7 @@
                 const humMax = daily.relative_humidity_2m_max[i] ?? '—';
                 const divH = document.createElement('div');
                 divH.className = 'day';
-                divH.innerHTML = `<div><strong>${dateLabel}</strong></div><div>${humMin} a ${humMax}</div>`;
+                divH.innerHTML = `<div><strong>${dateLabel}</strong></div><div>${humMin} - ${humMax}</div>`;
                 humList.appendChild(divH);
 
                 // Nuvens
