@@ -4,367 +4,355 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Previsão do Tempo</title>
+    <title>Previsão 15 dias — Preto & Branco</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap');
+        :root {
+            --bg: #ffffff;
+            --fg: #000000;
+            --muted: #333333;
+            --card: #f6f6f6
+        }
 
-        /* --- Layout principal --- */
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
         body {
             margin: 0;
-            padding: 20px;
-            background: #f0f4f8;
-            color: #111;
-            font-family: 'Ubuntu', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        /* --- Barra de busca moderna --- */
-        .search-modern {
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background: var(--bg);
+            color: var(--fg);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            padding: 28px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            width: 100%;
+            gap: 18px;
         }
 
-        .search-modern input[type="search"] {
-            width: 100%;
-            max-width: 400px;
-            padding: 10px 16px;
-            font-size: 16px;
-            border-radius: 25px;
-            border: 1px solid #ccc;
-            outline: none;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            font-family: 'Ubuntu', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
-        }
-
-        .search-modern input[type="search"]:focus {
-            border-color: #4a90e2;
-            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
-        }
-
-        .search-buttons-modern {
+        header {
             display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .search-buttons-modern button {
-            padding: 8px 20px;
-            font-size: 14px;
-            border-radius: 20px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: #4a90e2;
-            color: #fff;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-            font-family: 'Ubuntu', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
-        }
-
-        .search-buttons-modern button:hover {
-            background: #357ab8;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        /* --- Meta info --- */
-        .meta {
-            font-size: 14px;
-            text-align: center;
-            margin-bottom: 20px;
-            color: #555;
-        }
-
-        /* --- Forecast cards modernos --- */
-        .forecast {
-            display: flex;
-            flex-direction: column;
             gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
         }
 
-        .day {
-            background: #fff;
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        .brand {
+            display: flex;
+            gap: 14px;
+            align-items: baseline;
+            flex-wrap: wrap;
         }
 
-        .day:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        .brand h1 {
+            font-size: 18px;
+            margin: 0;
+            font-weight: 700;
+            letter-spacing: 0.2px
         }
 
-        .day-header {
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input[type=text] {
+            padding: 12px 14px;
+            border: 1px solid var(--muted);
+            background: #fefefe;
+            color: var(--fg);
+            font-size: 14px;
+            min-width: 220px;
+            flex: 1;
+            border-radius: 8px;
+            transition: all 0.25s ease;
+        }
+
+        input[type=text]:focus {
+            outline: none;
+            border-color: var(--fg);
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            padding: 12px 18px;
+            border: 1px solid var(--fg);
+            background: var(--fg);
+            color: var(--bg);
+            cursor: pointer;
             font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 12px;
+            border-radius: 8px;
+            transition: all 0.25s ease;
+        }
+
+        button:hover,
+        button:focus {
+            background: var(--bg);
+            color: var(--fg);
+        }
+
+        .meta {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        main {
+            display: block
+        }
+
+        .location-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 6px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid #e8e8e8;
+            padding: 14px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card .date {
+            font-weight: 700
+        }
+
+        .row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            color: #222;
+            font-size: 13px
         }
 
-        .cloud-desc-box {
-            background: #e1e7f0;
-            color: #333;
-            padding: 6px 12px;
-            border-radius: 12px;
-            font-weight: 500;
-            text-align: center;
-            min-width: 130px;
+        .small {
+            font-size: 12px;
+            color: var(--muted)
         }
 
-        .day-details {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            font-size: 14px;
+        footer {
+            margin-top: 18px;
+            font-size: 13px;
+            color: var(--muted)
         }
 
-        .box {
-            border-radius: 12px;
-            padding: 6px 12px;
-            flex: 0 1 auto;
-            text-align: center;
-            font-weight: 500;
-        }
+        @media (max-width:520px) {
 
-        .box.chuva {
-            background: #d6ebff;
-            color: #054a91;
-        }
-
-        .box.temp {
-            background: #ffe7d6;
-            color: #a85a2d;
-        }
-
-        .box.umidade {
-            background: #e3f7e1;
-            color: #2e7d32;
-        }
-
-        /* --- Responsividade --- */
-        @media (max-width: 600px) {
-            .day-details {
-                flex-direction: column;
+            header {
+                display: grid;
+                justify-content: center;
+                justify-items: center;
+                text-align: center;
             }
 
-            .cloud-desc-box {
-                min-width: auto;
+            input[type=text] {
+                min-width: 100%;
             }
 
-            .search-modern input[type="search"] {
-                max-width: 100%;
-            }
-
-            .search-buttons-modern {
-                flex-direction: column;
-                gap: 8px;
+            button {
                 width: 100%;
-                align-items: center;
             }
 
-            .search-buttons-modern button {
-                width: auto;
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            #locationName {
+                align-self: center;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Previsão (14 dias) - ECMWF Ensemble com IA</h1>
+    <header>
+        <div class="brand">
+            <h1>Previsão - 15 dias</h1>
+        </div>
+        <div class="controls">
+            <form id="searchForm">
+                <input type="text" id="cityInput" placeholder="Buscar cidade (ex: Recife, BR)" value="Recife"
+                    aria-label="Buscar cidade" />
+                <button type="submit">Buscar</button>
+            </form>
+        </div>
+    </header>
 
-        <div class="search-modern">
-            <input id="q" type="search" placeholder="Digite cidade" />
-            <div class="search-buttons-modern">
-                <button id="buscar">Buscar</button>
-                <button id="use-coords">Usar localidade atual</button>
+    <main>
+        <div class="location-row">
+            <div id="locationName" style="font-weight:700">Carregando...</div>
+            <div style="margin-left:auto;text-align:right">
+                <div class="meta">Hoje: <span id="todayDate"></span></div>
+                <div class="small">Dados: Open-Meteo (modelo ecmwf_ifs)</div>
             </div>
         </div>
+        <section id="forecastSection">
+            <div class="cards" id="cards"></div>
+        </section>
+    </main>
 
-        <div class="meta" id="meta">📌 São Paulo, São Paulo, Brasil</div>
-
-        <div class="forecast" id="forecast-list">Carregando previsão...</div>
-    </div>
+    <footer>
+        Mostrando até 15 dias de previsão. A Busca utiliza a API de geocoding do Open-Meteo.
+    </footer>
 
     <script>
-        const DEFAULT = { lat: -23.5475, lon: -46.6361 };
-        const dailyParams = [
-            'temperature_2m_min', 'temperature_2m_max',
-            'wind_speed_10m_max', 'precipitation_sum',
-            'relative_humidity_2m_min', 'relative_humidity_2m_max', 'cloud_cover_mean'
-        ];
+        const geocodeBase = 'https://geocoding-api.open-meteo.com/v1/search';
+        const forecastBase = 'https://api.open-meteo.com/v1/forecast';
+        const model = 'ecmwf_ifs';
 
-        function setMeta(info) {
-            document.getElementById('meta').textContent = info;
+        const cityInput = document.getElementById('cityInput');
+        const searchForm = document.getElementById('searchForm');
+        const locationName = document.getElementById('locationName');
+        const cardsEl = document.getElementById('cards');
+        const todayDate = document.getElementById('todayDate');
+
+        const today = new Date();
+        const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(today);
+        const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(today);
+        todayDate.textContent = `${date} - ${weekday}`;
+
+        function formatDateLabel(iso) {
+            const d = new Date(iso);
+            const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(d);
+            const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+            return { weekday, date };
         }
 
-        async function fetchWeather(lat, lon) {
-            const base = 'https://ensemble-api.open-meteo.com/v1/ensemble';
-            const url = new URL(base);
+        function groupHourlyByDate(times, arrays) {
+            const map = new Map();
+            for (let i = 0; i < times.length; i++) {
+                const day = times[i].slice(0, 10);
+                if (!map.has(day)) map.set(day, []);
+                const point = {};
+                for (const key in arrays) { point[key] = arrays[key][i]; }
+                map.get(day).push(point);
+            }
+            return map;
+        }
+
+        function summarizeDay(points) {
+            const n = points.length || 1;
+            let tMin = Infinity, tMax = -Infinity, rhMin = Infinity, rhMax = -Infinity;
+            let precipSum = 0, cloudSum = 0, gustMax = 0;
+            for (const p of points) {
+                if (p.temperature_2m != null) {
+                    if (p.temperature_2m < tMin) tMin = p.temperature_2m;
+                    if (p.temperature_2m > tMax) tMax = p.temperature_2m;
+                }
+                if (p.relative_humidity_2m != null) {
+                    if (p.relative_humidity_2m < rhMin) rhMin = p.relative_humidity_2m;
+                    if (p.relative_humidity_2m > rhMax) rhMax = p.relative_humidity_2m;
+                }
+                if (p.precipitation != null) precipSum += p.precipitation;
+                if (p.cloud_cover != null) cloudSum += p.cloud_cover;
+                if (p.wind_gusts_10m != null && p.wind_gusts_10m > gustMax) gustMax = p.wind_gusts_10m;
+            }
+            const cloudMean = cloudSum / n;
+            return { tMin, tMax, rhMin, rhMax, precipSum, cloudMean, gustMax };
+        }
+
+        function renderDays(dayMap) {
+            cardsEl.innerHTML = '';
+            const entries = Array.from(dayMap.entries()).slice(0, 15);
+            for (const [day, points] of entries) {
+                const iso = day + 'T00:00:00';
+                const labels = formatDateLabel(iso);
+                const s = summarizeDay(points);
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+          <div class="date">${labels.date} (${labels.weekday})</div>
+          <div class="row"><div class="small">Temp. (°C)</div><div>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</div></div>
+          <div class="row"><div class="small">Precipitação (mm)</div><div>${s.precipSum.toFixed(1)}</div></div>
+          <div class="row"><div class="small">Umidade (%)</div><div>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</div></div>
+          <div class="row"><div class="small">Cobertura de nuvens (%)</div><div>${s.cloudMean.toFixed(0)}</div></div>
+          <div class="row"><div class="small">Rajadas de vento</div><div>${s.gustMax.toFixed(0)} km/h</div></div>`;
+                cardsEl.appendChild(card);
+            }
+        }
+
+        async function geocode(query) {
+            const url = new URL(geocodeBase);
+            url.searchParams.set('name', query);
+            url.searchParams.set('count', '5');
+            url.searchParams.set('language', 'pt');
+            const res = await fetch(url.toString());
+            if (!res.ok) throw new Error('Erro na geocodificação');
+            return await res.json();
+        }
+
+        async function fetchForecast(lat, lon, timezone = 'auto') {
+            const url = new URL(forecastBase);
             url.searchParams.set('latitude', lat);
             url.searchParams.set('longitude', lon);
-            url.searchParams.set('daily', dailyParams.join(','));
-            url.searchParams.set('models', 'ecmwf_aifs025');
-            url.searchParams.set('timezone', 'auto');
-            url.searchParams.set('forecast_days', '14');
-
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('Falha ao obter dados: ' + res.status);
-            return res.json();
+            url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,cloud_cover,wind_gusts_10m');
+            url.searchParams.set('models', model);
+            url.searchParams.set('timezone', timezone);
+            url.searchParams.set('forecast_days', '15');
+            const res = await fetch(url.toString());
+            if (!res.ok) throw new Error('Erro ao buscar previsão');
+            return await res.json();
         }
 
-        function formatDate(d) {
-            const [ano, mes, dia] = d.split('-').map(Number);
-            const dataObj = new Date(ano, mes - 1, dia);
-            const diasSemana = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
-            const diaSemana = diasSemana[dataObj.getDay()];
-            return `${String(dia).padStart(2, '0')}/${String(mes).padStart(2, '0')} - ${diaSemana}`;
-        }
-
-        function cloudDescription(value) {
-            if (value < 20) return 'Poucas nuvens';
-            if (value < 55) return 'Algumas nuvens';
-            if (value < 80) return 'Parcialmente nublado';
-            return 'Nublado';
-        }
-
-        function render(data) {
-            const daily = data.daily;
-            const dates = daily.time;
-            const list = document.getElementById('forecast-list');
-            list.innerHTML = '';
-
-            for (let i = 0; i < dates.length; i++) {
-                const dateLabel = formatDate(dates[i]);
-                const prec = daily.precipitation_sum[i] ?? '—';
-                const tmin = daily.temperature_2m_min[i] ?? '—';
-                const tmax = daily.temperature_2m_max[i] ?? '—';
-                const humMin = daily.relative_humidity_2m_min[i] ?? '—';
-                const humMax = daily.relative_humidity_2m_max[i] ?? '—';
-                const cloudVal = daily.cloud_cover_mean[i] ?? '—';
-                const cloudDesc = (cloudVal === '—') ? '—' : cloudDescription(cloudVal);
-
-                const div = document.createElement('div');
-                div.className = 'day';
-                div.innerHTML = `
-          <div class="day-header">
-            <div>${dateLabel}</div>
-          </div>
-          <div class="day-details">
-            <div class="cloud-desc-box ">${cloudDesc}</div>
-            <div class="box chuva">Chuva (mm): ${prec.toFixed ? prec.toFixed(0) : prec}</div>
-            <div class="box temp">Temp (°C): ${tmin.toFixed ? tmin.toFixed(0) : tmin} a ${tmax.toFixed ? tmax.toFixed(0) : tmax}</div>
-            <div class="box umidade">Umidade (%): ${humMin.toFixed ? humMin.toFixed(0) : humMin} a ${humMax.toFixed ? humMax.toFixed(0) : humMax}</div>
-          </div>
-        `;
-                list.appendChild(div);
-            }
-        }
-
-        async function geocode(q) {
-            const url = new URL('https://nominatim.openstreetmap.org/search');
-            url.searchParams.set('q', q);
-            url.searchParams.set('format', 'json');
-            url.searchParams.set('limit', '1');
-            url.searchParams.set('addressdetails', '0');
-            const res = await fetch(url.toString(), { headers: { 'Accept-Language': 'pt' } });
-            if (!res.ok) throw new Error('Falha no geocoding: ' + res.status);
-            const arr = await res.json();
-            if (!arr || arr.length === 0) throw new Error('Localidade não encontrada');
-            return { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon) };
-        }
-
-        async function reverseGeocode(lat, lon) {
-            const url = new URL('https://nominatim.openstreetmap.org/reverse');
-            url.searchParams.set('lat', lat);
-            url.searchParams.set('lon', lon);
-            url.searchParams.set('format', 'json');
-            url.searchParams.set('accept-language', 'pt');
-            const res = await fetch(url);
-            if (!res.ok) throw new Error('Falha no reverse geocoding');
-            const data = await res.json();
-            if (!data.address) return 'Localização desconhecida';
-            const a = data.address;
-            const cidade = a.city || a.town || a.village || a.municipality || a.hamlet || a.county || '—';
-            const estado = a.state || a.region || '';
-            const pais = a.country || '';
-            return `📌 ${cidade}${estado ? ', ' + estado : ''}${pais ? ', ' + pais : ''}`;
-        }
-
-        async function doSearch(q) {
+        async function loadForCity(query) {
             try {
-                document.getElementById('forecast-list').textContent = 'Carregando...';
-                const coords = await geocode(q);
-                const placeName = await reverseGeocode(coords.lat, coords.lon);
-                setMeta(placeName);
-                const data = await fetchWeather(coords.lat, coords.lon);
-                render(data);
-            } catch (err) {
-                alert(err.message || err);
-            }
-        }
-
-        (async function init() {
-            try {
-                const data = await fetchWeather(DEFAULT.lat, DEFAULT.lon);
-                render(data);
+                locationName.textContent = 'Buscando...';
+                cardsEl.innerHTML = '';
+                const g = await geocode(query);
+                if (!g || !g.results || g.results.length === 0) {
+                    locationName.textContent = 'Local não encontrado';
+                    return;
+                }
+                const place = g.results[0];
+                locationName.textContent = `${place.name}${place.admin1 ? ', ' + place.admin1 : ''}${place.country ? ' - ' + place.country : ''}`;
+                const forecast = await fetchForecast(place.latitude, place.longitude, place.timezone ?? 'auto');
+                if (!forecast || !forecast.hourly) {
+                    locationName.textContent += ' - sem dados disponíveis';
+                    return;
+                }
+                const times = forecast.hourly.time;
+                const arrays = {
+                    temperature_2m: forecast.hourly.temperature_2m || [],
+                    relative_humidity_2m: forecast.hourly.relative_humidity_2m || [],
+                    precipitation: forecast.hourly.precipitation || [],
+                    cloud_cover: forecast.hourly.cloud_cover || [],
+                    wind_gusts_10m: forecast.hourly.wind_gusts_10m || []
+                };
+                const dayMap = groupHourlyByDate(times, arrays);
+                renderDays(dayMap);
             } catch (err) {
                 console.error(err);
+                locationName.textContent = 'Erro ao carregar';
             }
-        })();
+        }
 
-        document.getElementById('buscar').addEventListener('click', () => {
-            const q = document.getElementById('q').value.trim();
-            if (!q) return alert('Digite uma localidade para buscar');
-            doSearch(q);
+        searchForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const q = cityInput.value.trim();
+            if (!q) return;
+            loadForCity(q);
         });
 
-        document.getElementById('use-coords').addEventListener('click', async () => {
-            if (!navigator.geolocation) {
-                alert('Geolocalização não é suportada neste navegador.');
-                return;
-            }
-            setMeta('Obtendo localização...');
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                try {
-                    const lat = pos.coords.latitude;
-                    const lon = pos.coords.longitude;
-                    const nomeLugar = await reverseGeocode(lat, lon);
-                    setMeta(nomeLugar);
-                    const data = await fetchWeather(lat, lon);
-                    render(data);
-                } catch (err) {
-                    alert('Erro ao obter dados: ' + err.message);
-                }
-            }, (err) => {
-                alert('Erro ao obter localização: ' + err.message);
-            });
-        });
-
-        document.getElementById('q').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                document.getElementById('buscar').click();
-            }
-        });
+        window.addEventListener('load', () => { loadForCity(cityInput.value || 'Recife'); });
     </script>
 </body>
 
