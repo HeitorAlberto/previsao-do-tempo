@@ -49,6 +49,7 @@
             transition: all 0.2s ease;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
+            font-family: 'Ubuntu', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
         }
 
         .search-modern input[type="search"]:focus {
@@ -72,6 +73,7 @@
             background: #4a90e2;
             color: #fff;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            font-family: 'Ubuntu', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
         }
 
         .search-buttons-modern button:hover {
@@ -238,10 +240,10 @@
         }
 
         function cloudDescription(value) {
-            if (value < 20) return 'Céu limpo';
+            if (value < 20) return 'Poucas nuvens';
             if (value < 50) return 'Algumas nuvens';
-            if (value < 80) return 'Muitas nuvens';
-            return 'Encoberto';
+            if (value < 80) return 'Parcialmente nublado';
+            return 'Nublado';
         }
 
         function render(data) {
