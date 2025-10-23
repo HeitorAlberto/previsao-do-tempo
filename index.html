@@ -270,9 +270,9 @@
           </div>
           <div class="day-details">
             <div class="cloud-desc-box ">${cloudDesc}</div>
-            <div class="box chuva">Chuva: ${prec.toFixed ? prec.toFixed(0) : prec} mm</div>
-            <div class="box temp">Temp: ${tmin.toFixed ? tmin.toFixed(0) : tmin}° - ${tmax.toFixed ? tmax.toFixed(0) : tmax}°</div>
-            <div class="box umidade">Umidade: ${humMin.toFixed ? humMin.toFixed(0) : humMin}% - ${humMax.toFixed ? humMax.toFixed(0) : humMax}%</div>
+            <div class="box chuva">Chuva (mm): ${prec.toFixed ? prec.toFixed(0) : prec}</div>
+            <div class="box temp">Temp (°C): ${tmin.toFixed ? tmin.toFixed(0) : tmin} a ${tmax.toFixed ? tmax.toFixed(0) : tmax}</div>
+            <div class="box umidade">Umidade (%): ${humMin.toFixed ? humMin.toFixed(0) : humMin} a ${humMax.toFixed ? humMax.toFixed(0) : humMax}</div>
           </div>
         `;
                 list.appendChild(div);
