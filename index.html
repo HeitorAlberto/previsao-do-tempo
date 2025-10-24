@@ -160,8 +160,6 @@
             font-size: 18px;
         }
 
-
-
         .row-text {
             color: var(--muted)
         }
@@ -169,7 +167,7 @@
         .row-data p {
             font-size: 20px;
             background-color: #ffedd1;
-            padding: 6px;
+            padding: 6px 15px;
             border-radius: 12px;
         }
 
@@ -309,23 +307,64 @@
             return { tMin, tMax, rhMin, rhMax, precipSum, cloudMean, gustMax };
         }
 
+        function cloudDesc(cloudMean) {
+            if (cloudMean <= 30) return 'Poucas nuvens';
+            if (cloudMean <= 60) return 'Parcialmente nublado';
+            if (cloudMean <= 80) return 'Maioria nublado';
+            return 'Encoberto';
+        }
+
         function renderDays(dayMap) {
             cardsEl.innerHTML = '';
             const entries = Array.from(dayMap.entries()).slice(0, 15);
+
             for (const [day, points] of entries) {
                 const iso = day + 'T00:00:00';
                 const labels = formatDateLabel(iso);
                 const s = summarizeDay(points);
-                const cloudIndex = Math.round(s.cloudMean / 10); // índice 0 a 10
+
                 const card = document.createElement('div');
                 card.className = 'card';
+
                 card.innerHTML = `
-          <div class="date">${labels.date} (${labels.weekday})</div>
-          <div class="row"><div class="row-text"><p>Temperatura (°C)</p></div><div class="row-data"><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p></div></div>
-          <div class="row"><div class="row-text"><p>Precipitação (mm)</p></div><div class="row-data"><p>${s.precipSum.toFixed(1)}</p></div></div>
-          <div class="row"><div class="row-text"><p>Umidade (%)</p></div><div class="row-data"><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p></div></div>
-          <div class="row"><div class="row-text"><p>Qtd. de nuvens (0 a 10)</p></div><div class="row-data"><p>${cloudIndex}</p></div></div>
-          <div class="row"><div class="row-text"><p>Rajadas de vento (km/h)</P></div><div class="row-data"><p>${s.gustMax.toFixed(0)}</p></div></div>`;
+                    <div class="date">${labels.date} (${labels.weekday})</div>
+
+                    <!-- Condição de nuvens -->
+                    <div class="row">
+                        <div class="row-data">
+                            <p style="background-color: #e0e0e0;">${cloudDesc(s.cloudMean)}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="row-text"><p>Temperatura (°C)</p></div>
+                        <div class="row-data">
+                            <p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="row-text"><p>Precipitação (mm)</p></div>
+                        <div class="row-data">
+                            <p>${s.precipSum.toFixed(1)}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="row-text"><p>Umidade (%)</p></div>
+                        <div class="row-data">
+                            <p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="row-text"><p>Rajadas de vento (km/h)</p></div>
+                        <div class="row-data">
+                            <p>${s.gustMax.toFixed(0)}</p>
+                        </div>
+                    </div>
+                `;
+
                 cardsEl.appendChild(card);
             }
         }
