@@ -76,6 +76,7 @@
             border-radius: 8px;
             transition: all 0.25s ease;
             font-family: 'Ubuntu', sans-serif;
+            text-align: center;
         }
 
         input[type=text]:focus {
@@ -96,15 +97,19 @@
             font-family: 'Ubuntu', sans-serif;
         }
 
-        /* Botão Localizar */
         #geoButton {
             background: var(--fg);
             color: var(--bg);
         }
 
         .meta {
-            font-size: 13px;
+            font-size: 18px;
             color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .fonte-dados {
+            font-size: 18px;
         }
 
         main {
@@ -133,20 +138,18 @@
             border-radius: 12px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 15px;
         }
 
         .card .date {
             font-size: 22px;
-            font-weight: 700
+            font-weight: 700;
         }
 
         .row {
             display: flex;
             justify-content: space-between;
             font-size: 18px;
-            padding: 5px;
-            border-bottom: 2px solid rgb(232, 232, 232);
         }
 
         .row-text {
@@ -155,7 +158,9 @@
 
         .row-data {
             font-size: 20px;
-            font-weight: bolder;
+            background-color: #ffedd1;
+            padding: 6px;
+            border-radius: 12px;
         }
 
         footer {
@@ -164,7 +169,7 @@
             color: var(--muted)
         }
 
-        @media (max-width:520px) {
+        @media (max-width:1000px) {
 
             body {
                 padding: 15px 8px;
@@ -194,13 +199,13 @@
 
             .location-row {
                 align-items: center;
+                gap: 12px;
             }
 
             #locationName {
-                text-align: center;
+                margin: auto;
             }
 
-            /* CENTRALIZAR TEXTOS ABAIXO DO INPUT NO CELULAR */
             .location-row>div:last-child {
                 margin-left: 0 !important;
                 text-align: center !important;
@@ -235,19 +240,15 @@
         <div class="location-row">
             <div id="locationName" style="font-weight:700"></div>
             <div
-                style="margin-left:auto;text-align:right;background-color: rgb(255, 237, 224);border-radius: 10px;padding: 7px;">
+                style="margin-left:auto;text-align:right;background-color: rgb(255, 237, 224);border-radius: 10px;padding: 10px;">
                 <div class="meta">Hoje: <span id="todayDate"></span></div>
-                <div class="small">Dados: Open-Meteo (modelo ecmwf_ifs)</div>
+                <div class="fonte-dados">Dados: Open-Meteo (modelo ecmwf_ifs)</div>
             </div>
         </div>
         <section id="forecastSection">
             <div class="cards" id="cards"></div>
         </section>
     </main>
-
-    <footer>
-        Mostrando até 15 dias de previsão. A Busca utiliza a API de geocoding do Nominatim (OpenStreetMap).
-    </footer>
 
     <script>
         const forecastBase = 'https://api.open-meteo.com/v1/forecast';
@@ -261,13 +262,13 @@
 
         const today = new Date();
         const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(today);
-        const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(today); // só dia/mês
+        const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(today);
         todayDate.textContent = `${date} - ${weekday}`;
 
         function formatDateLabel(iso) {
             const d = new Date(iso);
             const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(d);
-            const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(d); // só dia/mês
+            const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(d);
             return { weekday, date };
         }
 
@@ -305,6 +306,7 @@
                 const iso = day + 'T00:00:00';
                 const labels = formatDateLabel(iso);
                 const s = summarizeDay(points);
+                const cloudIndex = Math.round(s.cloudMean / 10); // índice 0 a 10
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
@@ -312,7 +314,7 @@
           <div class="row"><div class="row-text">Temperatura (°C)</div><div class="row-data">${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</div></div>
           <div class="row"><div class="row-text">Precipitação (mm)</div><div class="row-data">${s.precipSum.toFixed(1)}</div></div>
           <div class="row"><div class="row-text">Umidade (%)</div><div class="row-data">${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</div></div>
-          <div class="row"><div class="row-text">Cobertura de nuvens (%)</div><div class="row-data">${s.cloudMean.toFixed(0)}</div></div>
+          <div class="row"><div class="row-text">Nuvens no céu (0 a 10)</div><div class="row-data">${cloudIndex}</div></div>
           <div class="row"><div class="row-text">Rajadas de vento (km/h)</div><div class="row-data">${s.gustMax.toFixed(0)}</div></div>`;
                 cardsEl.appendChild(card);
             }
@@ -331,7 +333,6 @@
             return await res.json();
         }
 
-        // --- Função para buscar pelo input (cidade, estado, país) usando Nominatim ---
         async function searchLocation(query) {
             const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`;
             const res = await fetch(url);
@@ -343,7 +344,7 @@
             const city = addr.city || addr.town || addr.village || addr.municipality || '';
             const state = addr.state || '';
             const country = addr.country || '';
-            locationName.textContent = `${city}${state ? ', ' + state : ''}${country ? ' - ' + country : ''}`;
+            locationName.textContent = `📌 ${city}${state ? ', ' + state : ''}${country ? ' - ' + country : ''}`;
             return { lat: parseFloat(place.lat), lon: parseFloat(place.lon) };
         }
 
@@ -366,13 +367,13 @@
                 };
                 const dayMap = groupHourlyByDate(times, arrays);
                 renderDays(dayMap);
+                cityInput.value = '';
             } catch (err) {
                 console.error(err);
                 locationName.textContent = 'Erro ao carregar';
             }
         });
 
-        // --- Botão Localizar ---
         const geoButton = document.getElementById('geoButton');
         geoButton.addEventListener('click', () => {
             if (!navigator.geolocation) { alert('Geolocalização não é suportada neste navegador.'); return; }
@@ -382,7 +383,6 @@
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const { latitude, longitude } = pos.coords;
                 try {
-                    // Reverse geocoding via Nominatim
                     const url = `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${latitude}&lon=${longitude}`;
                     const res = await fetch(url);
                     const data = await res.json();
@@ -390,7 +390,7 @@
                     const city = addr.city || addr.town || addr.village || addr.municipality || '';
                     const state = addr.state || '';
                     const country = addr.country || '';
-                    locationName.textContent = `${city}${state ? ', ' + state : ''}${country ? ' - ' + country : ''}`;
+                    locationName.textContent = `📌 ${city}${state ? ', ' + state : ''}${country ? ' - ' + country : ''}`;
 
                     const forecast = await fetchForecast(latitude, longitude);
                     const times = forecast.hourly.time;
