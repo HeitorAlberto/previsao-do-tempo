@@ -324,7 +324,7 @@
           <div class="row"><div class="row-text"><p>Temperatura (°C)</p></div><div class="row-data"><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p></div></div>
           <div class="row"><div class="row-text"><p>Precipitação (mm)</p></div><div class="row-data"><p>${s.precipSum.toFixed(1)}</p></div></div>
           <div class="row"><div class="row-text"><p>Umidade (%)</p></div><div class="row-data"><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p></div></div>
-          <div class="row"><div class="row-text"><p>Nuvens no céu (0 a 10)</p></div><div class="row-data"><p>${cloudIndex}</p></div></div>
+          <div class="row"><div class="row-text"><p>Qtd. de nuvens (0 a 10)</p></div><div class="row-data"><p>${cloudIndex}</p></div></div>
           <div class="row"><div class="row-text"><p>Rajadas de vento (km/h)</P></div><div class="row-data"><p>${s.gustMax.toFixed(0)}</p></div></div>`;
                 cardsEl.appendChild(card);
             }
