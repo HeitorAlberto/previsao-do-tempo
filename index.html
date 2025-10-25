@@ -297,12 +297,17 @@
         }
 
         function summarizeDay(points) {
-            const n = points.length || 1;
             let tMin = Infinity, tMax = -Infinity, rhMin = Infinity, rhMax = -Infinity;
             let precipSum = 0, gustMax = 0;
             for (const p of points) {
-                if (p.temperature_2m != null) { if (p.temperature_2m < tMin) tMin = p.temperature_2m; if (p.temperature_2m > tMax) tMax = p.temperature_2m; }
-                if (p.relative_humidity_2m != null) { if (p.relative_humidity_2m < rhMin) rhMin = p.relative_humidity_2m; if (p.relative_humidity_2m > rhMax) rhMax = p.relative_humidity_2m; }
+                if (p.temperature_2m != null) {
+                    if (p.temperature_2m < tMin) tMin = p.temperature_2m;
+                    if (p.temperature_2m > tMax) tMax = p.temperature_2m;
+                }
+                if (p.relative_humidity_2m != null) {
+                    if (p.relative_humidity_2m < rhMin) rhMin = p.relative_humidity_2m;
+                    if (p.relative_humidity_2m > rhMax) rhMax = p.relative_humidity_2m;
+                }
                 if (p.precipitation != null) precipSum += p.precipitation;
                 if (p.wind_gusts_10m != null && p.wind_gusts_10m > gustMax) gustMax = p.wind_gusts_10m;
             }
@@ -317,27 +322,54 @@
             return arr.reduce((a, b) => a + b, 0);
         }
 
-        // --- Cloud description ---
-        function cloudDescHourly(points) {
-            const clouds = points.map(p => p.cloud_cover);
-            const manha = average(clouds.slice(6, 12));
-            const tarde = average(clouds.slice(12, 18));
-            const noite = average(clouds.slice(18, 24));
-
-            if (manha < 40 && tarde > 70 && noite > 70) return "Limpo pela manhã. Tarde e noite nublado.";
-            if (manha < 40 && tarde > 70 && noite <= 70) return "Limpo pela manhã. Nublado à tarde.";
-            if (manha > 70 && tarde < 40 && noite > 70) return "Nublado de manhã e à noite. Limpo à tarde.";
-            if (manha > 70 && tarde < 40 && noite <= 70) return "Nublado pela manhã. Diminuição de nuvens à tarde.";
-            if (manha < 40 && tarde < 40 && noite > 70) return "Céu limpo durante o dia. Nublado à noite.";
-            if (manha < 40 && tarde > 70 && noite < 40) return "Limpo de manhã e à noite. Nublado à tarde.";
-            if (manha < 40 && tarde < 70 && noite < 70) return "Céu limpo pela manhã. Tarde e noite com muitas nuvens.";
-            if (manha > 70 && tarde > 70 && noite > 70) return "Nublado o dia todo.";
-            if (manha < 30 && tarde < 30 && noite < 30) return "Céu limpo o dia todo.";
-            return "Parcialmente nublado.";
+        // --- Classificação ---
+        function cloudText(value) {
+            if (value < 30) return "céu limpo";
+            if (value < 60) return "parcialmente nublado";
+            if (value < 80) return "muitas nuvens";
+            return "nublado";
         }
 
+        function rainText(mm) {
+            if (mm < 1) return null; // sem chuva significativa
+            if (mm < 5) return "chuva leve";
+            if (mm < 15) return "chuva moderada";
+            return "chuva forte";
+        }
 
+        // --- Gera descrição por período ---
+        function periodDesc(label, clouds, rain) {
+            const cText = cloudText(clouds);
+            const rText = rainText(rain);
+            let color = "#e0e0e0";
+            let text;
 
+            if (rText) {
+                text = `<strong>${label}:</strong> ${rText}.`; // prioridade para chuva
+                color = "#cce4ff"; // azul claro se chove
+            } else {
+                text = `<strong>${label}:</strong> ${cText}.`;
+            }
+
+            return { text, color };
+        }
+
+        function generatePeriodDescriptions(points) {
+            const clouds = points.map(p => p.cloud_cover || 0);
+            const rain = points.map(p => p.precipitation || 0);
+
+            const madrugada = { clouds: average(clouds.slice(0, 6)), rain: parseFloat(sum(rain.slice(0, 6)).toFixed(1)) };
+            const manha = { clouds: average(clouds.slice(6, 12)), rain: parseFloat(sum(rain.slice(6, 12)).toFixed(1)) };
+            const tarde = { clouds: average(clouds.slice(12, 18)), rain: parseFloat(sum(rain.slice(12, 18)).toFixed(1)) };
+            const noite = { clouds: average(clouds.slice(18, 24)), rain: parseFloat(sum(rain.slice(18, 24)).toFixed(1)) };
+
+            return [
+                periodDesc("Madrugada", madrugada.clouds, madrugada.rain),
+                periodDesc("Manhã", manha.clouds, manha.rain),
+                periodDesc("Tarde", tarde.clouds, tarde.rain),
+                periodDesc("Noite", noite.clouds, noite.rain)
+            ];
+        }
 
         // --- Render ---
         function renderDays(dayMap) {
@@ -348,48 +380,51 @@
                 const iso = day + 'T00:00:00';
                 const labels = formatDateLabel(iso);
                 const s = summarizeDay(points);
+                const periods = generatePeriodDescriptions(points);
 
                 const card = document.createElement('div');
                 card.className = 'card';
 
+                let periodHTML = periods.map(p => `
+                    <div style="background-color:${p.color}; padding:10px; width:100%; box-sizing:border-box; margin-top:5px; border-radius:12px">
+                        <div>${p.text.split(':')[0]}:</div>
+                        <div>${p.text.split(':')[1].trim()}</div>
+                    </div>
+                `).join('');
+
                 card.innerHTML = `
-                <div class="date">${labels.date} (${labels.weekday})</div>
+                    <div class="date">${labels.date} (${labels.weekday})</div>
     
-                <!-- Condição de nuvens -->
-                <div class="row">
-                    <div class="row-data">
-                        <p style="background-color: #e0e0e0;">${cloudDescHourly(points)}</p>
+                    <div class="row">
+                        <div class="row-text"><p>Temperatura (°C)</p></div>
+                        <div class="row-data">
+                            <p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p>
+                        </div>
                     </div>
-                </div>
     
-                <div class="row">
-                    <div class="row-text"><p>Temperatura (°C)</p></div>
-                    <div class="row-data">
-                        <p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p>
+                    <div class="row">
+                        <div class="row-text"><p>Precipitação (mm)</p></div>
+                        <div class="row-data">
+                            <p>${s.precipSum.toFixed(1)}</p>
+                        </div>
                     </div>
-                </div>
     
-                <div class="row">
-                    <div class="row-text"><p>Precipitação (mm)</p></div>
-                    <div class="row-data">
-                        <p>${s.precipSum.toFixed(1)}</p>
+                    <div class="row">
+                        <div class="row-text"><p>Umidade (%)</p></div>
+                        <div class="row-data">
+                            <p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p>
+                        </div>
                     </div>
-                </div>
     
-                <div class="row">
-                    <div class="row-text"><p>Umidade (%)</p></div>
-                    <div class="row-data">
-                        <p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p>
+                    <div class="row">
+                        <div class="row-text"><p>Rajadas de vento (km/h)</p></div>
+                        <div class="row-data">
+                            <p>${s.gustMax.toFixed(0)}</p>
+                        </div>
                     </div>
-                </div>
     
-                <div class="row">
-                    <div class="row-text"><p>Rajadas de vento (km/h)</p></div>
-                    <div class="row-data">
-                        <p>${s.gustMax.toFixed(0)}</p>
-                    </div>
-                </div>
-            `;
+                    ${periodHTML}
+                `;
 
                 cardsEl.appendChild(card);
             }
@@ -454,7 +489,10 @@
 
         const geoButton = document.getElementById('geoButton');
         geoButton.addEventListener('click', () => {
-            if (!navigator.geolocation) { alert('Geolocalização não é suportada neste navegador.'); return; }
+            if (!navigator.geolocation) {
+                alert('Geolocalização não é suportada neste navegador.');
+                return;
+            }
             locationName.textContent = 'Obtendo sua localização...';
             cardsEl.innerHTML = '';
 
@@ -491,7 +529,6 @@
             });
         });
     </script>
-
 
 </body>
 
