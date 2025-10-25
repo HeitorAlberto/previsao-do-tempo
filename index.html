@@ -276,6 +276,7 @@
         const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(today);
         todayDate.textContent = `${date} - ${weekday}`;
 
+        // --- Helpers ---
         function formatDateLabel(iso) {
             const d = new Date(iso);
             const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(d);
@@ -308,74 +309,37 @@
             return { tMin, tMax, rhMin, rhMax, precipSum, gustMax };
         }
 
-        // Função nova para descrições narrativas
+        function average(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+        function sum(arr) {
+            return arr.reduce((a, b) => a + b, 0);
+        }
+
+        // --- Cloud description ---
         function cloudDescHourly(points) {
             const clouds = points.map(p => p.cloud_cover);
+            const manha = average(clouds.slice(6, 12));
+            const tarde = average(clouds.slice(12, 18));
+            const noite = average(clouds.slice(18, 24));
 
-            // Médias por período
-            const manha = average(clouds.slice(6, 12));   // 6h-12h
-            const tarde = average(clouds.slice(12, 18));  // 12h-18h
-            const noite = average(clouds.slice(18, 24));  // 18h-24h
-
-            // Tendências por períodos (mais específicas)
-            if (manha < 40 && tarde > 70 && noite > 70) return "Limpo pela manhã, tarde e noite nublado.";
-            if (manha < 40 && tarde > 70 && noite <= 70) return "Limpo pela manhã, nublado à tarde.";
-            if (manha > 70 && tarde < 40 && noite > 70) return "Nublado de manhã e à noite, limpo à tarde.";
-            if (manha > 70 && tarde < 40 && noite <= 70) return "Nublado pela manhã, abrindo à tarde.";
-            if (manha < 40 && tarde < 40 && noite > 70) return "Céu limpo durante o dia, nublado à noite.";
-            if (manha < 40 && tarde > 70 && noite < 40) return "Limpo de manhã e à noite, nublado à tarde.";
-            if (manha < 40 && tarde < 70 && noite < 70) return "Céu limpo a parcialmente nublado.";
+            if (manha < 40 && tarde > 70 && noite > 70) return "Limpo pela manhã. Tarde e noite nublado.";
+            if (manha < 40 && tarde > 70 && noite <= 70) return "Limpo pela manhã. Nublado à tarde.";
+            if (manha > 70 && tarde < 40 && noite > 70) return "Nublado de manhã e à noite. Limpo à tarde.";
+            if (manha > 70 && tarde < 40 && noite <= 70) return "Nublado pela manhã. Diminuição de nuvens à tarde.";
+            if (manha < 40 && tarde < 40 && noite > 70) return "Céu limpo durante o dia. Nublado à noite.";
+            if (manha < 40 && tarde > 70 && noite < 40) return "Limpo de manhã e à noite. Nublado à tarde.";
+            if (manha < 40 && tarde < 70 && noite < 70) return "Céu limpo pela manhã. Tarde e noite com muitas nuvens.";
             if (manha > 70 && tarde > 70 && noite > 70) return "Nublado o dia todo";
             if (manha < 30 && tarde < 30 && noite < 30) return "Céu limpo o dia todo.";
-
-            // Caso geral para variações não capturadas acima
             return "Parcialmente nublado";
         }
 
-        // Funções auxiliares
-        function average(arr) {
-            return arr.reduce((a, b) => a + b, 0) / arr.length;
-        }
 
 
-        // Funções auxiliares
-        function average(arr) {
-            return arr.reduce((a, b) => a + b, 0) / arr.length;
-        }
 
-        function hasLargeJumps(arr) {
-            for (let i = 1; i < arr.length; i++) {
-                if (Math.abs(arr[i] - arr[i - 1]) > 50) return true;
-            }
-            return false;
-        }
-
-
-        // Funções auxiliares
-        function average(arr) {
-            return arr.reduce((a, b) => a + b, 0) / arr.length;
-        }
-
-        function hasLargeJumps(arr) {
-            for (let i = 1; i < arr.length; i++) {
-                if (Math.abs(arr[i] - arr[i - 1]) > 50) return true;
-            }
-            return false;
-        }
-
-
-        // Funções auxiliares
-        function average(arr) {
-            return arr.reduce((a, b) => a + b, 0) / arr.length;
-        }
-
-        function hasLargeJumps(arr) {
-            for (let i = 1; i < arr.length; i++) {
-                if (Math.abs(arr[i] - arr[i - 1]) > 50) return true;
-            }
-            return false;
-        }
-
+        // --- Render ---
         function renderDays(dayMap) {
             cardsEl.innerHTML = '';
             const entries = Array.from(dayMap.entries()).slice(0, 15);
@@ -431,6 +395,7 @@
             }
         }
 
+        // --- Fetch ---
         async function fetchForecast(lat, lon, timezone = 'auto') {
             const url = new URL(forecastBase);
             url.searchParams.set('latitude', lat);
@@ -444,6 +409,7 @@
             return await res.json();
         }
 
+        // --- Search ---
         async function searchLocation(query) {
             const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`;
             const res = await fetch(url);
@@ -459,6 +425,7 @@
             return { lat: parseFloat(place.lat), lon: parseFloat(place.lon) };
         }
 
+        // --- Event listeners ---
         searchForm.addEventListener('submit', async e => {
             e.preventDefault();
             const q = cityInput.value.trim();
@@ -524,6 +491,7 @@
             });
         });
     </script>
+
 
 </body>
 
