@@ -298,23 +298,82 @@
         function summarizeDay(points) {
             const n = points.length || 1;
             let tMin = Infinity, tMax = -Infinity, rhMin = Infinity, rhMax = -Infinity;
-            let precipSum = 0, cloudSum = 0, gustMax = 0;
+            let precipSum = 0, gustMax = 0;
             for (const p of points) {
                 if (p.temperature_2m != null) { if (p.temperature_2m < tMin) tMin = p.temperature_2m; if (p.temperature_2m > tMax) tMax = p.temperature_2m; }
                 if (p.relative_humidity_2m != null) { if (p.relative_humidity_2m < rhMin) rhMin = p.relative_humidity_2m; if (p.relative_humidity_2m > rhMax) rhMax = p.relative_humidity_2m; }
                 if (p.precipitation != null) precipSum += p.precipitation;
-                if (p.cloud_cover != null) cloudSum += p.cloud_cover;
                 if (p.wind_gusts_10m != null && p.wind_gusts_10m > gustMax) gustMax = p.wind_gusts_10m;
             }
-            const cloudMean = cloudSum / n;
-            return { tMin, tMax, rhMin, rhMax, precipSum, cloudMean, gustMax };
+            return { tMin, tMax, rhMin, rhMax, precipSum, gustMax };
         }
 
-        function cloudDesc(cloudMean) {
-            if (cloudMean <= 30) return 'Poucas nuvens';
-            if (cloudMean <= 60) return 'Parcialmente nublado';
-            if (cloudMean <= 80) return 'Maioria nublado';
-            return 'Encoberto';
+        // Função nova para descrições narrativas
+        function cloudDescHourly(points) {
+            const clouds = points.map(p => p.cloud_cover);
+
+            // Médias por período
+            const manha = average(clouds.slice(6, 12));   // 6h-12h
+            const tarde = average(clouds.slice(12, 18));  // 12h-18h
+            const noite = average(clouds.slice(18, 24));  // 18h-24h
+
+            // Tendências por períodos (mais específicas)
+            if (manha < 40 && tarde > 70 && noite > 70) return "Limpo pela manhã, tarde e noite nublado.";
+            if (manha < 40 && tarde > 70 && noite <= 70) return "Limpo pela manhã, nublado à tarde.";
+            if (manha > 70 && tarde < 40 && noite > 70) return "Nublado de manhã e à noite, limpo à tarde.";
+            if (manha > 70 && tarde < 40 && noite <= 70) return "Nublado pela manhã, abrindo à tarde.";
+            if (manha < 40 && tarde < 40 && noite > 70) return "Céu limpo durante o dia, nublado à noite.";
+            if (manha < 40 && tarde > 70 && noite < 40) return "Limpo de manhã e à noite, nublado à tarde.";
+            if (manha < 40 && tarde < 70 && noite < 70) return "Céu limpo a parcialmente nublado.";
+            if (manha > 70 && tarde > 70 && noite > 70) return "Nublado o dia todo";
+            if (manha < 30 && tarde < 30 && noite < 30) return "Céu limpo o dia todo.";
+
+            // Caso geral para variações não capturadas acima
+            return "Parcialmente nublado";
+        }
+
+        // Funções auxiliares
+        function average(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+
+        // Funções auxiliares
+        function average(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+        function hasLargeJumps(arr) {
+            for (let i = 1; i < arr.length; i++) {
+                if (Math.abs(arr[i] - arr[i - 1]) > 50) return true;
+            }
+            return false;
+        }
+
+
+        // Funções auxiliares
+        function average(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+        function hasLargeJumps(arr) {
+            for (let i = 1; i < arr.length; i++) {
+                if (Math.abs(arr[i] - arr[i - 1]) > 50) return true;
+            }
+            return false;
+        }
+
+
+        // Funções auxiliares
+        function average(arr) {
+            return arr.reduce((a, b) => a + b, 0) / arr.length;
+        }
+
+        function hasLargeJumps(arr) {
+            for (let i = 1; i < arr.length; i++) {
+                if (Math.abs(arr[i] - arr[i - 1]) > 50) return true;
+            }
+            return false;
         }
 
         function renderDays(dayMap) {
@@ -330,43 +389,43 @@
                 card.className = 'card';
 
                 card.innerHTML = `
-                    <div class="date">${labels.date} (${labels.weekday})</div>
-
-                    <!-- Condição de nuvens -->
-                    <div class="row">
-                        <div class="row-data">
-                            <p style="background-color: #e0e0e0;">${cloudDesc(s.cloudMean)}</p>
-                        </div>
+                <div class="date">${labels.date} (${labels.weekday})</div>
+    
+                <!-- Condição de nuvens -->
+                <div class="row">
+                    <div class="row-data">
+                        <p style="background-color: #e0e0e0;">${cloudDescHourly(points)}</p>
                     </div>
-
-                    <div class="row">
-                        <div class="row-text"><p>Temperatura (°C)</p></div>
-                        <div class="row-data">
-                            <p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p>
-                        </div>
+                </div>
+    
+                <div class="row">
+                    <div class="row-text"><p>Temperatura (°C)</p></div>
+                    <div class="row-data">
+                        <p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p>
                     </div>
-
-                    <div class="row">
-                        <div class="row-text"><p>Precipitação (mm)</p></div>
-                        <div class="row-data">
-                            <p>${s.precipSum.toFixed(1)}</p>
-                        </div>
+                </div>
+    
+                <div class="row">
+                    <div class="row-text"><p>Precipitação (mm)</p></div>
+                    <div class="row-data">
+                        <p>${s.precipSum.toFixed(1)}</p>
                     </div>
-
-                    <div class="row">
-                        <div class="row-text"><p>Umidade (%)</p></div>
-                        <div class="row-data">
-                            <p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p>
-                        </div>
+                </div>
+    
+                <div class="row">
+                    <div class="row-text"><p>Umidade (%)</p></div>
+                    <div class="row-data">
+                        <p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p>
                     </div>
-
-                    <div class="row">
-                        <div class="row-text"><p>Rajadas de vento (km/h)</p></div>
-                        <div class="row-data">
-                            <p>${s.gustMax.toFixed(0)}</p>
-                        </div>
+                </div>
+    
+                <div class="row">
+                    <div class="row-text"><p>Rajadas de vento (km/h)</p></div>
+                    <div class="row-data">
+                        <p>${s.gustMax.toFixed(0)}</p>
                     </div>
-                `;
+                </div>
+            `;
 
                 cardsEl.appendChild(card);
             }
@@ -465,6 +524,7 @@
             });
         });
     </script>
+
 </body>
 
 </html>
