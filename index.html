@@ -314,63 +314,6 @@
             return { tMin, tMax, rhMin, rhMax, precipSum, gustMax };
         }
 
-        function average(arr) {
-            return arr.reduce((a, b) => a + b, 0) / arr.length;
-        }
-
-        function sum(arr) {
-            return arr.reduce((a, b) => a + b, 0);
-        }
-
-        // --- Classificação ---
-        function cloudText(value) {
-            if (value < 30) return "céu limpo";
-            if (value < 60) return "parcialmente nublado";
-            if (value < 80) return "muitas nuvens";
-            return "nublado";
-        }
-
-        function rainText(mm) {
-            if (mm < 1) return null; // sem chuva significativa
-            if (mm < 5) return "chuva fraca";
-            if (mm < 15) return "chuva moderada";
-            return "chuva forte";
-        }
-
-        // --- Gera descrição por período ---
-        function periodDesc(label, clouds, rain) {
-            const cText = cloudText(clouds);
-            const rText = rainText(rain);
-            let color = "#e0e0e0";
-            let text;
-
-            if (rText) {
-                text = `<strong>${label}:</strong> ${rText}.`; // prioridade para chuva
-                color = "#cce4ff"; // azul claro se chove
-            } else {
-                text = `<strong>${label}:</strong> ${cText}.`;
-            }
-
-            return { text, color };
-        }
-
-        function generatePeriodDescriptions(points) {
-            const clouds = points.map(p => p.cloud_cover || 0);
-            const rain = points.map(p => p.precipitation || 0);
-
-            const madrugada = { clouds: average(clouds.slice(0, 6)), rain: parseFloat(sum(rain.slice(0, 6)).toFixed(1)) };
-            const manha = { clouds: average(clouds.slice(6, 12)), rain: parseFloat(sum(rain.slice(6, 12)).toFixed(1)) };
-            const tarde = { clouds: average(clouds.slice(12, 18)), rain: parseFloat(sum(rain.slice(12, 18)).toFixed(1)) };
-            const noite = { clouds: average(clouds.slice(18, 24)), rain: parseFloat(sum(rain.slice(18, 24)).toFixed(1)) };
-
-            return [
-                periodDesc("Madrugada", madrugada.clouds, madrugada.rain),
-                periodDesc("Manhã", manha.clouds, manha.rain),
-                periodDesc("Tarde", tarde.clouds, tarde.rain),
-                periodDesc("Noite", noite.clouds, noite.rain)
-            ];
-        }
-
         // --- Render ---
         function renderDays(dayMap) {
             cardsEl.innerHTML = '';
@@ -380,50 +323,40 @@
                 const iso = day + 'T00:00:00';
                 const labels = formatDateLabel(iso);
                 const s = summarizeDay(points);
-                const periods = generatePeriodDescriptions(points);
 
                 const card = document.createElement('div');
                 card.className = 'card';
 
-                let periodHTML = periods.map(p => `
-                    <div style="background-color:${p.color}; padding:10px; width:100%; box-sizing:border-box; margin-top:5px; border-radius:12px">
-                        <div>${p.text.split(':')[0]}:</div>
-                        <div>${p.text.split(':')[1].trim()}</div>
-                    </div>
-                `).join('');
-
                 card.innerHTML = `
                     <div class="date">${labels.date} (${labels.weekday})</div>
-    
+
                     <div class="row">
                         <div class="row-text"><p>Temperatura (°C)</p></div>
                         <div class="row-data">
                             <p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p>
                         </div>
                     </div>
-    
+
                     <div class="row">
                         <div class="row-text"><p>Precipitação (mm)</p></div>
                         <div class="row-data">
                             <p>${s.precipSum.toFixed(1)}</p>
                         </div>
                     </div>
-    
+
                     <div class="row">
                         <div class="row-text"><p>Umidade (%)</p></div>
                         <div class="row-data">
                             <p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p>
                         </div>
                     </div>
-    
+
                     <div class="row">
                         <div class="row-text"><p>Rajadas de vento (km/h)</p></div>
                         <div class="row-data">
                             <p>${s.gustMax.toFixed(0)}</p>
                         </div>
                     </div>
-    
-                    ${periodHTML}
                 `;
 
                 cardsEl.appendChild(card);
