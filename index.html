@@ -322,6 +322,9 @@
 
             const avg = arr => arr.length ? arr.reduce((a, b) => a + b) / arr.length : 0;
 
+            // 🔹 Arredondar porcentagens de nuvens para múltiplos de 10
+            const round10 = v => Math.round(v / 10) * 10;
+
             return {
                 tMin,
                 tMax,
@@ -330,13 +333,14 @@
                 precipSum,
                 gustMax,
                 clouds: {
-                    madrugada: avg(clouds.madrugada),
-                    manha: avg(clouds.manha),
-                    tarde: avg(clouds.tarde),
-                    noite: avg(clouds.noite)
+                    madrugada: round10(avg(clouds.madrugada)),
+                    manha: round10(avg(clouds.manha)),
+                    tarde: round10(avg(clouds.tarde)),
+                    noite: round10(avg(clouds.noite))
                 }
             };
         }
+
 
         // --- Render ---
         function renderDays(dayMap) {
