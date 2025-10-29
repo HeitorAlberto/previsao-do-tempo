@@ -1,0 +1,9 @@
+conda activate geo
+
+
+
+conda deactivate
+
+
+
+conda env list
