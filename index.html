@@ -364,7 +364,7 @@
         function getCloudBg(percent) {
             if (percent <= 10) return 'poucas-nuvens.png';
             if (percent <= 30) return 'poucas-nuvens.png';
-            if (percent <= 70) return 'muitas-nuvens.png';
+            if (percent <= 80) return 'muitas-nuvens.png';
             return 'nublado.png';
         }
 
@@ -398,19 +398,19 @@
         </div>
 
         <div class="cloud-level">
-            <div class="row-text"><p>Madrugada</p></div>
+            <div class="row-text"><p>Nuvens de madrugada</p></div>
             <div class="row-data"><p style="display: none">${s.clouds.madrugada.toFixed(0)}</p></div>
         </div>
         <div class="cloud-level">
-            <div class="row-text"><p>Manhã</p></div>
+            <div class="row-text"><p>Nuvens de manhã</p></div>
             <div class="row-data"><p style="display: none">${s.clouds.manha.toFixed(0)}</p></div>
         </div>
         <div class="cloud-level">
-            <div class="row-text"><p>Tarde</p></div>
+            <div class="row-text"><p>Nuvens à tarde</p></div>
             <div class="row-data"><p style="display: none">${s.clouds.tarde.toFixed(0)}</p></div>
         </div>
         <div class="cloud-level">
-            <div class="row-text"><p>Noite</p></div>
+            <div class="row-text"><p>Nuvens à noite</p></div>
             <div class="row-data"><p style="display: none">${s.clouds.noite.toFixed(0)}</p></div>
         </div>
         `;
