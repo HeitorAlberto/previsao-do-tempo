@@ -26,7 +26,7 @@
         }
 
         .image-container img {
-            max-width: 90vw;
+            max-width: 60vw;
             max-height: 120vh;
             object-fit: contain;
             border-radius: 10px;
@@ -61,8 +61,8 @@
         }
 
         .indicator {
-            width: 30px;
-            height: 15px;
+            width: 35px;
+            height: 35px;
             background: rgba(0, 0, 0, 0.2);
             cursor: pointer;
             border-radius: 4px;
@@ -79,7 +79,7 @@
         }
 
         .acumulado img {
-            max-width: 90vw;
+            max-width: 60vw;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
@@ -89,9 +89,7 @@
 <body>
 
     <div class="image-container">
-        <div class="click-zone left"></div>
         <img id="main-image" src="" alt="Previsão do dia">
-        <div class="click-zone right"></div>
     </div>
 
     <!-- Indicadores retangulares -->
@@ -104,8 +102,8 @@
 
     <script>
         const dailyImages = [
-            { day: "Hoje", file: "previsao/01.png" },
-            { day: "Amanhã", file: "previsao/02.png" },
+            { day: "Dia 1", file: "previsao/01.png" },
+            { day: "Dia 2", file: "previsao/02.png" },
             { day: "Dia 3", file: "previsao/03.png" },
             { day: "Dia 4", file: "previsao/04.png" },
             { day: "Dia 5", file: "previsao/05.png" },
@@ -150,15 +148,17 @@
             });
         });
 
-        // Áreas clicáveis
-        document.querySelector('.click-zone.left').addEventListener('click', () => {
-            currentIndex = (currentIndex - 1 + dailyImages.length) % dailyImages.length;
-            updateImage();
-        });
 
-        document.querySelector('.click-zone.right').addEventListener('click', () => {
-            currentIndex = (currentIndex + 1) % dailyImages.length;
-            updateImage();
+
+        // ✅ Navegação com setas do teclado
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') {
+                currentIndex = (currentIndex - 1 + dailyImages.length) % dailyImages.length;
+                updateImage();
+            } else if (event.key === 'ArrowRight') {
+                currentIndex = (currentIndex + 1) % dailyImages.length;
+                updateImage();
+            }
         });
 
         updateImage(); // Inicializa a primeira imagem
