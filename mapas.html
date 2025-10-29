@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Precipitação ECMWF - 15 Dias</title>
     <style>
+
         body {
             margin: 0;
             font-family: Arial, sans-serif;
@@ -15,6 +16,28 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
+        }
+
+        header {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding: 50px 0px;
+        }
+
+        .menu a {
+            text-decoration: none;
+            background-color: #eaeaea;
+            color: #000000;
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 20px;
+        }
+
+        .menu a:hover {
+            background-color: #7d7d7d;
         }
 
         .image-container,
@@ -64,6 +87,13 @@
 </head>
 
 <body>
+
+    <header>
+        <div class="menu">
+            <a href="index.html">Previsão por local (clique aqui)</a>
+        </div>
+    </header>
+
 
     <div class="image-container">
         <img id="main-image" src="" alt="Previsão do dia">
