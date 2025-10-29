@@ -17,47 +17,27 @@
             padding: 20px;
         }
 
-        .image-container {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 10px;
+        .image-container,
+        .acumulado {
+            margin-bottom: 20px;
+            text-align: center;
         }
 
-        .image-container img {
-            max-width: 60vw;
-            max-height: 120vh;
-            object-fit: contain;
+        .image-container img,
+        .acumulado img {
+            width: 60vw;
+            max-width: 100%;
+            height: auto;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
         }
 
-        /* Áreas invisíveis clicáveis */
-        .click-zone {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 50%;
-            cursor: pointer;
-            z-index: 5;
-        }
-
-        .click-zone.left {
-            left: 0;
-        }
-
-        .click-zone.right {
-            right: 0;
-        }
-
-        /* Indicadores retangulares */
         .indicators {
             display: flex;
             gap: 5px;
-            margin-top: 15px;
             flex-wrap: wrap;
             justify-content: center;
+            margin-bottom: 20px;
         }
 
         .indicator {
@@ -73,15 +53,12 @@
             background: rgba(0, 0, 0, 0.8);
         }
 
-        .acumulado {
-            margin-top: 40px;
-            text-align: center;
-        }
+        @media (max-width: 768px) {
 
-        .acumulado img {
-            max-width: 60vw;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            .image-container img,
+            .acumulado img {
+                width: 98vw;
+            }
         }
     </style>
 </head>
@@ -92,10 +69,8 @@
         <img id="main-image" src="" alt="Previsão do dia">
     </div>
 
-    <!-- Indicadores retangulares -->
     <div class="indicators" id="indicators"></div>
 
-    <!-- Imagem do acumulado de 15 dias -->
     <div class="acumulado">
         <img src="previsao/acumulado-15-dias.png" alt="Acumulado 15 dias">
     </div>
@@ -128,14 +103,12 @@
             mainImage.src = current.file;
             mainImage.alt = `Previsão ${current.day}`;
 
-            // Atualiza indicadores
             const indicators = indicatorsContainer.children;
             for (let i = 0; i < indicators.length; i++) {
                 indicators[i].classList.toggle('active', i === currentIndex);
             }
         }
 
-        // Cria indicadores
         dailyImages.forEach((item, index) => {
             const indicator = document.createElement('div');
             indicator.classList.add('indicator');
@@ -148,9 +121,6 @@
             });
         });
 
-
-
-        // ✅ Navegação com setas do teclado
         document.addEventListener('keydown', (event) => {
             if (event.key === 'ArrowLeft') {
                 currentIndex = (currentIndex - 1 + dailyImages.length) % dailyImages.length;
@@ -161,7 +131,7 @@
             }
         });
 
-        updateImage(); // Inicializa a primeira imagem
+        updateImage();
     </script>
 
 </body>
