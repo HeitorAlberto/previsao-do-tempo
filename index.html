@@ -51,7 +51,7 @@
         }
 
         .brand h1 {
-            font-size: 18px;
+            font-size: 35px;
             margin: 0;
             font-weight: 700;
             letter-spacing: 0.2px
@@ -131,13 +131,11 @@
         .cards {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 14px;
+            gap: 30px;
+            row-gap: 60px;
         }
 
         .card {
-            background: var(--card);
-            border: 1px solid #e8e8e8;
-            padding: 14px;
             border-radius: 12px;
             display: flex;
             flex-direction: column;
@@ -164,11 +162,11 @@
         }
 
         .row-text {
-            color: gray;
+            color: rgb(0, 0, 0);
         }
 
         .row-data p {
-            font-size: 20px;
+            font-size: 18px;
             padding: 6px 15px;
             border-radius: 12px;
         }
@@ -226,7 +224,7 @@
             .cards {
                 display: grid;
                 grid-template-columns: 1fr;
-                gap: 50px;
+                gap: 80px;
             }
         }
     </style>
@@ -291,6 +289,7 @@
                 if (!map.has(day)) map.set(day, []);
                 const point = {};
                 for (const key in arrays) { point[key] = arrays[key][i]; }
+                point.time = times[i];
                 map.get(day).push(point);
             }
             return map;
@@ -299,7 +298,10 @@
         function summarizeDay(points) {
             let tMin = Infinity, tMax = -Infinity, rhMin = Infinity, rhMax = -Infinity;
             let precipSum = 0, gustMax = 0;
+            let clouds = { madrugada: [], manha: [], tarde: [], noite: [] };
+
             for (const p of points) {
+                const hour = new Date(p.time).getHours();
                 if (p.temperature_2m != null) {
                     if (p.temperature_2m < tMin) tMin = p.temperature_2m;
                     if (p.temperature_2m > tMax) tMax = p.temperature_2m;
@@ -310,8 +312,30 @@
                 }
                 if (p.precipitation != null) precipSum += p.precipitation;
                 if (p.wind_gusts_10m != null && p.wind_gusts_10m > gustMax) gustMax = p.wind_gusts_10m;
+                if (p.cloud_cover != null) {
+                    if (hour >= 0 && hour < 6) clouds.madrugada.push(p.cloud_cover);
+                    else if (hour >= 6 && hour < 12) clouds.manha.push(p.cloud_cover);
+                    else if (hour >= 12 && hour < 18) clouds.tarde.push(p.cloud_cover);
+                    else clouds.noite.push(p.cloud_cover);
+                }
             }
-            return { tMin, tMax, rhMin, rhMax, precipSum, gustMax };
+
+            const avg = arr => arr.length ? arr.reduce((a, b) => a + b) / arr.length : 0;
+
+            return {
+                tMin,
+                tMax,
+                rhMin,
+                rhMax,
+                precipSum,
+                gustMax,
+                clouds: {
+                    madrugada: avg(clouds.madrugada),
+                    manha: avg(clouds.manha),
+                    tarde: avg(clouds.tarde),
+                    noite: avg(clouds.noite)
+                }
+            };
         }
 
         // --- Render ---
@@ -330,31 +354,68 @@
                 card.innerHTML = `
                     <div class="date">${labels.date} (${labels.weekday})</div>
 
-                    <div class="row">
+                    <div class="row" style="background-color: #ffeac9; padding: 10px; border-radius: 8px">
                         <div class="row-text"><p>Temperatura (°C)</p></div>
                         <div class="row-data">
                             <p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p>
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row" style="background-color: #c9efff; padding: 10px; border-radius: 8px">
                         <div class="row-text"><p>Precipitação (mm)</p></div>
                         <div class="row-data">
                             <p>${s.precipSum.toFixed(1)}</p>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="row-text"><p>Umidade (%)</p></div>
+                    <div class="row" style="background-color: #c9efff; padding: 10px; border-radius: 8px"> 
+                        <div class="row-text" ><p>Umidade (%)</p></div>
                         <div class="row-data">
                             <p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="row-text"><p>Rajadas de vento (km/h)</p></div>
+                    <div class="row" style="background-color: #cfffc9; padding: 10px; border-radius: 8px">
+                        <div class="row-text" ><p>Rajadas de vento (km/h)</p></div>
                         <div class="row-data">
                             <p>${s.gustMax.toFixed(0)}</p>
+                        </div>
+                    </div>
+
+
+                    <div class="row" style="background-color: #ebebeb; padding: 10px; border-radius: 8px">
+                        <div class="row-text"><p>Nuvens de madrugada (%)</p></div>
+                        <div class="row-data">
+                            <p>
+                               ${s.clouds.madrugada.toFixed(0)}<br>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row" style="background-color: #ebebeb; padding: 10px; border-radius: 8px">
+                        <div class="row-text"><p>Nuvens de manhã (%)</p></div>
+                        <div class="row-data">
+                            <p>
+                                ${s.clouds.manha.toFixed(0)}<br>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row" style="background-color: #ebebeb; padding: 10px; border-radius: 8px">
+                        <div class="row-text"><p>Nuvens à tarde (%)</p></div>
+                        <div class="row-data">
+                            <p>
+                                ${s.clouds.tarde.toFixed(0)}<br>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="row" style="background-color: #ebebeb; padding: 10px; border-radius: 8px">
+                        <div class="row-text"><p>Nuvens à noite (%)</p></div>
+                        <div class="row-data">
+                            <p>
+                                ${s.clouds.noite.toFixed(0)}
+                            </p>
                         </div>
                     </div>
                 `;
