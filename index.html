@@ -7,210 +7,142 @@
     <title>Previsão 15 dias - ECMWF</title>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #ffffff;
-            --fg: #000000;
-            --muted: #333333;
-            --card: #f6f6f6
-        }
-
-        * {
-            box-sizing: border-box
-        }
-
-        html,
-        body {
-            height: 100%
-        }
-
         body {
             margin: 0;
             font-family: 'Ubuntu', sans-serif;
-            background: var(--bg);
-            color: var(--fg);
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             padding: 28px;
-            display: flex;
-            flex-direction: column;
+            color: #000;
+            background: #fff;
         }
 
         header {
             display: flex;
-            gap: 16px;
-            align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-        }
-
-        .brand {
-            display: flex;
-            gap: 14px;
-            align-items: baseline;
-            flex-wrap: wrap;
-        }
-
-        .brand h1 {
-            font-size: 35px;
-            margin: 0;
-            font-weight: 700;
-            letter-spacing: 0.2px
-        }
-
-        .controls {
-            display: flex;
-            gap: 8px;
             align-items: center;
-            flex-wrap: wrap;
+            gap: 16px;
         }
 
-        input[type=text] {
-            padding: 12px 14px;
-            border: 1px solid var(--muted);
-            background: #fefefe;
-            color: var(--fg);
-            font-size: 14px;
-            min-width: 220px;
-            flex: 1;
+        input[type=text],
+        button {
+            font-family: inherit;
             border-radius: 8px;
-            transition: all 0.25s ease;
-            font-family: 'Ubuntu', sans-serif;
-            text-align: center;
-        }
-
-        input[type=text]:focus {
-            outline: none;
-            border-color: var(--fg);
-            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+            padding: 10px 14px;
+            border: 1px solid #333;
         }
 
         button {
-            padding: 12px 18px;
-            border: 1px solid var(--fg);
-            background: var(--fg);
-            color: var(--bg);
             cursor: pointer;
+            background: #000;
+            color: #fff;
             font-weight: 600;
-            border-radius: 8px;
-            transition: all 0.25s ease;
-            font-family: 'Ubuntu', sans-serif;
-        }
-
-        #geoButton {
-            background: var(--fg);
-            color: var(--bg);
-        }
-
-        .meta {
-            font-size: 18px;
-            color: var(--muted);
-            margin-bottom: 8px;
-        }
-
-        .fonte-dados {
-            font-size: 18px;
-            margin-bottom: 8px;
-        }
-
-        main {
-            display: block
-        }
-
-        .location-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            margin: 50px 0;
-            flex-wrap: wrap;
-            text-align: right;
         }
 
         #locationName {
-            font-size: 20px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
-        .cards {
+        main {
+            margin-top: 40px;
+        }
+
+        #cards {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 30px;
-            row-gap: 60px;
+            gap: 20px;
         }
 
-        .card {
+        .day {
+            border: 1px solid #ddd;
             border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+            padding: 16px 20px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .card .date {
+        .day .date {
             font-size: 22px;
             font-weight: 700;
+            margin-bottom: 12px;
         }
 
         .row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            padding: 0 25px !important;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .row:last-child {
+            border-bottom: none;
         }
 
         .row p {
-            line-height: 1.3;
-            font-size: 18px;
+            margin: 0;
+            font-size: 16px;
+        }
+
+        /* cores de texto por categoria */
+        .temp {
+            color: #d35400;
+        }
+
+        .precip {
+            color: #003ce1;
+        }
+
+        .humidity {
+            color: #003ce1;
+        }
+
+        .wind {
+            color: #00a827;
+        }
+
+        .cloud {
+            color: #555;
         }
 
         footer {
-            margin-top: 18px;
+            margin-top: 20px;
             font-size: 13px;
-            color: var(--muted);
+            color: #555;
         }
 
-        @media (max-width:1000px) {
-            body {
-                padding: 15px 8px;
-            }
+        @media(max-width:800px) {
 
             header {
-                display: grid;
-                justify-content: center;
-                justify-items: center;
-                text-align: center;
-                gap: 50px;
-            }
-
-            input[type=text] {
-                min-width: 100%;
-                margin-bottom: 5px;
-            }
-
-            button {
-                width: 100%;
-                margin-bottom: 5px;
-            }
-
-            .controls {
                 flex-direction: column;
-                align-items: stretch;
-            }
-
-            .location-row {
                 align-items: center;
-                gap: 27px;
-                justify-content: center;
                 text-align: center;
             }
 
-            #locationName {
-                margin: auto;
-                font-size: 14px;
+            #searchForm {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                max-width: 300px;
+                gap: 8px;
             }
 
-            .cards {
+            #searchForm > button {
+                width: 200px;
+            }
+
+            #cityInput {
+                width: 100%;
+                text-align: center;
+            }
+
+            #cards {
                 grid-template-columns: 1fr;
-                gap: 80px;
+                gap: 20px;
+            }
+
+            .day {
+                padding: 14px;
             }
         }
     </style>
@@ -218,30 +150,25 @@
 
 <body>
     <header>
-        <div class="brand">
-            <h1>Previsão - 15 dias</h1>
-        </div>
-        <div class="controls">
-            <form id="searchForm">
-                <input type="text" id="cityInput" placeholder="Buscar cidade (ex: Recife, BR)"
-                    aria-label="Buscar cidade" />
-                <button type="submit">Buscar</button>
-                <button type="button" id="geoButton" title="Usar minha localização">Localizar</button>
-            </form>
-        </div>
+        <h1>Previsão - 15 dias</h1>
+        <form id="searchForm">
+            <input type="text" id="cityInput" placeholder="Buscar cidade (ex: Recife, BR)" />
+            <button type="submit">Buscar</button>
+            <button type="button" id="geoButton">Localizar</button>
+        </form>
     </header>
 
     <main>
         <div class="location-row">
             <div id="locationName" style="font-weight:700"></div>
-            <div style="display: grid;grid-template-columns: 1fr;align-items: center;">
-                <div class="meta">Hoje: <span id="todayDate"></span></div>
-                <div class="fonte-dados">Modelo ECMWF 0.25°</div>
-                <div class="fonte-dados">Api da Open-Meteo</div>
+            <div style="display: grid; gap: 20px;margin-bottom: 20px; justify-items: center;">
+                <div>Hoje: <span id="todayDate"></span></div>
+                <div>Modelo ECMWF (0.25°) - Open-Meteo</div>
             </div>
         </div>
+
         <section id="forecastSection">
-            <div class="cards" id="cards"></div>
+            <div id="cards"></div>
         </section>
     </main>
 
@@ -327,42 +254,18 @@
                 const s = summarizeDay(points);
 
                 const card = document.createElement('div');
-                card.className = 'card';
+                card.className = 'day';
                 card.innerHTML = `
-                    <div class="date">${labels.date} (${labels.weekday})</div>
-                    <div class="row" style="background-color:#ffeac9;padding:10px;border-radius:8px">
-                        <div><p>Temperatura (°C)</p></div>
-                        <div><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p></div>
-                    </div>
-                    <div class="row" style="background-color:#c9efff;padding:10px;border-radius:8px">
-                        <div><p>Precipitação (mm)</p></div>
-                        <div><p>${s.precipSum.toFixed(1)}</p></div>
-                    </div>
-                    <div class="row" style="background-color:#c9efff;padding:10px;border-radius:8px">
-                        <div><p>Umidade (%)</p></div>
-                        <div><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p></div>
-                    </div>
-                    <div class="row" style="background-color:#cfffc9;padding:10px;border-radius:8px">
-                        <div><p>Rajadas de vento (km/h)</p></div>
-                        <div><p>${s.gustMax.toFixed(0)}</p></div>
-                    </div>
-                    <div class="row" style="background-color:#ebebeb;padding:10px;border-radius:8px">
-                        <div><p>Cobert. Nuvens (Madrugada)</p></div>
-                        <div><p>${s.clouds.madrugada.toFixed(0)}%</p></div>
-                    </div>
-                    <div class="row" style="background-color:#ebebeb;padding:10px;border-radius:8px">
-                        <div><p>Cobert. Nuvens (Manhã)</p></div>
-                        <div><p>${s.clouds.manha.toFixed(0)}%</p></div>
-                    </div>
-                    <div class="row" style="background-color:#ebebeb;padding:10px;border-radius:8px">
-                        <div><p>Cobert. Nuvens (Tarde)</p></div>
-                        <div><p>${s.clouds.tarde.toFixed(0)}%</p></div>
-                    </div>
-                    <div class="row" style="background-color:#ebebeb;padding:10px;border-radius:8px">
-                        <div><p>Cobert. Nuvens (Noite)</p></div>
-                        <div><p>${s.clouds.noite.toFixed(0)}%</p></div>
-                    </div>
-                `;
+                <div class="date">${labels.date} (${labels.weekday})</div>
+                <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p></div>
+                <div class="row precip"><p>Precipitação (mm)</p><p>${s.precipSum.toFixed(1)}</p></div>
+                <div class="row humidity"><p>Umidade (%)</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p></div>
+                <div class="row wind"><p>Rajadas de vento (km/h)</p><p>${s.gustMax.toFixed(0)}</p></div>
+                <div class="row cloud"><p>Cobert. nuvens (Madrugada)</p><p>${s.clouds.madrugada}%</p></div>
+                <div class="row cloud"><p>Cobert. nuvens (Manhã)</p><p>${s.clouds.manha}%</p></div>
+                <div class="row cloud"><p>Cobert. nuvens (Tarde)</p><p>${s.clouds.tarde}%</p></div>
+                <div class="row cloud"><p>Cobert. nuvens (Noite)</p><p>${s.clouds.noite}%</p></div>
+            `;
                 cardsEl.appendChild(card);
             }
         }
@@ -383,9 +286,8 @@
         async function searchLocation(query) {
             const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`;
             const res = await fetch(url);
-            if (!res.ok) throw new Error('Erro ao buscar localização');
             const data = await res.json();
-            if (!data[0] || !data[0].lat) throw new Error('Local não encontrado');
+            if (!data[0]) throw new Error('Local não encontrado');
             const place = data[0];
             const addr = place.address || {};
             const city = addr.city || addr.town || addr.village || addr.municipality || '';
@@ -414,49 +316,35 @@
                 };
                 const dayMap = groupHourlyByDate(times, arrays);
                 renderDays(dayMap);
-                cityInput.value = '';
-            } catch (err) {
-                console.error(err);
+            } catch {
                 locationName.textContent = 'Erro ao carregar';
             }
         });
 
-        const geoButton = document.getElementById('geoButton');
-        geoButton.addEventListener('click', () => {
-            if (!navigator.geolocation) {
-                alert('Geolocalização não é suportada neste navegador.');
-                return;
-            }
-            locationName.textContent = 'Obtendo sua localização...';
-            cardsEl.innerHTML = '';
+        document.getElementById('geoButton').addEventListener('click', () => {
+            if (!navigator.geolocation) return alert('Geolocalização não suportada.');
+            locationName.textContent = 'Obtendo localização...';
             navigator.geolocation.getCurrentPosition(async pos => {
                 const { latitude, longitude } = pos.coords;
-                try {
-                    const url = `https://nominatim.openstreetmap.org/reverse?format=json&addressdetails=1&lat=${latitude}&lon=${longitude}`;
-                    const res = await fetch(url);
-                    const data = await res.json();
-                    const addr = data.address || {};
-                    const city = addr.city || addr.town || addr.village || addr.municipality || '';
-                    const state = addr.state || '';
-                    const country = addr.country || '';
-                    locationName.textContent = `📌 ${city}${state ? ', ' + state : ''}${country ? ' - ' + country : ''}`;
-                    const forecast = await fetchForecast(latitude, longitude);
-                    const times = forecast.hourly.time;
-                    const arrays = {
-                        temperature_2m: forecast.hourly.temperature_2m || [],
-                        relative_humidity_2m: forecast.hourly.relative_humidity_2m || [],
-                        precipitation: forecast.hourly.precipitation || [],
-                        cloud_cover: forecast.hourly.cloud_cover || [],
-                        wind_gusts_10m: forecast.hourly.wind_gusts_10m || []
-                    };
-                    const dayMap = groupHourlyByDate(times, arrays);
-                    renderDays(dayMap);
-                } catch (err) {
-                    console.error(err);
-                    locationName.textContent = 'Erro ao carregar dados.';
-                }
-            }, err => {
-                alert('Erro ao obter localização: ' + err.message);
+                const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`;
+                const res = await fetch(url);
+                const data = await res.json();
+                const addr = data.address || {};
+                const city = addr.city || addr.town || addr.village || '';
+                const state = addr.state || '';
+                const country = addr.country || '';
+                locationName.textContent = `📌 ${city}${state ? ', ' + state : ''}${country ? ' - ' + country : ''}`;
+                const forecast = await fetchForecast(latitude, longitude);
+                const times = forecast.hourly.time;
+                const arrays = {
+                    temperature_2m: forecast.hourly.temperature_2m || [],
+                    relative_humidity_2m: forecast.hourly.relative_humidity_2m || [],
+                    precipitation: forecast.hourly.precipitation || [],
+                    cloud_cover: forecast.hourly.cloud_cover || [],
+                    wind_gusts_10m: forecast.hourly.wind_gusts_10m || []
+                };
+                const dayMap = groupHourlyByDate(times, arrays);
+                renderDays(dayMap);
             });
         });
     </script>
