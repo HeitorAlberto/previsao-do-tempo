@@ -163,7 +163,7 @@
             <div id="locationName" style="font-weight:700"></div>
             <div style="display: grid; gap: 20px;margin-bottom: 40px; justify-items: center;">
                 <div>Hoje: <span id="todayDate"></span></div>
-                <div>Modelo ECMWF (0.25°) - Open-Meteo</div>
+                <div>Modelo ECMWF (HRES 9 km) (via Open-Meteo)</div>
             </div>
         </div>
 
@@ -174,7 +174,7 @@
 
     <script>
         const forecastBase = 'https://api.open-meteo.com/v1/forecast';
-        const model = 'ecmwf_ifs025';
+        const model = 'ecmwf_ifs';
         const cityInput = document.getElementById('cityInput');
         const searchForm = document.getElementById('searchForm');
         const locationName = document.getElementById('locationName');
