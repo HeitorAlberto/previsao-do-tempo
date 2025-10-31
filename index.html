@@ -257,7 +257,7 @@
             };
         }
 
-        // 🆕 NOVA FUNÇÃO: soma precipitação total de todos os dias
+        // 🆕 Soma precipitação total de todos os dias
         function calculateTotalPrecipitation(dayMap) {
             let total = 0;
             for (const [, points] of dayMap) {
@@ -267,20 +267,32 @@
             return total;
         }
 
-        // 🆕 NOVA FUNÇÃO: cria o card com total acumulado
+        // 🆕 Cria o card com total acumulado e dias de chuva
         function renderSummaryCard(dayMap) {
             const existing = document.getElementById('summaryCard');
             if (existing) existing.remove();
 
             const totalPrecip = calculateTotalPrecipitation(dayMap);
 
+            // Conta quantos dias têm chuva (> 0 mm)
+            let rainyDays = 0;
+            for (const [, points] of dayMap) {
+                const s = summarizeDay(points);
+                if (s.precipSum > 0) rainyDays++;
+            }
+
             const card = document.createElement('div');
             card.id = 'summaryCard';
             card.className = 'day';
             card.innerHTML = `
+                <h2 style="margin:8px 0px; text-align:center">Resumo para 15 dias</h2>
                 <div class="row precip">
-                    <p style="color:black">Chuva em 15 dias</p>
-                    <p>${totalPrecip.toFixed(1)} mm</p>
+                    <p style="color:black">Chuva (mm)</p>
+                    <p>${totalPrecip.toFixed(1)}</p>
+                </div>
+                <div class="row precip">
+                    <p style="color:black">Dias de chuva</p>
+                    <p>${rainyDays} de 15</p>
                 </div>
             `;
 
@@ -395,6 +407,7 @@
             });
         });
     </script>
+
 
 </body>
 
