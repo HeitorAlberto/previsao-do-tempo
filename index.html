@@ -10,7 +10,7 @@
         body {
             margin: 0;
             font-family: 'Ubuntu', sans-serif;
-            padding: 28px;
+            padding: 28px 12px;
             color: #000;
             background: #fff;
         }
@@ -80,7 +80,7 @@
 
         .row p {
             margin: 0;
-            font-size: 16px;
+            font-size: 20px;
         }
 
         /* cores de texto por categoria */
@@ -101,7 +101,7 @@
         }
 
         .cloud {
-            color: #555;
+            color: #797979;
         }
 
         footer {
@@ -161,7 +161,7 @@
     <main>
         <div class="location-row">
             <div id="locationName" style="font-weight:700"></div>
-            <div style="display: grid; gap: 20px;margin-bottom: 20px; justify-items: center;">
+            <div style="display: grid; gap: 20px;margin-bottom: 40px; justify-items: center;">
                 <div>Hoje: <span id="todayDate"></span></div>
                 <div>Modelo ECMWF (0.25°) - Open-Meteo</div>
             </div>
@@ -188,7 +188,7 @@
 
         function formatDateLabel(iso) {
             const d = new Date(iso);
-            const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(d);
+            const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(d);
             const date = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(d);
             return { weekday, date };
         }
@@ -256,15 +256,15 @@
                 const card = document.createElement('div');
                 card.className = 'day';
                 card.innerHTML = `
-                <div class="date">${labels.date} (${labels.weekday})</div>
+                <div class="date">${labels.date} - ${labels.weekday}</div>
                 <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p></div>
                 <div class="row precip"><p>Precipitação (mm)</p><p>${s.precipSum.toFixed(1)}</p></div>
                 <div class="row humidity"><p>Umidade (%)</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p></div>
                 <div class="row wind"><p>Rajadas de vento (km/h)</p><p>${s.gustMax.toFixed(0)}</p></div>
-                <div class="row cloud"><p>Cobert. nuvens (Madrugada)</p><p>${s.clouds.madrugada}%</p></div>
-                <div class="row cloud"><p>Cobert. nuvens (Manhã)</p><p>${s.clouds.manha}%</p></div>
-                <div class="row cloud"><p>Cobert. nuvens (Tarde)</p><p>${s.clouds.tarde}%</p></div>
-                <div class="row cloud"><p>Cobert. nuvens (Noite)</p><p>${s.clouds.noite}%</p></div>
+                <div class="row cloud"><p>Nuvens (Madrugada)</p><p>${s.clouds.madrugada}%</p></div>
+                <div class="row cloud"><p>Nuvens (Manhã)</p><p>${s.clouds.manha}%</p></div>
+                <div class="row cloud"><p>Nuvens (Tarde)</p><p>${s.clouds.tarde}%</p></div>
+                <div class="row cloud"><p>Nuvens (Noite)</p><p>${s.clouds.noite}%</p></div>
             `;
                 cardsEl.appendChild(card);
             }
