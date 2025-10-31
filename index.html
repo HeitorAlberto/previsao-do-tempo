@@ -43,6 +43,12 @@
             text-align: center;
         }
 
+        #summaryCard {
+            width: 500px;
+            padding: 8px 15px;
+            justify-self: center;
+        }
+
         main {
             margin-top: 40px;
         }
@@ -127,13 +133,17 @@
                 gap: 8px;
             }
 
-            #searchForm > button {
+            #searchForm>button {
                 width: 200px;
             }
 
             #cityInput {
                 width: 100%;
                 text-align: center;
+            }
+
+            #summaryCard {
+                width: 327px;
             }
 
             #cards {
@@ -180,6 +190,7 @@
         const locationName = document.getElementById('locationName');
         const cardsEl = document.getElementById('cards');
         const todayDate = document.getElementById('todayDate');
+        const forecastSection = document.getElementById('forecastSection');
 
         const today = new Date();
         const weekday = new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(today);
@@ -245,9 +256,44 @@
             };
         }
 
+        // 🆕 NOVA FUNÇÃO: soma precipitação total de todos os dias
+        function calculateTotalPrecipitation(dayMap) {
+            let total = 0;
+            for (const [, points] of dayMap) {
+                const s = summarizeDay(points);
+                total += s.precipSum;
+            }
+            return total;
+        }
+
+        // 🆕 NOVA FUNÇÃO: cria o card com total acumulado
+        function renderSummaryCard(dayMap) {
+            const existing = document.getElementById('summaryCard');
+            if (existing) existing.remove();
+
+            const totalPrecip = calculateTotalPrecipitation(dayMap);
+
+            const card = document.createElement('div');
+            card.id = 'summaryCard';
+            card.className = 'day';
+            card.innerHTML = `
+                <div class="row precip">
+                    <p style="color:black">Chuva em 15 dias</p>
+                    <p><strong>${totalPrecip.toFixed(1)} mm</strong></p>
+                </div>
+            `;
+
+            // insere o card antes da seção de previsão
+            forecastSection.parentNode.insertBefore(card, forecastSection);
+        }
+
         function renderDays(dayMap) {
             cardsEl.innerHTML = '';
             const entries = Array.from(dayMap.entries()).slice(0, 15);
+
+            // 🆕 Chama o resumo antes dos dias
+            renderSummaryCard(dayMap);
+
             for (const [day, points] of entries) {
                 const iso = day + 'T00:00:00';
                 const labels = formatDateLabel(iso);
@@ -256,16 +302,16 @@
                 const card = document.createElement('div');
                 card.className = 'day';
                 card.innerHTML = `
-                <div class="date">${labels.date} - ${labels.weekday}</div>
-                <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p></div>
-                <div class="row precip"><p>Precipitação (mm)</p><p>${s.precipSum.toFixed(1)}</p></div>
-                <div class="row humidity"><p>Umidade (%)</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p></div>
-                <div class="row wind"><p>Rajadas de vento (km/h)</p><p>${s.gustMax.toFixed(0)}</p></div>
-                <div class="row cloud"><p>Nuvens (Madrugada)</p><p>${s.clouds.madrugada}%</p></div>
-                <div class="row cloud"><p>Nuvens (Manhã)</p><p>${s.clouds.manha}%</p></div>
-                <div class="row cloud"><p>Nuvens (Tarde)</p><p>${s.clouds.tarde}%</p></div>
-                <div class="row cloud"><p>Nuvens (Noite)</p><p>${s.clouds.noite}%</p></div>
-            `;
+                    <div class="date">${labels.date} - ${labels.weekday}</div>
+                    <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p></div>
+                    <div class="row precip"><p>Chuva (mm)</p><p>${s.precipSum.toFixed(1)}</p></div>
+                    <div class="row humidity"><p>Umidade (%)</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p></div>
+                    <div class="row wind"><p>Rajadas de vento (km/h)</p><p>${s.gustMax.toFixed(0)}</p></div>
+                    <div class="row cloud"><p>Nuvens (Madrugada)</p><p>${s.clouds.madrugada}%</p></div>
+                    <div class="row cloud"><p>Nuvens (Manhã)</p><p>${s.clouds.manha}%</p></div>
+                    <div class="row cloud"><p>Nuvens (Tarde)</p><p>${s.clouds.tarde}%</p></div>
+                    <div class="row cloud"><p>Nuvens (Noite)</p><p>${s.clouds.noite}%</p></div>
+                `;
                 cardsEl.appendChild(card);
             }
         }
@@ -348,6 +394,7 @@
             });
         });
     </script>
+
 </body>
 
 </html>
