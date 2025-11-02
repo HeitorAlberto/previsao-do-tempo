@@ -42,6 +42,7 @@
         #locationName {
             margin-bottom: 20px;
             text-align: center;
+            font-size: 22px;
         }
 
         #summaryCard {
@@ -143,6 +144,10 @@
                 text-align: center;
             }
 
+            #locationName {
+                font-size: 18px;
+            }
+
             #summaryCard {
                 width: 327px;
             }
@@ -174,7 +179,7 @@
             <div id="locationName" style="font-weight:700"></div>
             <div style="display: grid; gap: 20px;margin-bottom: 40px; justify-items: center;">
                 <div>Hoje: <span id="todayDate"></span></div>
-                <div>Modelo ECMWF (HRES 9 km) (via Open-Meteo)</div>
+                <div>Modelo ECMWF (HRES 9 km) - via Open-Meteo</div>
             </div>
         </div>
 
@@ -273,28 +278,90 @@
             const totalPrecip = calculateTotalPrecipitation(dayMap);
 
             let rainyDays = 0;
-            for (const [, points] of dayMap) {
+            let maxTemp = -Infinity, maxTempDay = '';
+            let minTemp = Infinity, minTempDay = '';
+            let maxGust = -Infinity, maxGustDay = '';
+            let maxPrecip = -Infinity, maxPrecipDay = '';
+
+            for (const [day, points] of dayMap) {
                 const s = summarizeDay(points);
                 if (s.precipSum > 0) rainyDays++;
+
+                if (s.tMax > maxTemp) {
+                    maxTemp = s.tMax;
+                    maxTempDay = day;
+                }
+
+                if (s.tMin < minTemp) {
+                    minTemp = s.tMin;
+                    minTempDay = day;
+                }
+
+                if (s.gustMax > maxGust) {
+                    maxGust = s.gustMax;
+                    maxGustDay = day;
+                }
+
+                if (s.precipSum > maxPrecip) {
+                    maxPrecip = s.precipSum;
+                    maxPrecipDay = day;
+                }
             }
+
+            // ✅ Mesmo comportamento dos outros cards (sem ajustar fuso manualmente)
+            const formatShort = iso => {
+                const d = new Date(iso + 'T00:00:00');
+                return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(d);
+            };
+
+            // ✅ Define texto de precipitação dependendo se há chuva ou não
+            const maxPrecipText = (isFinite(maxPrecip) && maxPrecip > 0)
+                ? `${maxPrecip.toFixed(1)} mm (${formatShort(maxPrecipDay)})`
+                : '--';
 
             const card = document.createElement('div');
             card.id = 'summaryCard';
             card.className = 'day';
             card.innerHTML = `
         <h2 style="margin:8px 0px; text-align:center">Resumo para 15 dias</h2>
+
         <div class="row precip">
             <p style="color:black">Chuva (mm)</p>
             <p>${totalPrecip.toFixed(1)}</p>
         </div>
+
         <div class="row precip">
             <p style="color:black">Dias de chuva</p>
             <p>${rainyDays} de 15</p>
+        </div>
+
+        <div class="row temp">
+            <p style="color:black">Temp. mínima</p>
+            <p>${isFinite(minTemp) ? `${minTemp.toFixed(0)}° (${formatShort(minTempDay)})` : '-'}</p>
+        </div>
+
+        <div class="row temp">
+            <p style="color:black">Temp. máxima</p>
+            <p>${isFinite(maxTemp) ? `${maxTemp.toFixed(0)}° (${formatShort(maxTempDay)})` : '-'}</p>
+        </div>
+
+        <div class="row precip">
+            <p style="color:black">Maior precipitação</p>
+            <p>${maxPrecipText}</p>
+        </div>
+
+        <div class="row wind">
+            <p style="color:black">Rajadas máx.</p>
+            <p>${isFinite(maxGust) ? `${maxGust.toFixed(0)} km/h (${formatShort(maxGustDay)})` : '-'}</p>
         </div>
     `;
 
             forecastSection.parentNode.insertBefore(card, forecastSection);
         }
+
+
+
+
 
         function renderDays(dayMap) {
             cardsEl.innerHTML = '';
@@ -397,7 +464,7 @@
             function cloudDescription(percent) {
                 if (percent <= 10) return 'Céu limpo';
                 if (percent <= 40) return 'Poucas nuvens';
-                if (percent <= 60) return 'Muitas nuvens';
+                if (percent <= 60) return 'Parcialmente nublado';
                 if (percent <= 80) return 'Maioria nublado';
                 return 'Nublado';
             }
