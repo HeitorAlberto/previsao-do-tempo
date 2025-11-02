@@ -316,7 +316,7 @@
 
             // ✅ Define texto de precipitação dependendo se há chuva ou não
             const maxPrecipText = (isFinite(maxPrecip) && maxPrecip > 0)
-                ? `${maxPrecip.toFixed(1)} (${formatShort(maxPrecipDay)})`
+                ? `${maxPrecip.toFixed(1)} - ${formatShort(maxPrecipDay)}`
                 : '--';
 
             const card = document.createElement('div');
@@ -337,12 +337,12 @@
 
         <div class="row temp">
             <p style="color:black">Temp. mínima</p>
-            <p>${isFinite(minTemp) ? `${minTemp.toFixed(0)}° (${formatShort(minTempDay)})` : '-'}</p>
+            <p>${isFinite(minTemp) ? `${minTemp.toFixed(0)}° - ${formatShort(minTempDay)}` : '-'}</p>
         </div>
 
         <div class="row temp">
             <p style="color:black">Temp. máxima</p>
-            <p>${isFinite(maxTemp) ? `${maxTemp.toFixed(0)}° (${formatShort(maxTempDay)})` : '-'}</p>
+            <p>${isFinite(maxTemp) ? `${maxTemp.toFixed(0)}° - ${formatShort(maxTempDay)}` : '-'}</p>
         </div>
 
         <div class="row precip">
@@ -352,7 +352,7 @@
 
         <div class="row wind">
             <p style="color:black">Rajadas máx.</p>
-            <p>${isFinite(maxGust) ? `${maxGust.toFixed(0)} km/h (${formatShort(maxGustDay)})` : '-'}</p>
+            <p>${isFinite(maxGust) ? `${maxGust.toFixed(0)} km/h - ${formatShort(maxGustDay)}` : '-'}</p>
         </div>
     `;
 
