@@ -316,7 +316,7 @@
 
             // ✅ Define texto de precipitação dependendo se há chuva ou não
             const maxPrecipText = (isFinite(maxPrecip) && maxPrecip > 0)
-                ? `${maxPrecip.toFixed(1)} mm (${formatShort(maxPrecipDay)})`
+                ? `${maxPrecip.toFixed(1)} (${formatShort(maxPrecipDay)})`
                 : '--';
 
             const card = document.createElement('div');
@@ -346,7 +346,7 @@
         </div>
 
         <div class="row precip">
-            <p style="color:black">Maior precipitação</p>
+            <p style="color:black">Maior precipitação (mm)</p>
             <p>${maxPrecipText}</p>
         </div>
 
