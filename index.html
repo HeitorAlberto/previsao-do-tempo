@@ -316,7 +316,7 @@
 
             // ✅ Define texto de precipitação dependendo se há chuva ou não
             const maxPrecipText = (isFinite(maxPrecip) && maxPrecip > 0)
-                ? `${maxPrecip.toFixed(1)} - ${formatShort(maxPrecipDay)}`
+                ? `${maxPrecip.toFixed(1)} mm - ${formatShort(maxPrecipDay)}`
                 : '--';
 
             const card = document.createElement('div');
@@ -326,8 +326,8 @@
         <h2 style="margin:8px 0px; text-align:center">Resumo para 15 dias</h2>
 
         <div class="row precip">
-            <p style="color:black">Chuva (mm)</p>
-            <p>${totalPrecip.toFixed(1)}</p>
+            <p style="color:black">Chuva</p>
+            <p>${totalPrecip.toFixed(1)} mm</p>
         </div>
 
         <div class="row precip">
@@ -336,17 +336,17 @@
         </div>
 
         <div class="row temp">
-            <p style="color:black">Temp. mínima</p>
+            <p style="color:black">Temp. mínima (°C)</p>
             <p>${isFinite(minTemp) ? `${minTemp.toFixed(0)}° - ${formatShort(minTempDay)}` : '-'}</p>
         </div>
 
         <div class="row temp">
-            <p style="color:black">Temp. máxima</p>
+            <p style="color:black">Temp. máxima (°C)</p>
             <p>${isFinite(maxTemp) ? `${maxTemp.toFixed(0)}° - ${formatShort(maxTempDay)}` : '-'}</p>
         </div>
 
         <div class="row precip">
-            <p style="color:black">Maior chuva (mm)</p>
+            <p style="color:black">Maior chuva</p>
             <p>${maxPrecipText}</p>
         </div>
 
@@ -380,10 +380,10 @@
                 card.className = 'day';
                 card.innerHTML = `
             <div class="date">${labels.date} - ${labels.weekday}</div>
-            <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'} a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}</p></div>
-            <div class="row precip"><p>Chuva (mm)</p><p>${s.precipSum.toFixed(1)}</p></div>
-            <div class="row humidity"><p>Umidade (%)</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'} a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}</p></div>
-            <div class="row wind"><p>Rajadas de vento (km/h)</p><p>${s.gustMax.toFixed(0)}</p></div>
+            <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
+            <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
+            <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
+            <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
             <div class="row cloud"><p>${cloudDescription(avgCloud)} (${avgCloud}%)</p></div>
             ${storm ? `<div class="row" style="color:red;"><p>Risco de tempestades</p></div>` : ''}
             <div style="text-align:center; margin-top:10px;">
