@@ -124,8 +124,8 @@ const renderSummaryCard = dayMap => {
     card.className = 'day';
     card.innerHTML = `
         <h2 style="margin:8px 0;text-align:center">Resumo para 15 dias</h2>
-        <div class="row precip"><p>Chuva total (15 dias)</p><p>${totalPrecip.toFixed(1)} mm</p></div>
-        <div class="row precip"><p>Dias de chuva</p><p>${rainyDays} de 15</p></div>
+        <div class="row precip"><p>Chuva total</p><p>${totalPrecip.toFixed(1)} mm</p></div>
+        <div class="row precip"><p>Dias de chuva (1mm ou mais)</p><p>${rainyDays}</p></div>
     `;
 
     forecastSection.parentNode.insertBefore(card, forecastSection);
