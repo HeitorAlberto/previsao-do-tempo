@@ -1,3 +1,4 @@
+/* ===== Base do site ===== */
 body {
     margin: 0;
     font-family: 'Ubuntu', sans-serif;
@@ -108,6 +109,7 @@ footer {
     color: #555;
 }
 
+/* ===== Mobile adjustments ===== */
 @media(max-width:800px) {
     header {
         flex-direction: column;
@@ -149,4 +151,102 @@ footer {
     .day {
         padding: 14px;
     }
+}
+
+/* ===== Overlay fullscreen ===== */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #fff;
+    color: #000;
+    overflow-y: auto;
+    padding: 0;
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+}
+
+.overlay.active {
+    display: flex;
+}
+
+/* Header do overlay: botão voltar + data/dia */
+.overlay-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 50px;
+    border-bottom: 1px solid #ddd;
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.overlay-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.overlay-header button {
+    background: #000;
+    color: #fff;
+    border: 1px solid #333;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Grid de períodos */
+.grid-periods {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 16px;
+}
+
+.period-block {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 12px;
+    background: #fafafa;
+}
+
+.period-block h3 {
+    text-align: center;
+    margin-top: 0;
+    font-size: 18px;
+}
+
+.hour-item {
+    border-bottom: 1px solid #eee;
+    padding: 6px 0;
+}
+
+.hour-item:last-child {
+    border-bottom: none;
+}
+
+.hour-item p {
+    margin: 4px 0;
+    font-size: 14px;
+}
+
+/* ===== Mobile overlay adjustments ===== */
+@media (max-width: 800px) {
+    .grid-periods {
+        grid-template-columns: 1fr;
+        /* apenas uma coluna */
+        padding: 12px;
+    }
+
+    .period-block {
+        width: 85%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
 }
