@@ -43,10 +43,12 @@ const prepareHourlyArrays = hourly => ({
     weathercode: hourly.weathercode || []
 });
 
+// Agrupa horários por dia usando data local
 const groupHourlyByDate = (times, arrays) => {
     const map = new Map();
     for (let i = 0; i < times.length; i++) {
-        const day = times[i].slice(0, 10);
+        const d = new Date(times[i]);
+        const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         if (!map.has(day)) map.set(day, []);
         const point = {};
         for (const key in arrays) point[key] = arrays[key][i];
@@ -57,10 +59,10 @@ const groupHourlyByDate = (times, arrays) => {
 };
 
 const groupByPeriod = points => ({
-    madrugada: points.filter(p => { const h = new Date(p.time).getHours(); return h < 6; }),
+    madrugada: points.filter(p => new Date(p.time).getHours() < 6),
     manha: points.filter(p => { const h = new Date(p.time).getHours(); return h >= 6 && h < 12; }),
     tarde: points.filter(p => { const h = new Date(p.time).getHours(); return h >= 12 && h < 18; }),
-    noite: points.filter(p => { const h = new Date(p.time).getHours(); return h >= 18; })
+    noite: points.filter(p => new Date(p.time).getHours() >= 18)
 });
 
 const predominantCategory = values => {
@@ -93,7 +95,6 @@ const summarizeDay = points => {
         }
         return acc;
     }, { tMin: Infinity, tMax: -Infinity, rhMin: Infinity, rhMax: -Infinity, precipSum: 0, gustMax: 0 });
-
     summary.clouds = Object.fromEntries(Object.entries(clouds).map(([k, v]) => [k, predominantCategory(v)]));
     return summary;
 };
@@ -105,38 +106,24 @@ const cloudDescription = cat => ({ clear: 'Céu limpo', few: 'Poucas nuvens', pa
 // Renderização
 // =====================
 const renderSummaryCard = dayMap => {
+    
     const existing = document.getElementById('summaryCard');
+    
     if (existing) existing.remove();
 
-    let totalPrecip = 0, rainyDays = 0;
-    let maxTemp = -Infinity, minTemp = Infinity, maxGust = -Infinity, maxPrecip = -Infinity;
-    let maxTempDay = '', minTempDay = '', maxGustDay = '', maxPrecipDay = '';
+    let totalPrecip = 0;
 
-    for (const [day, points] of dayMap) {
-        const s = summarizeDay(points);
-        totalPrecip += s.precipSum;
-        if (s.precipSum > 0) rainyDays++;
-        if (s.tMax > maxTemp) { maxTemp = s.tMax; maxTempDay = day; }
-        if (s.tMin < minTemp) { minTemp = s.tMin; minTempDay = day; }
-        if (s.gustMax > maxGust) { maxGust = s.gustMax; maxGustDay = day; }
-        if (s.precipSum > maxPrecip) { maxPrecip = s.precipSum; maxPrecipDay = day; }
-    }
 
-    const formatShort = iso => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(new Date(iso + 'T00:00:00'));
     const card = document.createElement('div');
     card.id = 'summaryCard';
     card.className = 'day';
     card.innerHTML = `
-        <h2 style="margin:8px 0;text-align:center">Resumo para 15 dias</h2>
-        <div class="row precip"><p>Chuva</p><p>${totalPrecip.toFixed(1)} mm</p></div>
-        <div class="row precip"><p>Dias de chuva</p><p>${rainyDays} de 15</p></div>
-        <div class="row temp"><p>Temp. mínima (°C)</p><p>${isFinite(minTemp) ? `${minTemp.toFixed(0)}° dia ${formatShort(minTempDay)}` : '-'}</p></div>
-        <div class="row temp"><p>Temp. máxima (°C)</p><p>${isFinite(maxTemp) ? `${maxTemp.toFixed(0)}° dia ${formatShort(maxTempDay)}` : '-'}</p></div>
-        <div class="row precip"><p>Maior chuva</p><p>${isFinite(maxPrecip) && maxPrecip > 0 ? `${maxPrecip.toFixed(1)} mm dia ${formatShort(maxPrecipDay)}` : '--'}</p></div>
-        <div class="row wind"><p>Rajadas máx.</p><p>${isFinite(maxGust) ? `${maxGust.toFixed(0)} km/h dia ${formatShort(maxGustDay)}` : '-'}</p></div>
+        <div class="row precip"><p>Chuva total (15 dias)</p><p>${totalPrecip.toFixed(1)} mm</p></div>
     `;
+
     forecastSection.parentNode.insertBefore(card, forecastSection);
 };
+
 
 const renderDays = dayMap => {
     cardsEl.innerHTML = '';
@@ -148,7 +135,6 @@ const renderDays = dayMap => {
         const labels = formatDateLabel(day + 'T00:00:00');
         const s = summarizeDay(points);
         const storm = points.some(p => [95, 96, 99].includes(p.weathercode));
-
         const card = document.createElement('div');
         card.className = 'day';
         card.innerHTML = `
@@ -158,51 +144,39 @@ const renderDays = dayMap => {
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
             <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
             ${storm ? `<div class="row" style="color:red;"><p>Risco de tempestades</p></div>` : ''}
-            <div style="text-align:center; margin-top:10px;"><button class="detail-btn" style="background:#000;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;">Detalhes por período</button></div>
+            <div style="text-align:center;margin-top:10px;">
+                <button class="detail-btn" style="background:#000;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;">Detalhes por período</button>
+            </div>
         `;
-
         card.querySelector('.detail-btn').addEventListener('click', () => showOverlay(day, points, labels, now));
         cardsEl.appendChild(card);
     });
 };
 
 const showOverlay = (day, points, labels, now) => {
-    overlay.innerHTML = '';
-    overlay.classList.add('active');
-
-    const header = document.createElement('div');
-    header.className = 'overlay-header';
-    const h2 = document.createElement('h2');
-    h2.textContent = `${labels.date} - ${labels.weekday}`;
-    const backBtn = document.createElement('button');
-    backBtn.textContent = 'Voltar';
+    overlay.innerHTML = ''; overlay.classList.add('active');
+    const header = document.createElement('div'); header.className = 'overlay-header';
+    const h2 = document.createElement('h2'); h2.textContent = `${labels.date} - ${labels.weekday}`;
+    const backBtn = document.createElement('button'); backBtn.textContent = 'Voltar';
     backBtn.addEventListener('click', () => overlay.classList.remove('active'));
-    header.append(h2, backBtn);
-    overlay.appendChild(header);
+    header.append(h2, backBtn); overlay.appendChild(header);
 
-    const periodNames = { madrugada: 'Madrugada', manha: 'Manhã', tarde: 'Tarde', noite: 'Noite' };
+    
     const periodos = groupByPeriod(points);
-    const grid = document.createElement('div');
-    grid.className = 'grid-periods';
+    const grid = document.createElement('div'); grid.className = 'grid-periods';
     let scrollToDiv = null;
 
     Object.entries(periodos).forEach(([key, arr]) => {
-        const block = document.createElement('div');
-        block.className = 'period-block';
-        block.innerHTML = `<h3>${periodNames[key]}</h3>`;
+        const block = document.createElement('div'); block.className = 'period-block';
+        
         if (arr.length === 0) block.innerHTML += '<p style="text-align:center">Sem dados</p>';
-
         arr.forEach(p => {
             const h = new Date(p.time).getHours();
             const cloudCat = predominantCategory([p.cloud_cover || 0]);
             const precip = p.precipitation || 0;
             const storm = [95, 96, 99].includes(p.weathercode);
-            const hourDiv = document.createElement('div');
-            hourDiv.className = 'hour-item';
-            if (day === now.toISOString().slice(0, 10) && h === now.getHours()) {
-                hourDiv.style.borderBottom = '1px solid black';
-                scrollToDiv = hourDiv;
-            }
+            const hourDiv = document.createElement('div'); hourDiv.className = 'hour-item';
+            if (day === now.toISOString().slice(0, 10) && h === now.getHours()) hourDiv.style.backgroundColor = '#fffbd7ff', hourDiv.style.borderRadius = '8px', scrollToDiv = hourDiv;
             hourDiv.innerHTML = `
                 <p><strong>${String(h).padStart(2, '0')}h</strong></p>
                 <p>${cloudDescription(cloudCat)}</p>
@@ -213,7 +187,6 @@ const showOverlay = (day, points, labels, now) => {
         });
         grid.appendChild(block);
     });
-
     overlay.appendChild(grid);
     if (scrollToDiv) setTimeout(() => scrollToDiv.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
 };
@@ -246,24 +219,16 @@ async function searchLocation(query) {
 
 async function loadForecast(lat, lon) {
     locationName.textContent = 'Carregando...';
-
-    // Busca previsão
     const forecast = await fetchForecast(lat, lon);
     const dayMap = groupHourlyByDate(forecast.hourly.time, prepareHourlyArrays(forecast.hourly));
     renderDays(dayMap);
 
-    // Atualiza o nome da cidade via reverse geocoding
     try {
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-        const res = await fetch(url);
-        const data = await res.json();
-        const addr = data.address || {};
-        locationName.textContent = getAddressText(addr);
-    } catch {
-        locationName.textContent = 'Local desconhecido';
-    }
+        const res = await fetch(url); const data = await res.json();
+        locationName.textContent = getAddressText(data.address || {});
+    } catch { locationName.textContent = 'Local desconhecido'; }
 }
-
 
 // =====================
 // Eventos
@@ -272,18 +237,15 @@ searchForm.addEventListener('submit', async e => {
     e.preventDefault();
     const q = cityInput.value.trim();
     if (!q) return;
-    try {
-        const { lat, lon } = await searchLocation(q);
-        await loadForecast(lat, lon);
-    } catch { locationName.textContent = 'Erro ao carregar'; }
+    try { const { lat, lon } = await searchLocation(q); await loadForecast(lat, lon); }
+    catch { locationName.textContent = 'Erro ao carregar'; }
 });
 
 document.getElementById('geoButton').addEventListener('click', () => {
     if (!navigator.geolocation) return alert('Geolocalização não suportada.');
     locationName.textContent = 'Obtendo localização...';
     navigator.geolocation.getCurrentPosition(
-        pos => loadForecast(pos.coords.latitude, pos.coords.longitude)
-            .catch(() => locationName.textContent = 'Erro ao carregar'),
+        pos => loadForecast(pos.coords.latitude, pos.coords.longitude).catch(() => locationName.textContent = 'Erro ao carregar'),
         () => locationName.textContent = 'Erro ao obter localização'
     );
 });

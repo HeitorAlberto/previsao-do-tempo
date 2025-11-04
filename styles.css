@@ -223,7 +223,7 @@ footer {
 
 .hour-item {
     border-bottom: 1px solid #eee;
-    padding: 6px 0;
+    padding: 6px 0px 10px 6px;
 }
 
 .hour-item:last-child {
@@ -232,7 +232,7 @@ footer {
 
 .hour-item p {
     margin: 4px 0;
-    font-size: 14px;
+    font-size: 20px;
 }
 
 /* ===== Mobile overlay adjustments ===== */
