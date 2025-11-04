@@ -93,19 +93,19 @@
 
         /* cores de texto por categoria */
         .temp {
-            color: #d35400;
+            color: #000000;
         }
 
         .precip {
-            color: #003ce1;
+            color: #000000;
         }
 
         .humidity {
-            color: #003ce1;
+            color: #000000;
         }
 
         .wind {
-            color: #00a827;
+            color: #000000;
         }
 
         .cloud {
@@ -226,7 +226,8 @@
         function summarizeDay(points) {
             let tMin = Infinity, tMax = -Infinity, rhMin = Infinity, rhMax = -Infinity;
             let precipSum = 0, gustMax = 0;
-            let clouds = { madrugada: [], manha: [], tarde: [], noite: [] };
+
+            const clouds = { madrugada: [], manha: [], tarde: [], noite: [] };
 
             for (const p of points) {
                 const hour = new Date(p.time).getHours();
@@ -248,18 +249,23 @@
                 }
             }
 
-            const avg = arr => arr.length ? arr.reduce((a, b) => a + b) / arr.length : 0;
-            const round10 = v => Math.round(v / 10) * 10;
-
-            return {
-                tMin, tMax, rhMin, rhMax, precipSum, gustMax,
-                clouds: {
-                    madrugada: round10(avg(clouds.madrugada)),
-                    manha: round10(avg(clouds.manha)),
-                    tarde: round10(avg(clouds.tarde)),
-                    noite: round10(avg(clouds.noite))
+            function predominantCategory(values) {
+                const buckets = { clear: 0, few: 0, part: 0, mostly: 0, over: 0 };
+                for (const v of values) {
+                    if (v <= 10) buckets.clear++;
+                    else if (v <= 40) buckets.few++;
+                    else if (v <= 60) buckets.part++;
+                    else if (v <= 80) buckets.mostly++;
+                    else buckets.over++;
                 }
-            };
+                const maxKey = Object.entries(buckets).sort((a, b) => b[1] - a[1])[0][0];
+                return maxKey;
+            }
+
+            const cloudMode = {};
+            for (const k in clouds) cloudMode[k] = predominantCategory(clouds[k]);
+
+            return { tMin, tMax, rhMin, rhMax, precipSum, gustMax, clouds: cloudMode };
         }
 
         function calculateTotalPrecipitation(dayMap) {
@@ -308,13 +314,11 @@
                 }
             }
 
-            // ✅ Mesmo comportamento dos outros cards (sem ajustar fuso manualmente)
             const formatShort = iso => {
                 const d = new Date(iso + 'T00:00:00');
                 return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(d);
             };
 
-            // ✅ Define texto de precipitação dependendo se há chuva ou não
             const maxPrecipText = (isFinite(maxPrecip) && maxPrecip > 0)
                 ? `${maxPrecip.toFixed(1)} mm - ${formatShort(maxPrecipDay)}`
                 : '--';
@@ -323,45 +327,41 @@
             card.id = 'summaryCard';
             card.className = 'day';
             card.innerHTML = `
-        <h2 style="margin:8px 0px; text-align:center">Resumo para 15 dias</h2>
-
-        <div class="row precip">
-            <p style="color:black">Chuva</p>
-            <p>${totalPrecip.toFixed(1)} mm</p>
-        </div>
-
-        <div class="row precip">
-            <p style="color:black">Dias de chuva</p>
-            <p>${rainyDays} de 15</p>
-        </div>
-
-        <div class="row temp">
-            <p style="color:black">Temp. mínima (°C)</p>
-            <p>${isFinite(minTemp) ? `${minTemp.toFixed(0)}° - ${formatShort(minTempDay)}` : '-'}</p>
-        </div>
-
-        <div class="row temp">
-            <p style="color:black">Temp. máxima (°C)</p>
-            <p>${isFinite(maxTemp) ? `${maxTemp.toFixed(0)}° - ${formatShort(maxTempDay)}` : '-'}</p>
-        </div>
-
-        <div class="row precip">
-            <p style="color:black">Maior chuva</p>
-            <p>${maxPrecipText}</p>
-        </div>
-
-        <div class="row wind">
-            <p style="color:black">Rajadas máx.</p>
-            <p>${isFinite(maxGust) ? `${maxGust.toFixed(0)} km/h - ${formatShort(maxGustDay)}` : '-'}</p>
-        </div>
-    `;
+            <h2 style="margin:8px 0px; text-align:center">Resumo para 15 dias</h2>
+    
+            <div class="row precip">
+                <p style="color:black">Chuva</p>
+                <p>${totalPrecip.toFixed(1)} mm</p>
+            </div>
+    
+            <div class="row precip">
+                <p style="color:black">Dias de chuva</p>
+                <p>${rainyDays} de 15</p>
+            </div>
+    
+            <div class="row temp">
+                <p style="color:black">Temp. mínima (°C)</p>
+                <p>${isFinite(minTemp) ? `${minTemp.toFixed(0)}° - ${formatShort(minTempDay)}` : '-'}</p>
+            </div>
+    
+            <div class="row temp">
+                <p style="color:black">Temp. máxima (°C)</p>
+                <p>${isFinite(maxTemp) ? `${maxTemp.toFixed(0)}° - ${formatShort(maxTempDay)}` : '-'}</p>
+            </div>
+    
+            <div class="row precip">
+                <p style="color:black">Maior chuva</p>
+                <p>${maxPrecipText}</p>
+            </div>
+    
+            <div class="row wind">
+                <p style="color:black">Rajadas máx.</p>
+                <p>${isFinite(maxGust) ? `${maxGust.toFixed(0)} km/h - ${formatShort(maxGustDay)}` : '-'}</p>
+            </div>
+        `;
 
             forecastSection.parentNode.insertBefore(card, forecastSection);
         }
-
-
-
-
 
         function renderDays(dayMap) {
             cardsEl.innerHTML = '';
@@ -373,100 +373,144 @@
                 const labels = formatDateLabel(iso);
                 const s = summarizeDay(points);
 
-                const avgCloud = Math.round((s.clouds.madrugada + s.clouds.manha + s.clouds.tarde + s.clouds.noite) / 4);
-                const storm = points.some(p => [95, 96, 99].includes(p.weathercode)); // ⚡ DETECTA TEMPESTADE
+                const dayCats = [s.clouds.manha, s.clouds.tarde];
+                const nightCats = [s.clouds.madrugada, s.clouds.noite];
+                const dayCloud = predominantFromCats(dayCats);
+                const nightCloud = predominantFromCats(nightCats);
+
+                const storm = points.some(p => [95, 96, 99].includes(p.weathercode));
 
                 const card = document.createElement('div');
                 card.className = 'day';
                 card.innerHTML = `
-            <div class="date">${labels.date} - ${labels.weekday}</div>
-            <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
-            <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
-            <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
-            <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-            <div class="row cloud"><p>${cloudDescription(avgCloud)} (${avgCloud}%)</p></div>
-            ${storm ? `<div class="row" style="color:red;"><p>Risco de tempestades</p></div>` : ''}
-            <div style="text-align:center; margin-top:10px;">
-                <button class="detail-btn" style="background:#000;color:#fff;border:1px solid #333;padding:10px 14px;border-radius:8px;cursor:pointer;">Detalhes por período</button>
-            </div>
-        `;
-
-                const detailBtn = card.querySelector('.detail-btn');
-                detailBtn.addEventListener('click', () => {
-                    card.innerHTML = `
                 <div class="date">${labels.date} - ${labels.weekday}</div>
+                <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
+                <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
+                <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
+                <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
+                <div class="row cloud"><p>${cloudDescription(dayCloud)} durante o dia.</p></div>
+                <div class="row cloud"><p>${cloudDescription(nightCloud)} à noite.</p></div>
+                ${storm ? `<div class="row" style="color:red;"><p>Risco de tempestades</p></div>` : ''}
+                <div style="text-align:center; margin-top:10px;">
+                    <button class="detail-btn" style="background:#000;color:#fff;border:1px solid #333;padding:10px 14px;border-radius:8px;cursor:pointer;">Detalhes por período</button>
+                </div>
             `;
 
-                    const periods = {
-                        madrugada: points.filter(p => {
-                            const h = new Date(p.time).getHours();
-                            return h >= 0 && h < 6;
-                        }),
-                        manha: points.filter(p => {
-                            const h = new Date(p.time).getHours();
-                            return h >= 6 && h < 12;
-                        }),
-                        tarde: points.filter(p => {
-                            const h = new Date(p.time).getHours();
-                            return h >= 12 && h < 18;
-                        }),
-                        noite: points.filter(p => {
-                            const h = new Date(p.time).getHours();
-                            return h >= 18 && h < 24;
-                        })
-                    };
+                const detailBtn = card.querySelector('.detail-btn');
 
-                    const periodNames = {
-                        madrugada: 'Madrugada',
-                        manha: 'Manhã',
-                        tarde: 'Tarde',
-                        noite: 'Noite'
-                    };
+                detailBtn.addEventListener('click', () => {
+                    card.innerHTML = `<div class="date">${labels.date} - ${labels.weekday}</div>`;
 
-                    const avg = arr => arr.length ? arr.reduce((a, b) => a + b) / arr.length : 0;
-                    const round10 = v => Math.round(v / 10) * 10;
+                    // container único para as 24 horas
+                    const container = document.createElement('div');
+                    container.className = 'row';
+                    container.style.flexDirection = 'column';
+                    container.style.maxHeight = '400px';
+                    container.style.overflowY = 'auto';
+                    container.style.border = '1px solid #eee';
+                    container.style.borderRadius = '8px';
+                    container.style.padding = '8px 10px';
+                    container.style.background = '#fafafa';
+                    container.style.marginBottom = '14px';
 
-                    for (const key in periods) {
-                        const period = periods[key];
-                        const cloudAvg = round10(avg(period.map(p => p.cloud_cover || 0)));
-                        const precipSum = period.reduce((sum, p) => sum + (p.precipitation || 0), 0);
-                        const storm = period.some(p => [95, 96, 99].includes(p.weathercode)); // ⚡ TEMPESTADE POR PERÍODO
+                    const title = document.createElement('p');
+                    title.style.fontWeight = '700';
+                    title.style.marginBottom = '8px';
+                    title.style.textAlign = 'center';
+                    title.textContent = 'Condições horárias';
+                    container.appendChild(title);
 
-                        const div = document.createElement('div');
-                        div.className = 'row';
-                        div.style.flexDirection = 'column';
-                        div.innerHTML = `
-                    <p style="font-weight:700; margin-bottom:8px;">${periodNames[key]}</p>
-                    <p style="margin:4px 0">${cloudDescription(cloudAvg)} (${cloudAvg}%)</p>
-                    <p style="margin:4px 0">${rainDescription(precipSum)} (${precipSum.toFixed(1)} mm)</p>
-                    ${storm ? `<p style="margin:4px 0">Risco de tempestades</p>` : ''}
-                `;
-                        card.appendChild(div);
+                    const now = new Date();
+                    let currentHourDiv = null;
+
+                    for (const p of points) {
+                        const h = new Date(p.time).getHours();
+                        const label = `${String(h).padStart(2, '0')}h00`;
+
+                        const cloudCat = predominantCategory([p.cloud_cover || 0]);
+                        const precip = p.precipitation || 0;
+                        const storm = [95, 96, 99].includes(p.weathercode);
+
+                        const divHour = document.createElement('div');
+                        divHour.className = 'hour-block';
+                        divHour.style.padding = '8px';
+                        divHour.style.paddingBottom = '12px';
+                        divHour.style.borderBottom = '1px solid #eee';
+
+                        if (h === now.getHours() && day === now.toISOString().slice(0, 10)) {
+                            divHour.style.background = '#ffffcc';
+                            currentHourDiv = divHour; // guarda para rolar depois
+                        }
+
+                        divHour.innerHTML = `
+            <p style="font-weight:700; margin:0 0 4px 0;">${label}</p>
+            <p style="margin:4px 0">${cloudDescription(cloudCat)}</p>
+            <p style="margin:4px 0">${rainDescription(precip)} - ${precip.toFixed(1)} mm</p>
+            ${storm ? `<p style="margin:4px 0; color:red;">Risco de tempestades</p>` : ''}
+        `;
+                        container.appendChild(divHour);
                     }
 
+                    card.appendChild(container);
+
+                    // botão de voltar
                     const backDiv = document.createElement('div');
                     backDiv.style.textAlign = 'center';
                     backDiv.style.marginTop = '10px';
                     backDiv.innerHTML = `
-                <button class="back-btn" style="background:#000;color:#fff;border:1px solid #333;padding:10px 14px;border-radius:8px;cursor:pointer;">Voltar</button>
-            `;
+        <button class="back-btn" style="background:#000;color:#fff;border:1px solid #333;padding:10px 14px;border-radius:8px;cursor:pointer;">Voltar</button>
+    `;
                     card.appendChild(backDiv);
 
                     backDiv.querySelector('.back-btn').addEventListener('click', () => {
                         renderDays(dayMap);
                         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     });
+
+                    // faz scroll automático até a hora atual
+                    if (currentHourDiv) {
+                        setTimeout(() => {
+                            container.scrollTo({
+                                top: currentHourDiv.offsetTop - container.clientHeight / 3 + currentHourDiv.clientHeight / 3,
+                                behavior: 'smooth'
+                            });
+                        }, 200);
+                    }
                 });
+
+
+
 
                 cardsEl.appendChild(card);
             }
 
-            function cloudDescription(percent) {
-                if (percent <= 10) return 'Céu limpo';
-                if (percent <= 40) return 'Poucas nuvens';
-                if (percent <= 60) return 'Parcialmente nublado';
-                if (percent <= 80) return 'Maioria nublado';
-                return 'Nublado';
+            function predominantFromCats(arr) {
+                const count = { clear: 0, few: 0, part: 0, mostly: 0, over: 0 };
+                for (const c of arr) if (c) count[c]++;
+                return Object.entries(count).sort((a, b) => b[1] - a[1])[0][0];
+            }
+
+            function predominantCategory(values) {
+                const buckets = { clear: 0, few: 0, part: 0, mostly: 0, over: 0 };
+                for (const v of values) {
+                    if (v <= 10) buckets.clear++;
+                    else if (v <= 40) buckets.few++;
+                    else if (v <= 60) buckets.part++;
+                    else if (v <= 80) buckets.mostly++;
+                    else buckets.over++;
+                }
+                return Object.entries(buckets).sort((a, b) => b[1] - a[1])[0][0];
+            }
+
+            function cloudDescription(cat) {
+                const map = {
+                    clear: 'Céu limpo',
+                    few: 'Poucas nuvens',
+                    part: 'Parcialmente nublado',
+                    mostly: 'Maioria nublado',
+                    over: 'Nublado'
+                };
+                return map[cat] || '-';
             }
 
             function rainDescription(mm) {
@@ -481,7 +525,7 @@
             const url = new URL(forecastBase);
             url.searchParams.set('latitude', lat);
             url.searchParams.set('longitude', lon);
-            url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,cloud_cover,wind_gusts_10m,weathercode'); // ✅ adicionado weathercode
+            url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,cloud_cover,wind_gusts_10m,weathercode');
             url.searchParams.set('models', model);
             url.searchParams.set('timezone', timezone);
             url.searchParams.set('forecast_days', '15');
@@ -520,7 +564,7 @@
                     precipitation: forecast.hourly.precipitation || [],
                     cloud_cover: forecast.hourly.cloud_cover || [],
                     wind_gusts_10m: forecast.hourly.wind_gusts_10m || [],
-                    weathercode: forecast.hourly.weathercode || [] // ✅ adicionado
+                    weathercode: forecast.hourly.weathercode || []
                 };
                 const dayMap = groupHourlyByDate(times, arrays);
                 renderDays(dayMap);
@@ -550,15 +594,15 @@
                     precipitation: forecast.hourly.precipitation || [],
                     cloud_cover: forecast.hourly.cloud_cover || [],
                     wind_gusts_10m: forecast.hourly.wind_gusts_10m || [],
-                    weathercode: forecast.hourly.weathercode || [] // ✅ adicionado
+                    weathercode: forecast.hourly.weathercode || []
                 };
                 const dayMap = groupHourlyByDate(times, arrays);
                 renderDays(dayMap);
+            }, () => {
+                locationName.textContent = 'Erro ao obter localização';
             });
         });
     </script>
-
-
 
 </body>
 
