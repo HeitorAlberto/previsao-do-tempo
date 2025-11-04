@@ -106,19 +106,26 @@ const cloudDescription = cat => ({ clear: 'Céu limpo', few: 'Poucas nuvens', pa
 // Renderização
 // =====================
 const renderSummaryCard = dayMap => {
-    
     const existing = document.getElementById('summaryCard');
-    
     if (existing) existing.remove();
 
     let totalPrecip = 0;
+    let rainyDays = 0;
 
+    // Somando a precipitação de cada dia
+    for (const [day, points] of dayMap) {
+        const s = summarizeDay(points);
+        totalPrecip += s.precipSum;
+        if (s.precipSum >= 1) rainyDays++;
+    }
 
     const card = document.createElement('div');
     card.id = 'summaryCard';
     card.className = 'day';
     card.innerHTML = `
+        <h2 style="margin:8px 0;text-align:center">Resumo para 15 dias</h2>
         <div class="row precip"><p>Chuva total (15 dias)</p><p>${totalPrecip.toFixed(1)} mm</p></div>
+        <div class="row precip"><p>Dias de chuva</p><p>${rainyDays} de 15</p></div>
     `;
 
     forecastSection.parentNode.insertBefore(card, forecastSection);
