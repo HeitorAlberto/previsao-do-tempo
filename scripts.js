@@ -110,22 +110,18 @@ const renderSummaryCard = dayMap => {
     if (existing) existing.remove();
 
     let totalPrecip = 0;
-    let rainyDays = 0;
 
     // Somando a precipitação de cada dia
     for (const [day, points] of dayMap) {
         const s = summarizeDay(points);
         totalPrecip += s.precipSum;
-        if (s.precipSum >= 1) rainyDays++;
     }
 
     const card = document.createElement('div');
     card.id = 'summaryCard';
     card.className = 'day';
     card.innerHTML = `
-        <h2 style="margin:8px 0;text-align:center">Resumo para 15 dias</h2>
-        <div class="row precip"><p>Chuva total</p><p>${totalPrecip.toFixed(1)} mm</p></div>
-        <div class="row precip"><p>Dias de chuva (1mm ou mais)</p><p>${rainyDays}</p></div>
+        <div class="row precip"><p>Chuva total (15 dias)</p><p>${totalPrecip.toFixed(1)} mm</p></div>
     `;
 
     forecastSection.parentNode.insertBefore(card, forecastSection);
