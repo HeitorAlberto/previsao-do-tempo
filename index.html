@@ -320,7 +320,7 @@
             };
 
             const maxPrecipText = (isFinite(maxPrecip) && maxPrecip > 0)
-                ? `${maxPrecip.toFixed(1)} mm - ${formatShort(maxPrecipDay)}`
+                ? `${maxPrecip.toFixed(1)} mm dia ${formatShort(maxPrecipDay)}`
                 : '--';
 
             const card = document.createElement('div');
@@ -341,12 +341,12 @@
     
             <div class="row temp">
                 <p style="color:black">Temp. mínima (°C)</p>
-                <p>${isFinite(minTemp) ? `${minTemp.toFixed(0)}° - ${formatShort(minTempDay)}` : '-'}</p>
+                <p>${isFinite(minTemp) ? `${minTemp.toFixed(0)}° dia ${formatShort(minTempDay)}` : '-'}</p>
             </div>
     
             <div class="row temp">
                 <p style="color:black">Temp. máxima (°C)</p>
-                <p>${isFinite(maxTemp) ? `${maxTemp.toFixed(0)}° - ${formatShort(maxTempDay)}` : '-'}</p>
+                <p>${isFinite(maxTemp) ? `${maxTemp.toFixed(0)}° dia ${formatShort(maxTempDay)}` : '-'}</p>
             </div>
     
             <div class="row precip">
@@ -356,7 +356,7 @@
     
             <div class="row wind">
                 <p style="color:black">Rajadas máx.</p>
-                <p>${isFinite(maxGust) ? `${maxGust.toFixed(0)} km/h - ${formatShort(maxGustDay)}` : '-'}</p>
+                <p>${isFinite(maxGust) ? `${maxGust.toFixed(0)} km/h dia ${formatShort(maxGustDay)}` : '-'}</p>
             </div>
         `;
 
