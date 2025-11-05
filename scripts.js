@@ -143,7 +143,7 @@ const renderDays = dayMap => {
         const avgCloud = periodArr => {
             if (!periodArr.length) return '-';
             const avg = periodArr.reduce((a, b) => a + b, 0) / periodArr.length;
-            if (avg < 25) return 'Poucas nuvens';
+            if (avg < 25) return 'poucas nuvens';
             if (avg < 50) return 'Parcialmente nublado';
             if (avg < 75) return 'Muitas nuvens';
             return 'Nublado';
@@ -163,10 +163,10 @@ const renderDays = dayMap => {
             <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
             <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-            <div class="row clouds"><p>${cloudAvgs.madrugada} na madrugada.</p></div>
-            <div class="row clouds"><p>${cloudAvgs.manha} pela manhã.</p></div>
-            <div class="row clouds"><p>${cloudAvgs.tarde} à tarde.</p></div>
-            <div class="row clouds"><p>${cloudAvgs.noite} à noite.</p></div>
+            <div class="row clouds"><p>Madrugada</p><p>${cloudAvgs.madrugada}</p></div>
+            <div class="row clouds"><p>Manhã</p><p>${cloudAvgs.manha}</p></div>
+            <div class="row clouds"><p>Tarde</p><p>${cloudAvgs.tarde}</p></div>
+            <div class="row clouds"><p>Noite</p><p>${cloudAvgs.noite}</p></div>
             ${storm ? `<div class="row" style="color:red;"><p>Risco de tempestades</p></div>` : ''}
             <div style="text-align:center;margin-top:10px;">
                 <button class="detail-btn" style="background:#000;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;">Detalhes por período</button>
