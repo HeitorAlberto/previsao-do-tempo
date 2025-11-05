@@ -51,7 +51,8 @@ main {
 #cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 50px 50px;
+    gap: 40px;
+    padding: 0px 40px;
 }
 
 .day {
@@ -147,6 +148,7 @@ footer {
     #cards {
         grid-template-columns: 1fr;
         gap: 20px;
+        padding: 0px;
     }
 
     .day {
