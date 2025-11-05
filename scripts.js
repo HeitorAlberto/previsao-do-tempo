@@ -157,29 +157,48 @@ const renderDays = dayMap => {
 };
 
 const showOverlay = (day, points, labels, now) => {
-    overlay.innerHTML = ''; overlay.classList.add('active');
-    const header = document.createElement('div'); header.className = 'overlay-header';
-    const h2 = document.createElement('h2'); h2.textContent = `${labels.date} - ${labels.weekday}`;
-    const backBtn = document.createElement('button'); backBtn.textContent = 'Voltar';
-    backBtn.addEventListener('click', () => overlay.classList.remove('active'));
-    header.append(h2, backBtn); overlay.appendChild(header);
+    overlay.innerHTML = '';
+    overlay.classList.add('active');
 
-    
+    // 🔒 Bloqueia scroll da página (apenas desktop)
+    if (window.innerWidth > 768) document.body.style.overflow = 'hidden';
+
+    const header = document.createElement('div');
+    header.className = 'overlay-header';
+    const h2 = document.createElement('h2');
+    h2.textContent = `${labels.date} - ${labels.weekday}`;
+    const backBtn = document.createElement('button');
+    backBtn.textContent = 'Voltar';
+    backBtn.addEventListener('click', () => {
+        overlay.classList.remove('active');
+        // 🔓 Libera scroll novamente
+        if (window.innerWidth > 768) document.body.style.overflow = '';
+    });
+    header.append(h2, backBtn);
+    overlay.appendChild(header);
+
     const periodos = groupByPeriod(points);
-    const grid = document.createElement('div'); grid.className = 'grid-periods';
+    const grid = document.createElement('div');
+    grid.className = 'grid-periods';
     let scrollToDiv = null;
 
     Object.entries(periodos).forEach(([key, arr]) => {
-        const block = document.createElement('div'); block.className = 'period-block';
-        
+        const block = document.createElement('div');
+        block.className = 'period-block';
+
         if (arr.length === 0) block.innerHTML += '<p style="text-align:center">Sem dados</p>';
         arr.forEach(p => {
             const h = new Date(p.time).getHours();
             const cloudCat = predominantCategory([p.cloud_cover || 0]);
             const precip = p.precipitation || 0;
             const storm = [95, 96, 99].includes(p.weathercode);
-            const hourDiv = document.createElement('div'); hourDiv.className = 'hour-item';
-            if (day === now.toISOString().slice(0, 10) && h === now.getHours()) hourDiv.style.backgroundColor = '#fffbd7ff', hourDiv.style.borderRadius = '8px', scrollToDiv = hourDiv;
+            const hourDiv = document.createElement('div');
+            hourDiv.className = 'hour-item';
+            if (day === now.toISOString().slice(0, 10) && h === now.getHours()) {
+                hourDiv.style.backgroundColor = '#fffbd7ff';
+                hourDiv.style.borderRadius = '8px';
+                scrollToDiv = hourDiv;
+            }
             hourDiv.innerHTML = `
                 <p><strong>${String(h).padStart(2, '0')}h</strong></p>
                 <p>${cloudDescription(cloudCat)}</p>
@@ -193,6 +212,7 @@ const showOverlay = (day, points, labels, now) => {
     overlay.appendChild(grid);
     if (scrollToDiv) setTimeout(() => scrollToDiv.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
 };
+
 
 // =====================
 // Fetch
