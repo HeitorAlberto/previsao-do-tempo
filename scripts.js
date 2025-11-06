@@ -158,7 +158,7 @@ const renderDays = dayMap => {
         const card = document.createElement('div');
         card.className = 'day';
         card.innerHTML = `
-            <div class="date">${labels.date} - ${labels.weekday}</div>
+            <div class="date">${labels.date} • ${labels.weekday}</div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
             <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
@@ -189,7 +189,8 @@ const showOverlay = (day, points, labels, now) => {
     const header = document.createElement('div');
     header.className = 'overlay-header';
     const h2 = document.createElement('h2');
-    h2.textContent = `${labels.date} - ${labels.weekday}`;
+    h2.textContent = `${labels.date} • ${labels.weekday}`;
+    const locationNameOverlay = locationName.innerText;
     const backBtn = document.createElement('button');
     backBtn.textContent = 'Voltar';
     backBtn.addEventListener('click', () => {
@@ -197,7 +198,7 @@ const showOverlay = (day, points, labels, now) => {
         // 🔓 Libera scroll novamente
         if (window.innerWidth > 768) document.body.style.overflow = '';
     });
-    header.append(h2, backBtn);
+    header.append(locationNameOverlay, h2, backBtn);
     overlay.appendChild(header);
 
     const periodos = groupByPeriod(points);
