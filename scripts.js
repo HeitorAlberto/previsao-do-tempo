@@ -148,12 +148,7 @@ const renderDays = dayMap => {
             if (avg < 75) return 'Muitas nuvens';
             return 'Nublado';
         };
-        const cloudAvgs = {
-            madrugada: avgCloud(points.filter(p => new Date(p.time).getHours() < 6).map(p => p.cloud_cover ?? 0)),
-            manha: avgCloud(points.filter(p => { const h = new Date(p.time).getHours(); return h >= 6 && h < 12; }).map(p => p.cloud_cover ?? 0)),
-            tarde: avgCloud(points.filter(p => { const h = new Date(p.time).getHours(); return h >= 12 && h < 18; }).map(p => p.cloud_cover ?? 0)),
-            noite: avgCloud(points.filter(p => new Date(p.time).getHours() >= 18).map(p => p.cloud_cover ?? 0))
-        };
+
 
         const card = document.createElement('div');
         card.className = 'day';
@@ -163,10 +158,6 @@ const renderDays = dayMap => {
             <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
             <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-            <div class="row clouds"><p>Madrugada</p><p>${cloudAvgs.madrugada}</p></div>
-            <div class="row clouds"><p>Manhã</p><p>${cloudAvgs.manha}</p></div>
-            <div class="row clouds"><p>Tarde</p><p>${cloudAvgs.tarde}</p></div>
-            <div class="row clouds"><p>Noite</p><p>${cloudAvgs.noite}</p></div>
             ${storm ? `<div class="row" style="color:red;"><p>Risco de tempestades</p></div>` : ''}
             <div style="text-align:center;margin-top:10px;">
                 <button class="detail-btn" style="background:#000;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;">Detalhes por hora</button>
