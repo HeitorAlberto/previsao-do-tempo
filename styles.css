@@ -24,6 +24,11 @@ button {
     border: 1px solid #333;
 }
 
+input[type=text]:focus {
+    outline: none;
+    background-color: rgb(241, 241, 241);
+}
+
 
 button {
     cursor: pointer;
@@ -72,7 +77,7 @@ main {
 .row {
     display: flex;
     justify-content: space-between;
-    padding: 16px 0;
+    padding: 16px 8px;
     border-bottom: 1px solid #f0f0f0;
 }
 
@@ -102,7 +107,10 @@ main {
 }
 
 .clouds {
-    color: #555555;
+    color: #000000;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    margin-bottom: 8px;
 }
 
 footer {

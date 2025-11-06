@@ -169,7 +169,7 @@ const renderDays = dayMap => {
             <div class="row clouds"><p>Noite</p><p>${cloudAvgs.noite}</p></div>
             ${storm ? `<div class="row" style="color:red;"><p>Risco de tempestades</p></div>` : ''}
             <div style="text-align:center;margin-top:10px;">
-                <button class="detail-btn" style="background:#000;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;">Detalhes por período</button>
+                <button class="detail-btn" style="background:#000;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;">Detalhes por hora</button>
             </div>
         `;
         card.querySelector('.detail-btn').addEventListener('click', () => showOverlay(day, points, labels, now));
