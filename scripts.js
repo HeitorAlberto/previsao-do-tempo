@@ -175,6 +175,8 @@ const renderDays = dayMap => {
         card.querySelector('.detail-btn').addEventListener('click', () => showOverlay(day, points, labels, now));
         cardsEl.appendChild(card);
     });
+
+    cityInput.value = '';
 };
 
 const showOverlay = (day, points, labels, now) => {
