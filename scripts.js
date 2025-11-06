@@ -144,7 +144,7 @@ const renderDays = dayMap => {
             if (!periodArr.length) return '-';
             const avg = periodArr.reduce((a, b) => a + b, 0) / periodArr.length;
             if (avg < 25) return 'poucas nuvens';
-            if (avg < 50) return 'Parcialmente nublado';
+            if (avg < 50) return 'Algumas nuvens';
             if (avg < 75) return 'Muitas nuvens';
             return 'Nublado';
         };
