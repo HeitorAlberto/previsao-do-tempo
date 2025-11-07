@@ -11,6 +11,10 @@
 
         header {text-align: center;}
 
+        header h1 {margin-bottom: 0px; font-size: 24px;}
+
+        header p {font-size: 24px; font-weight: bolder; margin-top: 10px; color: rgb(107, 107, 107);}
+
         main {
             display: grid;
             grid-template-columns: 1fr;
@@ -26,6 +30,15 @@
         }
 
         @media (max-width:800px) {
+            header h1 {
+                font-size: 20px;
+                margin-bottom: 0px;
+            }
+
+            header p {
+                font-size: 20px;
+                margin-top: 2px;
+            }
             main {
                 width: 95vw;
             }
@@ -35,7 +48,8 @@
 
 <body>
     <header>
-        <h1>Mapas de chuva acumulada em 24h - 15 dias</h1>
+        <h1>Mapas de chuva acumulada em 24h</h1>
+        <p>Para 15 dias</p>
     </header>
 
     <main>

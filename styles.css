@@ -136,6 +136,10 @@ footer {
         text-align: center;
     }
 
+    header h1 {
+        margin-bottom: 0px;
+    }
+
     #searchForm {
         display: flex;
         flex-direction: column;
