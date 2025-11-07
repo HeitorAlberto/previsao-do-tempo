@@ -44,7 +44,6 @@ def gerar_mapas():
     run_date_str = date_run.strftime("%Y%m%d")
     target_file = os.path.join(out_dir, "dados_ecmwf.grib2")
 
-
     steps_all = list(range(0,145,3)) + list(range(150,361,6))
     request_params = {
         "date": run_date_str, "time": 0, "step": steps_all,
@@ -52,12 +51,14 @@ def gerar_mapas():
         "stream": "oper", "target": target_file
     }
 
-    print(f"\n📡 Baixando ECMWF HRES {run_date_str} 00Z...")
+    print(f"\n📡 Verificando ECMWF HRES {run_date_str} 00Z...")
     if not os.path.exists(target_file):
+        print("⬇️  Arquivo não encontrado. Iniciando download...")
         client.retrieve(**request_params)
         print(f"✅ Download concluído: {target_file}")
     else:
-        print(f"⚠️ Arquivo já existe: {target_file}")
+        print(f"⚠️  O arquivo '{target_file}' já existe — usando versão local.")
+
 
     print("\n📂 Abrindo arquivo GRIB2...")
     ds = xr.open_dataset(target_file, engine="cfgrib", filter_by_keys={"typeOfLevel": "surface"})
