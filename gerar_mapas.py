@@ -42,7 +42,8 @@ def gerar_mapas():
     now_br = datetime.utcnow() - timedelta(hours=3)
     date_run = now_br.date()
     run_date_str = date_run.strftime("%Y%m%d")
-    target_file = os.path.join(out_dir, f"ecmwf_rain_tp_run_{run_date_str}_00Z_15d.grib2")
+    target_file = os.path.join(out_dir, "dados_ecmwf.grib2")
+
 
     steps_all = list(range(0,145,3)) + list(range(150,361,6))
     request_params = {
