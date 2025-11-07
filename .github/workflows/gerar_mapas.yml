@@ -1,0 +1,37 @@
+name: Gerar Mapas ECMWF
+
+on:
+  schedule:
+    - cron: "0 9 * * *"   # executa todo dia às 06:00 BRT (09:00 UTC)
+  workflow_dispatch:       # permite rodar manualmente
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar dependências do sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libeccodes0 libproj-dev proj-data proj-bin libgeos-dev
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar bibliotecas Python
+        run: pip install -r requirements.txt
+
+      - name: Executar script de geração
+        run: python gerar_mapas.py
+
+      - name: Publicar no GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./
