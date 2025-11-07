@@ -16,6 +16,14 @@ header {
     padding: 0px 40px;
 }
 
+header .btn-mapas {
+    text-decoration: none;
+    color: black;
+    background-color: rgb(236, 236, 236);
+    border-radius: 8px;
+    padding: 10px 20px;
+}
+
 input[type=text],
 button {
     font-family: inherit;
