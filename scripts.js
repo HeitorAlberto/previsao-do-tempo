@@ -43,7 +43,6 @@ const prepareHourlyArrays = hourly => ({
     weathercode: hourly.weathercode || []
 });
 
-// Agrupa horários por dia usando data local
 const groupHourlyByDate = (times, arrays) => {
     const map = new Map();
     for (let i = 0; i < times.length; i++) {
@@ -103,6 +102,74 @@ const rainDescription = mm => mm < 1 ? 'Sem chuva' : mm < 5 ? 'Chuva leve' : mm 
 const cloudDescription = cat => ({ clear: 'Céu limpo', few: 'Poucas nuvens', part: 'Parcialmente nublado', mostly: 'Maioria nublado', over: 'Nublado' }[cat] || '-');
 
 // =====================
+// Cache (IndexedDB)
+// =====================
+const DB_NAME = 'WeatherCacheDB';
+const STORE_NAME = 'forecasts';
+const DB_VERSION = 1;
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = e => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME))
+                db.createObjectStore(STORE_NAME, { keyPath: 'key' });
+            if (!db.objectStoreNames.contains('meta'))
+                db.createObjectStore('meta', { keyPath: 'id' });
+        };
+        request.onsuccess = e => resolve(e.target.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function setCacheItem(key, data) {
+    const db = await openDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(data);
+    return tx.complete;
+}
+
+async function getCacheItem(key) {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const req = tx.objectStore(STORE_NAME).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+async function maybeClearCache() {
+    const now = new Date();
+    const h = now.getHours();
+    const db = await openDB();
+    const txMeta = db.transaction('meta', 'readwrite');
+    const metaStore = txMeta.objectStore('meta');
+
+    const req = metaStore.get('lastClear');
+    req.onsuccess = async () => {
+        const last = req.result ? new Date(req.result.time) : null;
+        const mustClear =
+            (h === 0 || h === 12 || h === 18) &&
+            (!last || last.getHours() !== h || last.toDateString() !== now.toDateString());
+
+        if (mustClear) {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            store.clear();
+            metaStore.put({ id: 'lastClear', time: now.toISOString() });
+            console.log('🧹 Cache IndexedDB limpo automaticamente.');
+        }
+    };
+}
+maybeClearCache();
+
+function coordKey(lat, lon) {
+    return `${lat.toFixed(2)},${lon.toFixed(2)}`;
+}
+
+// =====================
 // Renderização
 // =====================
 const renderSummaryCard = dayMap => {
@@ -110,8 +177,6 @@ const renderSummaryCard = dayMap => {
     if (existing) existing.remove();
 
     let totalPrecip = 0;
-
-    // Somando a precipitação de cada dia
     for (const [day, points] of dayMap) {
         const s = summarizeDay(points);
         totalPrecip += s.precipSum;
@@ -123,12 +188,11 @@ const renderSummaryCard = dayMap => {
     card.innerHTML = `
         <div class="row precip"><p>Chuva total (15 dias)</p><p>${totalPrecip.toFixed(1)} mm</p></div>
     `;
-
     forecastSection.parentNode.insertBefore(card, forecastSection);
 };
 
-
-const renderDays = dayMap => {
+const renderDays = dayMapInput => {
+    const dayMap = dayMapInput instanceof Map ? dayMapInput : new Map(dayMapInput);
     cardsEl.innerHTML = '';
     const entries = Array.from(dayMap.entries()).slice(0, 15);
     renderSummaryCard(dayMap);
@@ -138,17 +202,6 @@ const renderDays = dayMap => {
         const labels = formatDateLabel(day + 'T00:00:00');
         const s = summarizeDay(points);
         const storm = points.some(p => [95, 96, 99].includes(p.weathercode));
-
-        // 🔹 calcular média de nebulosidade por período
-        const avgCloud = periodArr => {
-            if (!periodArr.length) return '-';
-            const avg = periodArr.reduce((a, b) => a + b, 0) / periodArr.length;
-            if (avg < 25) return 'poucas nuvens';
-            if (avg < 50) return 'Algumas nuvens';
-            if (avg < 75) return 'Muitas nuvens';
-            return 'Nublado';
-        };
-
 
         const card = document.createElement('div');
         card.className = 'day';
@@ -173,8 +226,6 @@ const renderDays = dayMap => {
 const showOverlay = (day, points, labels, now) => {
     overlay.innerHTML = '';
     overlay.classList.add('active');
-
-    // 🔒 Bloqueia scroll da página (apenas desktop)
     if (window.innerWidth > 768) document.body.style.overflow = 'hidden';
 
     const header = document.createElement('div');
@@ -186,7 +237,6 @@ const showOverlay = (day, points, labels, now) => {
     backBtn.textContent = 'Voltar';
     backBtn.addEventListener('click', () => {
         overlay.classList.remove('active');
-        // 🔓 Libera scroll novamente
         if (window.innerWidth > 768) document.body.style.overflow = '';
     });
     header.append(locationNameOverlay, h2, backBtn);
@@ -200,7 +250,6 @@ const showOverlay = (day, points, labels, now) => {
     Object.entries(periodos).forEach(([key, arr]) => {
         const block = document.createElement('div');
         block.className = 'period-block';
-
         if (arr.length === 0) block.innerHTML += '<p style="text-align:center">Sem dados</p>';
         arr.forEach(p => {
             const h = new Date(p.time).getHours();
@@ -228,9 +277,8 @@ const showOverlay = (day, points, labels, now) => {
     if (scrollToDiv) setTimeout(() => scrollToDiv.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
 };
 
-
 // =====================
-// Fetch
+// Fetch e Cache Integrado
 // =====================
 async function fetchForecast(lat, lon, timezone = 'auto') {
     const url = new URL(forecastBase);
@@ -256,16 +304,39 @@ async function searchLocation(query) {
 }
 
 async function loadForecast(lat, lon) {
+    const key = coordKey(lat, lon);
+    const now = Date.now();
+
+    const cached = await getCacheItem(key);
+    if (cached && now - cached.timestamp < 6 * 60 * 60 * 1000) {
+        console.log('🗂️ Usando cache IndexedDB para', key);
+        locationName.textContent = cached.locationName;
+        renderDays(cached.dayMap);
+        return;
+    }
+
     locationName.textContent = 'Carregando...';
     const forecast = await fetchForecast(lat, lon);
     const dayMap = groupHourlyByDate(forecast.hourly.time, prepareHourlyArrays(forecast.hourly));
     renderDays(dayMap);
 
+    let locName = 'Local desconhecido';
     try {
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
-        const res = await fetch(url); const data = await res.json();
-        locationName.textContent = getAddressText(data.address || {});
-    } catch { locationName.textContent = 'Local desconhecido'; }
+        const res = await fetch(url);
+        const data = await res.json();
+        locName = getAddressText(data.address || {});
+        locationName.textContent = locName;
+    } catch {
+        locationName.textContent = locName;
+    }
+
+    await setCacheItem(key, {
+        key,
+        timestamp: now,
+        dayMap: Array.from(dayMap.entries()),
+        locationName: locName
+    });
 }
 
 // =====================
