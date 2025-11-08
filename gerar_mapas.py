@@ -8,6 +8,7 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 import numpy as np
 import pandas as pd
 import os, warnings
+from pathlib import Path
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -39,26 +40,37 @@ os.makedirs(out_dir, exist_ok=True)
 # ==============================
 def gerar_mapas():
     client = Client(source="azure")
+    
+    # Hora de Brasília = UTC-3
     now_br = datetime.utcnow() - timedelta(hours=3)
     date_run = now_br.date()
     run_date_str = date_run.strftime("%Y%m%d")
-    target_file = os.path.join(out_dir, "dados_ecmwf.grib2")
+    run_hour = 0  # Sempre rodada 00Z
+
+    # Nome do arquivo inclui a data da rodada
+    target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}.grib2")
 
     steps_all = list(range(0,145,3)) + list(range(150,361,6))
     request_params = {
-        "date": run_date_str, "time": 0, "step": steps_all,
-        "param": "tp", "type": "fc", "levtype": "sfc",
-        "stream": "oper", "target": target_file
+        "date": run_date_str,
+        "time": run_hour,
+        "step": steps_all,
+        "param": "tp",
+        "type": "fc",
+        "levtype": "sfc",
+        "stream": "oper",
+        "target": target_file
     }
 
     print(f"\n📡 Verificando ECMWF HRES {run_date_str} 00Z...")
+
+    # Só baixa se o arquivo do dia ainda não existir
     if not os.path.exists(target_file):
         print("⬇️  Arquivo não encontrado. Iniciando download...")
         client.retrieve(**request_params)
         print(f"✅ Download concluído: {target_file}")
     else:
         print(f"⚠️  O arquivo '{target_file}' já existe — usando versão local.")
-
 
     print("\n📂 Abrindo arquivo GRIB2...")
     ds = xr.open_dataset(target_file, engine="cfgrib", filter_by_keys={"typeOfLevel": "surface"})
