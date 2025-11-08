@@ -242,20 +242,51 @@ const showOverlay = (day, points, labels, now) => {
     header.append(locationNameOverlay, h2, backBtn);
     overlay.appendChild(header);
 
+    // 🔹 Dicionário com descrições dos weather codes (Open-Meteo)
+    const weatherDescriptions = {
+        0: 'Céu limpo',
+        1: 'Principalmente limpo',
+        2: 'Parcialmente nublado',
+        3: 'Nublado',
+        45: 'Nevoeiro',
+        48: 'Nevoeiro com gelo',
+        51: 'Garoa leve',
+        53: 'Garoa moderada',
+        55: 'Garoa densa',
+        56: 'Garoa congelante leve',
+        57: 'Garoa congelante densa',
+        61: 'Chuva leve',
+        63: 'Chuva moderada',
+        65: 'Chuva forte',
+        66: 'Chuva congelante leve',
+        67: 'Chuva congelante forte',
+        71: 'Neve leve',
+        73: 'Neve moderada',
+        75: 'Neve intensa',
+        77: 'Grãos de neve',
+        80: 'Pancadas de chuva leves',
+        81: 'Pancadas de chuva moderadas',
+        82: 'Pancadas de chuva fortes',
+        85: 'Pancadas de neve leves',
+        86: 'Pancadas de neve fortes',
+        95: 'Tempestades',
+        96: 'Tempestade com granizo leve',
+        99: 'Tempestade com granizo forte'
+    };
+
     const periodos = groupByPeriod(points);
     const grid = document.createElement('div');
     grid.className = 'grid-periods';
     let scrollToDiv = null;
 
+    // 🔸 Mantém os mesmos blocos: madrugada, manhã, tarde, noite
     Object.entries(periodos).forEach(([key, arr]) => {
         const block = document.createElement('div');
         block.className = 'period-block';
         if (arr.length === 0) block.innerHTML += '<p style="text-align:center">Sem dados</p>';
         arr.forEach(p => {
             const h = new Date(p.time).getHours();
-            const cloudCat = predominantCategory([p.cloud_cover || 0]);
-            const precip = p.precipitation || 0;
-            const storm = [95, 96, 99].includes(p.weathercode);
+            const desc = weatherDescriptions[p.weathercode] || 'Desconhecido';
             const hourDiv = document.createElement('div');
             hourDiv.className = 'hour-item';
             if (day === now.toISOString().slice(0, 10) && h === now.getHours()) {
@@ -265,9 +296,7 @@ const showOverlay = (day, points, labels, now) => {
             }
             hourDiv.innerHTML = `
                 <p><strong>${String(h).padStart(2, '0')}h</strong></p>
-                <p>${cloudDescription(cloudCat)}</p>
-                <p>${rainDescription(precip)} - ${precip.toFixed(1)} mm</p>
-                ${storm ? '<p style="color:red">Risco de tempestades</p>' : ''}
+                <p>${desc}</p>
             `;
             block.appendChild(hourDiv);
         });
@@ -276,6 +305,8 @@ const showOverlay = (day, points, labels, now) => {
     overlay.appendChild(grid);
     if (scrollToDiv) setTimeout(() => scrollToDiv.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
 };
+
+
 
 // =====================
 // Fetch e Cache Integrado
