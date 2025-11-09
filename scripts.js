@@ -252,7 +252,7 @@ const showOverlay = (day, points, labels, now) => {
         48: 'Nevoeiro com gelo',
         51: 'Garoa leve',
         53: 'Garoa moderada',
-        55: 'Garoa densa',
+        55: 'Garoa forte',
         56: 'Garoa congelante leve',
         57: 'Garoa congelante densa',
         61: 'Chuva leve',
