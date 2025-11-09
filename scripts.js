@@ -242,7 +242,7 @@ const renderDays = dayMapInput => {
         card.className = 'day';
         card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
-            <div class="row weather"><p style="color: #5e5e5eff">${weatherDesc}</p></div>
+            <div class="row weather"><p>${weatherDesc}</p></div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
             <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
