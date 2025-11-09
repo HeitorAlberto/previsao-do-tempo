@@ -291,11 +291,14 @@ const showOverlay = (day, points, labels, now) => {
             const gust = isFinite(p.wind_gusts_10m) ? `${p.wind_gusts_10m.toFixed(0)} km/h` : '-';
             const hourDiv = document.createElement('div');
             hourDiv.className = 'hour-item';
-            if (day === now.toISOString().slice(0, 10) && h === now.getHours()) {
+
+            const localDate = new Date().toLocaleDateString('sv-SE');
+            if (day === localDate && h === now.getHours()) {
                 hourDiv.style.backgroundColor = '#fffbd7ff';
                 hourDiv.style.borderRadius = '8px';
                 scrollToDiv = hourDiv;
             }
+
             hourDiv.innerHTML = `
                 <p><strong>${String(h).padStart(2, '0')}h</strong></p>
                 <p style="margin-bottom: 12px">${desc}, ${temp}</p>
