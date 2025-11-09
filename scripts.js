@@ -287,6 +287,8 @@ const showOverlay = (day, points, labels, now) => {
         arr.forEach(p => {
             const h = new Date(p.time).getHours();
             const desc = weatherDescriptions[p.weathercode] || 'Desconhecido';
+            const temp = isFinite(p.temperature_2m) ? `${p.temperature_2m.toFixed(0)}°C` : '-';
+            const gust = isFinite(p.wind_gusts_10m) ? `${p.wind_gusts_10m.toFixed(0)} km/h` : '-';
             const hourDiv = document.createElement('div');
             hourDiv.className = 'hour-item';
             if (day === now.toISOString().slice(0, 10) && h === now.getHours()) {
@@ -296,7 +298,8 @@ const showOverlay = (day, points, labels, now) => {
             }
             hourDiv.innerHTML = `
                 <p><strong>${String(h).padStart(2, '0')}h</strong></p>
-                <p>${desc}</p>
+                <p style="margin-bottom: 12px">${desc}, ${temp}</p>
+                <p style="margin-bottom: 12px">Rajadas de vento: ${gust}</p>
             `;
             block.appendChild(hourDiv);
         });
@@ -305,6 +308,7 @@ const showOverlay = (day, points, labels, now) => {
     overlay.appendChild(grid);
     if (scrollToDiv) setTimeout(() => scrollToDiv.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
 };
+
 
 
 
