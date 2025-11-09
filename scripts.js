@@ -198,20 +198,55 @@ const renderDays = dayMapInput => {
     renderSummaryCard(dayMap);
 
     const now = new Date();
+
+    // 🔹 Função auxiliar local para determinar o weather code mais representativo do dia
+    const getDayWeatherCode = points => {
+        const priority = code => {
+            if ([95, 96, 99].includes(code)) return 6;       // tempestades
+            if ([80, 81, 82].includes(code)) return 5;       // pancadas de chuva
+            if ([61, 63, 65, 66, 67].includes(code)) return 4; // chuva
+            if ([51, 53, 55, 56, 57].includes(code)) return 3; // garoa
+            if ([45, 48].includes(code)) return 2;           // nevoeiro
+            if ([1, 2, 3].includes(code)) return 1;          // nublado
+            return 0;                                        // limpo ou outros
+        };
+        let max = -1, selected = null;
+        for (const p of points) {
+            const pri = priority(p.weathercode);
+            if (pri > max) { max = pri; selected = p.weathercode; }
+        }
+        return selected;
+    };
+
+    // 🔹 Dicionário de descrições (pode ficar aqui ou em escopo global)
+    const weatherDescriptions = {
+        0: 'Céu limpo', 1: 'Principalmente limpo', 2: 'Parcialmente nublado', 3: 'Nublado',
+        45: 'Nevoeiro', 48: 'Nevoeiro com gelo', 51: 'Garoa leve', 53: 'Garoa moderada', 55: 'Garoa forte',
+        56: 'Garoa congelante leve', 57: 'Garoa congelante densa', 61: 'Chuva leve', 63: 'Chuva moderada',
+        65: 'Chuva forte', 66: 'Chuva congelante leve', 67: 'Chuva congelante forte', 71: 'Neve leve',
+        73: 'Neve moderada', 75: 'Neve intensa', 77: 'Grãos de neve', 80: 'Pancadas de chuva leves',
+        81: 'Pancadas de chuva moderadas', 82: 'Pancadas de chuva fortes', 85: 'Pancadas de neve leves',
+        86: 'Pancadas de neve fortes', 95: 'Tempestades ⚡', 96: 'Tempestade com granizo leve ⚡🧊', 99: 'Tempestade com granizo forte ⚡'
+    };
+
     entries.forEach(([day, points]) => {
         const labels = formatDateLabel(day + 'T00:00:00');
         const s = summarizeDay(points);
         const storm = points.some(p => [95, 96, 99].includes(p.weathercode));
 
+        // 🔸 Novo: calcular tempo predominante
+        const weatherCode = getDayWeatherCode(points);
+        const weatherDesc = weatherDescriptions[weatherCode] || '-';
+
         const card = document.createElement('div');
         card.className = 'day';
         card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
+            <div class="row weather"><p style="color: #5e5e5eff">${weatherDesc}</p></div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
             <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
             <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-            ${storm ? `<div class="row" style="color:red;"><p>Risco de tempestades</p></div>` : ''}
             <div style="text-align:center;margin-top:10px;">
                 <button class="detail-btn" style="background:#000;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;">Detalhes por hora</button>
             </div>
@@ -222,6 +257,7 @@ const renderDays = dayMapInput => {
 
     cityInput.value = '';
 };
+
 
 const showOverlay = (day, points, labels, now) => {
     overlay.innerHTML = '';
