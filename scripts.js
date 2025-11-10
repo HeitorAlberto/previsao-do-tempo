@@ -220,8 +220,8 @@ const renderDays = dayMapInput => {
 
     // 🔹 Dicionário de descrições (pode ficar aqui ou em escopo global)
     const weatherDescriptions = {
-        0: 'Céu limpo', 1: 'Principalmente limpo', 2: 'Parcialmente nublado', 3: 'Nublado',
-        45: 'Nevoeiro', 48: 'Nevoeiro com gelo', 51: 'Garoa leve', 53: 'Garoa moderada', 55: 'Garoa forte',
+        0: 'Céu limpo', 1: 'Poucas nuvens', 2: 'Parcialmente nublado', 3: 'Nublado',
+        45: 'Nevoeiro', 48: 'Nevoeiro com gelo', 51: 'Chuvisco leve', 53: 'Chuvisco moderado', 55: 'Chuvisco forte',
         56: 'Garoa congelante leve', 57: 'Garoa congelante densa', 61: 'Chuva leve', 63: 'Chuva moderada',
         65: 'Chuva forte', 66: 'Chuva congelante leve', 67: 'Chuva congelante forte', 71: 'Neve leve',
         73: 'Neve moderada', 75: 'Neve intensa', 77: 'Grãos de neve', 80: 'Pancadas de chuva leves',
