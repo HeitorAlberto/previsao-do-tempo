@@ -10,12 +10,6 @@ const cardsEl = document.getElementById('cards');
 const todayDate = document.getElementById('todayDate');
 const forecastSection = document.getElementById('forecastSection');
 
-// Overlay para detalhes
-const overlay = document.createElement('div');
-overlay.id = 'detailsOverlay';
-overlay.className = 'overlay';
-document.body.appendChild(overlay);
-
 // =====================
 // Utilitários
 // =====================
@@ -56,13 +50,6 @@ const groupHourlyByDate = (times, arrays) => {
     }
     return map;
 };
-
-const groupByPeriod = points => ({
-    madrugada: points.filter(p => new Date(p.time).getHours() < 6),
-    manha: points.filter(p => { const h = new Date(p.time).getHours(); return h >= 6 && h < 12; }),
-    tarde: points.filter(p => { const h = new Date(p.time).getHours(); return h >= 12 && h < 18; }),
-    noite: points.filter(p => new Date(p.time).getHours() >= 18)
-});
 
 const predominantCategory = values => {
     const buckets = { clear: 0, few: 0, part: 0, mostly: 0, over: 0 };
@@ -192,164 +179,32 @@ const renderSummaryCard = dayMap => {
 };
 
 const renderDays = dayMapInput => {
+    
     const dayMap = dayMapInput instanceof Map ? dayMapInput : new Map(dayMapInput);
     cardsEl.innerHTML = '';
     const entries = Array.from(dayMap.entries()).slice(0, 15);
     renderSummaryCard(dayMap);
 
-    const now = new Date();
 
-    // 🔹 Função auxiliar local para determinar o weather code mais representativo do dia
-    const getDayWeatherCode = points => {
-        const priority = code => {
-            if ([95, 96, 99].includes(code)) return 6;       // tempestades
-            if ([80, 81, 82].includes(code)) return 5;       // pancadas de chuva
-            if ([61, 63, 65, 66, 67].includes(code)) return 4; // chuva
-            if ([51, 53, 55, 56, 57].includes(code)) return 3; // garoa
-            if ([45, 48].includes(code)) return 2;           // nevoeiro
-            if ([1, 2, 3].includes(code)) return 1;          // nublado
-            return 0;                                        // limpo ou outros
-        };
-        let max = -1, selected = null;
-        for (const p of points) {
-            const pri = priority(p.weathercode);
-            if (pri > max) { max = pri; selected = p.weathercode; }
-        }
-        return selected;
-    };
-
-    // 🔹 Dicionário de descrições (pode ficar aqui ou em escopo global)
-    const weatherDescriptions = {
-        0: 'Céu limpo', 1: 'Poucas nuvens', 2: 'Parcialmente nublado', 3: 'Nublado',
-        45: 'Nevoeiro', 48: 'Nevoeiro com gelo', 51: 'Chuvisco leve', 53: 'Chuvisco moderado', 55: 'Chuvisco forte',
-        56: 'Garoa congelante leve', 57: 'Garoa congelante densa', 61: 'Chuva leve', 63: 'Chuva moderada',
-        65: 'Chuva forte', 66: 'Chuva congelante leve', 67: 'Chuva congelante forte', 71: 'Neve leve',
-        73: 'Neve moderada', 75: 'Neve intensa', 77: 'Grãos de neve', 80: 'Pancadas de chuva leves',
-        81: 'Pancadas de chuva moderadas', 82: 'Pancadas de chuva fortes', 85: 'Pancadas de neve leves',
-        86: 'Pancadas de neve fortes', 95: 'Tempestades ⚡', 96: 'Tempestade com granizo leve ⚡🧊', 99: 'Tempestade com granizo forte ⚡'
-    };
 
     entries.forEach(([day, points]) => {
         const labels = formatDateLabel(day + 'T00:00:00');
         const s = summarizeDay(points);
-        const storm = points.some(p => [95, 96, 99].includes(p.weathercode));
-
-        // 🔸 Novo: calcular tempo predominante
-        const weatherCode = getDayWeatherCode(points);
-        const weatherDesc = weatherDescriptions[weatherCode] || '-';
 
         const card = document.createElement('div');
         card.className = 'day';
         card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
-            <div class="row weather"><p>${weatherDesc}</p></div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
             <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
             <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-            <div style="text-align:center;margin-top:10px;">
-                <button class="detail-btn" style="background:#000;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;">Detalhes por hora</button>
-            </div>
         `;
-        card.querySelector('.detail-btn').addEventListener('click', () => showOverlay(day, points, labels, now));
         cardsEl.appendChild(card);
     });
 
     cityInput.value = '';
 };
-
-
-const showOverlay = (day, points, labels, now) => {
-    overlay.innerHTML = '';
-    overlay.classList.add('active');
-    if (window.innerWidth > 768) document.body.style.overflow = 'hidden';
-
-    const header = document.createElement('div');
-    header.className = 'overlay-header';
-    const h2 = document.createElement('h2');
-    h2.textContent = `${labels.date} • ${labels.weekday}`;
-    const locationNameOverlay = locationName.innerText;
-    const backBtn = document.createElement('button');
-    backBtn.textContent = 'Voltar';
-    backBtn.addEventListener('click', () => {
-        overlay.classList.remove('active');
-        if (window.innerWidth > 768) document.body.style.overflow = '';
-    });
-    header.append(locationNameOverlay, h2, backBtn);
-    overlay.appendChild(header);
-
-    // 🔹 Dicionário com descrições dos weather codes (Open-Meteo)
-    const weatherDescriptions = {
-        0: 'Céu limpo',
-        1: 'Principalmente limpo',
-        2: 'Parcialmente nublado',
-        3: 'Nublado',
-        45: 'Nevoeiro',
-        48: 'Nevoeiro com gelo',
-        51: 'Chuvisco leve',
-        53: 'Chuvisco moderada',
-        55: 'Chuvisco forte',
-        56: 'Chuvisco congelante leve',
-        57: 'Chuvisco congelante forte',
-        61: 'Chuva leve',
-        63: 'Chuva moderada',
-        65: 'Chuva forte',
-        66: 'Chuva congelante leve',
-        67: 'Chuva congelante forte',
-        71: 'Neve leve',
-        73: 'Neve moderada',
-        75: 'Neve intensa',
-        77: 'Grãos de neve',
-        80: 'Pancadas de chuva leves',
-        81: 'Pancadas de chuva moderadas',
-        82: 'Pancadas de chuva fortes',
-        85: 'Pancadas de neve leves',
-        86: 'Pancadas de neve fortes',
-        95: 'Tempestades',
-        96: 'Tempestade com granizo leve',
-        99: 'Tempestade com granizo forte'
-    };
-
-    const periodos = groupByPeriod(points);
-    const grid = document.createElement('div');
-    grid.className = 'grid-periods';
-    let scrollToDiv = null;
-
-    // 🔸 Mantém os mesmos blocos: madrugada, manhã, tarde, noite
-    Object.entries(periodos).forEach(([key, arr]) => {
-        const block = document.createElement('div');
-        block.className = 'period-block';
-        if (arr.length === 0) block.innerHTML += '<p style="text-align:center">Sem dados</p>';
-        arr.forEach(p => {
-            const h = new Date(p.time).getHours();
-            const desc = weatherDescriptions[p.weathercode] || 'Desconhecido';
-            const temp = isFinite(p.temperature_2m) ? `${p.temperature_2m.toFixed(0)}°C` : '-';
-            const gust = isFinite(p.wind_gusts_10m) ? `${p.wind_gusts_10m.toFixed(0)} km/h` : '-';
-            const hourDiv = document.createElement('div');
-            hourDiv.className = 'hour-item';
-
-            const localDate = new Date().toLocaleDateString('sv-SE');
-            if (day === localDate && h === now.getHours()) {
-                hourDiv.style.backgroundColor = '#fffbd7ff';
-                hourDiv.style.borderRadius = '8px';
-                scrollToDiv = hourDiv;
-            }
-
-            hourDiv.innerHTML = `
-                <p><strong>${String(h).padStart(2, '0')}h</strong></p>
-                <p style="margin-bottom: 12px">${desc}, ${temp}</p>
-                <p style="margin-bottom: 12px">Rajadas de vento: ${gust}</p>
-            `;
-            block.appendChild(hourDiv);
-        });
-        grid.appendChild(block);
-    });
-    overlay.appendChild(grid);
-    if (scrollToDiv) setTimeout(() => scrollToDiv.scrollIntoView({ behavior: 'smooth', block: 'center' }), 200);
-};
-
-
-
 
 // =====================
 // Fetch e Cache Integrado
