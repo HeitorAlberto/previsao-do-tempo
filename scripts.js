@@ -213,7 +213,7 @@ async function fetchForecast(lat, lon, timezone = 'auto') {
     const url = new URL(forecastBase);
     url.searchParams.set('latitude', lat);
     url.searchParams.set('longitude', lon);
-    url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,cloud_cover,wind_gusts_10m,weathercode');
+    url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m');
     url.searchParams.set('models', model);
     url.searchParams.set('timezone', timezone);
     url.searchParams.set('forecast_days', '15');
