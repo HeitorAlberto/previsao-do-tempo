@@ -32,9 +32,7 @@ const prepareHourlyArrays = hourly => ({
     temperature_2m: hourly.temperature_2m || [],
     relative_humidity_2m: hourly.relative_humidity_2m || [],
     precipitation: hourly.precipitation || [],
-    cloud_cover: hourly.cloud_cover || [],
     wind_gusts_10m: hourly.wind_gusts_10m || [],
-    weathercode: hourly.weathercode || []
 });
 
 const groupHourlyByDate = (times, arrays) => {
@@ -64,7 +62,6 @@ const predominantCategory = values => {
 };
 
 const summarizeDay = points => {
-    const clouds = { madrugada: [], manha: [], tarde: [], noite: [] };
     const summary = points.reduce((acc, p) => {
         const hour = new Date(p.time).getHours();
         acc.tMin = Math.min(acc.tMin, p.temperature_2m ?? acc.tMin);
@@ -73,15 +70,9 @@ const summarizeDay = points => {
         acc.rhMax = Math.max(acc.rhMax, p.relative_humidity_2m ?? acc.rhMax);
         acc.precipSum += p.precipitation ?? 0;
         acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
-        if (p.cloud_cover != null) {
-            if (hour < 6) clouds.madrugada.push(p.cloud_cover);
-            else if (hour < 12) clouds.manha.push(p.cloud_cover);
-            else if (hour < 18) clouds.tarde.push(p.cloud_cover);
-            else clouds.noite.push(p.cloud_cover);
-        }
         return acc;
     }, { tMin: Infinity, tMax: -Infinity, rhMin: Infinity, rhMax: -Infinity, precipSum: 0, gustMax: 0 });
-    summary.clouds = Object.fromEntries(Object.entries(clouds).map(([k, v]) => [k, predominantCategory(v)]));
+
     return summary;
 };
 
