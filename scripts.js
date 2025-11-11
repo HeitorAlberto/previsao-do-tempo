@@ -76,6 +76,87 @@ const summarizeDay = points => {
     return summary;
 };
 
+// =====================
+// Nebulosidade (heurística simples)
+// =====================
+// inferência única com modo manual/auto
+function inferNebulosidade(daySummary, options = {}) {
+    // options.mode: 'auto' (padrão), 'coastal', 'interior', 'simple'
+    const mode = options.mode || 'auto';
+    const { tMin, tMax, rhMin, rhMax, precipSum, gustMax } = daySummary;
+    const amp = isFinite(tMax) && isFinite(tMin) ? (tMax - tMin) : 999;
+
+    // 1) detector simples de litoral (se mode === 'auto' decide perfil)
+    let profile = 'general'; // general trata como neutro/universal
+    if (mode === 'coastal' || mode === 'interior' || mode === 'simple') profile = mode;
+    else {
+        // auto: regras leves para inferir influência marítima
+        // Se houver rajadas fortes OU rhMax muito alto comparado ao rhMin, assumimos influência costeira
+        const strongGust = typeof gustMax === 'number' && gustMax >= 35;
+        const humidPenetration = (typeof rhMax === 'number' && typeof rhMin === 'number')
+            ? (rhMax >= 90 && (rhMax - rhMin) >= 20) // muita variação noturna -> mar pode estar "empurrando" umidade
+            : false;
+        if (strongGust || humidPenetration) profile = 'coastal';
+        else profile = 'interior';
+    }
+
+    // 2) pesos por perfil (simples e explicáveis)
+    const WEIGHTS = {
+        general: { amp: [6, 9, 2, 1], rhDay: [75, 60, 2, 1], precip: [3, 0.5, 2, 1], rhNightBonus: [95, 0.5], gustBonus: [35, 1] },
+        coastal: { amp: [6, 8, 2, 1], rhDay: [75, 60, 2, 1], precip: [3, 0.5, 2, 1], rhNightBonus: [90, 1.5], gustBonus: [35, 1] },
+        interior: { amp: [6, 10, 2, 1], rhDay: [75, 60, 2, 1], precip: [3, 1, 2, 1], rhNightBonus: [85, 0.5], gustBonus: [40, 0.2] }
+    };
+    const w = WEIGHTS[profile] || WEIGHTS.general;
+
+    // 3) cálculo do score (transparente)
+    let score = 0;
+
+    // amplitude: w.amp = [lim1, lim2, ptsIf<=lim1, ptsIf<=lim2]
+    if (amp <= w.amp[0]) score += w.amp[2];
+    else if (amp <= w.amp[1]) score += w.amp[3];
+
+    // umidade diurna (usar rhMin quando disponível)
+    if (typeof rhMin === 'number') {
+        if (rhMin >= w.rhDay[0]) score += w.rhDay[2];
+        else if (rhMin >= w.rhDay[1]) score += w.rhDay[3];
+    }
+
+    // precipitação
+    if (precipSum >= w.precip[0]) score += w.precip[2];
+    else if (precipSum >= w.precip[1]) score += w.precip[3];
+
+    // bônus de umidade noturna (indicador de persistência/coastal)
+    if (typeof rhMax === 'number' && typeof w.rhNightBonus[0] === 'number' && rhMax >= w.rhNightBonus[0]) {
+        score += w.rhNightBonus[1];
+    }
+
+    // bônus de rajadas (se forte sinaliza penetração marítima)
+    if (typeof gustMax === 'number' && gustMax >= w.gustBonus[0]) score += w.gustBonus[1];
+
+    // 4) classificação final (clara)
+    let categoria = 'baixa';
+    if (score >= 4) categoria = 'alta';
+    else if (score >= 2) categoria = 'média';
+
+    const frases = {
+        baixa: 'Poucas nuvens',
+        média: 'Nebulosidade variável',
+        alta: 'Predominantemente nublado'
+    };
+
+    // retorno detalhado pra debugging/integracao
+    return {
+        profile,     // 'coastal' | 'interior' | 'general'
+        score: Number(score.toFixed(2)),
+        categoria,
+        frase: frases[categoria]
+    };
+}
+
+
+
+
+
 const rainDescription = mm => mm < 1 ? '' : mm < 5 ? 'Chuva fraca' : mm < 15 ? 'Chuva moderada' : 'Chuva forte';
 const cloudDescription = cat => ({ clear: 'Céu limpo', few: 'Poucas nuvens', part: 'Parcialmente nublado', mostly: 'Maioria nublado', over: 'Nublado' }[cat] || '-');
 
@@ -178,12 +259,15 @@ const renderDays = dayMapInput => {
     entries.forEach(([day, points]) => {
         const labels = formatDateLabel(day + 'T00:00:00');
         const s = summarizeDay(points);
+        const nebulosidade = inferNebulosidade(s);
+
         const chuvaTexto = rainDescription(s.precipSum);
 
         const card = document.createElement('div');
         card.className = 'day';
         card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
+            <div class="row clouds"><p>${nebulosidade.frase}</p></div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
             <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
