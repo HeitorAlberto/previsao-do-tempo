@@ -76,7 +76,7 @@ const summarizeDay = points => {
     return summary;
 };
 
-const rainDescription = mm => mm < 1 ? 'Sem chuva' : mm < 5 ? 'Chuva leve' : mm < 15 ? 'Chuva moderada' : 'Chuva forte';
+const rainDescription = mm => mm < 1 ? '' : mm < 5 ? 'Chuva fraca' : mm < 15 ? 'Chuva moderada' : 'Chuva forte';
 const cloudDescription = cat => ({ clear: 'Céu limpo', few: 'Poucas nuvens', part: 'Parcialmente nublado', mostly: 'Maioria nublado', over: 'Nublado' }[cat] || '-');
 
 // =====================
@@ -170,17 +170,15 @@ const renderSummaryCard = dayMap => {
 };
 
 const renderDays = dayMapInput => {
-    
     const dayMap = dayMapInput instanceof Map ? dayMapInput : new Map(dayMapInput);
     cardsEl.innerHTML = '';
     const entries = Array.from(dayMap.entries()).slice(0, 15);
     renderSummaryCard(dayMap);
 
-
-
     entries.forEach(([day, points]) => {
         const labels = formatDateLabel(day + 'T00:00:00');
         const s = summarizeDay(points);
+        const chuvaTexto = rainDescription(s.precipSum);
 
         const card = document.createElement('div');
         card.className = 'day';
@@ -196,6 +194,7 @@ const renderDays = dayMapInput => {
 
     cityInput.value = '';
 };
+
 
 // =====================
 // Fetch e Cache Integrado
