@@ -57,7 +57,7 @@ button {
 }
 
 .open-meteo-ref:hover {
-    text-decoration: underline;
+    color: #155c00;
 }
 
 #locationName {
