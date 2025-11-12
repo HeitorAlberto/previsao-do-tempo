@@ -10,20 +10,18 @@ body {
 }
 
 header {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    align-items: center;
+    display: grid;
+    grid-template-columns: 1fr;
+    justify-items: center;
     gap: 16px;
     padding: 0px 40px;
 }
 
-header .btn-mapas {
-    text-decoration: none;
-    color: black;
-    background-color: rgb(236, 236, 236);
-    border-radius: 8px;
-    padding: 10px 20px;
+#searchForm {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    justify-items: center;
 }
 
 input[type=text],
@@ -32,6 +30,11 @@ button {
     border-radius: 8px;
     padding: 10px 14px;
     border: 1px solid #333;
+}
+
+input[type=text]{
+    width: 450px;
+    text-align: center;
 }
 
 input[type=text]:focus {
@@ -45,6 +48,7 @@ button {
     background: #000;
     color: #fff;
     font-weight: 600;
+    width: 200px;
 }
 
 .open-meteo-ref {
@@ -60,6 +64,14 @@ button {
     margin-bottom: 20px;
     text-align: center;
     font-size: 22px;
+}
+
+.btn-mapas {
+    text-decoration: none;
+    color: black;
+    background-color: #ececec;
+    border-radius: 8px;
+    padding: 10px 20px;
 }
 
 #summaryCard {
