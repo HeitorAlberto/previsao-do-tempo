@@ -8,26 +8,28 @@ body {
     background: #fff;
 }
 
+/* ===== HEADER ===== */
 header {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     padding: 20px 40px;
     background-color: #000;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
 #titulo-site {
     color: white;
     font-weight: bolder;
     font-size: 18px;
-    margin-right: 80px;
-    align-self: center;
+    flex-grow: 1;
 }
 
 #searchForm {
     display: flex;
     gap: 10px;
-    width: 100%;
+    flex-wrap: wrap;
     justify-content: center;
 }
 
@@ -40,7 +42,7 @@ button {
 }
 
 input[type=text] {
-    width: 450px;
+    width: 350px;
     text-align: center;
 }
 
@@ -48,7 +50,6 @@ input[type=text]:focus {
     outline: none;
     background-color: rgb(241, 241, 241);
 }
-
 
 button {
     cursor: pointer;
@@ -58,6 +59,7 @@ button {
     width: 100px;
 }
 
+/* ===== Referências ===== */
 .open-meteo-ref {
     text-decoration: none;
     color: #2ab300;
@@ -67,13 +69,15 @@ button {
     color: #155c00;
 }
 
+/* ===== Título de Localização ===== */
 #locationName {
     text-align: center;
     font-size: 18px;
-    align-self: center;
     font-weight: bolder;
+    margin-top: 20px;
 }
 
+/* ===== Botão Mapas ===== */
 .btn-mapas {
     text-decoration: none;
     color: black;
@@ -83,24 +87,28 @@ button {
     padding: 10px 20px;
 }
 
+/* ===== Summary Card ===== */
 #summaryCard {
-    width: 500px;
+    width: 100%;
+    max-width: 500px;
     padding: 8px 15px;
-    justify-self: center;
-    margin-bottom: 50px;
+    margin: 30px auto 50px auto;
 }
 
+/* ===== Layout principal ===== */
 main {
     margin-top: 40px;
 }
 
+/* ===== GRID dos Cards ===== */
 #cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 40px;
     padding: 0px 40px;
 }
 
+/* ===== Cards ===== */
 .day {
     border: 2px solid #000000;
     border-radius: 12px;
@@ -111,9 +119,10 @@ main {
     font-size: 22px;
     font-weight: 700;
     margin-bottom: 12px;
-    justify-self: center;
+    text-align: center;
 }
 
+/* ===== Linhas internas ===== */
 .row {
     display: flex;
     justify-content: space-between;
@@ -130,18 +139,10 @@ main {
     font-size: 20px;
 }
 
-.temp {
-    color: #000000;
-}
-
-.precip {
-    color: #000000;
-}
-
-.humidity {
-    color: #000000;
-}
-
+/* ===== Classes de dados ===== */
+.temp,
+.precip,
+.humidity,
 .wind {
     color: #000000;
 }
@@ -153,123 +154,80 @@ main {
     margin-bottom: 8px;
 }
 
-
+/* ===== Footer ===== */
 footer {
     margin-top: 20px;
     font-size: 13px;
     color: #555;
 }
 
-
 /* ===== Mobile adjustments ===== */
 @media(max-width:800px) {
 
     header {
         flex-direction: column;
+        justify-content: center;
         align-items: center;
+        gap: 12px;
+        padding: 20px;
         text-align: center;
     }
 
     #titulo-site {
-        margin-right: 0px;
-        margin-bottom: 12px;
+        margin: 0;
+        width: 100%;
     }
 
     #searchForm {
         display: flex;
         flex-direction: column;
-        align-items: center;
         width: 100%;
-        max-width: 300px;
-        gap: 8px;
+        max-width: 320px;
+        gap: 10px;
     }
 
     #searchForm>button {
-        width: 200px;
+        width: 100%;
     }
 
     #cityInput {
-        width: 100%;
-        text-align: center;
+        width: 90%;
     }
 
     #locationName {
         font-size: 18px;
-        margin: 0;
-        width: 90%;
+        width: 100%;
+        margin-top: 10px;
     }
 
     main {
         padding: 12px;
+        margin-top: 20px;
     }
 
     #summaryCard {
-        width: 327px;
+        width: 90%;
+        max-width: 350px;
+        margin: 0 auto 40px auto;
     }
 
     #cards {
         grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 0px;
+        gap: 24px;
+        padding: 0;
     }
 
     .day {
-        padding: 14px;
-        margin-bottom: 50px;
+        padding: 16px;
+        margin-bottom: 30px;
     }
 }
 
-/* ===== Overlay fullscreen ===== */
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: #fff;
-    color: #000;
-    overflow-y: auto;
-    padding: 0;
-    z-index: 9999;
-    display: none;
-    flex-direction: column;
-}
 
-.overlay.active {
-    display: flex;
-}
-
-/* Header do overlay: botão voltar + data/dia */
-.overlay-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 50px;
-    border-bottom: 1px solid #ddd;
-    background: #fff;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.overlay-header h2 {
-    margin: 0;
-    font-size: 20px;
-}
-
-.overlay-header button {
-    background: #000;
-    color: #fff;
-    border: 1px solid #333;
-    padding: 8px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-/* Grid de períodos */
+/* GRID de períodos */
 .grid-periods {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 20px;
     padding: 16px;
 }
@@ -287,40 +245,13 @@ footer {
     font-size: 18px;
 }
 
+/* Itens de hora */
 .hour-item {
     padding: 40px 12px;
     text-align: center;
 }
 
-.hour-item:last-child {
-    border-bottom: none;
-}
-
 .hour-item p {
     margin: 4px 0;
     font-size: 20px;
-}
-
-/* ===== Mobile overlay adjustments ===== */
-@media (max-width: 800px) {
-
-    .overlay-header {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        padding: 12px 4px;
-
-    }
-
-    .grid-periods {
-        grid-template-columns: 1fr;
-        padding: 12px;
-    }
-
-    .period-block {
-        width: 85%;
-        max-width: 400px;
-        margin: 0 auto;
-    }
-
 }
