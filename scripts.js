@@ -24,6 +24,7 @@ const formatDateLabel = iso => {
 const getAddressText = address => {
     const city = address.city || address.town || address.village || address.municipality || '';
     const state = address.state || '';
+    const country = address.country || '';
     return `${city}${state ? ', ' + state : ''}`;
 };
 
