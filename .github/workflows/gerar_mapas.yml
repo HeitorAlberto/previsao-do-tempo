@@ -2,8 +2,8 @@ name: Atualizar Mapas ECMWF
 
 on:
   schedule:
-    # Executa todos os dias às 8h (horário de Brasília = 11h UTC)
-    - cron: "0 11 * * *"
+    # Executa todos os dias às 7h (10h UTC)
+    - cron: "0 10 * * *"
   workflow_dispatch:
 
 jobs:
