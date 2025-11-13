@@ -4,7 +4,6 @@
 body {
     margin: 0;
     font-family: "Roboto", sans-serif;
-    padding: 28px 50px;
     color: #000;
     background: #fff;
 }
@@ -14,14 +13,14 @@ header {
     grid-template-columns: 1fr;
     justify-items: center;
     gap: 16px;
-    padding: 0px 40px;
+    padding: 20px 40px;
+    background-color: #000;
 }
 
 #searchForm {
-    display: grid;
-    grid-template-columns: 1fr;
+    display: flex;
+    justify-content: space-between;
     gap: 10px;
-    justify-items: center;
 }
 
 input[type=text],
@@ -45,10 +44,10 @@ input[type=text]:focus {
 
 button {
     cursor: pointer;
-    background: #000;
+    background: #4e4e4e;
     color: #fff;
     font-weight: 600;
-    width: 200px;
+    width: 100px;
 }
 
 .open-meteo-ref {
@@ -61,9 +60,10 @@ button {
 }
 
 #locationName {
-    margin-bottom: 20px;
     text-align: center;
-    font-size: 22px;
+    font-size: 18px;
+    align-self: center;
+    color: white;
 }
 
 .btn-mapas {

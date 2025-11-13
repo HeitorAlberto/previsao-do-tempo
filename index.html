@@ -10,8 +10,8 @@
 
 <body>
     <header>
-        <h1>Previsão - 15 dias</h1>
         <form id="searchForm">
+            <div id="locationName"></div>
             <input type="text" id="cityInput" placeholder="Buscar cidade (ex: Recife, BR)" />
             <button type="submit">Buscar</button>
             <button type="button" id="geoButton">Localizar</button>
@@ -20,7 +20,6 @@
 
     <main>
         <div class="location-row">
-            <div id="locationName" style="font-weight:700"></div>
             <div style="display: grid; gap: 20px;margin-bottom: 40px; justify-items: center;">
                 <div><span id="todayDate"></span></div>
                 <div>Modelo ECMWF (HRES 9 km)</div>
