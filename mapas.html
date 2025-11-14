@@ -2,109 +2,201 @@
 <html lang="pt-BR">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Previsão 15 dias - ECMWF</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>Previsão 15 dias - ECMWF</title>
+        <style>
+                @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 
-        body {
-            font-family: "Roboto", sans-serif;
-        }
+                body {
+                        font-family: "Roboto", sans-serif;
+                        margin: 0;
+                        padding: 0;
+                }
 
-        header {
-            text-align: center;
-            margin-bottom: 50px;
-            gap: 50px;
-        }
+                header {
+                        text-align: center;
+                        margin-bottom: 50px;
+                        gap: 50px;
+                }
 
-        header h1 {
-            font-size: 24px;
-            margin-top: 50px;
-            margin-bottom: 50px;
-        }
+                header h1 {
+                        font-size: 24px;
+                        margin-top: 50px;
+                        margin-bottom: 50px;
+                }
 
-        header .btn-pagina-inicial {
-            text-decoration: none;
-            color: black;
-            background-color: rgb(236, 236, 236);
-            border-radius: 8px;
-            padding: 10px 20px;
-        }
+                header .btn-pagina-inicial {
+                        text-decoration: none;
+                        color: black;
+                        background-color: rgb(236, 236, 236);
+                        border-radius: 8px;
+                        padding: 10px 20px;
+                }
 
+                main {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 10px;
+                        width: 95vw;
+                        margin: auto;
+                }
 
-        main {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            width: 95vw;
-            justify-self: center;
-            justify-items: center;
-        }
+                main img {
+                        width: 100%;
+                        border: 2px solid #000000;
+                        border-radius: 12px;
+                        cursor: pointer;
+                }
 
-        main img {
-            width: 100%;
-            border: 2px solid #000000;
-            border-radius: 12px;
-        }
+                @media (max-width:800px) {
+                        header h1 {
+                                font-size: 20px;
+                        }
 
-        @media (max-width:800px) {
-            header h1 {
-                font-size: 20px;
-            }
+                        main {
+                                grid-template-columns: 1fr;
+                        }
+                }
 
-            main {
-                width: 95vw;
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+                /* LIGHTBOX */
+                #lightbox {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100vw;
+                        height: 100vh;
+                        background: rgba(0, 0, 0, 0.8);
+                        display: none;
+                        justify-content: center;
+                        align-items: center;
+                        z-index: 9999;
+                }
+
+                #lightbox img {
+                        max-height: 95vh;
+                        max-width: 95vw;
+                }
+
+                .contador {
+                        position: absolute;
+                        top: 20px;
+                        left: 20px;
+                        color: white;
+                        font-size: 24px;
+                }
+
+                .fechar {
+                        position: absolute;
+                        top: 20px;
+                        right: 50px;
+                        color: white;
+                        font-size: 24px;
+                        cursor: pointer;
+                }
+
+                .seta {
+                        position: absolute;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        font-size: 40px;
+                        color: white;
+                        cursor: pointer;
+                        padding: 20px;
+                        user-select: none;
+                }
+
+                .seta.esquerda {
+                        left: 20px;
+                }
+
+                .seta.direita {
+                        right: 20px;
+                }
+        </style>
 </head>
 
 <body>
-    <header>
-        <h1>Mapa de chuva diária (15 dias)</h1>
-        <a href="index.html" class="btn-pagina-inicial">Página inicial</a>
-    </header>
+        <header>
+                <h1>Mapa de chuva diária (15 dias)</h1>
+                <a href="index.html" class="btn-pagina-inicial">Página inicial</a>
+        </header>
 
-    <main>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/01.png"><img src="mapas/01.png"
-                alt="dia 01"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/02.png"><img src="mapas/02.png"
-                alt="dia 02"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/03.png"><img src="mapas/03.png"
-                alt="dia 03"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/04.png"><img src="mapas/04.png"
-                alt="dia 04"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/05.png"><img src="mapas/05.png"
-                alt="dia 05"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/06.png"><img src="mapas/06.png"
-                alt="dia 06"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/07.png"><img src="mapas/07.png"
-                alt="dia 07"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/08.png"><img src="mapas/08.png"
-                alt="dia 08"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/09.png"><img src="mapas/09.png"
-                alt="dia 09"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/10.png"><img src="mapas/10.png"
-                alt="dia 10"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/11.png"><img src="mapas/11.png"
-                alt="dia 11"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/12.png"><img src="mapas/12.png"
-                alt="dia 12"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/13.png"><img src="mapas/13.png"
-                alt="dia 13"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/14.png"><img src="mapas/14.png"
-                alt="dia 14"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/15.png"><img src="mapas/15.png"
-                alt="dia 15"></a>
-        <a href="https://heitoralberto.github.io/previsao-do-tempo/mapas/acumulado-15-dias.png"><img
-                src="mapas/acumulado-15-dias.png" alt="acumulado em 15 dias"></a>
-    </main>
+        <main id="galeria">
+                <img src="mapas/01.png" data-index="0">
+                <img src="mapas/02.png" data-index="1">
+                <img src="mapas/03.png" data-index="2">
+                <img src="mapas/04.png" data-index="3">
+                <img src="mapas/05.png" data-index="4">
+                <img src="mapas/06.png" data-index="5">
+                <img src="mapas/07.png" data-index="6">
+                <img src="mapas/08.png" data-index="7">
+                <img src="mapas/09.png" data-index="8">
+                <img src="mapas/10.png" data-index="9">
+                <img src="mapas/11.png" data-index="10">
+                <img src="mapas/12.png" data-index="11">
+                <img src="mapas/13.png" data-index="12">
+                <img src="mapas/14.png" data-index="13">
+                <img src="mapas/15.png" data-index="14">
+                <img src="mapas/acumulado-15-dias.png" data-index="15">
+        </main>
+
+        <!-- LIGHTBOX -->
+        <div id="lightbox">
+                <div class="contador"></div>
+                <div class="fechar">x</div>
+                <div class="seta esquerda">Anterior</div>
+                <img id="lightbox-img">
+                <div class="seta direita">Próxima</div>
+        </div>
+
+        <script>
+                const imagens = Array.from(document.querySelectorAll('#galeria img'));
+                const lightbox = document.getElementById('lightbox');
+                const lightboxImg = document.getElementById('lightbox-img');
+                const contador = document.querySelector('.contador');
+                const fecharBtn = document.querySelector('.fechar');
+                const setaEsq = document.querySelector('.seta.esquerda');
+                const setaDir = document.querySelector('.seta.direita');
+
+                let indexAtual = 0;
+
+                function abrirLightbox(index) {
+                        indexAtual = index;
+                        lightboxImg.src = imagens[index].src;
+                        contador.textContent = `${index + 1}/${imagens.length}`;
+                        lightbox.style.display = 'flex';
+                        document.body.style.overflow = 'hidden';
+
+                }
+
+                if (window.innerWidth > 800) {
+                        imagens.forEach(img => {
+                                img.addEventListener('click', () => abrirLightbox(Number(img.dataset.index)));
+                        });
+                }
+
+                function navegar(dir) {
+                        indexAtual += dir;
+                        if (indexAtual < 0) indexAtual = imagens.length - 1;
+                        if (indexAtual >= imagens.length) indexAtual = 0;
+                        abrirLightbox(indexAtual);
+                }
+
+                setaEsq.addEventListener('click', () => navegar(-1));
+                setaDir.addEventListener('click', () => navegar(1));
+                fecharBtn.addEventListener('click', () => lightbox.style.display = 'none',
+                        document.body.style.overflow = 'auto');
 
 
-
-
+                // Navegação por teclado
+                window.addEventListener('keydown', (e) => {
+                        if (lightbox.style.display === 'flex') {
+                                if (e.key === 'ArrowLeft') navegar(-1);
+                                if (e.key === 'ArrowRight') navegar(1);
+                        }
+                }); ('click', () => lightbox.style.display = 'none');
+        </script>
 </body>
 
 </html>
