@@ -28,7 +28,6 @@ const getAddressText = address => {
     return `🗺️ ${city}${state ? ', ' + state : ''}`;
 };
 
-// ➡️ MODIFICADO: Adicionando 'cloud_cover'
 const prepareHourlyArrays = hourly => ({
     temperature_2m: hourly.temperature_2m || [],
     relative_humidity_2m: hourly.relative_humidity_2m || [],
@@ -51,7 +50,6 @@ const groupHourlyByDate = (times, arrays) => {
     return map;
 };
 
-// ➡️ FUNÇÃO DE CLASSIFICAÇÃO: Retorna o tipo de nuvem.
 const cloudCategory = v => {
     if (v <= 10) return 'Limpo';
     if (v <= 30) return 'Poucas Nuvens';
@@ -70,29 +68,24 @@ const summarizeDay = points => {
         acc.precipSum += p.precipitation ?? 0;
         acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
 
-        // Captura de nuvens
         const cloud = p.cloud_cover ?? 0;
         if (hour >= 6 && hour < 18) {
             acc.cloudDay.push(cloud);
         } else {
             acc.cloudNight.push(cloud);
         }
-
         return acc;
     }, { tMin: Infinity, tMax: -Infinity, rhMin: Infinity, rhMax: -Infinity, precipSum: 0, gustMax: 0, cloudDay: [], cloudNight: [] });
 
     return summary;
 };
 
-// ➡️ FUNÇÃO PRINCIPAL DE DESCRIÇÃO COM LÓGICA DE EMPATE (Inalterada)
 function getCloudDescriptions(dayPoints, nextDayPoints) {
-    // 1. Coleta os dados de cobertura de nuvens:
     const dayClouds = dayPoints.filter(p => new Date(p.time).getHours() >= 6 && new Date(p.time).getHours() < 18).map(p => p.cloud_cover);
     const todayNightClouds = dayPoints.filter(p => new Date(p.time).getHours() >= 18).map(p => p.cloud_cover);
     const nextDayMorningClouds = (nextDayPoints || []).filter(p => new Date(p.time).getHours() < 6).map(p => p.cloud_cover);
     const nightClouds = [...todayNightClouds, ...nextDayMorningClouds];
 
-    // Mapeamento de categorias para descrição final
     const DESC_MAP = {
         'Limpo': 'Céu limpo',
         'Poucas Nuvens': 'Poucas nuvens',
@@ -102,11 +95,9 @@ function getCloudDescriptions(dayPoints, nextDayPoints) {
     };
     const CATEGORY_ORDER = ['Limpo', 'Poucas Nuvens', 'Parcialmente Nublado', 'Nublado', 'Encoberto'];
 
-    // 2. Lógica de Moda e Desempate
     const getModeDescription = cloudValues => {
         if (cloudValues.length === 0) return 'Dados indisponíveis';
-
-        const contagem = {}; // Contagem em termos das chaves: 'Limpo', 'Nublado', etc.
+        const contagem = {};
         cloudValues.forEach(v => {
             const cat = cloudCategory(v);
             contagem[cat] = (contagem[cat] || 0) + 1;
@@ -117,27 +108,19 @@ function getCloudDescriptions(dayPoints, nextDayPoints) {
             if (horas > maxHoras) maxHoras = horas;
         }
 
-        // 3. Identificar todas as categorias que empataram
         const categoriasDominantes = CATEGORY_ORDER.filter(cat => contagem[cat] === maxHoras);
 
-        // 4. Regras de Retorno
         if (categoriasDominantes.length === 1) {
-            // Apenas um vencedor: retorna a descrição simples
             return DESC_MAP[categoriasDominantes[0]];
         } else if (categoriasDominantes.length > 1) {
-            // Empate: Combina as duas categorias mais extremas em termos de nuvens
-            const primeira = DESC_MAP[categoriasDominantes[0]]; // A menos nublada (por ordem de CATEGORY_ORDER)
-            const ultima = DESC_MAP[categoriasDominantes[categoriasDominantes.length - 1]]; // A mais nublada
-
-            // Desempate com Descrição Mista
+            const primeira = DESC_MAP[categoriasDominantes[0]];
+            const ultima = DESC_MAP[categoriasDominantes[categoriasDominantes.length - 1]];
             if (categoriasDominantes.length === 2 && maxHoras >= 4) {
                 return `Variando entre ${primeira.toLowerCase()} e ${ultima.toLowerCase()}.`;
             } else {
-                // Se houver empate triplo ou mais, retorna a mais otimista com ressalva
                 return `${primeira} (Condição Mista)`;
             }
         }
-
         return 'Dados indisponíveis';
     };
 
@@ -147,78 +130,7 @@ function getCloudDescriptions(dayPoints, nextDayPoints) {
     };
 }
 
-
 const rainDescription = mm => mm < 1 ? '' : mm < 5 ? 'Chuva fraca' : mm < 15 ? 'Chuva moderada' : 'Chuva forte';
-
-// =====================
-// Cache (IndexedDB)
-// =====================
-// ... (código de Cache inalterado)
-const DB_NAME = 'WeatherCacheDB';
-const STORE_NAME = 'forecasts';
-const DB_VERSION = 1;
-
-function openDB() {
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-        request.onupgradeneeded = e => {
-            const db = e.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME))
-                db.createObjectStore(STORE_NAME, { keyPath: 'key' });
-            if (!db.objectStoreNames.contains('meta'))
-                db.createObjectStore('meta', { keyPath: 'id' });
-        };
-        request.onsuccess = e => resolve(e.target.result);
-        request.onerror = () => reject(request.error);
-    });
-}
-
-async function setCacheItem(key, data) {
-    const db = await openDB();
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put(data);
-    return tx.complete;
-}
-
-async function getCacheItem(key) {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(STORE_NAME, 'readonly');
-        const req = tx.objectStore(STORE_NAME).get(key);
-        req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
-    });
-}
-
-async function maybeClearCache() {
-    const now = new Date();
-    const h = now.getHours();
-    const db = await openDB();
-    const txMeta = db.transaction('meta', 'readwrite');
-    const metaStore = txMeta.objectStore('meta');
-
-    const req = metaStore.get('lastClear');
-    req.onsuccess = async () => {
-        const last = req.result ? new Date(req.result.time) : null;
-        const mustClear =
-            (h === 0 || h === 12 || h === 18) &&
-            (!last || last.getHours() !== h || last.toDateString() !== now.toDateString());
-
-        if (mustClear) {
-            const tx = db.transaction(STORE_NAME, 'readwrite');
-            const store = tx.objectStore(STORE_NAME);
-            store.clear();
-            metaStore.put({ id: 'lastClear', time: now.toISOString() });
-            console.log('🧹 Cache IndexedDB limpo automaticamente.');
-        }
-    };
-}
-maybeClearCache();
-
-function coordKey(lat, lon) {
-    return `${lat.toFixed(2)},${lon.toFixed(2)}`;
-}
-
 
 // =====================
 // Renderização
@@ -242,7 +154,6 @@ const renderSummaryCard = dayMap => {
     forecastSection.parentNode.insertBefore(card, forecastSection);
 };
 
-// ➡️ FUNÇÃO renderDays CORRIGIDA
 const renderDays = dayMapInput => {
     const dayMap = dayMapInput instanceof Map ? dayMapInput : new Map(dayMapInput);
     cardsEl.innerHTML = '';
@@ -252,8 +163,6 @@ const renderDays = dayMapInput => {
     entries.forEach(([day, points], index) => {
         const labels = formatDateLabel(day + 'T00:00:00');
         const s = summarizeDay(points);
-
-        // Pega os pontos do dia seguinte para o bloco "Noite"
         const nextDay = entries[index + 1] ? entries[index + 1][1] : null;
         const descriptions = getCloudDescriptions(points, nextDay);
 
@@ -280,26 +189,26 @@ const renderDays = dayMapInput => {
     cityInput.value = '';
 };
 
+// =====================
 
 // =====================
-// Fetch e Cache Integrado
+// Fetch (sem cache)
 // =====================
 async function fetchForecast(lat, lon, timezone = 'auto') {
     const url = new URL(forecastBase);
     url.searchParams.set('latitude', lat);
     url.searchParams.set('longitude', lon);
-    // Corrigido o nome da variável para 'cloud_cover'
     url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover');
     url.searchParams.set('models', model);
     url.searchParams.set('timezone', timezone);
     url.searchParams.set('forecast_days', '15');
+
     const res = await fetch(url);
     if (!res.ok) throw new Error('Erro ao buscar previsão');
     return res.json();
 }
 
 async function searchLocation(query) {
-    // ... (código de searchLocation inalterado)
     const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`;
     const res = await fetch(url);
     const data = await res.json();
@@ -310,52 +219,36 @@ async function searchLocation(query) {
 }
 
 async function loadForecast(lat, lon) {
-    // ... (código de loadForecast inalterado)
-    const key = coordKey(lat, lon);
-    const now = Date.now();
-
-    const cached = await getCacheItem(key);
-    if (cached && now - cached.timestamp < 6 * 60 * 60 * 1000) {
-        console.log('🗂️ Usando cache IndexedDB para', key);
-        locationName.textContent = cached.locationName;
-        renderDays(cached.dayMap);
-        return;
-    }
-
     locationName.textContent = 'Carregando...';
+
     const forecast = await fetchForecast(lat, lon);
     const dayMap = groupHourlyByDate(forecast.hourly.time, prepareHourlyArrays(forecast.hourly));
+
     renderDays(dayMap);
 
-    let locName = 'Local desconhecido';
     try {
         const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`;
         const res = await fetch(url);
         const data = await res.json();
-        locName = getAddressText(data.address || {});
-        locationName.textContent = locName;
+        locationName.textContent = getAddressText(data.address || {});
     } catch {
-        locationName.textContent = locName;
+        locationName.textContent = 'Local desconhecido';
     }
-
-    await setCacheItem(key, {
-        key,
-        timestamp: now,
-        dayMap: Array.from(dayMap.entries()),
-        locationName: locName
-    });
 }
 
 // =====================
 // Eventos
 // =====================
-// ... (código de Eventos inalterado)
 searchForm.addEventListener('submit', async e => {
     e.preventDefault();
     const q = cityInput.value.trim();
     if (!q) return;
-    try { const { lat, lon } = await searchLocation(q); await loadForecast(lat, lon); }
-    catch { locationName.textContent = 'Erro ao carregar'; }
+    try {
+        const { lat, lon } = await searchLocation(q);
+        await loadForecast(lat, lon);
+    } catch {
+        locationName.textContent = 'Erro ao carregar';
+    }
 });
 
 document.getElementById('geoButton').addEventListener('click', () => {
