@@ -185,8 +185,10 @@
 
                 setaEsq.addEventListener('click', () => navegar(-1));
                 setaDir.addEventListener('click', () => navegar(1));
-                fecharBtn.addEventListener('click', () => lightbox.style.display = 'none',
-                        document.body.style.overflow = 'auto');
+                fecharBtn.addEventListener('click', () => {
+                                lightbox.style.display = 'none';
+                                document.body.style.overflow = 'auto';
+                        });
 
 
                 // Navegação por teclado
