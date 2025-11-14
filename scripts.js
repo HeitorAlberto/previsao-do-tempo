@@ -116,9 +116,9 @@ function getCloudDescriptions(dayPoints, nextDayPoints) {
             const primeira = DESC_MAP[categoriasDominantes[0]];
             const ultima = DESC_MAP[categoriasDominantes[categoriasDominantes.length - 1]];
             if (categoriasDominantes.length === 2 && maxHoras >= 4) {
-                return `Variando entre ${primeira.toLowerCase()} e ${ultima.toLowerCase()}.`;
+                return `Variando entre ${primeira} e ${ultima}`;
             } else {
-                return `${primeira} (Condição Mista)`;
+                return `Variações de nebulosidade`;
             }
         }
         return 'Dados indisponíveis';
