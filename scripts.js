@@ -28,11 +28,13 @@ const getAddressText = address => {
     return `🗺️ ${city}${state ? ', ' + state : ''}`;
 };
 
+// ➡️ MODIFICADO: Adicionando 'cloud_cover'
 const prepareHourlyArrays = hourly => ({
     temperature_2m: hourly.temperature_2m || [],
     relative_humidity_2m: hourly.relative_humidity_2m || [],
     precipitation: hourly.precipitation || [],
     wind_gusts_10m: hourly.wind_gusts_10m || [],
+    cloud_cover: hourly.cloud_cover || []
 });
 
 const groupHourlyByDate = (times, arrays) => {
@@ -49,16 +51,13 @@ const groupHourlyByDate = (times, arrays) => {
     return map;
 };
 
-const predominantCategory = values => {
-    const buckets = { clear: 0, few: 0, part: 0, mostly: 0, over: 0 };
-    values.forEach(v => {
-        if (v <= 10) buckets.clear++;
-        else if (v <= 40) buckets.few++;
-        else if (v <= 60) buckets.part++;
-        else if (v <= 80) buckets.mostly++;
-        else buckets.over++;
-    });
-    return Object.entries(buckets).sort((a, b) => b[1] - a[1])[0][0];
+// ➡️ FUNÇÃO DE CLASSIFICAÇÃO: Retorna o tipo de nuvem.
+const cloudCategory = v => {
+    if (v <= 10) return 'Limpo';
+    if (v <= 30) return 'Poucas Nuvens';
+    if (v <= 60) return 'Parcialmente Nublado';
+    if (v <= 90) return 'Nublado';
+    return 'Encoberto';
 };
 
 const summarizeDay = points => {
@@ -70,19 +69,91 @@ const summarizeDay = points => {
         acc.rhMax = Math.max(acc.rhMax, p.relative_humidity_2m ?? acc.rhMax);
         acc.precipSum += p.precipitation ?? 0;
         acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
+
+        // Captura de nuvens
+        const cloud = p.cloud_cover ?? 0;
+        if (hour >= 6 && hour < 18) {
+            acc.cloudDay.push(cloud);
+        } else {
+            acc.cloudNight.push(cloud);
+        }
+
         return acc;
-    }, { tMin: Infinity, tMax: -Infinity, rhMin: Infinity, rhMax: -Infinity, precipSum: 0, gustMax: 0 });
+    }, { tMin: Infinity, tMax: -Infinity, rhMin: Infinity, rhMax: -Infinity, precipSum: 0, gustMax: 0, cloudDay: [], cloudNight: [] });
 
     return summary;
 };
 
+// ➡️ FUNÇÃO PRINCIPAL DE DESCRIÇÃO COM LÓGICA DE EMPATE (Inalterada)
+function getCloudDescriptions(dayPoints, nextDayPoints) {
+    // 1. Coleta os dados de cobertura de nuvens:
+    const dayClouds = dayPoints.filter(p => new Date(p.time).getHours() >= 6 && new Date(p.time).getHours() < 18).map(p => p.cloud_cover);
+    const todayNightClouds = dayPoints.filter(p => new Date(p.time).getHours() >= 18).map(p => p.cloud_cover);
+    const nextDayMorningClouds = (nextDayPoints || []).filter(p => new Date(p.time).getHours() < 6).map(p => p.cloud_cover);
+    const nightClouds = [...todayNightClouds, ...nextDayMorningClouds];
+
+    // Mapeamento de categorias para descrição final
+    const DESC_MAP = {
+        'Limpo': 'Céu limpo',
+        'Poucas Nuvens': 'Poucas nuvens',
+        'Parcialmente Nublado': 'Parcialmente nublado',
+        'Nublado': 'Maioria nublado',
+        'Encoberto': 'Céu encoberto'
+    };
+    const CATEGORY_ORDER = ['Limpo', 'Poucas Nuvens', 'Parcialmente Nublado', 'Nublado', 'Encoberto'];
+
+    // 2. Lógica de Moda e Desempate
+    const getModeDescription = cloudValues => {
+        if (cloudValues.length === 0) return 'Dados indisponíveis';
+
+        const contagem = {}; // Contagem em termos das chaves: 'Limpo', 'Nublado', etc.
+        cloudValues.forEach(v => {
+            const cat = cloudCategory(v);
+            contagem[cat] = (contagem[cat] || 0) + 1;
+        });
+
+        let maxHoras = 0;
+        for (const horas of Object.values(contagem)) {
+            if (horas > maxHoras) maxHoras = horas;
+        }
+
+        // 3. Identificar todas as categorias que empataram
+        const categoriasDominantes = CATEGORY_ORDER.filter(cat => contagem[cat] === maxHoras);
+
+        // 4. Regras de Retorno
+        if (categoriasDominantes.length === 1) {
+            // Apenas um vencedor: retorna a descrição simples
+            return DESC_MAP[categoriasDominantes[0]];
+        } else if (categoriasDominantes.length > 1) {
+            // Empate: Combina as duas categorias mais extremas em termos de nuvens
+            const primeira = DESC_MAP[categoriasDominantes[0]]; // A menos nublada (por ordem de CATEGORY_ORDER)
+            const ultima = DESC_MAP[categoriasDominantes[categoriasDominantes.length - 1]]; // A mais nublada
+
+            // Desempate com Descrição Mista
+            if (categoriasDominantes.length === 2 && maxHoras >= 4) {
+                return `Variando entre ${primeira.toLowerCase()} e ${ultima.toLowerCase()}.`;
+            } else {
+                // Se houver empate triplo ou mais, retorna a mais otimista com ressalva
+                return `${primeira} (Condição Mista)`;
+            }
+        }
+
+        return 'Dados indisponíveis';
+    };
+
+    return {
+        dia: getModeDescription(dayClouds),
+        noite: getModeDescription(nightClouds)
+    };
+}
+
 
 const rainDescription = mm => mm < 1 ? '' : mm < 5 ? 'Chuva fraca' : mm < 15 ? 'Chuva moderada' : 'Chuva forte';
-const cloudDescription = cat => ({ clear: 'Céu limpo', few: 'Poucas nuvens', part: 'Parcialmente nublado', mostly: 'Maioria nublado', over: 'Nublado' }[cat] || '-');
 
 // =====================
 // Cache (IndexedDB)
 // =====================
+// ... (código de Cache inalterado)
 const DB_NAME = 'WeatherCacheDB';
 const STORE_NAME = 'forecasts';
 const DB_VERSION = 1;
@@ -148,6 +219,7 @@ function coordKey(lat, lon) {
     return `${lat.toFixed(2)},${lon.toFixed(2)}`;
 }
 
+
 // =====================
 // Renderização
 // =====================
@@ -166,28 +238,42 @@ const renderSummaryCard = dayMap => {
     card.className = 'day';
     card.innerHTML = `
         <div class="row precip"><p>Chuva total (15 dias)</p><p>${totalPrecip.toFixed(1)} mm</p></div>
-    `;
+        `;
     forecastSection.parentNode.insertBefore(card, forecastSection);
 };
 
+// ➡️ FUNÇÃO renderDays CORRIGIDA
 const renderDays = dayMapInput => {
     const dayMap = dayMapInput instanceof Map ? dayMapInput : new Map(dayMapInput);
     cardsEl.innerHTML = '';
     const entries = Array.from(dayMap.entries()).slice(0, 15);
     renderSummaryCard(dayMap);
 
-    entries.forEach(([day, points]) => {
+    entries.forEach(([day, points], index) => {
         const labels = formatDateLabel(day + 'T00:00:00');
         const s = summarizeDay(points);
+
+        // Pega os pontos do dia seguinte para o bloco "Noite"
+        const nextDay = entries[index + 1] ? entries[index + 1][1] : null;
+        const descriptions = getCloudDescriptions(points, nextDay);
+
         const card = document.createElement('div');
         card.className = 'day';
         card.innerHTML = `
-            <div class="date">${labels.date} • ${labels.weekday}</div>
-            <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
-            <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
-            <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
-            <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-        `;
+                <div class="date">${labels.date} • ${labels.weekday}</div>
+                <div class="descricao-nuvens">
+                    <p>${descriptions.dia} durante o dia.</p>
+                </div>
+
+                <div class="descricao-nuvens">
+                    <p>${descriptions.noite} à noite.</p>
+                </div>
+                
+                <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
+                <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
+                <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
+                <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
+                `;
         cardsEl.appendChild(card);
     });
 
@@ -202,7 +288,8 @@ async function fetchForecast(lat, lon, timezone = 'auto') {
     const url = new URL(forecastBase);
     url.searchParams.set('latitude', lat);
     url.searchParams.set('longitude', lon);
-    url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m');
+    // Corrigido o nome da variável para 'cloud_cover'
+    url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover');
     url.searchParams.set('models', model);
     url.searchParams.set('timezone', timezone);
     url.searchParams.set('forecast_days', '15');
@@ -212,6 +299,7 @@ async function fetchForecast(lat, lon, timezone = 'auto') {
 }
 
 async function searchLocation(query) {
+    // ... (código de searchLocation inalterado)
     const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`;
     const res = await fetch(url);
     const data = await res.json();
@@ -222,6 +310,7 @@ async function searchLocation(query) {
 }
 
 async function loadForecast(lat, lon) {
+    // ... (código de loadForecast inalterado)
     const key = coordKey(lat, lon);
     const now = Date.now();
 
@@ -260,6 +349,7 @@ async function loadForecast(lat, lon) {
 // =====================
 // Eventos
 // =====================
+// ... (código de Eventos inalterado)
 searchForm.addEventListener('submit', async e => {
     e.preventDefault();
     const q = cityInput.value.trim();
