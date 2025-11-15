@@ -33,7 +33,8 @@ const prepareHourlyArrays = hourly => ({
     relative_humidity_2m: hourly.relative_humidity_2m || [],
     precipitation: hourly.precipitation || [],
     wind_gusts_10m: hourly.wind_gusts_10m || [],
-    cloud_cover: hourly.cloud_cover || []
+    cloud_cover: hourly.cloud_cover || [],
+    weather_code: hourly.weather_code || []
 });
 
 const groupHourlyByDate = (times, arrays) => {
@@ -80,57 +81,94 @@ const summarizeDay = points => {
     return summary;
 };
 
-function getCloudDescriptions(dayPoints, nextDayPoints) {
-    const dayClouds = dayPoints.filter(p => new Date(p.time).getHours() >= 6 && new Date(p.time).getHours() < 18).map(p => p.cloud_cover);
-    const todayNightClouds = dayPoints.filter(p => new Date(p.time).getHours() >= 18).map(p => p.cloud_cover);
-    const nextDayMorningClouds = (nextDayPoints || []).filter(p => new Date(p.time).getHours() < 6).map(p => p.cloud_cover);
-    const nightClouds = [...todayNightClouds, ...nextDayMorningClouds];
+// =========================================================
+// NOVA FUNÇÃO: nuvens + chuva + trovoadas
+// =========================================================
+function getCloudDescriptions(dayPoints) {
 
-    const DESC_MAP = {
-        'Limpo': 'Céu limpo',
-        'Poucas Nuvens': 'Poucas nuvens',
-        'Parcialmente Nublado': 'Parcialmente nublado',
-        'Nublado': 'Maioria nublado',
-        'Encoberto': 'Céu encoberto'
-    };
     const CATEGORY_ORDER = ['Limpo', 'Poucas Nuvens', 'Parcialmente Nublado', 'Nublado', 'Encoberto'];
+    const DESC_MAP = {
+        'Limpo': 'céu limpo',
+        'Poucas Nuvens': 'poucas nuvens',
+        'Parcialmente Nublado': 'parcialmente nublado',
+        'Nublado': 'céu nublado',
+        'Encoberto': 'céu encoberto'
+    };
 
-    const getModeDescription = cloudValues => {
-        if (cloudValues.length === 0) return 'Dados indisponíveis';
-        const contagem = {};
-        cloudValues.forEach(v => {
-            const cat = cloudCategory(v);
-            contagem[cat] = (contagem[cat] || 0) + 1;
+    const isThunder = w => w === 95 || w === 96 || w === 99;
+
+    const rainLevel = mm =>
+        mm < 1 ? null :
+            mm < 5 ? 'chuva fraca' :
+                mm < 15 ? 'chuva moderada' :
+                    'chuva forte';
+
+    const period = { dawn: [], morning: [], afternoon: [], night: [] };
+
+    const pushPeriod = (list, p) => {
+        list.push({
+            cloud: p.cloud_cover ?? 0,
+            rain: p.precipitation ?? 0,
+            w: p.weather_code
         });
+    };
 
-        let maxHoras = 0;
-        for (const horas of Object.values(contagem)) {
-            if (horas > maxHoras) maxHoras = horas;
-        }
+    // Coleta por período (somente o próprio dia)
+    dayPoints.forEach(p => {
+        const h = new Date(p.time).getHours();
 
-        const categoriasDominantes = CATEGORY_ORDER.filter(cat => contagem[cat] === maxHoras);
+        if (h < 6) pushPeriod(period.dawn, p);              // MADRUGADA do próprio dia
+        else if (h < 12) pushPeriod(period.morning, p);     // Manhã
+        else if (h < 18) pushPeriod(period.afternoon, p);   // Tarde
+        else pushPeriod(period.night, p);                   // Noite
+    });
 
-        if (categoriasDominantes.length === 1) {
-            return DESC_MAP[categoriasDominantes[0]];
-        } else if (categoriasDominantes.length > 1) {
-            const primeira = DESC_MAP[categoriasDominantes[0]];
-            const ultima = DESC_MAP[categoriasDominantes[categoriasDominantes.length - 1]];
-            if (categoriasDominantes.length === 2 && maxHoras >= 4) {
-                return `${primeira} e ${ultima.toLowerCase()}`;
-            } else {
-                return `Variações de nebulosidade`;
-            }
-        }
-        return 'Dados indisponíveis';
+    const getPeriodCat = arr => {
+        if (!arr || arr.length === 0) return null;
+        const count = {};
+        arr.forEach(o => {
+            const v = o.cloud;
+            const c =
+                v <= 10 ? 'Limpo' :
+                    v <= 30 ? 'Poucas Nuvens' :
+                        v <= 60 ? 'Parcialmente Nublado' :
+                            v <= 90 ? 'Nublado' :
+                                'Encoberto';
+            count[c] = (count[c] || 0) + 1;
+        });
+        return Object.entries(count)
+            .sort(([aKey, a], [bKey, b]) => {
+                if (a !== b) return b - a;
+                return CATEGORY_ORDER.indexOf(bKey) - CATEGORY_ORDER.indexOf(aKey);
+            })[0][0];
+    };
+
+    const getRain = arr => {
+        const total = arr.reduce((sum, o) => sum + o.rain, 0);
+        return rainLevel(total);
+    };
+
+    const getThunder = arr => arr.some(o => isThunder(o.w));
+
+    const buildDescription = (cat, arr) => {
+        const chuva = getRain(arr);
+        const trovoada = getThunder(arr);
+
+        if (trovoada && chuva) return `${chuva} com trovoadas`;
+        if (trovoada) return `trovoadas isoladas`;
+        if (chuva) return `${DESC_MAP[cat]} / ${chuva}`;
+        return DESC_MAP[cat] || 'Dados indisponíveis';
     };
 
     return {
-        dia: getModeDescription(dayClouds),
-        noite: getModeDescription(nightClouds)
+        madrugada: buildDescription(getPeriodCat(period.dawn), period.dawn),
+        manha: buildDescription(getPeriodCat(period.morning), period.morning),
+        tarde: buildDescription(getPeriodCat(period.afternoon), period.afternoon),
+        noite: buildDescription(getPeriodCat(period.night), period.night),
     };
 }
 
-const rainDescription = mm => mm < 1 ? '' : mm < 5 ? 'Chuva fraca' : mm < 15 ? 'Chuva moderada' : 'Chuva forte';
+
 
 // =====================
 // Renderização
@@ -170,18 +208,18 @@ const renderDays = dayMapInput => {
         card.className = 'day';
         card.innerHTML = `
                 <div class="date">${labels.date} • ${labels.weekday}</div>
-                <div class="descricao-nuvens">
-                    <p>${descriptions.dia} durante o dia.</p>
-                </div>
 
-                <div class="descricao-nuvens">
-                    <p>${descriptions.noite} à noite.</p>
-                </div>
-                
                 <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
                 <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
                 <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
                 <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
+
+                <div class="descricao-nuvens"><p><strong>Madrugada:</strong> ${descriptions.madrugada}</p></div>
+                <div class="descricao-nuvens"><p><strong>Manhã:</strong> ${descriptions.manha}</p></div>
+                <div class="descricao-nuvens"><p><strong>Tarde:</strong> ${descriptions.tarde}</p></div>
+                <div class="descricao-nuvens"><p><strong>Noite:</strong> ${descriptions.noite}</p></div>
+                
+
                 `;
         cardsEl.appendChild(card);
     });
@@ -190,15 +228,13 @@ const renderDays = dayMapInput => {
 };
 
 // =====================
-
-// =====================
 // Fetch (sem cache)
 // =====================
 async function fetchForecast(lat, lon, timezone = 'auto') {
     const url = new URL(forecastBase);
     url.searchParams.set('latitude', lat);
     url.searchParams.set('longitude', lon);
-    url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover');
+    url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,weather_code');
     url.searchParams.set('models', model);
     url.searchParams.set('timezone', timezone);
     url.searchParams.set('forecast_days', '15');
