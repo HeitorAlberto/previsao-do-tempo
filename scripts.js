@@ -154,17 +154,17 @@ function getCloudDescriptions(points) {
 
         // Média de cobertura de nuvens
         const avgCloud = arr.reduce((a, b) => a + b.cloud_cover, 0) / arr.length;
-        const sky = avgCloud < 20 ? "Céu limpo"
-            : avgCloud < 50 ? "Parcialmente nublado"
-                : avgCloud < 85 ? "Predominantemente nublado"
-                    : "Céu encoberto";
+        const sky = avgCloud < 20 ? `Céu limpo`
+            : avgCloud < 50 ? `Algumas nuvens`
+                : avgCloud < 85 ? `Predominantemente nublado`
+                    : `Céu encoberto`;
 
         // Soma total de chuva no período
         const totalPrecip = arr.reduce((sum, p) => sum + (p.precipitation ?? 0), 0);
 
         // Determina intensidade da chuva baseada no acumulado
         let rain = null;
-        if (totalPrecip >= 0.5 && totalPrecip < 5) rain = "chuva fraca";
+        if (totalPrecip >= 0.5 && totalPrecip < 5) rain = `chuva fraca`;
         else if (totalPrecip >= 5 && totalPrecip < 15) rain = "chuva moderada";
         else if (totalPrecip >= 15) rain = "chuva forte";
 
