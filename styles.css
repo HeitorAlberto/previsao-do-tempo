@@ -103,7 +103,7 @@ main {
 /* ===== GRID dos Cards ===== */
 #cards {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 40px;
     padding: 0px 40px;
 }
@@ -132,8 +132,7 @@ main {
 
 .descricao-nuvens {
     justify-content: space-between;
-    padding: 16px 0px;
-    border-bottom: 1px solid #f0f0f0;
+    padding: 6px 0px;
     font-size: 20px;
     margin: 0px;
 }

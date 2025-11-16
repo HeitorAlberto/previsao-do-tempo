@@ -51,14 +51,6 @@ const groupHourlyByDate = (times, arrays) => {
     return map;
 };
 
-const cloudCategory = v => {
-    if (v <= 10) return 'Limpo';
-    if (v <= 30) return 'Poucas Nuvens';
-    if (v <= 60) return 'Parcialmente Nublado';
-    if (v <= 90) return 'Nublado';
-    return 'Encoberto';
-};
-
 const summarizeDay = points => {
     const summary = points.reduce((acc, p) => {
         const hour = new Date(p.time).getHours();
@@ -82,92 +74,121 @@ const summarizeDay = points => {
 };
 
 // =========================================================
-// NOVA FUNÇÃO: nuvens + chuva + trovoadas
+// CLASSIFICAÇÃO OFICIAL WMO — CHUVA / PANCADAS / TROVOADAS
 // =========================================================
-function getCloudDescriptions(dayPoints) {
-
-    const CATEGORY_ORDER = ['Limpo', 'Poucas Nuvens', 'Parcialmente Nublado', 'Nublado', 'Encoberto'];
-    const DESC_MAP = {
-        'Limpo': 'céu limpo',
-        'Poucas Nuvens': 'poucas nuvens',
-        'Parcialmente Nublado': 'parcialmente nublado',
-        'Nublado': 'céu nublado',
-        'Encoberto': 'céu encoberto'
-    };
-
-    const isThunder = w => w === 95 || w === 96 || w === 99;
-
-    const rainLevel = mm =>
-        mm < 1 ? null :
-            mm < 5 ? 'chuva fraca' :
-                mm < 15 ? 'chuva moderada' :
-                    'chuva forte';
-
-    const period = { dawn: [], morning: [], afternoon: [], night: [] };
-
-    const pushPeriod = (list, p) => {
-        list.push({
-            cloud: p.cloud_cover ?? 0,
-            rain: p.precipitation ?? 0,
-            w: p.weather_code
-        });
-    };
-
-    // Coleta por período (somente o próprio dia)
-    dayPoints.forEach(p => {
-        const h = new Date(p.time).getHours();
-
-        if (h < 6) pushPeriod(period.dawn, p);              // MADRUGADA do próprio dia
-        else if (h < 12) pushPeriod(period.morning, p);     // Manhã
-        else if (h < 18) pushPeriod(period.afternoon, p);   // Tarde
-        else pushPeriod(period.night, p);                   // Noite
-    });
-
-    const getPeriodCat = arr => {
-        if (!arr || arr.length === 0) return null;
-        const count = {};
-        arr.forEach(o => {
-            const v = o.cloud;
-            const c =
-                v <= 10 ? 'Limpo' :
-                    v <= 30 ? 'Poucas Nuvens' :
-                        v <= 60 ? 'Parcialmente Nublado' :
-                            v <= 90 ? 'Nublado' :
-                                'Encoberto';
-            count[c] = (count[c] || 0) + 1;
-        });
-        return Object.entries(count)
-            .sort(([aKey, a], [bKey, b]) => {
-                if (a !== b) return b - a;
-                return CATEGORY_ORDER.indexOf(bKey) - CATEGORY_ORDER.indexOf(aKey);
-            })[0][0];
-    };
-
-    const getRain = arr => {
-        const total = arr.reduce((sum, o) => sum + o.rain, 0);
-        return rainLevel(total);
-    };
-
-    const getThunder = arr => arr.some(o => isThunder(o.w));
-
-    const buildDescription = (cat, arr) => {
-        const chuva = getRain(arr);
-        const trovoada = getThunder(arr);
-
-        if (trovoada && chuva) return `${chuva} com trovoadas`;
-        if (trovoada) return `trovoadas isoladas`;
-        if (chuva) return `${DESC_MAP[cat]} / ${chuva}`;
-        return DESC_MAP[cat] || 'Dados indisponíveis';
-    };
-
-    return {
-        madrugada: buildDescription(getPeriodCat(period.dawn), period.dawn),
-        manha: buildDescription(getPeriodCat(period.morning), period.morning),
-        tarde: buildDescription(getPeriodCat(period.afternoon), period.afternoon),
-        noite: buildDescription(getPeriodCat(period.night), period.night),
-    };
+function getRainType(code) {
+    if ((code >= 51 && code <= 57) || code === 61 || code === 80) return "chuva fraca";
+    if (code === 63 || code === 81) return "chuva moderada";
+    if (code === 65 || code === 82) return "chuva forte";
+    return null;
 }
 
+function getShowerType(code) {
+    if (code === 80) return "pancadas fracas";
+    if (code === 81) return "pancadas moderadas";
+    if (code === 82) return "pancadas fortes";
+    return null;
+}
+
+function isThunder(code) {
+    return code >= 95 && code <= 99;
+}
+
+function classifyFrequency(count) {
+    return count >= 3 ? "frequente" : "pontual";
+}
+
+// Monta chuva/pancadas por período, considerando limiar diário
+function getRainDescription(codes, totalPrecip) {
+    if (totalPrecip < 0.9) return null; // Limite mínimo de chuva no dia
+
+    const events = [];
+    for (const c of codes) {
+        const shower = getShowerType(c);
+        const rain = getRainType(c);
+        if (shower) events.push(shower);
+        else if (rain) events.push(rain);
+    }
+
+    if (events.length === 0) return null;
+
+    const strong = events.find(e => e.includes("forte"));
+    const moderate = events.find(e => e.includes("moderada"));
+    const weak = events.find(e => e.includes("fraca"));
+
+    let dominant = strong || moderate || weak;
+    const freq = classifyFrequency(events.length);
+    return `${dominant} ${freq}`;
+}
+
+function getThunderDescription(codes) {
+    const count = codes.filter(isThunder).length;
+    if (count === 0) return null;
+    return `trovoadas ${classifyFrequency(count)}`;
+}
+
+// Céu
+function getSkyDescription(avgCloud) {
+    if (avgCloud < 20) return "Céu limpo";
+    if (avgCloud < 50) return "Céu parcialmente nublado";
+    if (avgCloud < 85) return "Céu nublado";
+    return "Céu encoberto";
+}
+
+// Função principal dos períodos
+function getCloudDescriptions(points) {
+    const periods = {
+        madrugada: points.filter(p => new Date(p.time).getHours() < 6),
+        manhã: points.filter(p => new Date(p.time).getHours() >= 6 && new Date(p.time).getHours() < 12),
+        tarde: points.filter(p => new Date(p.time).getHours() >= 12 && new Date(p.time).getHours() < 18),
+        noite: points.filter(p => new Date(p.time).getHours() >= 18)
+    };
+
+    const descriptions = {};
+
+    for (const [period, arr] of Object.entries(periods)) {
+        if (arr.length === 0) {
+            descriptions[period] = "Dados insuficientes";
+            continue;
+        }
+
+        // Média de cobertura de nuvens
+        const avgCloud = arr.reduce((a, b) => a + b.cloud_cover, 0) / arr.length;
+        const sky = avgCloud < 20 ? "Céu limpo"
+            : avgCloud < 50 ? "Céu parcialmente nublado"
+                : avgCloud < 85 ? "Céu nublado"
+                    : "Céu encoberto";
+
+        // Soma total de chuva no período
+        const totalPrecip = arr.reduce((sum, p) => sum + (p.precipitation ?? 0), 0);
+
+        // Determina intensidade da chuva baseada no acumulado
+        let rain = null;
+        if (totalPrecip >= 0.5 && totalPrecip < 5) rain = "chuva fraca";
+        else if (totalPrecip >= 5 && totalPrecip < 15) rain = "chuva moderada";
+        else if (totalPrecip >= 15) rain = "chuva forte";
+
+        // Determina frequência (pontual/frequente) baseado em horas com chuva
+        if (rain) {
+            const hoursWithRain = arr.filter(p => p.precipitation >= 0.5).length;
+            const freq = hoursWithRain >= 3 ? "frequente" : "pontual";
+            rain += ` ${freq}`;
+        }
+
+        // Trovoadas baseadas no weather code
+        const hasThunder = arr.some(p => p.weather_code >= 95 && p.weather_code <= 99);
+        const thunder = hasThunder ? `trovoadas ${arr.filter(p => p.weather_code >= 95 && p.weather_code <= 99).length >= 3 ? "frequentes" : "pontuais"}` : null;
+
+        // Monta a descrição final
+        const parts = [sky];
+        if (rain) parts.push(rain);
+        if (thunder) parts.push(thunder);
+
+        descriptions[period] = parts.join(" / ");
+    }
+
+    return descriptions;
+}
 
 
 // =====================
@@ -201,8 +222,7 @@ const renderDays = dayMapInput => {
     entries.forEach(([day, points], index) => {
         const labels = formatDateLabel(day + 'T00:00:00');
         const s = summarizeDay(points);
-        const nextDay = entries[index + 1] ? entries[index + 1][1] : null;
-        const descriptions = getCloudDescriptions(points, nextDay);
+        const descriptions = getCloudDescriptions(points, s.precipSum);
 
         const card = document.createElement('div');
         card.className = 'day';
@@ -214,12 +234,10 @@ const renderDays = dayMapInput => {
                 <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
                 <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
 
-                <div class="descricao-nuvens"><p><strong>Madrugada:</strong> ${descriptions.madrugada}</p></div>
-                <div class="descricao-nuvens"><p><strong>Manhã:</strong> ${descriptions.manha}</p></div>
-                <div class="descricao-nuvens"><p><strong>Tarde:</strong> ${descriptions.tarde}</p></div>
-                <div class="descricao-nuvens"><p><strong>Noite:</strong> ${descriptions.noite}</p></div>
-                
-
+                <div class="descricao-nuvens"><p><strong>Madrugada <br></strong> ${descriptions.madrugada}</p></div>
+                <div class="descricao-nuvens"><p><strong>Manhã <br></strong> ${descriptions.manhã}</p></div>
+                <div class="descricao-nuvens"><p><strong>Tarde <br></strong> ${descriptions.tarde}</p></div>
+                <div class="descricao-nuvens"><p><strong>Noite <br></strong> ${descriptions.noite}</p></div>
                 `;
         cardsEl.appendChild(card);
     });
