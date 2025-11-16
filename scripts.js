@@ -130,8 +130,8 @@ function getThunderDescription(codes) {
 // Céu
 function getSkyDescription(avgCloud) {
     if (avgCloud < 20) return "Céu limpo";
-    if (avgCloud < 50) return "Céu parcialmente nublado";
-    if (avgCloud < 85) return "Céu nublado";
+    if (avgCloud < 50) return "Parcialmente nublado";
+    if (avgCloud < 85) return "Predominantemente nublado";
     return "Céu encoberto";
 }
 
@@ -155,8 +155,8 @@ function getCloudDescriptions(points) {
         // Média de cobertura de nuvens
         const avgCloud = arr.reduce((a, b) => a + b.cloud_cover, 0) / arr.length;
         const sky = avgCloud < 20 ? "Céu limpo"
-            : avgCloud < 50 ? "Céu parcialmente nublado"
-                : avgCloud < 85 ? "Céu nublado"
+            : avgCloud < 50 ? "Parcialmente nublado"
+                : avgCloud < 85 ? "Predominantemente nublado"
                     : "Céu encoberto";
 
         // Soma total de chuva no período
