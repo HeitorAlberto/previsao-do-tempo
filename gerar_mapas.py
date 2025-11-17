@@ -303,7 +303,7 @@ def gerar_mapas():
         # Adiciona o texto (APENAS O VALOR INTEIRO)
         ax.text(lon, lat, precip_int,
                 transform=ccrs.PlateCarree(),
-                fontsize=7, # Tamanho ajustado
+                fontsize=2,
                 color=text_color,
                 weight='bold',
                 ha='center', # Centraliza o texto na coordenada
