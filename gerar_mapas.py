@@ -21,72 +21,101 @@ dias_semana_pt = {
     "Thursday": "quinta-feira", "Friday": "sexta-feira", "Saturday": "sábado", "Sunday": "domingo",
 }
 
-# Dicionário COMPLETO de Cidades do Nordeste e Coordenadas (45 Cidades)
-CIDADES_NORDESTE = {
-    # BAHIA (BA)
+# ======================================================
+# ► NOVO DICIONÁRIO: CIDADES PRINCIPAIS DO BRASIL
+#   (Inclui todas do Nordeste + Norte + Sul + Sudeste + Centro-Oeste)
+# ======================================================
+CIDADES_BRASIL = {
+
+    # NORDESTE – (todas que você já tinha)
     "Salvador (BA)": (-12.9714, -38.5108),
     "Feira de Santana (BA)": (-12.2669, -38.9664),
     "Vitória da Conquista (BA)": (-15.1970, -40.8354),
     "Camaçari (BA)": (-12.6961, -38.3117),
     "Ilhéus (BA)": (-14.7937, -39.0494),
-    
-    # CEARÁ (CE)
     "Fortaleza (CE)": (-3.7319, -38.5267),
     "Caucaia (CE)": (-3.7388, -38.6534),
     "Juazeiro do Norte (CE)": (-7.2081, -39.3149),
     "Sobral (CE)": (-3.6888, -40.3475),
     "Maracanaú (CE)": (-3.8646, -38.6253),
-
-    # PERNAMBUCO (PE)
     "Recife (PE)": (-8.0539, -34.8811),
     "Jaboatão dos Guararapes (PE)": (-8.1032, -34.9080),
     "Olinda (PE)": (-8.0100, -34.8550),
     "Caruaru (PE)": (-8.2753, -35.9754),
     "Petrolina (PE)": (-9.3900, -40.5086),
-
-    # MARANHÃO (MA)
     "São Luís (MA)": (-2.5367, -44.3056),
     "Imperatriz (MA)": (-5.5261, -47.4786),
     "São José de Ribamar (MA)": (-2.5939, -44.0533),
     "Caxias (MA)": (-4.8617, -43.3553),
     "Timon (MA)": (-5.0874, -42.8306),
-
-    # RIO GRANDE DO NORTE (RN)
     "Natal (RN)": (-5.7950, -35.2014),
     "Mossoró (RN)": (-5.1931, -37.3456),
     "Parnamirim (RN)": (-5.9189, -35.2443),
     "São Gonçalo do Amarante (RN)": (-5.7939, -35.3283),
     "Macaíba (RN)": (-5.8506, -35.3619),
-
-    # PARAÍBA (PB)
     "João Pessoa (PB)": (-7.1197, -34.8450),
     "Campina Grande (PB)": (-7.2306, -35.8819),
     "Santa Rita (PB)": (-7.0699, -35.0354),
     "Patos (PB)": (-7.0210, -37.2801),
     "Bayeux (PB)": (-7.0945, -34.9392),
-
-    # ALAGOAS (AL)
     "Maceió (AL)": (-9.6658, -35.7351),
     "Arapiraca (AL)": (-9.7540, -36.6669),
     "Rio Largo (AL)": (-9.5085, -35.8340),
     "Palmeira dos Índios (AL)": (-9.4140, -36.6340),
     "São Miguel dos Campos (AL)": (-9.7766, -36.0963),
-
-    # SERGIPE (SE)
     "Aracaju (SE)": (-10.9092, -37.0631),
     "Nossa Senhora do Socorro (SE)": (-10.8353, -37.1856),
     "Lagarto (SE)": (-10.9231, -37.6472),
     "Itabaiana (SE)": (-10.6861, -37.3197),
     "Estância (SE)": (-11.2721, -37.4410),
-
-    # PIAUÍ (PI)
     "Teresina (PI)": (-5.0927, -42.8037),
     "Parnaíba (PI)": (-2.9031, -41.7769),
     "Picos (PI)": (-7.0753, -41.4725),
     "Piripiri (PI)": (-4.2750, -41.7825),
     "Floriano (PI)": (-6.7645, -43.0186),
-}
 
+    # NORTE
+    "Manaus (AM)": (-3.1190, -60.0217),
+    "Belém (PA)": (-1.4558, -48.5044),
+    "Macapá (AP)": (0.0350, -51.0705),
+    "Rio Branco (AC)": (-9.9749, -67.8243),
+    "Porto Velho (RO)": (-8.7608, -63.8999),
+    "Boa Vista (RR)": (2.8235, -60.6758),
+    "Palmas (TO)": (-10.2491, -48.3243),
+
+    # CENTRO-OESTE
+    "Brasília (DF)": (-15.7939, -47.8828),
+    "Goiânia (GO)": (-16.6869, -49.2648),
+    "Anápolis (GO)": (-16.3281, -48.9533),
+    "Cuiabá (MT)": (-15.6010, -56.0974),
+    "Várzea Grande (MT)": (-15.6462, -56.1322),
+    "Campo Grande (MS)": (-20.4697, -54.6201),
+    "Dourados (MS)": (-22.2231, -54.8120),
+
+    # SUDESTE
+    "São Paulo (SP)": (-23.5505, -46.6333),
+    "Campinas (SP)": (-22.9056, -47.0608),
+    "Ribeirão Preto (SP)": (-21.1775, -47.8103),
+    "Santos (SP)": (-23.9608, -46.3337),
+    "Rio de Janeiro (RJ)": (-22.9068, -43.1729),
+    "Niterói (RJ)": (-22.8832, -43.1034),
+    "Belo Horizonte (MG)": (-19.9167, -43.9345),
+    "Uberlândia (MG)": (-18.9146, -48.2754),
+    "Juiz de Fora (MG)": (-21.7642, -43.3496),
+    "Vitória (ES)": (-20.3155, -40.3128),
+    "Vila Velha (ES)": (-20.3478, -40.2949),
+
+    # SUL
+    "Porto Alegre (RS)": (-30.0346, -51.2177),
+    "Caxias do Sul (RS)": (-29.1670, -51.1790),
+    "Pelotas (RS)": (-31.7654, -52.3371),
+    "Florianópolis (SC)": (-27.5945, -48.5477),
+    "Joinville (SC)": (-26.3044, -48.8487),
+    "Blumenau (SC)": (-26.9180, -49.0653),
+    "Curitiba (PR)": (-25.4284, -49.2733),
+    "Londrina (PR)": (-23.3045, -51.1696),
+    "Maringá (PR)": (-23.4205, -51.9331)
+}
 
 nivels = [0, 0.5, 2, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 cores = ["#FFFFFF","#cbcbcb","#797979","#4ffd72","#006000","#040CA5","#5E8CFF","#FFFF00",
@@ -99,53 +128,26 @@ tick_labels = [f"{nivels[i]}–{nivels[i+1]}" for i in range(len(nivels)-1)]
 tick_labels[-1] = f">{nivels[-2]}"
 extent = [-85, -30, -35, 10]
 
-# Estilo para o fundo preto/sombra (bbox)
 BBOX_STYLE = dict(boxstyle="round,pad=0.2", facecolor='black', alpha=0.8, edgecolor='black', linewidth=0.5)
 
-
-# Pasta local (dentro do repositório)
 out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
 
-
-# ==========================================================
-# FUNÇÃO AUXILIAR PARA DETERMINAR A COR DO TEXTO (SIMPLIFICADA)
-# Não é mais estritamente necessária, mas mantida por clareza.
-# ==========================================================
 def get_text_color_from_value(value, levels, cmap_colors, threshold=0.5):
-    """Retorna 'white' para fundos escuros, 'black' para fundos claros (mantido)"""
     if pd.isna(value) or value < levels[0]: 
         return 'black'
-
-    color_index = 0
-    for i, level in enumerate(levels):
-        if value >= level:
-            color_index = i
-        else:
-            break
-    
-    color_index = min(color_index, len(cmap_colors) - 1)
-    hex_color = cmap_colors[color_index]
-    rgb = mcolors.hex2color(hex_color)
-    luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2])
-    
-    # Se usarmos bbox, sempre podemos usar branco para o texto
     return 'white'
 
-
-# ==============================
-# 2. Baixar ECMWF e processar
-# ==============================
+# ======================================================
+# 2. Baixar ECMWF e processar (SEM ALTERAÇÕES)
+# ======================================================
 def gerar_mapas():
     client = Client(source="azure")
-    
-    # Hora de Brasília = UTC-3
+
     now_br = datetime.utcnow() - timedelta(hours=3)
     date_run = now_br.date()
     run_date_str = date_run.strftime("%Y%m%d")
-    run_hour = 0  # Sempre rodada 00Z
-
-    # Nome do arquivo inclui a data da rodada
+    run_hour = 0
     target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}.grib2")
 
     steps_all = list(range(0,145,3)) + list(range(150,361,6))
@@ -163,11 +165,11 @@ def gerar_mapas():
     print(f"\n📡 Verificando ECMWF HRES {run_date_str} 00Z...")
 
     if not os.path.exists(target_file):
-        print("⬇️  Arquivo não encontrado. Iniciando download...")
+        print("⬇️  Arquivo não encontrado. Iniciando download...")
         client.retrieve(**request_params)
         print(f"✅ Download concluído: {target_file}")
     else:
-        print(f"⚠️  O arquivo '{target_file}' já existe — usando versão local.")
+        print(f"⚠️  O arquivo '{target_file}' já existe — usando versão local.")
 
     print("\n📂 Abrindo arquivo GRIB2...")
     ds = xr.open_dataset(target_file, engine="cfgrib", filter_by_keys={"typeOfLevel": "surface"})
@@ -191,7 +193,7 @@ def gerar_mapas():
         daily.append({"data": data_24h, "start": start_br, "end": end_br})
 
     # ==============================
-    # 3. Mapas diários (SEM PONTOS E COM BBOX)
+    # 3. Mapas diários
     # ==============================
     print("\n🗺️ Gerando mapas diários...")
     for idx, item in enumerate(daily):
@@ -209,46 +211,35 @@ def gerar_mapas():
         
         cf = rain.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
                                  cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
-        
-        # ----------------------------------------------------
-        # Plotagem dos Valores Diários (SÓ INTEIROS NO CENTRO COM BBOX)
-        # ----------------------------------------------------
+
+        # ------------------------------------------
+        # ► ALTERAÇÃO 1: FONTE MUITO MENOR (0.8)
+        # ------------------------------------------
         print(f"   > Plotando valores de precipitação para o dia {start:%d-%m}...")
-        for city, (lat, lon) in CIDADES_NORDESTE.items():
+        for city, (lat, lon) in CIDADES_BRASIL.items():
             try:
                 precip_value = rain.sel(latitude=lat, longitude=lon, method="nearest").item()
-                
-                # Arredonda o valor e converte para string SEM casas decimais
                 precip_int = str(int(round(precip_value)))
-                
-                # Definimos a cor do texto como branco, já que usaremos bbox preto
-                text_color = 'white' 
-
-            except Exception:
+                text_color = 'white'
+                bbox_style = BBOX_STYLE
+            except:
                 precip_int = "N/D"
-                text_color = 'black' # Cor padrão se não houver dados
+                text_color = 'black'
                 bbox_style = None
-            else:
-                bbox_style = BBOX_STYLE # Aplica o bbox se houver dados
 
-            # Não plotamos mais o ax.plot (ponto)
-
-            # Adiciona o texto (APENAS O VALOR INTEIRO)
             ax.text(lon, lat, precip_int,
                     transform=ccrs.PlateCarree(),
-                    fontsize=2,
+                    fontsize=0.8,       # <<< MUITO MENOR
                     color=text_color,
                     weight='bold',
-                    ha='center', # Centraliza o texto na coordenada
-                    va='center', # Centraliza o texto na coordenada
-                    bbox=bbox_style) # Aplica o fundo preto
-        
-        # ----------------------------------------------------
-        # Título e barra de cores
-        # ----------------------------------------------------
+                    ha='center',
+                    va='center',
+                    bbox=bbox_style)
+
         dia_semana = dias_semana_pt[start.strftime("%A")]
         ax.set_title(f"({daynum:02d}) {start:%d-%m-%y} ({dia_semana})\nRodada ECMWF: {run_time:%d-%m-%Y %H:%MZ}",
                       fontsize=11, weight="bold")
+
         cbar = plt.colorbar(cf, ax=ax, orientation="vertical", fraction=0.04, pad=0.02)
         cbar.set_ticks(tick_locs)
         cbar.set_ticklabels(tick_labels)
@@ -260,7 +251,7 @@ def gerar_mapas():
         print(f"✅ Salvo: {fname}")
 
     # ==============================
-    # 4. Mapa acumulado (SEM PONTOS E COM BBOX)
+    # 4. Mapa Acumulado
     # ==============================
     accum_15d = sum([item["data"] for item in daily])
     start_acc = daily[0]['start']
@@ -276,52 +267,36 @@ def gerar_mapas():
     
     cf = accum_15d.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
                                   cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
-    
-    # ----------------------------------------------------
-    # Plotagem dos Valores Acumulados (SÓ INTEIROS NO CENTRO COM BBOX)
-    # ----------------------------------------------------
+
     print("\n📍 Plotando valores acumulados no mapa (15 dias)...")
-    for city, (lat, lon) in CIDADES_NORDESTE.items():
+    for city, (lat, lon) in CIDADES_BRASIL.items():
         try:
             precip_value = accum_15d.sel(latitude=lat, longitude=lon, method="nearest").item()
-            
-            # Arredonda o valor e converte para string SEM casas decimais
             precip_int = str(int(round(precip_value)))
-            
-            # Definimos a cor do texto como branco, já que usaremos bbox preto
             text_color = 'white'
-
-        except Exception:
+            bbox_style = BBOX_STYLE
+        except:
             precip_int = "N/D"
-            text_color = 'black' # Cor padrão se não houver dados
+            text_color = 'black'
             bbox_style = None
-        else:
-            bbox_style = BBOX_STYLE # Aplica o bbox se houver dados
 
-        # Não plotamos mais o ax.plot (ponto)
-        
-        # Adiciona o texto (APENAS O VALOR INTEIRO)
         ax.text(lon, lat, precip_int,
                 transform=ccrs.PlateCarree(),
-                fontsize=2,
+                fontsize=0.8,       # <<< MUITO MENOR
                 color=text_color,
                 weight='bold',
-                ha='center', # Centraliza o texto na coordenada
-                va='center', # Centraliza o texto na coordenada
-                bbox=bbox_style) # Aplica o fundo preto
+                ha='center',
+                va='center',
+                bbox=bbox_style)
 
-
-    # Título do mapa
     ax.set_title(f"Precipitação acumulada - 15 dias\nPeríodo: {start_acc:%d-%m} até {end_acc:%d-%m}\nRodada ECMWF: {run_time:%d-%m-%Y %HZ}",
                   fontsize=12, weight="bold")
-    
-    # Configuração da barra de cores
+
     cbar = plt.colorbar(cf, ax=ax, orientation="vertical", fraction=0.04, pad=0.02)
     cbar.set_ticks(tick_locs)
     cbar.set_ticklabels(tick_labels)
     cbar.set_label("Precipitação (mm/15 dias)")
-    
-    # Salvar mapa
+
     fname_acc = os.path.join(out_dir, "acumulado-15-dias.png")
     plt.savefig(fname_acc, dpi=600, bbox_inches="tight")
     plt.close(fig)
