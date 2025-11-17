@@ -21,7 +21,6 @@ dias_semana_pt = {
 }
 
 # Dicionário de Cidades do Nordeste e Coordenadas (Latitude, Longitude) em Graus Decimais
-# Usando apenas as capitais para manter o mapa limpo, mas você pode adicionar mais:
 CIDADES_NORDESTE = {
     "Salvador (BA)": (-12.9714, -38.5108),
     "Fortaleza (CE)": (-3.7319, -38.5267),
@@ -88,7 +87,6 @@ def gerar_mapas():
 
     print("\n📂 Abrindo arquivo GRIB2...")
     ds = xr.open_dataset(target_file, engine="cfgrib", filter_by_keys={"typeOfLevel": "surface"})
-    # ECMWF 'tp' está em metros, multiplicamos por 1000 para milímetros
     tp_mm = ds["tp"] * 1000.0
     run_time = pd.to_datetime(tp_mm["time"].item()).to_pydatetime()
     utc_offset = -3
@@ -102,18 +100,14 @@ def gerar_mapas():
         start_br_utc = start_br - timedelta(hours=utc_offset)
         end_br_utc   = end_br - timedelta(hours=utc_offset)
         
-        # Encontra o índice (step) mais próximo da hora de início e fim no fuso UTC.
         step_start = np.argmin(np.abs(step_times - start_br_utc))
         step_end   = np.argmin(np.abs(step_times - end_br_utc))
 
-        # Calcula o acumulado de 24h:
-        # Se for o primeiro dia (day == 0), é o valor total até o step_end (do 0 ao 24h).
-        # Senão, é a diferença entre os dois steps (acumulado no dia).
         data_24h = tp_mm.isel(step=step_end) if day == 0 else tp_mm.isel(step=step_end) - tp_mm.isel(step=step_start)
         daily.append({"data": data_24h, "start": start_br, "end": end_br})
 
     # ==============================
-    # 3. Mapas diários (SEM ALTERAÇÃO)
+    # 3. Mapas diários (INCLUSÃO DA PLOTAGEM DE CIDADES)
     # ==============================
     print("\n🗺️ Gerando mapas diários...")
     for idx, item in enumerate(daily):
@@ -132,6 +126,35 @@ def gerar_mapas():
         cf = rain.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
                                  cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
         
+        # ----------------------------------------------------
+        # Plotagem das Cidades e Valores Diários
+        # ----------------------------------------------------
+        print(f"   > Plotando cidades para o dia {start:%d-%m}...")
+        for city, (lat, lon) in CIDADES_NORDESTE.items():
+            # Interpolação para obter o valor de precipitação na coordenada da cidade
+            try:
+                precip_value = rain.sel(latitude=lat, longitude=lon, method="nearest").item()
+                precip_rounded = round(precip_value, 1) # Arredonda para 1 casa decimal
+            except Exception:
+                precip_rounded = "N/D"
+
+            # Adiciona o marcador da cidade (ponto preto)
+            ax.plot(lon, lat, 'ko', markersize=5, transform=ccrs.PlateCarree())
+            
+            # Adiciona o texto (nome da cidade e valor de precipitação)
+            text_label = f"{city.split(' ')[0]}\n({precip_rounded} mm)" # Usando apenas o nome da cidade para economizar espaço
+            
+            ax.text(lon + 0.5, lat + 0.1, text_label,
+                    transform=ccrs.PlateCarree(),
+                    fontsize=6.5, # Tamanho um pouco menor para o diário
+                    color='black',
+                    weight='bold',
+                    ha='left',
+                    va='center')
+
+        # ----------------------------------------------------
+        # Título e barra de cores (Sem alteração)
+        # ----------------------------------------------------
         dia_semana = dias_semana_pt[start.strftime("%A")]
         ax.set_title(f"({daynum:02d}) {start:%d-%m-%y} ({dia_semana})\nRodada ECMWF: {run_time:%d-%m-%Y %H:%MZ}",
                       fontsize=11, weight="bold")
@@ -146,7 +169,7 @@ def gerar_mapas():
         print(f"✅ Salvo: {fname}")
 
     # ==============================
-    # 4. Mapa acumulado com CIDADES (ADICIONADO)
+    # 4. Mapa acumulado (COM PLOTAGEM DE CIDADES)
     # ==============================
     accum_15d = sum([item["data"] for item in daily])
     start_acc = daily[0]['start']
@@ -167,11 +190,9 @@ def gerar_mapas():
     # ----------------------------------------------------
     # Plotagem das Cidades e Valores de Acumulado
     # ----------------------------------------------------
-    print("\n📍 Plotando cidades no mapa acumulado...")
+    print("\n📍 Plotando cidades no mapa acumulado (15 dias)...")
     for city, (lat, lon) in CIDADES_NORDESTE.items():
-        # Interpolação para obter o valor de precipitação na coordenada da cidade
         try:
-            # Seleciona o valor mais próximo (nearest)
             precip_value = accum_15d.sel(latitude=lat, longitude=lon, method="nearest").item()
             precip_rounded = round(precip_value, 1) # Arredonda para 1 casa decimal
         except Exception:
@@ -181,7 +202,6 @@ def gerar_mapas():
         ax.plot(lon, lat, 'ko', markersize=5, transform=ccrs.PlateCarree(), label=city)
         
         # Adiciona o texto (nome da cidade e valor de precipitação)
-        # Ajuste de posição: ligeiramente à direita do ponto
         text_label = f"{city}\n({precip_rounded} mm)"
         
         ax.text(lon + 0.5, lat + 0.1, text_label,
