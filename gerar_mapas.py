@@ -262,7 +262,7 @@ def gerar_mapas():
         cbar.set_label("Precipitação (mm/24h)")
 
         fname = os.path.join(out_dir, f"{daynum:02d}.png")
-        plt.savefig(fname, dpi=300, bbox_inches="tight")
+        plt.savefig(fname, dpi=600, bbox_inches="tight")
         plt.close(fig)
         print(f"✅ Salvo: {fname}")
 
