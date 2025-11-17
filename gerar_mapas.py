@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import os, warnings
 from pathlib import Path
+import matplotlib.colors as mcolors 
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -98,9 +99,39 @@ tick_labels = [f"{nivels[i]}–{nivels[i+1]}" for i in range(len(nivels)-1)]
 tick_labels[-1] = f">{nivels[-2]}"
 extent = [-85, -30, -35, 10]
 
+# Estilo para o fundo preto/sombra (bbox)
+BBOX_STYLE = dict(boxstyle="round,pad=0.2", facecolor='black', alpha=0.8, edgecolor='black', linewidth=0.5)
+
+
 # Pasta local (dentro do repositório)
 out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
+
+
+# ==========================================================
+# FUNÇÃO AUXILIAR PARA DETERMINAR A COR DO TEXTO (SIMPLIFICADA)
+# Não é mais estritamente necessária, mas mantida por clareza.
+# ==========================================================
+def get_text_color_from_value(value, levels, cmap_colors, threshold=0.5):
+    """Retorna 'white' para fundos escuros, 'black' para fundos claros (mantido)"""
+    if pd.isna(value) or value < levels[0]: 
+        return 'black'
+
+    color_index = 0
+    for i, level in enumerate(levels):
+        if value >= level:
+            color_index = i
+        else:
+            break
+    
+    color_index = min(color_index, len(cmap_colors) - 1)
+    hex_color = cmap_colors[color_index]
+    rgb = mcolors.hex2color(hex_color)
+    luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2])
+    
+    # Se usarmos bbox, sempre podemos usar branco para o texto
+    return 'white'
+
 
 # ==============================
 # 2. Baixar ECMWF e processar
@@ -160,7 +191,7 @@ def gerar_mapas():
         daily.append({"data": data_24h, "start": start_br, "end": end_br})
 
     # ==============================
-    # 3. Mapas diários (VALOR EXATO SEM TEXTO)
+    # 3. Mapas diários (SEM PONTOS E COM BBOX)
     # ==============================
     print("\n🗺️ Gerando mapas diários...")
     for idx, item in enumerate(daily):
@@ -180,27 +211,37 @@ def gerar_mapas():
                                  cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
         
         # ----------------------------------------------------
-        # Plotagem dos Valores Diários (SÓ NÚMERO)
+        # Plotagem dos Valores Diários (SÓ INTEIROS NO CENTRO COM BBOX)
         # ----------------------------------------------------
         print(f"   > Plotando valores de precipitação para o dia {start:%d-%m}...")
         for city, (lat, lon) in CIDADES_NORDESTE.items():
             try:
                 precip_value = rain.sel(latitude=lat, longitude=lon, method="nearest").item()
-                precip_rounded = round(precip_value, 1)
-            except Exception:
-                precip_rounded = "N/D"
+                
+                # Arredonda o valor e converte para string SEM casas decimais
+                precip_int = str(int(round(precip_value)))
+                
+                # Definimos a cor do texto como branco, já que usaremos bbox preto
+                text_color = 'white' 
 
-            # Adiciona o marcador da cidade (ponto preto)
-            ax.plot(lon, lat, 'ko', markersize=3, transform=ccrs.PlateCarree()) # Marcador menor (3)
-            
-            # Adiciona o texto (APENAS O VALOR)
-            ax.text(lon, lat, str(precip_rounded),
+            except Exception:
+                precip_int = "N/D"
+                text_color = 'black' # Cor padrão se não houver dados
+                bbox_style = None
+            else:
+                bbox_style = BBOX_STYLE # Aplica o bbox se houver dados
+
+            # Não plotamos mais o ax.plot (ponto)
+
+            # Adiciona o texto (APENAS O VALOR INTEIRO)
+            ax.text(lon, lat, precip_int,
                     transform=ccrs.PlateCarree(),
-                    fontsize=5, # Tamanho bem pequeno para 45 pontos
-                    color='black',
+                    fontsize=6.5, # Tamanho ajustado
+                    color=text_color,
                     weight='bold',
-                    ha='center', # Centraliza o texto no ponto
-                    va='bottom') # Coloca o texto ligeiramente acima do ponto
+                    ha='center', # Centraliza o texto na coordenada
+                    va='center', # Centraliza o texto na coordenada
+                    bbox=bbox_style) # Aplica o fundo preto
         
         # ----------------------------------------------------
         # Título e barra de cores
@@ -219,7 +260,7 @@ def gerar_mapas():
         print(f"✅ Salvo: {fname}")
 
     # ==============================
-    # 4. Mapa acumulado (VALOR EXATO SEM TEXTO)
+    # 4. Mapa acumulado (SEM PONTOS E COM BBOX)
     # ==============================
     accum_15d = sum([item["data"] for item in daily])
     start_acc = daily[0]['start']
@@ -237,27 +278,37 @@ def gerar_mapas():
                                   cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
     
     # ----------------------------------------------------
-    # Plotagem dos Valores Acumulados (SÓ NÚMERO)
+    # Plotagem dos Valores Acumulados (SÓ INTEIROS NO CENTRO COM BBOX)
     # ----------------------------------------------------
     print("\n📍 Plotando valores acumulados no mapa (15 dias)...")
     for city, (lat, lon) in CIDADES_NORDESTE.items():
         try:
             precip_value = accum_15d.sel(latitude=lat, longitude=lon, method="nearest").item()
-            precip_rounded = round(precip_value, 1)
-        except Exception:
-            precip_rounded = "N/D"
+            
+            # Arredonda o valor e converte para string SEM casas decimais
+            precip_int = str(int(round(precip_value)))
+            
+            # Definimos a cor do texto como branco, já que usaremos bbox preto
+            text_color = 'white'
 
-        # Adiciona o marcador da cidade (ponto preto)
-        ax.plot(lon, lat, 'ko', markersize=3, transform=ccrs.PlateCarree(), label=city)
+        except Exception:
+            precip_int = "N/D"
+            text_color = 'black' # Cor padrão se não houver dados
+            bbox_style = None
+        else:
+            bbox_style = BBOX_STYLE # Aplica o bbox se houver dados
+
+        # Não plotamos mais o ax.plot (ponto)
         
-        # Adiciona o texto (APENAS O VALOR)
-        ax.text(lon, lat, str(precip_rounded),
+        # Adiciona o texto (APENAS O VALOR INTEIRO)
+        ax.text(lon, lat, precip_int,
                 transform=ccrs.PlateCarree(),
-                fontsize=6, # Tamanho ligeiramente maior que o diário
-                color='black',
+                fontsize=7, # Tamanho ajustado
+                color=text_color,
                 weight='bold',
-                ha='center', # Centraliza o texto no ponto
-                va='bottom') # Coloca o texto ligeiramente acima do ponto
+                ha='center', # Centraliza o texto na coordenada
+                va='center', # Centraliza o texto na coordenada
+                bbox=bbox_style) # Aplica o fundo preto
 
 
     # Título do mapa
