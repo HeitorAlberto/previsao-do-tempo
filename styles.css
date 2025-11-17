@@ -269,3 +269,54 @@ footer {
     margin: 4px 0;
     font-size: 20px;
 }
+
+
+
+
+
+
+
+
+
+/* HISTÓRICO */
+#historyContainer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.history-item {
+    padding: 8px 12px;
+    border: 1px solid black;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 auto;
+    font-size: 14px;
+}
+
+/* remove barra feia do scroll */
+#historyContainer::-webkit-scrollbar {
+    height: 6px;
+}
+
+#historyContainer::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+/* Mobile — funciona naturalmente como carrossel */
+@media (max-width: 600px) {
+    #historyContainer {
+        gap: 8px;
+    }
+
+    .history-item {
+        font-size: 13px;
+        padding: 6px 10px;
+    }
+}
