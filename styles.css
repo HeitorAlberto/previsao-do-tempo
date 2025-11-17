@@ -322,6 +322,7 @@ footer {
 @media (max-width: 600px) {
     #historyContainer {
         gap: 8px;
+        justify-content: left;
     }
 
     .history-item {

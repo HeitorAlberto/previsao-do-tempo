@@ -18,32 +18,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // =====================
     let searchHistory = [];
 
-    // Salvar no histórico sem duplicar e mantendo sempre o último no final
     function addToHistory(name, lat, lon) {
-
-        // Remove duplicata, se existir
         const existingIndex = searchHistory.findIndex(
             item => item.name.toLowerCase() === name.toLowerCase()
         );
-        if (existingIndex !== -1) {
-            searchHistory.splice(existingIndex, 1);
-        }
-
-        // Adiciona ao final da lista
+        if (existingIndex !== -1) searchHistory.splice(existingIndex, 1);
         searchHistory.push({ name, lat, lon });
-
-        // Mantém apenas as últimas 5
-        if (searchHistory.length > 5) {
-            searchHistory.shift();
-        }
-
+        if (searchHistory.length > 5) searchHistory.shift();
         renderHistory();
     }
 
-
     function renderHistory() {
         historyContainer.innerHTML = "";
-
         historyContainer.innerHTML = "Histórico: ";
         historyContainer.style.fontWeight = "bolder";
 
@@ -51,14 +37,35 @@ document.addEventListener("DOMContentLoaded", () => {
             const div = document.createElement("div");
             div.className = "history-item";
             div.textContent = item.name;
-
-            // Clicar no item → recarrega previsão
             div.onclick = () => loadForecast(item.lat, item.lon, item.name);
-
             historyContainer.appendChild(div);
         });
     }
 
+    // =====================
+    // Cache no navegador
+    // =====================
+    const CACHE_TTL_MINUTES = 60; // validade do cache
+
+    function getWeatherCache(lat, lon) {
+        const key = `weather_${lat}_${lon}`;
+        const cached = localStorage.getItem(key);
+        if (!cached) return null;
+
+        const { data, timestamp } = JSON.parse(cached);
+        const age = (Date.now() - timestamp) / (1000 * 60);
+        if (age > CACHE_TTL_MINUTES) return null; // cache expirado
+
+        return data;
+    }
+
+    function saveWeatherCache(lat, lon, data) {
+        const key = `weather_${lat}_${lon}`;
+        localStorage.setItem(key, JSON.stringify({
+            data,
+            timestamp: Date.now()
+        }));
+    }
 
     // =====================
     // Utilitários
@@ -102,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const summarizeDay = points => {
-        const summary = points.reduce((acc, p) => {
+        return points.reduce((acc, p) => {
             const hour = new Date(p.time).getHours();
             acc.tMin = Math.min(acc.tMin, p.temperature_2m ?? acc.tMin);
             acc.tMax = Math.max(acc.tMax, p.temperature_2m ?? acc.tMax);
@@ -112,43 +119,41 @@ document.addEventListener("DOMContentLoaded", () => {
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
 
             const cloud = p.cloud_cover ?? 0;
-            if (hour >= 6 && hour < 18) {
-                acc.cloudDay.push(cloud);
-            } else {
-                acc.cloudNight.push(cloud);
-            }
-            return acc;
-        }, { tMin: Infinity, tMax: -Infinity, rhMin: Infinity, rhMax: -Infinity, precipSum: 0, gustMax: 0, cloudDay: [], cloudNight: [] });
+            if (hour >= 6 && hour < 18) acc.cloudDay.push(cloud);
+            else acc.cloudNight.push(cloud);
 
-        return summary;
+            acc.weatherCodes.push(p.weather_code);
+            return acc;
+        }, { tMin: Infinity, tMax: -Infinity, rhMin: Infinity, rhMax: -Infinity, precipSum: 0, gustMax: 0, cloudDay: [], cloudNight: [], weatherCodes: [] });
     };
 
-    // =========================================================
-    // CLASSIFICAÇÃO OFICIAL WMO — CHUVA / PANCADAS / TROVOADAS
-    // =========================================================
+    // =====================
+    // CLASSIFICAÇÃO CHUVA / PANCADAS / TROVOADAS
+    // =====================
     function getRainType(code) {
         if ((code >= 51 && code <= 57) || code === 61 || code === 80) return "chuva fraca";
         if (code === 63 || code === 81) return "chuva moderada";
         if (code === 65 || code === 82) return "chuva forte";
         return null;
     }
+
     function getShowerType(code) {
         if (code === 80) return "pancadas fracas";
         if (code === 81) return "pancadas moderadas";
         if (code === 82) return "pancadas fortes";
         return null;
     }
+
     function isThunder(code) {
         return code >= 95 && code <= 99;
     }
+
     function classifyFrequency(count) {
         return count >= 3 ? "frequente" : "pontual";
     }
 
-    // Monta chuva/pancadas por período, considerando limiar diário
     function getRainDescription(codes, totalPrecip) {
         if (totalPrecip < 0.9) return null;
-
         const events = [];
         for (const c of codes) {
             const shower = getShowerType(c);
@@ -156,14 +161,13 @@ document.addEventListener("DOMContentLoaded", () => {
             if (shower) events.push(shower);
             else if (rain) events.push(rain);
         }
-
         if (events.length === 0) return null;
 
         const strong = events.find(e => e.includes("forte"));
         const moderate = events.find(e => e.includes("moderada"));
         const weak = events.find(e => e.includes("fraca"));
 
-        let dominant = strong || moderate || weak;
+        const dominant = strong || moderate || weak;
         const freq = classifyFrequency(events.length);
         return `${dominant} ${freq}`;
     }
@@ -174,7 +178,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return `trovoadas ${classifyFrequency(count)}`;
     }
 
-    // Céu
     function getSkyDescription(avgCloud) {
         if (avgCloud < 20) return "Céu limpo";
         if (avgCloud < 50) return "Parcialmente nublado";
@@ -182,7 +185,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return "Céu encoberto";
     }
 
-    // Função principal dos períodos
     function getCloudDescriptions(points) {
         const periods = {
             madrugada: points.filter(p => new Date(p.time).getHours() < 6),
@@ -198,7 +200,6 @@ document.addEventListener("DOMContentLoaded", () => {
         };
 
         const descriptions = {};
-
         for (const [period, arr] of Object.entries(periods)) {
             if (arr.length === 0) {
                 descriptions[period] = "Dados insuficientes";
@@ -206,26 +207,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const avgCloud = arr.reduce((a, b) => a + b.cloud_cover, 0) / arr.length;
-            const sky = avgCloud < 20 ? `Céu limpo`
-                : avgCloud < 50 ? `Algumas nuvens`
-                    : avgCloud < 85 ? `Predominantemente nublado`
-                        : `Céu encoberto`;
+            const sky = getSkyDescription(avgCloud);
 
             const totalPrecip = arr.reduce((sum, p) => sum + (p.precipitation ?? 0), 0);
-
-            let rain = null;
-            if (totalPrecip >= 0.5 && totalPrecip < 5) rain = `chuva fraca`;
-            else if (totalPrecip >= 5 && totalPrecip < 15) rain = "chuva moderada";
-            else if (totalPrecip >= 15) rain = "chuva forte";
-
-            if (rain) {
-                const hoursWithRain = arr.filter(p => p.precipitation >= 0.5).length;
-                const freq = hoursWithRain >= 3 ? "frequente" : "pontual";
-                rain += ` ${freq}`;
-            }
-
-            const hasThunder = arr.some(p => p.weather_code >= 95 && p.weather_code <= 99);
-            const thunder = hasThunder ? `trovoadas ${arr.filter(p => p.weather_code >= 95 && p.weather_code <= 99).length >= 3 ? "frequentes" : "pontuais"}` : null;
+            const rain = getRainDescription(arr.map(p => p.weather_code), totalPrecip);
+            const thunder = getThunderDescription(arr.map(p => p.weather_code));
 
             const parts = [sky];
             if (rain) parts.push(rain);
@@ -233,7 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             descriptions[period] = parts.join(" / ");
         }
-
         return descriptions;
     }
 
@@ -253,16 +238,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const card = document.createElement('div');
         card.id = 'summaryCard';
         card.className = 'day';
-        card.innerHTML = `
-        <div class="row precip"><p>Chuva total (15 dias)</p><p>${totalPrecip.toFixed(1)} mm</p></div>
-    `;
+        card.innerHTML = `<div class="row precip"><p>Chuva total (15 dias)</p><p>${totalPrecip.toFixed(1)} mm</p></div>`;
         forecastSection.parentNode.insertBefore(card, forecastSection);
     };
 
     const renderDays = dayMapInput => {
         const dayMap = dayMapInput instanceof Map ? dayMapInput : new Map(dayMapInput);
         cardsEl.innerHTML = '';
-
         const entries = Array.from(dayMap.entries()).slice(0, 15);
         renderSummaryCard(dayMap);
 
@@ -284,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="descricao-nuvens"><p><strong>Manhã</strong><br>${descriptions.manhã}</p></div>
             <div class="descricao-nuvens"><p><strong>Tarde</strong><br>${descriptions.tarde}</p></div>
             <div class="descricao-nuvens"><p><strong>Noite</strong><br>${descriptions.noite}</p></div>
-        `;
+            `;
             cardsEl.appendChild(card);
         });
 
@@ -292,7 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // =====================
-    // Fetch (sem cache)
+    // Fetch API
     // =====================
     async function fetchForecast(lat, lon, timezone = 'auto') {
         const url = new URL(forecastBase);
@@ -312,31 +294,31 @@ document.addEventListener("DOMContentLoaded", () => {
         const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`;
         const res = await fetch(url);
         const data = await res.json();
-
         if (!data[0]) throw new Error('Local não encontrado');
 
         const place = data[0];
         const name = getAddressText(place.address || {});
-
-        return {
-            name,
-            lat: parseFloat(place.lat),
-            lon: parseFloat(place.lon)
-        };
+        return { name, lat: parseFloat(place.lat), lon: parseFloat(place.lon) };
     }
 
+    // =====================
+    // Load Forecast com cache
+    // =====================
     async function loadForecast(lat, lon) {
         locationName.textContent = "Carregando...";
 
         try {
-            const forecast = await fetchForecast(lat, lon);
-            const dayMap = groupHourlyByDate(forecast.hourly.time, prepareHourlyArrays(forecast.hourly));
+            let forecast = getWeatherCache(lat, lon);
+            if (!forecast) {
+                forecast = await fetchForecast(lat, lon);
+                saveWeatherCache(lat, lon, forecast);
+            }
 
+            const dayMap = groupHourlyByDate(forecast.hourly.time, prepareHourlyArrays(forecast.hourly));
             renderDays(dayMap);
 
             const rev = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`);
             const revData = await rev.json();
-
             const resolvedName = getAddressText(revData.address || {});
             locationName.textContent = resolvedName;
 
