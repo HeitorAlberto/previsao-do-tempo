@@ -20,18 +20,72 @@ dias_semana_pt = {
     "Thursday": "quinta-feira", "Friday": "sexta-feira", "Saturday": "sábado", "Sunday": "domingo",
 }
 
-# Dicionário de Cidades do Nordeste e Coordenadas (Latitude, Longitude) em Graus Decimais
+# Dicionário COMPLETO de Cidades do Nordeste e Coordenadas (45 Cidades)
 CIDADES_NORDESTE = {
+    # BAHIA (BA)
     "Salvador (BA)": (-12.9714, -38.5108),
+    "Feira de Santana (BA)": (-12.2669, -38.9664),
+    "Vitória da Conquista (BA)": (-15.1970, -40.8354),
+    "Camaçari (BA)": (-12.6961, -38.3117),
+    "Ilhéus (BA)": (-14.7937, -39.0494),
+    
+    # CEARÁ (CE)
     "Fortaleza (CE)": (-3.7319, -38.5267),
+    "Caucaia (CE)": (-3.7388, -38.6534),
+    "Juazeiro do Norte (CE)": (-7.2081, -39.3149),
+    "Sobral (CE)": (-3.6888, -40.3475),
+    "Maracanaú (CE)": (-3.8646, -38.6253),
+
+    # PERNAMBUCO (PE)
     "Recife (PE)": (-8.0539, -34.8811),
+    "Jaboatão dos Guararapes (PE)": (-8.1032, -34.9080),
+    "Olinda (PE)": (-8.0100, -34.8550),
+    "Caruaru (PE)": (-8.2753, -35.9754),
+    "Petrolina (PE)": (-9.3900, -40.5086),
+
+    # MARANHÃO (MA)
     "São Luís (MA)": (-2.5367, -44.3056),
+    "Imperatriz (MA)": (-5.5261, -47.4786),
+    "São José de Ribamar (MA)": (-2.5939, -44.0533),
+    "Caxias (MA)": (-4.8617, -43.3553),
+    "Timon (MA)": (-5.0874, -42.8306),
+
+    # RIO GRANDE DO NORTE (RN)
     "Natal (RN)": (-5.7950, -35.2014),
+    "Mossoró (RN)": (-5.1931, -37.3456),
+    "Parnamirim (RN)": (-5.9189, -35.2443),
+    "São Gonçalo do Amarante (RN)": (-5.7939, -35.3283),
+    "Macaíba (RN)": (-5.8506, -35.3619),
+
+    # PARAÍBA (PB)
     "João Pessoa (PB)": (-7.1197, -34.8450),
+    "Campina Grande (PB)": (-7.2306, -35.8819),
+    "Santa Rita (PB)": (-7.0699, -35.0354),
+    "Patos (PB)": (-7.0210, -37.2801),
+    "Bayeux (PB)": (-7.0945, -34.9392),
+
+    # ALAGOAS (AL)
     "Maceió (AL)": (-9.6658, -35.7351),
+    "Arapiraca (AL)": (-9.7540, -36.6669),
+    "Rio Largo (AL)": (-9.5085, -35.8340),
+    "Palmeira dos Índios (AL)": (-9.4140, -36.6340),
+    "São Miguel dos Campos (AL)": (-9.7766, -36.0963),
+
+    # SERGIPE (SE)
     "Aracaju (SE)": (-10.9092, -37.0631),
+    "Nossa Senhora do Socorro (SE)": (-10.8353, -37.1856),
+    "Lagarto (SE)": (-10.9231, -37.6472),
+    "Itabaiana (SE)": (-10.6861, -37.3197),
+    "Estância (SE)": (-11.2721, -37.4410),
+
+    # PIAUÍ (PI)
     "Teresina (PI)": (-5.0927, -42.8037),
+    "Parnaíba (PI)": (-2.9031, -41.7769),
+    "Picos (PI)": (-7.0753, -41.4725),
+    "Piripiri (PI)": (-4.2750, -41.7825),
+    "Floriano (PI)": (-6.7645, -43.0186),
 }
+
 
 nivels = [0, 0.5, 2, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 cores = ["#FFFFFF","#cbcbcb","#797979","#4ffd72","#006000","#040CA5","#5E8CFF","#FFFF00",
@@ -77,7 +131,6 @@ def gerar_mapas():
 
     print(f"\n📡 Verificando ECMWF HRES {run_date_str} 00Z...")
 
-    # Só baixa se o arquivo do dia ainda não existir
     if not os.path.exists(target_file):
         print("⬇️  Arquivo não encontrado. Iniciando download...")
         client.retrieve(**request_params)
@@ -107,7 +160,7 @@ def gerar_mapas():
         daily.append({"data": data_24h, "start": start_br, "end": end_br})
 
     # ==============================
-    # 3. Mapas diários (INCLUSÃO DA PLOTAGEM DE CIDADES)
+    # 3. Mapas diários (VALOR EXATO SEM TEXTO)
     # ==============================
     print("\n🗺️ Gerando mapas diários...")
     for idx, item in enumerate(daily):
@@ -127,33 +180,30 @@ def gerar_mapas():
                                  cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
         
         # ----------------------------------------------------
-        # Plotagem das Cidades e Valores Diários
+        # Plotagem dos Valores Diários (SÓ NÚMERO)
         # ----------------------------------------------------
-        print(f"   > Plotando cidades para o dia {start:%d-%m}...")
+        print(f"   > Plotando valores de precipitação para o dia {start:%d-%m}...")
         for city, (lat, lon) in CIDADES_NORDESTE.items():
-            # Interpolação para obter o valor de precipitação na coordenada da cidade
             try:
                 precip_value = rain.sel(latitude=lat, longitude=lon, method="nearest").item()
-                precip_rounded = round(precip_value, 1) # Arredonda para 1 casa decimal
+                precip_rounded = round(precip_value, 1)
             except Exception:
                 precip_rounded = "N/D"
 
             # Adiciona o marcador da cidade (ponto preto)
-            ax.plot(lon, lat, 'ko', markersize=5, transform=ccrs.PlateCarree())
+            ax.plot(lon, lat, 'ko', markersize=3, transform=ccrs.PlateCarree()) # Marcador menor (3)
             
-            # Adiciona o texto (nome da cidade e valor de precipitação)
-            text_label = f"{city.split(' ')[0]}\n({precip_rounded} mm)" # Usando apenas o nome da cidade para economizar espaço
-            
-            ax.text(lon + 0.5, lat + 0.1, text_label,
+            # Adiciona o texto (APENAS O VALOR)
+            ax.text(lon, lat, str(precip_rounded),
                     transform=ccrs.PlateCarree(),
-                    fontsize=6.5, # Tamanho um pouco menor para o diário
+                    fontsize=5, # Tamanho bem pequeno para 45 pontos
                     color='black',
                     weight='bold',
-                    ha='left',
-                    va='center')
-
+                    ha='center', # Centraliza o texto no ponto
+                    va='bottom') # Coloca o texto ligeiramente acima do ponto
+        
         # ----------------------------------------------------
-        # Título e barra de cores (Sem alteração)
+        # Título e barra de cores
         # ----------------------------------------------------
         dia_semana = dias_semana_pt[start.strftime("%A")]
         ax.set_title(f"({daynum:02d}) {start:%d-%m-%y} ({dia_semana})\nRodada ECMWF: {run_time:%d-%m-%Y %H:%MZ}",
@@ -169,7 +219,7 @@ def gerar_mapas():
         print(f"✅ Salvo: {fname}")
 
     # ==============================
-    # 4. Mapa acumulado (COM PLOTAGEM DE CIDADES)
+    # 4. Mapa acumulado (VALOR EXATO SEM TEXTO)
     # ==============================
     accum_15d = sum([item["data"] for item in daily])
     start_acc = daily[0]['start']
@@ -183,36 +233,31 @@ def gerar_mapas():
     ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines","50m", edgecolor="black", facecolor="none", linewidth=0.8))
     ax.gridlines(draw_labels=False, linestyle="--", alpha=0.4)
     
-    # Plotagem do acumulado de precipitação
     cf = accum_15d.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
                                   cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
     
     # ----------------------------------------------------
-    # Plotagem das Cidades e Valores de Acumulado
+    # Plotagem dos Valores Acumulados (SÓ NÚMERO)
     # ----------------------------------------------------
-    print("\n📍 Plotando cidades no mapa acumulado (15 dias)...")
+    print("\n📍 Plotando valores acumulados no mapa (15 dias)...")
     for city, (lat, lon) in CIDADES_NORDESTE.items():
         try:
             precip_value = accum_15d.sel(latitude=lat, longitude=lon, method="nearest").item()
-            precip_rounded = round(precip_value, 1) # Arredonda para 1 casa decimal
+            precip_rounded = round(precip_value, 1)
         except Exception:
             precip_rounded = "N/D"
 
         # Adiciona o marcador da cidade (ponto preto)
-        ax.plot(lon, lat, 'ko', markersize=5, transform=ccrs.PlateCarree(), label=city)
+        ax.plot(lon, lat, 'ko', markersize=3, transform=ccrs.PlateCarree(), label=city)
         
-        # Adiciona o texto (nome da cidade e valor de precipitação)
-        text_label = f"{city}\n({precip_rounded} mm)"
-        
-        ax.text(lon + 0.5, lat + 0.1, text_label,
+        # Adiciona o texto (APENAS O VALOR)
+        ax.text(lon, lat, str(precip_rounded),
                 transform=ccrs.PlateCarree(),
-                fontsize=7,
+                fontsize=6, # Tamanho ligeiramente maior que o diário
                 color='black',
                 weight='bold',
-                ha='left',
-                va='center')
-        
-        print(f"   > {city}: {precip_rounded} mm")
+                ha='center', # Centraliza o texto no ponto
+                va='bottom') # Coloca o texto ligeiramente acima do ponto
 
 
     # Título do mapa
