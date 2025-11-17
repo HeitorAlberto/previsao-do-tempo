@@ -33,16 +33,19 @@ CIDADES_BRASIL = {
     "Vitória da Conquista (BA)": (-15.1970, -40.8354),
     "Camaçari (BA)": (-12.6961, -38.3117),
     "Ilhéus (BA)": (-14.7937, -39.0494),
+    "Barreiras (BA)": (-12.1439, -44.9968),
+    "Irecê (BA)": (-11.3033, -41.8535),
     "Fortaleza (CE)": (-3.7319, -38.5267),
     "Caucaia (CE)": (-3.7388, -38.6534),
     "Juazeiro do Norte (CE)": (-7.2081, -39.3149),
     "Sobral (CE)": (-3.6888, -40.3475),
     "Maracanaú (CE)": (-3.8646, -38.6253),
     "Recife (PE)": (-8.0539, -34.8811),
-    "Jaboatão dos Guararapes (PE)": (-8.1032, -34.9080),
     "Olinda (PE)": (-8.0100, -34.8550),
     "Caruaru (PE)": (-8.2753, -35.9754),
     "Petrolina (PE)": (-9.3900, -40.5086),
+    "Serra Talhada (PE)": (-7.9858, -38.2958),
+    "Parnamirim (PE)": (-8.0906, -39.5783),
     "São Luís (MA)": (-2.5367, -44.3056),
     "Imperatriz (MA)": (-5.5261, -47.4786),
     "São José de Ribamar (MA)": (-2.5939, -44.0533),
@@ -56,13 +59,12 @@ CIDADES_BRASIL = {
     "João Pessoa (PB)": (-7.1197, -34.8450),
     "Campina Grande (PB)": (-7.2306, -35.8819),
     "Santa Rita (PB)": (-7.0699, -35.0354),
+    "Itaporanga (PB)": (-7.3039, -38.1500),
     "Patos (PB)": (-7.0210, -37.2801),
     "Bayeux (PB)": (-7.0945, -34.9392),
     "Maceió (AL)": (-9.6658, -35.7351),
     "Arapiraca (AL)": (-9.7540, -36.6669),
-    "Rio Largo (AL)": (-9.5085, -35.8340),
-    "Palmeira dos Índios (AL)": (-9.4140, -36.6340),
-    "São Miguel dos Campos (AL)": (-9.7766, -36.0963),
+    "Santana do Ipanema (AL)": (-9.3783, -37.2453),
     "Aracaju (SE)": (-10.9092, -37.0631),
     "Nossa Senhora do Socorro (SE)": (-10.8353, -37.1856),
     "Lagarto (SE)": (-10.9231, -37.6472),
@@ -112,9 +114,13 @@ CIDADES_BRASIL = {
     "Florianópolis (SC)": (-27.5945, -48.5477),
     "Joinville (SC)": (-26.3044, -48.8487),
     "Blumenau (SC)": (-26.9180, -49.0653),
+    "Chapecó (SC)": (-27.1004, -52.6152),
     "Curitiba (PR)": (-25.4284, -49.2733),
     "Londrina (PR)": (-23.3045, -51.1696),
-    "Maringá (PR)": (-23.4205, -51.9331)
+    "Maringá (PR)": (-23.4205, -51.9331),
+    "Santa Rosa (RS)": (-27.8702, -54.4804),
+    "Ijuí (RS)": (-28.3880, -53.9190),
+    "Uruguaiana (RS)": (-29.7602, -57.0852),
 }
 
 nivels = [0, 0.5, 2, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
@@ -229,7 +235,7 @@ def gerar_mapas():
 
             ax.text(lon, lat, precip_int,
                     transform=ccrs.PlateCarree(),
-                    fontsize=0.8,       # <<< MUITO MENOR
+                    fontsize=2,       # <<< MUITO MENOR
                     color=text_color,
                     weight='bold',
                     ha='center',
@@ -282,7 +288,7 @@ def gerar_mapas():
 
         ax.text(lon, lat, precip_int,
                 transform=ccrs.PlateCarree(),
-                fontsize=0.8,       # <<< MUITO MENOR
+                fontsize=2,       
                 color=text_color,
                 weight='bold',
                 ha='center',
