@@ -282,10 +282,15 @@ footer {
 #historyContainer {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     padding: 10px 15px;
     overflow-x: auto;
     white-space: nowrap;
+}
+
+#historyContainer p {
+    font-weight: bolder;
 }
 
 .history-item {
@@ -297,6 +302,10 @@ footer {
     display: inline-flex;
     flex: 0 0 auto;
     font-size: 14px;
+}
+
+.history-item:hover {
+    background-color: #e7e7e7;
 }
 
 /* remove barra feia do scroll */

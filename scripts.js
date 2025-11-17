@@ -45,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
         historyContainer.innerHTML = "";
 
         historyContainer.innerHTML = "Histórico: ";
+        historyContainer.style.fontWeight = "bolder";
 
         searchHistory.forEach(item => {
             const div = document.createElement("div");
