@@ -12,18 +12,20 @@
                         font-family: "Roboto", sans-serif;
                         margin: 0;
                         padding: 0;
+                        background: #f7f7f7;
                 }
 
                 header {
                         text-align: center;
-                        margin-bottom: 50px;
+                        margin-bottom: 30px;
                         gap: 50px;
+                        padding: 20px;
                 }
 
                 header h1 {
                         font-size: 24px;
-                        margin-top: 50px;
-                        margin-bottom: 50px;
+                        margin-top: 30px;
+                        margin-bottom: 10px;
                 }
 
                 header .btn-pagina-inicial {
@@ -31,173 +33,182 @@
                         color: black;
                         background-color: rgb(236, 236, 236);
                         border-radius: 8px;
-                        padding: 10px 20px;
+                        padding: 8px 16px;
                 }
 
-                main {
-                        display: grid;
-                        grid-template-columns: 1fr 1fr;
-                        gap: 10px;
+                /* VISOR (desktop) - mostra apenas 1 imagem com controles */
+                .visor {
+                        width: 90vw;
+                        margin: 20px auto;
+                        position: relative;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 12px;
+                }
+
+                .visor img {
+                        height: 95vh;
+                        border: 2px solid #000000;
+                        border-radius: 12px;
+                        display: block;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                        background: white;
+                }
+
+                .controle {
+                        background: rgba(0, 0, 0, 0.6);
+                        color: white;
+                        border: none;
+                        padding: 10px 14px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        user-select: none;
+                }
+
+                .contador {
+                        position: absolute;
+                        top: 12px;
+                        left: 12px;
+                        color: white;
+                        font-size: 16px;
+                        background: rgba(0, 0, 0, 0.4);
+                        padding: 6px 10px;
+                        border-radius: 8px;
+                }
+
+                /* Miniaturas / galeria para celular (ou quando explicitamente visível) */
+                #galeria {
+                        display: none;
+                        /* escondida no desktop */
                         width: 95vw;
-                        margin: auto;
+                        margin: 12px auto 40px;
+                        gap: 10px;
                 }
 
-                main img {
+                #galeria img {
                         width: 100%;
                         border: 2px solid #000000;
                         border-radius: 12px;
                         cursor: pointer;
                 }
 
-                @media (max-width:800px) {
-                        header h1 {
-                                font-size: 20px;
-                        }
-
-                        main {
-                                grid-template-columns: 1fr;
-                        }
-                }
-
-                /* LIGHTBOX */
+                /* LIGHTBOX - permanece disponível no desktop também se quiser ampliar */
                 #lightbox {
                         position: fixed;
                         top: 0;
                         left: 0;
                         width: 100vw;
                         height: 100vh;
-                        background: rgba(0, 0, 0, 0.8);
+                        background: rgba(0, 0, 0, 0.85);
                         display: none;
                         justify-content: center;
                         align-items: center;
                         z-index: 9999;
+                        padding: 20px;
+                        box-sizing: border-box;
                 }
 
                 #lightbox img {
                         max-height: 95vh;
                         max-width: 95vw;
-                }
-
-                .contador {
-                        position: absolute;
-                        top: 20px;
-                        left: 20px;
-                        color: white;
-                        font-size: 24px;
+                        border-radius: 8px;
                 }
 
                 .fechar {
                         position: absolute;
-                        top: 20px;
-                        right: 50px;
+                        top: 18px;
+                        right: 18px;
                         color: white;
-                        font-size: 24px;
+                        font-size: 22px;
                         cursor: pointer;
+                        background: rgba(0, 0, 0, 0.35);
+                        padding: 6px 10px;
+                        border-radius: 6px;
                 }
 
-                .seta {
-                        position: absolute;
-                        top: 50%;
-                        transform: translateY(-50%);
-                        font-size: 40px;
-                        color: white;
-                        cursor: pointer;
-                        padding: 20px;
-                        user-select: none;
-                }
+                /* Responsivo: em telas pequenas, mostrar a grade de imagens (comportamento anterior) */
+                @media (max-width:800px) {
+                        .visor {
+                                display: none;
+                        }
 
-                .seta.esquerda {
-                        left: 20px;
-                }
+                        #galeria {
+                                display: grid;
+                                grid-template-columns: 1fr;
+                        }
 
-                .seta.direita {
-                        right: 20px;
+                        #galeria img {
+                                max-width: 100%;
+                        }
                 }
         </style>
 </head>
 
 <body>
-        <header>
-                <h1>Mapa de chuva diária (15 dias)</h1>
-                <a href="index.html" class="btn-pagina-inicial">Página inicial</a>
-        </header>
 
-        <main id="galeria">
-                <img src="mapas/01.png" data-index="0">
-                <img src="mapas/02.png" data-index="1">
-                <img src="mapas/03.png" data-index="2">
-                <img src="mapas/04.png" data-index="3">
-                <img src="mapas/05.png" data-index="4">
-                <img src="mapas/06.png" data-index="5">
-                <img src="mapas/07.png" data-index="6">
-                <img src="mapas/08.png" data-index="7">
-                <img src="mapas/09.png" data-index="8">
-                <img src="mapas/10.png" data-index="9">
-                <img src="mapas/11.png" data-index="10">
-                <img src="mapas/12.png" data-index="11">
-                <img src="mapas/13.png" data-index="12">
-                <img src="mapas/14.png" data-index="13">
-                <img src="mapas/15.png" data-index="14">
-                <img src="mapas/acumulado-15-dias.png" data-index="15">
+        <!-- VISOR: Exibido por padrão em desktop - controles para navegar entre imagens -->
+        <section class="visor" aria-label="Visualizador de mapas">
+                <div class="contador" id="contador">1/16</div>
+                <button class="controle" id="prev" aria-label="Anterior">◀</button>
+                <img id="viewer" src="mapas/01.png" alt="Mapa dia 1">
+                <button class="controle" id="next" aria-label="Próximo">▶</button>
+        </section>
+
+        <!-- GALERIA: exibida somente no celular -->
+        <main id="galeria" aria-label="Galeria de mapas">
+                <img src="mapas/01.png" data-index="0" alt="Mapa dia 1">
+                <img src="mapas/02.png" data-index="1" alt="Mapa dia 2">
+                <img src="mapas/03.png" data-index="2" alt="Mapa dia 3">
+                <img src="mapas/04.png" data-index="3" alt="Mapa dia 4">
+                <img src="mapas/05.png" data-index="4" alt="Mapa dia 5">
+                <img src="mapas/06.png" data-index="5" alt="Mapa dia 6">
+                <img src="mapas/07.png" data-index="6" alt="Mapa dia 7">
+                <img src="mapas/08.png" data-index="7" alt="Mapa dia 8">
+                <img src="mapas/09.png" data-index="8" alt="Mapa dia 9">
+                <img src="mapas/10.png" data-index="9" alt="Mapa dia 10">
+                <img src="mapas/11.png" data-index="10" alt="Mapa dia 11">
+                <img src="mapas/12.png" data-index="11" alt="Mapa dia 12">
+                <img src="mapas/13.png" data-index="12" alt="Mapa dia 13">
+                <img src="mapas/14.png" data-index="13" alt="Mapa dia 14">
+                <img src="mapas/15.png" data-index="14" alt="Mapa dia 15">
+                <img src="mapas/acumulado-15-dias.png" data-index="15" alt="Acumulado 15 dias">
         </main>
 
-        <!-- LIGHTBOX -->
-        <div id="lightbox">
-                <div class="contador"></div>
-                <div class="fechar">x</div>
-                <div class="seta esquerda">Anterior</div>
-                <img id="lightbox-img">
-                <div class="seta direita">Próxima</div>
-        </div>
 
         <script>
-                const imagens = Array.from(document.querySelectorAll('#galeria img'));
-                const lightbox = document.getElementById('lightbox');
-                const lightboxImg = document.getElementById('lightbox-img');
-                const contador = document.querySelector('.contador');
-                const fecharBtn = document.querySelector('.fechar');
-                const setaEsq = document.querySelector('.seta.esquerda');
-                const setaDir = document.querySelector('.seta.direita');
+                const caminhos = [
+                        'mapas/01.png', 'mapas/02.png', 'mapas/03.png', 'mapas/04.png', 'mapas/05.png', 'mapas/06.png',
+                        'mapas/07.png', 'mapas/08.png', 'mapas/09.png', 'mapas/10.png', 'mapas/11.png', 'mapas/12.png',
+                        'mapas/13.png', 'mapas/14.png', 'mapas/15.png', 'mapas/acumulado-15-dias.png'
+                ];
+
+                const viewer = document.getElementById('viewer');
+                const prevBtn = document.getElementById('prev');
+                const nextBtn = document.getElementById('next');
+                const contador = document.getElementById('contador');
 
                 let indexAtual = 0;
 
-                function abrirLightbox(index) {
-                        indexAtual = index;
-                        lightboxImg.src = imagens[index].src;
-                        contador.textContent = `${index + 1}/${imagens.length}`;
-                        lightbox.style.display = 'flex';
-                        document.body.style.overflow = 'hidden';
-
+                function atualizarViewer(i) {
+                        indexAtual = (i + caminhos.length) % caminhos.length;
+                        viewer.src = caminhos[indexAtual];
+                        contador.textContent = `${indexAtual + 1}/${caminhos.length}`;
                 }
 
-                if (window.innerWidth > 800) {
-                        imagens.forEach(img => {
-                                img.addEventListener('click', () => abrirLightbox(Number(img.dataset.index)));
-                        });
-                }
+                prevBtn.addEventListener('click', () => atualizarViewer(indexAtual - 1));
+                nextBtn.addEventListener('click', () => atualizarViewer(indexAtual + 1));
 
-                function navegar(dir) {
-                        indexAtual += dir;
-                        if (indexAtual < 0) indexAtual = imagens.length - 1;
-                        if (indexAtual >= imagens.length) indexAtual = 0;
-                        abrirLightbox(indexAtual);
-                }
-
-                setaEsq.addEventListener('click', () => navegar(-1));
-                setaDir.addEventListener('click', () => navegar(1));
-                fecharBtn.addEventListener('click', () => {
-                                lightbox.style.display = 'none';
-                                document.body.style.overflow = 'auto';
-                        });
-
-
-                // Navegação por teclado
+                // Navegação por teclado (desktop apenas)
                 window.addEventListener('keydown', (e) => {
-                        if (lightbox.style.display === 'flex') {
-                                if (e.key === 'ArrowLeft') navegar(-1);
-                                if (e.key === 'ArrowRight') navegar(1);
+                        if (window.innerWidth > 800) {
+                                if (e.key === 'ArrowLeft') atualizarViewer(indexAtual - 1);
+                                if (e.key === 'ArrowRight') atualizarViewer(indexAtual + 1);
                         }
-                }); ('click', () => lightbox.style.display = 'none');
+                });
+
+                atualizarViewer(0);
         </script>
 </body>
 
