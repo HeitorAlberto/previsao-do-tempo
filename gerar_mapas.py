@@ -106,6 +106,7 @@ CIDADES_BRASIL = {
     "Santos (SP)": (-23.9608, -46.3337),
     "São José do Rio Preto (SP)": (-20.8196, -49.3797),
     "Cajati (SP)": (-24.7128, -48.0103),
+    "Araçatuba (SP)": (-21.2053, -50.4392),
     "Rio de Janeiro (RJ)": (-22.9068, -43.1729),
     "Niterói (RJ)": (-22.8832, -43.1034),
     "Belo Horizonte (MG)": (-19.9167, -43.9345),
