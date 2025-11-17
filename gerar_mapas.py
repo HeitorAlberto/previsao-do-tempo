@@ -71,7 +71,6 @@ CIDADES_BRASIL = {
     "Picos (PI)": (-7.0753, -41.4725),
     "Piripiri (PI)": (-4.2750, -41.7825),
     "Floriano (PI)": (-6.7645, -43.0186),
-    "Bom Jesus (PI)": (-9.0740, -44.3589),
     "Canto do Buriti (PI)": (-8.1111, -42.9517),
     "Redenção do Gurguéia (PI)": (-9.47937, -44.58110),
 
