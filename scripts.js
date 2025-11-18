@@ -15,17 +15,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // =====================
     // Histórico (máx 5 items)
+    // Agora persistente (localStorage)
     // =====================
     let searchHistory = [];
+
+    function loadHistory() {
+        const saved = localStorage.getItem("search_history");
+        if (!saved) return [];
+        try {
+            return JSON.parse(saved);
+        } catch {
+            return [];
+        }
+    }
+
+    function saveHistory() {
+        localStorage.setItem("search_history", JSON.stringify(searchHistory));
+    }
 
     function addToHistory(name, lat, lon) {
         const existingIndex = searchHistory.findIndex(
             item => item.name.toLowerCase() === name.toLowerCase()
         );
         if (existingIndex !== -1) searchHistory.splice(existingIndex, 1);
-        searchHistory.push({ name, lat, lon });
+
+        searchHistory.unshift({ name, lat, lon });
+
         if (searchHistory.length > 5) searchHistory.shift();
+
         renderHistory();
+        saveHistory(); // <-- Persistência aqui
     }
 
     function renderHistory() {
@@ -45,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // =====================
     // Cache no navegador
     // =====================
-    const CACHE_TTL_MINUTES = 60; // validade do cache
+    const CACHE_TTL_MINUTES = 60;
 
     function getWeatherCache(lat, lon) {
         const key = `weather_${lat}_${lon}`;
@@ -54,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const { data, timestamp } = JSON.parse(cached);
         const age = (Date.now() - timestamp) / (1000 * 60);
-        if (age > CACHE_TTL_MINUTES) return null; // cache expirado
+        if (age > CACHE_TTL_MINUTES) return null;
 
         return data;
     }
@@ -128,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // =====================
-    // CLASSIFICAÇÃO CHUVA / PANCADAS / TROVOADAS
+    // CLASSIFICAÇÃO
     // =====================
     function getRainType(code) {
         if ((code >= 51 && code <= 57) || code === 61 || code === 80) return "chuva fraca";
@@ -138,9 +157,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function getShowerType(code) {
-        if (code === 80) return "pancadas fracas";
-        if (code === 81) return "pancadas moderadas";
-        if (code === 82) return "pancadas fortes";
+        if (code === 80) return "pancadas de chuva fracas";
+        if (code === 81) return "pancadas de chuva moderadas";
+        if (code === 82) return "pancadas de chuva fortes";
         return null;
     }
 
@@ -149,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function classifyFrequency(count) {
-        return count >= 3 ? "frequente" : "pontual";
+        return count >= 3 ? "frequente(s)" : "pontual";
     }
 
     function getRainDescription(codes, totalPrecip) {
@@ -302,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =====================
-    // Load Forecast com cache
+    // Load Forecast
     // =====================
     async function loadForecast(lat, lon) {
         locationName.textContent = "Carregando...";
@@ -360,5 +379,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // =====================
     const today = new Date();
     todayDate.textContent = `${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(today)} - ${new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(today)}`;
+
+    // =====================
+    // Carrega histórico persistente ao iniciar
+    // =====================
+    searchHistory = loadHistory();
+    renderHistory();
 
 });
