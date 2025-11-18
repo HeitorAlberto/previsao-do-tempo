@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function classifyFrequency(count) {
-        return count >= 3 ? "frequente(s)" : "pontual";
+        return count >= 3 ? "frequente(s)" : "pontualmente";
     }
 
     function getRainDescription(codes, totalPrecip) {
