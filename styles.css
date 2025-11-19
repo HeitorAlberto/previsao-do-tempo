@@ -98,6 +98,7 @@ button {
 /* ===== Layout principal ===== */
 main {
     margin-top: 40px;
+    margin-bottom: 40px;
 }
 
 /* ===== GRID dos Cards ===== */
@@ -167,14 +168,6 @@ main {
     margin-bottom: 8px;
 }
 
-/* ===== Footer ===== */
-footer {
-    margin-top: 20px;
-    font-size: 16px;
-    background-color: #ccc;
-    padding: 20px;
-    text-align: center;
-}
 
 /* ===== Mobile adjustments ===== */
 @media(max-width:800px) {
