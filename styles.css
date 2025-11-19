@@ -142,6 +142,7 @@ main {
     background-color: #e6e6e6;
     border-radius: 8px;
     padding: 10px;
+    text-align: center;
 }
 
 .row:last-child {
