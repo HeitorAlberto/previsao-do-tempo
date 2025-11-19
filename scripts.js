@@ -89,13 +89,19 @@ document.addEventListener("DOMContentLoaded", () => {
     // =====================
     // Utilitários
     // =====================
-    const formatDateLabel = iso => {
-        const d = new Date(iso);
+    function formatDateLabel(dateStr) {
+        const d = new Date(dateStr);
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        const weekday = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+
         return {
-            weekday: new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(d),
-            date: new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(d)
+            date: `${day}/${month}/${year}`,
+            weekday
         };
-    };
+    }
+
 
     const getAddressText = address => {
         const city = address.city || address.town || address.village || address.municipality || '';
