@@ -51,12 +51,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderHistory() {
         historyContainer.innerHTML = "";
-        historyContainer.innerHTML = "Histórico: ";
+        historyContainer.innerHTML = "Histórico de buscas: ";
         historyContainer.style.fontWeight = "bolder";
 
         searchHistory.forEach(item => {
             const div = document.createElement("div");
             div.className = "history-item";
+            div.style.fontWeight = "400";
             div.textContent = item.name;
             div.onclick = () => loadForecast(item.lat, item.lon, item.name);
             historyContainer.appendChild(div);
