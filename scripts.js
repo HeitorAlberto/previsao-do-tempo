@@ -41,11 +41,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         searchHistory.unshift({ name, lat, lon });
 
-        if (searchHistory.length > 5) searchHistory.shift();
+        // Remove o mais antigo (fim da lista), mantendo sempre 5 itens
+        if (searchHistory.length > 5) searchHistory.pop();
 
         renderHistory();
-        saveHistory(); // <-- Persistência aqui
+        saveHistory();
     }
+
 
     function renderHistory() {
         historyContainer.innerHTML = "";
