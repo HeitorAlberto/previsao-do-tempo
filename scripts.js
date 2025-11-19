@@ -177,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function classifyFrequency(count) {
-        return count >= 3 ? "frequente(s)" : "pontualmente";
+        return count >= 3 ? "(frequente)" : "(pontual)";
     }
 
     function getRainDescription(codes, totalPrecip) {
@@ -209,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function getSkyDescription(avgCloud) {
         if (avgCloud < 20) return "Céu limpo";
         if (avgCloud < 50) return "Parcialmente nublado";
-        if (avgCloud < 85) return "Predominantemente nublado";
+        if (avgCloud < 85) return "Maioria nublado";
         return "Céu encoberto";
     }
 
