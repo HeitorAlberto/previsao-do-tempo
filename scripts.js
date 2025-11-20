@@ -258,17 +258,42 @@ document.addEventListener("DOMContentLoaded", () => {
         if (existing) existing.remove();
 
         let totalPrecip = 0;
+        let rainyDays = 0;
+        let maxDailyPrecip = 0;
+
         for (const [, points] of dayMap) {
             const s = summarizeDay(points);
+
             totalPrecip += s.precipSum;
+
+            if (s.precipSum >= 1) rainyDays++;  // Dia com chuva
+            if (s.precipSum > maxDailyPrecip) maxDailyPrecip = s.precipSum;
         }
 
         const card = document.createElement('div');
         card.id = 'summaryCard';
         card.className = 'day';
-        card.innerHTML = `<div class="row precip"><p>Chuva total (15 dias)</p><p>${totalPrecip.toFixed(1)} mm</p></div>`;
+
+        card.innerHTML = `
+        <div class="row precip">
+            <p>Chuva total (15 dias)</p>
+            <p><strong>${totalPrecip.toFixed(1)} mm</strong></p>
+        </div>
+
+        <div class="row precip">
+            <p>Dias de chuva (1mm ou mais)</p>
+            <p><strong>${rainyDays} de 15</strong></p>
+        </div>
+
+        <div class="row precip">
+            <p>Maior acumulado em 24h</p>
+            <p><strong>${maxDailyPrecip.toFixed(1)} mm</strong></p>
+        </div>
+    `;
+
         forecastSection.parentNode.insertBefore(card, forecastSection);
     };
+
 
     const renderDays = dayMapInput => {
         const dayMap = dayMapInput instanceof Map ? dayMapInput : new Map(dayMapInput);
@@ -286,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
-            <div class="row precip"><p>Chuva</p><p>${s.precipSum.toFixed(1)} mm</p></div>
+            <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(1)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
             <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
 

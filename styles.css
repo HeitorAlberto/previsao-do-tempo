@@ -95,6 +95,17 @@ button {
     margin: 30px auto 50px auto;
 }
 
+#summaryCard .row {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid: 10px;
+    text-align: center;
+}
+
+#summaryCard p {
+    margin-bottom: 8px;
+}
+
 /* ===== Layout principal ===== */
 main {
     margin-top: 40px;
@@ -121,6 +132,7 @@ main {
     font-weight: 700;
     margin-bottom: 12px;
     text-align: center;
+    color: #4a5ab9;
 }
 
 /* ===== Linhas internas ===== */
