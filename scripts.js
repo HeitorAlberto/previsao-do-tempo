@@ -245,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (rain) parts.push(rain);
             if (thunder) parts.push(thunder);
 
-            descriptions[period] = parts.join(" / ");
+            descriptions[period] = parts.join(" • ");
         }
         return descriptions;
     }
