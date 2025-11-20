@@ -275,14 +275,16 @@ document.addEventListener("DOMContentLoaded", () => {
         card.className = 'day';
 
         card.innerHTML = `
+        <div class="date">Resumo para 15 dias</div>
+
         <div class="row precip">
-            <p>Chuva total (15 dias)</p>
+            <p>Chuva acumulada</p>
             <p><strong>${totalPrecip.toFixed(1)} mm</strong></p>
         </div>
 
         <div class="row precip">
             <p>Dias de chuva (1mm ou mais)</p>
-            <p><strong>${rainyDays} de 15</strong></p>
+            <p><strong>${rainyDays} dias</strong></p>
         </div>
 
         <div class="row precip">
