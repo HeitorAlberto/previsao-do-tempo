@@ -207,10 +207,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function getSkyDescription(avgCloud) {
-        if (avgCloud < 20) return "Céu limpo";
-        if (avgCloud < 50) return "Algumas nuvens";
-        if (avgCloud < 85) return "Muitas nuvens";
-        return "Nublado";
+        if (avgCloud < 20) return `Céu limpo (${avgCloud.toFixed(0)}%)`;
+        if (avgCloud < 50) return `Algumas nuvens (${avgCloud.toFixed(0)}%)`;
+        if (avgCloud < 85) return `Muitas nuvens (${avgCloud.toFixed(0)}%)`;
+        return `Nublado (${avgCloud.toFixed(0)}%)`;
     }
 
     function getCloudDescriptions(points) {
