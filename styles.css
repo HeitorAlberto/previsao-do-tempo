@@ -115,7 +115,7 @@ main {
 /* ===== GRID dos Cards ===== */
 #cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 60px;
     padding: 0px 115px;
 }
