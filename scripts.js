@@ -159,16 +159,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // CLASSIFICAÇÃO
     // =====================
     function getRainType(code) {
-        if ((code >= 51 && code <= 57) || code === 61 || code === 80) return "chuva fraca";
-        if (code === 63 || code === 81) return "chuva moderada";
-        if (code === 65 || code === 82) return "chuva forte";
+        if ((code >= 51 && code <= 57) || code === 61 || code === 80) return "Chuva fraca";
+        if (code === 63 || code === 81) return "Chuva moderada";
+        if (code === 65 || code === 82) return "Chuva forte";
         return null;
     }
 
     function getShowerType(code) {
-        if (code === 80) return "pancadas de chuva fracas";
-        if (code === 81) return "pancadas de chuva moderadas";
-        if (code === 82) return "pancadas de chuva fortes";
+        if (code === 80) return "Pancadas de chuva fracas";
+        if (code === 81) return "Pancadas de chuva moderadas";
+        if (code === 82) return "Pancadas de chuva fortes";
         return null;
     }
 
@@ -200,10 +200,35 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${dominant} ${freq}`;
     }
 
+    function modeWithTieAverage(values) {
+        if (!values.length) return null;
+
+        const freq = new Map();
+        values.forEach(v => freq.set(v, (freq.get(v) || 0) + 1));
+
+        // frequência máxima
+        const maxFreq = Math.max(...freq.values());
+
+        // valores empatados
+        const tiedValues = [...freq.entries()]
+            .filter(([v, c]) => c === maxFreq)
+            .map(([v]) => v);
+
+        // moda única → retorna direto
+        if (tiedValues.length === 1) {
+            return tiedValues[0];
+        }
+
+        // empate → retorna média das modas
+        const avg = tiedValues.reduce((sum, v) => sum + v, 0) / tiedValues.length;
+        return avg;
+    }
+
+
     function getThunderDescription(codes) {
         const count = codes.filter(isThunder).length;
         if (count === 0) return null;
-        return `trovoadas ${classifyFrequency(count)}`;
+        return `Trovoadas ${classifyFrequency(count)}`;
     }
 
     function getSkyDescription(avgCloud) {
@@ -234,8 +259,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 continue;
             }
 
-            const avgCloud = arr.reduce((a, b) => a + b.cloud_cover, 0) / arr.length;
-            const sky = getSkyDescription(avgCloud);
+            // Usa a moda da nebulosidade (com desempate pela média)
+            const clouds = arr.map(p => p.cloud_cover);
+            const dominantCloud = modeWithTieAverage(clouds);
+            const sky = getSkyDescription(dominantCloud);
+
 
             const totalPrecip = arr.reduce((sum, p) => sum + (p.precipitation ?? 0), 0);
             const rain = getRainDescription(arr.map(p => p.weather_code), totalPrecip);
