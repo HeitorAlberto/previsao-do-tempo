@@ -22,7 +22,6 @@ header {
 #titulo-site {
     color: white;
     font-weight: bolder;
-    font-size: 18px;
     flex-grow: 1;
 }
 
@@ -72,7 +71,6 @@ button {
 /* ===== Título de Localização ===== */
 #locationName {
     text-align: center;
-    font-size: 40px;
     font-weight: bolder;
     margin-top: 20px;
 }
@@ -128,7 +126,6 @@ main {
 }
 
 .day .date {
-    font-size: 22px;
     font-weight: 700;
     margin-bottom: 12px;
     text-align: center;
@@ -145,7 +142,6 @@ main {
 .descricao-nuvens {
     justify-content: space-between;
     padding: 6px 0px;
-    font-size: 20px;
     margin: 0px;
 }
 
@@ -163,7 +159,6 @@ main {
 
 .row p {
     margin: 0;
-    font-size: 20px;
 }
 
 /* ===== Classes de dados ===== */
@@ -216,7 +211,6 @@ main {
     }
 
     #locationName {
-        font-size: 18px;
         width: 100%;
         margin-top: 10px;
     }
@@ -263,7 +257,6 @@ main {
 .period-block h3 {
     text-align: center;
     margin-top: 0;
-    font-size: 18px;
 }
 
 /* Itens de hora */
@@ -274,7 +267,6 @@ main {
 
 .hour-item p {
     margin: 4px 0;
-    font-size: 20px;
 }
 
 
@@ -333,7 +325,6 @@ main {
     }
 
     .history-item {
-        font-size: 13px;
         padding: 6px 10px;
     }
 }
