@@ -383,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const rev = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`);
             const revData = await rev.json();
             const resolvedName = getAddressText(revData.address || {});
-            locationName.textContent = resolvedName;
+            locationName.textContent = "📍 " + resolvedName;
 
             addToHistory(resolvedName, lat, lon);
 
