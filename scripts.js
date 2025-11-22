@@ -158,19 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // =====================
     // CLASSIFICAÇÃO
     // =====================
-    function getRainType(code) {
-        if ((code >= 51 && code <= 57) || code === 61 || code === 80) return "Chuva fraca";
-        if (code === 63 || code === 81) return "Chuva moderada";
-        if (code === 65 || code === 82) return "Chuva forte";
-        return null;
-    }
-
-    function getShowerType(code) {
-        if (code === 80) return "Pancadas de chuva fracas";
-        if (code === 81) return "Pancadas de chuva moderadas";
-        if (code === 82) return "Pancadas de chuva fortes";
-        return null;
-    }
+    
 
     function isThunder(code) {
         return code >= 95 && code <= 99;
@@ -180,25 +168,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return count >= 3 ? "" : "";
     }
 
-    function getRainDescription(codes, totalPrecip) {
-        if (totalPrecip < 0.9) return null;
-        const events = [];
-        for (const c of codes) {
-            const shower = getShowerType(c);
-            const rain = getRainType(c);
-            if (shower) events.push(shower);
-            else if (rain) events.push(rain);
-        }
-        if (events.length === 0) return null;
-
-        const strong = events.find(e => e.includes("forte"));
-        const moderate = events.find(e => e.includes("moderada"));
-        const weak = events.find(e => e.includes("fraca"));
-
-        const dominant = strong || moderate || weak;
-        const freq = classifyFrequency(events.length);
-        return `${dominant} ${freq}`;
+    function classifyRainByAccumulation(mm) {
+        if (mm < 0.5) return null;              
+        if (mm < 5) return "Chuva leve";
+        if (mm < 10) return "Chuva moderada";
+        return "Chuva forte";
     }
+
 
     function modeWithTieAverage(values) {
         if (!values.length) return null;
@@ -259,24 +235,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 continue;
             }
 
-            // Usa a moda da nebulosidade (com desempate pela média)
+            // === Nebulosidade (usando sua moda com desempate) ===
             const clouds = arr.map(p => p.cloud_cover);
             const dominantCloud = modeWithTieAverage(clouds);
             const sky = getSkyDescription(dominantCloud);
 
+            // === Chuva baseada no acumulado real ===
+            const precip = arr.reduce((sum, p) => sum + (p.precipitation ?? 0), 0);
+            const rainDesc = classifyRainByAccumulation(precip);
 
-            const totalPrecip = arr.reduce((sum, p) => sum + (p.precipitation ?? 0), 0);
-            const rain = getRainDescription(arr.map(p => p.weather_code), totalPrecip);
+            // === Trovoadas continuam baseadas em weather codes ===
             const thunder = getThunderDescription(arr.map(p => p.weather_code));
 
             const parts = [sky];
-            if (rain) parts.push(rain);
+            if (rainDesc) parts.push(rainDesc);
             if (thunder) parts.push(thunder);
 
             descriptions[period] = parts.join(" • ");
         }
+
         return descriptions;
     }
+
 
     // =====================
     // Renderização
