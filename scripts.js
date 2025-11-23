@@ -274,7 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             totalPrecip += s.precipSum;
 
-            if (s.precipSum >= 1) rainyDays++;  // Dia com chuva
+            if (s.precipSum.toFixed(0) >= 1) rainyDays++;  // Dia com chuva
             if (s.precipSum > maxDailyPrecip) maxDailyPrecip = s.precipSum;
         }
 
@@ -291,8 +291,8 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
 
         <div class="row precip">
-            <p>Dias de chuva (1mm ou mais)</p>
-            <p><strong>${rainyDays} dias</strong></p>
+            <p>Dias de chuva</p>
+            <p><strong>${rainyDays} de 15</strong></p>
         </div>
 
         <div class="row precip">
