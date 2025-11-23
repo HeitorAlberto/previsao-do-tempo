@@ -287,7 +287,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div class="row precip">
             <p>Chuva acumulada</p>
-            <p><strong>${totalPrecip.toFixed(1)} mm</strong></p>
+            <p><strong>${totalPrecip.toFixed(0)} mm</strong></p>
         </div>
 
         <div class="row precip">
@@ -297,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div class="row precip">
             <p>Maior acumulado em 24h</p>
-            <p><strong>${maxDailyPrecip.toFixed(1)} mm</strong></p>
+            <p><strong>${maxDailyPrecip.toFixed(0)} mm</strong></p>
         </div>
     `;
 
@@ -321,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
-            <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(1)} mm</p></div>
+            <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
             <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
 
