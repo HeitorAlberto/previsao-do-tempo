@@ -168,7 +168,7 @@ def get_text_color_from_value(value, levels, cmap_colors, threshold=0.5):
     return 'white'
 
 # ======================================================
-# 2. Baixar ECMWF e processar (com suporte 00Z/12Z)
+# 2. Baixar ECMWF e processar (com suporte 00Z/12Z + auto-detect time)
 # ======================================================
 def gerar_mapas():
     client = Client(source="azure")
@@ -178,20 +178,20 @@ def gerar_mapas():
     date_run = now_br.date()
     run_date_str = date_run.strftime("%Y%m%d")
 
-    # Aqui escolho run_hour = 0 para tentar baixar a rodada 00Z/12Z via param 'time' = 0 (00Z).
-    # A forma como você usa o client.retrieve pode requerer ajustes se você preferir buscar 12Z explicitamente.
-    # Vou solicitar o arquivo da rodada 00Z (time=0) — se seu workflow às 18h precisa de 12Z, a data
-    # usada abaixo (date_run) deve ser a apropriada; o seu workflow chama o script às 06h e 18h,
-    # então a combinação do YAML + disponibilidade do ECMWF deve fornecer o arquivo certo.
-    #
-    # Para reduzir problemas, vamos tentar sempre baixar a rodada do dia atual time=0 (00Z).
-    # Se você estiver rodando às 18h, a data_run já será o dia correto para a 12Z estar disponível
-    # via arquivo (depende de como o provider entrega os gribs). Em muitos casos você precisa
-    # alterar "time" para 12 quando quiser forçar 12Z; aqui mantive time=0 e deixei a detecção
-    # do run_time a partir do arquivo GRIB (caso o GRIB existente/baixado seja 12Z, a lógica
-    # funciona do mesmo jeito).
-    run_hour = 0
-    target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}.grib2")
+    # ---------------------------
+    # AUTO-DETECT para run_hour
+    # ---------------------------
+    # Se rodar entre 15:00 e 23:59 BR -> forçar 12Z (rodada 12)
+    # Caso contrário -> forçar 00Z
+    if now_br.hour >= 15:
+        run_hour = 12
+        print(f"⏱️ Execução às {now_br:%H:%M} (BR) → Forçando download da rodada 12Z")
+    else:
+        run_hour = 0
+        print(f"⏱️ Execução às {now_br:%H:%M} (BR) → Forçando download da rodada 00Z")
+
+    # Nome do arquivo com hora para evitar colisões
+    target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}_{run_hour:02d}Z.grib2")
 
     # steps: 0..144 step=3, depois 150..360 step=6 (igual ao seu)
     steps_all = list(range(0, 145, 3)) + list(range(150, 361, 6))
@@ -215,11 +215,27 @@ def gerar_mapas():
             print(f"✅ Download concluído: {target_file}")
         except Exception as e:
             print(f"❌ Erro ao baixar: {e}")
-            if os.path.exists(target_file):
-                print("⚠️ O arquivo local parece existir; continuando com versão local.")
+            # fallback: se tentou 12Z e falhou, tenta 00Z automaticamente
+            if run_hour == 12:
+                try:
+                    print("🔁 Tentando fallback: baixar 00Z...")
+                    run_hour = 0
+                    target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}_{run_hour:02d}Z.grib2")
+                    request_params["time"] = run_hour
+                    request_params["target"] = target_file
+                    client.retrieve(**request_params)
+                    print(f"✅ Download concluído (fallback 00Z): {target_file}")
+                except Exception as e2:
+                    print(f"❌ Fallback também falhou: {e2}")
+                    if os.path.exists(target_file):
+                        print("⚠️ O arquivo local parece existir; continuando com versão local.")
+                    else:
+                        raise
             else:
-                raise
-
+                if os.path.exists(target_file):
+                    print("⚠️ O arquivo local parece existir; continuando com versão local.")
+                else:
+                    raise
     else:
         print(f"⚠️  O arquivo '{target_file}' já existe — usando versão local.")
 
@@ -229,11 +245,9 @@ def gerar_mapas():
     tp_mm = ds["tp"] * 1000.0
 
     # 'time' na coord é a hora da rodada (reference time). Garantimos pegar o primeiro valor.
-    # Exemplo: 2025-11-23T00:00:00.000000000
     run_time = pd.to_datetime(tp_mm.coords["time"].values[0]).to_pydatetime()
 
     # Converter steps em datas/hora UTC relativamente à run_time
-    # Nota: tp_mm.step são horas desde a rodada (inteiros)
     step_hours = tp_mm.coords["step"].values
     step_times = np.array([run_time + np.timedelta64(int(h), 'h') for h in step_hours], dtype='datetime64[ns]')
 
@@ -246,7 +260,7 @@ def gerar_mapas():
     daily = []
 
     # ===============================
-    # Ajuste para suportar 00Z e 12Z
+    # Ajuste para suportar 00Z e 12Z (Opção B)
     # ===============================
     hora_rodada = run_time.hour  # normalmente 0 ou 12
 
@@ -274,7 +288,6 @@ def gerar_mapas():
         end_utc_with_offset = end_utc + timedelta(hours=offset_horas)
 
         # encontra índices de step (menor diferença em valor absoluto)
-        # step_times é array datetime64, convert to numpy datetime64 for comparisons
         start_idx = int(np.argmin(np.abs(step_times - np.datetime64(start_utc_with_offset))))
         end_idx = int(np.argmin(np.abs(step_times - np.datetime64(end_utc_with_offset))))
 
@@ -282,15 +295,12 @@ def gerar_mapas():
         print(f"   ▶ Dia {day+1:02d}: {start_br:%Y-%m-%d %H:%M} to {end_br:%Y-%m-%d %H:%M} (UTC indices {start_idx}->{end_idx}; steps {step_hours[start_idx]}->{step_hours[end_idx]})")
 
         # cálculo do acumulado 24h:
-        # - se o step inicial fosse 0 (ou igual ao end), apenas pega o valor direto
-        # - caso contrário, subtrai o campo do step inicial do step final
         try:
             if start_idx == 0 or start_idx == end_idx:
                 data_24h = tp_mm.isel(step=end_idx)
             else:
                 data_24h = tp_mm.isel(step=end_idx) - tp_mm.isel(step=start_idx)
         except Exception as e:
-            # fallback resiliente: tenta usar método alternativo
             print(f"   ⚠️ Erro ao calcular acumulado para dia {day+1}: {e}. Tentando usar isel(step=end_idx).")
             data_24h = tp_mm.isel(step=end_idx)
 
@@ -359,7 +369,6 @@ def gerar_mapas():
     # 4. Mapa Acumulado (15 dias)
     # ==============================
     print("\n🧮 Calculando acumulado de 15 dias...")
-    # alguns itens "data" podem ser DataArray; garantir soma nomeada
     accum_15d = None
     for item in daily:
         if accum_15d is None:
