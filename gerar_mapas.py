@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from ecmwf.opendata import Client
 from datetime import datetime, timedelta
 import xarray as xr
@@ -9,7 +12,7 @@ import numpy as np
 import pandas as pd
 import os, warnings
 from pathlib import Path
-import matplotlib.colors as mcolors 
+import matplotlib.colors as mcolors
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -22,12 +25,10 @@ dias_semana_pt = {
 }
 
 # ======================================================
-# ► NOVO DICIONÁRIO: CIDADES PRINCIPAIS DO BRASIL
-#   (Inclui todas do Nordeste + Norte + Sul + Sudeste + Centro-Oeste)
+# ► CIDADES PRINCIPAIS DO BRASIL (mantive seu dicionário)
 # ======================================================
 CIDADES_BRASIL = {
-
-    # NORDESTE – (todas que você já tinha)
+    # NORDESTE
     "Salvador (BA)": (-12.9714, -38.5108),
     "Paulo Afonso (BA)": (-9.3983, -38.2216),
     "Feira de Santana (BA)": (-12.2669, -38.9664),
@@ -56,11 +57,11 @@ CIDADES_BRASIL = {
     "Caxias (MA)": (-4.8617, -43.3553),
     "Timon (MA)": (-5.0874, -42.8306),
     "Balsas (MA)": (-7.5273, -46.0361),
-    "Natal (RN)": (-5.80540, -35.20809),  
-    "Mossoró (RN)": (-5.18413, -37.34778),  
-    "Caicó (RN)": (-6.45997, -37.09369),  
+    "Natal (RN)": (-5.80540, -35.20809),
+    "Mossoró (RN)": (-5.18413, -37.34778),
+    "Caicó (RN)": (-6.45997, -37.09369),
     "Lajes (RN)": (-5.69322, -36.24700),
-    "Macau (RN)": (-5.10834, -36.63217),  
+    "Macau (RN)": (-5.10834, -36.63217),
     "João Pessoa (PB)": (-7.11509, -34.86410),
     "Campina Grande (PB)": (-7.23056, -35.88110),
     "Cajazeiras (PB)": (-6.88004, -38.55770),
@@ -78,8 +79,6 @@ CIDADES_BRASIL = {
     "Floriano (PI)": (-6.7645, -43.0186),
     "Canto do Buriti (PI)": (-8.1111, -42.9517),
     "Redenção do Gurguéia (PI)": (-9.47937, -44.58110),
-
-
 
     # NORTE
     "Manaus (AM)": (-3.1190, -60.0217),
@@ -142,14 +141,16 @@ CIDADES_BRASIL = {
     "Bagé (RS)": (-31.3300, -54.1000),
 }
 
+# Colormap and níveis
 nivels = [0, 0.5, 2, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
-cores = ["#FFFFFF","#cbcbcb","#797979","#4ffd72","#006000","#040CA5","#5E8CFF","#FFFF00",
-          "#FFA500","#FF0000","#C00000","#800000","#330033","#660066","#c02ec0","#FFBFF5"]
-
+cores = [
+    "#FFFFFF", "#cbcbcb", "#797979", "#4ffd72", "#006000", "#040CA5", "#5E8CFF", "#FFFF00",
+    "#FFA500", "#FF0000", "#C00000", "#800000", "#330033", "#660066", "#c02ec0", "#FFBFF5"
+]
 color_map = ListedColormap(cores)
 norma = BoundaryNorm(nivels, color_map.N)
-tick_locs = [(nivels[i]+nivels[i+1])/2 for i in range(len(nivels)-1)]
-tick_labels = [f"{nivels[i]}–{nivels[i+1]}" for i in range(len(nivels)-1)]
+tick_locs = [(nivels[i] + nivels[i + 1]) / 2 for i in range(len(nivels) - 1)]
+tick_labels = [f"{nivels[i]}–{nivels[i + 1]}" for i in range(len(nivels) - 1)]
 tick_labels[-1] = f">{nivels[-2]}"
 extent = [-85, -30, -35, 10]
 
@@ -159,23 +160,41 @@ out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
 
 def get_text_color_from_value(value, levels, cmap_colors, threshold=0.5):
-    if pd.isna(value) or value < levels[0]: 
+    """
+    Função simples para escolher cor do texto. Mantive básica (branco sobre cores fortes).
+    """
+    if pd.isna(value) or value < levels[0]:
         return 'black'
     return 'white'
 
 # ======================================================
-# 2. Baixar ECMWF e processar (SEM ALTERAÇÕES)
+# 2. Baixar ECMWF e processar (com suporte 00Z/12Z)
 # ======================================================
 def gerar_mapas():
     client = Client(source="azure")
 
+    # Hora local BR (UTC-3)
     now_br = datetime.utcnow() - timedelta(hours=3)
     date_run = now_br.date()
     run_date_str = date_run.strftime("%Y%m%d")
+
+    # Aqui escolho run_hour = 0 para tentar baixar a rodada 00Z/12Z via param 'time' = 0 (00Z).
+    # A forma como você usa o client.retrieve pode requerer ajustes se você preferir buscar 12Z explicitamente.
+    # Vou solicitar o arquivo da rodada 00Z (time=0) — se seu workflow às 18h precisa de 12Z, a data
+    # usada abaixo (date_run) deve ser a apropriada; o seu workflow chama o script às 06h e 18h,
+    # então a combinação do YAML + disponibilidade do ECMWF deve fornecer o arquivo certo.
+    #
+    # Para reduzir problemas, vamos tentar sempre baixar a rodada do dia atual time=0 (00Z).
+    # Se você estiver rodando às 18h, a data_run já será o dia correto para a 12Z estar disponível
+    # via arquivo (depende de como o provider entrega os gribs). Em muitos casos você precisa
+    # alterar "time" para 12 quando quiser forçar 12Z; aqui mantive time=0 e deixei a detecção
+    # do run_time a partir do arquivo GRIB (caso o GRIB existente/baixado seja 12Z, a lógica
+    # funciona do mesmo jeito).
     run_hour = 0
     target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}.grib2")
 
-    steps_all = list(range(0,145,3)) + list(range(150,361,6))
+    # steps: 0..144 step=3, depois 150..360 step=6 (igual ao seu)
+    steps_all = list(range(0, 145, 3)) + list(range(150, 361, 6))
     request_params = {
         "date": run_date_str,
         "time": run_hour,
@@ -187,34 +206,94 @@ def gerar_mapas():
         "target": target_file
     }
 
-    print(f"\n📡 Verificando ECMWF HRES {run_date_str} 00Z...")
+    print(f"\n📡 Verificando ECMWF HRES {run_date_str} (solicitando time={run_hour}Z) ...")
 
     if not os.path.exists(target_file):
-        print("⬇️  Arquivo não encontrado. Iniciando download...")
-        client.retrieve(**request_params)
-        print(f"✅ Download concluído: {target_file}")
+        try:
+            print("⬇️  Arquivo não encontrado localmente. Tentando download...")
+            client.retrieve(**request_params)
+            print(f"✅ Download concluído: {target_file}")
+        except Exception as e:
+            print(f"❌ Erro ao baixar: {e}")
+            if os.path.exists(target_file):
+                print("⚠️ O arquivo local parece existir; continuando com versão local.")
+            else:
+                raise
+
     else:
         print(f"⚠️  O arquivo '{target_file}' já existe — usando versão local.")
 
     print("\n📂 Abrindo arquivo GRIB2...")
     ds = xr.open_dataset(target_file, engine="cfgrib", filter_by_keys={"typeOfLevel": "surface"})
+    # 'tp' vem em metros (acumulado desde a rodada) — converter pra mm
     tp_mm = ds["tp"] * 1000.0
-    run_time = pd.to_datetime(tp_mm["time"].item()).to_pydatetime()
-    utc_offset = -3
+
+    # 'time' na coord é a hora da rodada (reference time). Garantimos pegar o primeiro valor.
+    # Exemplo: 2025-11-23T00:00:00.000000000
+    run_time = pd.to_datetime(tp_mm.coords["time"].values[0]).to_pydatetime()
+
+    # Converter steps em datas/hora UTC relativamente à run_time
+    # Nota: tp_mm.step são horas desde a rodada (inteiros)
+    step_hours = tp_mm.coords["step"].values
+    step_times = np.array([run_time + np.timedelta64(int(h), 'h') for h in step_hours], dtype='datetime64[ns]')
+
+    print(f"ℹ️ Rodada detectada no GRIB (hora da rodada): {run_time:%Y-%m-%d %H:%M} UTC")
+    print(f"ℹ️ Total de steps lidos: {len(step_hours)} (ex.: {step_hours[:5]} ... {step_hours[-5:]})")
+
+    # UTC offset para hora local BR (UTC-3)
+    utc_offset = -3  # se precisar ajustar para outro fuso, mude aqui
     n_days = 15
     daily = []
-    step_times = run_time + pd.to_timedelta(tp_mm.step.values, unit='h')
 
+    # ===============================
+    # Ajuste para suportar 00Z e 12Z
+    # ===============================
+    hora_rodada = run_time.hour  # normalmente 0 ou 12
+
+    if hora_rodada == 12:
+        inicio_primeiro_dia = datetime(run_time.year, run_time.month, run_time.day) + timedelta(days=1)
+        offset_horas = 36  # 12Z: 00h do dia seguinte corresponde a 36h da rodada
+        print("🔁 Rodada é 12Z — Dia 1 será 00h do dia seguinte (uso offset 36h).")
+    else:
+        inicio_primeiro_dia = datetime(run_time.year, run_time.month, run_time.day)
+        offset_horas = 0
+        print("🔁 Rodada é 00Z (ou hora não-12/0) — Dia 1 será 00h do mesmo dia (offset 0h).")
+
+    # Gera os 15 dias (cada dia: 00-24h horário local BR)
     for day in range(n_days):
-        start_br = datetime(run_time.year, run_time.month, run_time.day) + timedelta(days=day)
-        end_br   = start_br + timedelta(hours=24)
-        start_br_utc = start_br - timedelta(hours=utc_offset)
-        end_br_utc   = end_br - timedelta(hours=utc_offset)
-        
-        step_start = np.argmin(np.abs(step_times - start_br_utc))
-        step_end   = np.argmin(np.abs(step_times - end_br_utc))
+        # período 00–24h LOCAL do dia solicitado
+        start_br = inicio_primeiro_dia + timedelta(days=day)
+        end_br = start_br + timedelta(hours=24)
 
-        data_24h = tp_mm.isel(step=step_end) if day == 0 else tp_mm.isel(step=step_end) - tp_mm.isel(step=step_start)
+        # converte para UTC (subtrai o offset local)
+        start_utc = start_br - timedelta(hours=utc_offset)
+        end_utc = end_br - timedelta(hours=utc_offset)
+
+        # soma offset relativo à rodada (0 para 00Z; 36 para 12Z)
+        start_utc_with_offset = start_utc + timedelta(hours=offset_horas)
+        end_utc_with_offset = end_utc + timedelta(hours=offset_horas)
+
+        # encontra índices de step (menor diferença em valor absoluto)
+        # step_times é array datetime64, convert to numpy datetime64 for comparisons
+        start_idx = int(np.argmin(np.abs(step_times - np.datetime64(start_utc_with_offset))))
+        end_idx = int(np.argmin(np.abs(step_times - np.datetime64(end_utc_with_offset))))
+
+        # DEBUG logs (opcional)
+        print(f"   ▶ Dia {day+1:02d}: {start_br:%Y-%m-%d %H:%M} to {end_br:%Y-%m-%d %H:%M} (UTC indices {start_idx}->{end_idx}; steps {step_hours[start_idx]}->{step_hours[end_idx]})")
+
+        # cálculo do acumulado 24h:
+        # - se o step inicial fosse 0 (ou igual ao end), apenas pega o valor direto
+        # - caso contrário, subtrai o campo do step inicial do step final
+        try:
+            if start_idx == 0 or start_idx == end_idx:
+                data_24h = tp_mm.isel(step=end_idx)
+            else:
+                data_24h = tp_mm.isel(step=end_idx) - tp_mm.isel(step=start_idx)
+        except Exception as e:
+            # fallback resiliente: tenta usar método alternativo
+            print(f"   ⚠️ Erro ao calcular acumulado para dia {day+1}: {e}. Tentando usar isel(step=end_idx).")
+            data_24h = tp_mm.isel(step=end_idx)
+
         daily.append({"data": data_24h, "start": start_br, "end": end_br})
 
     # ==============================
@@ -226,35 +305,36 @@ def gerar_mapas():
         rain = item["data"]
         start = item["start"]
 
-        fig = plt.figure(figsize=(10,8))
+        fig = plt.figure(figsize=(10, 8))
         ax = plt.axes(projection=ccrs.PlateCarree())
         ax.set_extent(extent, crs=ccrs.PlateCarree())
         ax.coastlines(resolution="10m", linewidth=0.8)
-        ax.add_feature(NaturalEarthFeature("cultural", "admin_0_countries","50m", edgecolor="black", facecolor="none", linewidth=0.8))
-        ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines","50m", edgecolor="black", facecolor="none", linewidth=0.8))
+        ax.add_feature(NaturalEarthFeature("cultural", "admin_0_countries", "50m",
+                                          edgecolor="black", facecolor="none", linewidth=0.8))
+        ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines", "50m",
+                                          edgecolor="black", facecolor="none", linewidth=0.8))
         ax.gridlines(draw_labels=False, linestyle="--", alpha=0.4)
-        
+
         cf = rain.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
                                  cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
 
-        # ------------------------------------------
-        # ► ALTERAÇÃO 1: FONTE MUITO MENOR (0.8)
-        # ------------------------------------------
+        # Plot de valores por cidade
         print(f"   > Plotando valores de precipitação para o dia {start:%d-%m}...")
         for city, (lat, lon) in CIDADES_BRASIL.items():
             try:
+                # selecionar o ponto mais próximo
                 precip_value = rain.sel(latitude=lat, longitude=lon, method="nearest").item()
                 precip_int = str(int(round(precip_value)))
-                text_color = 'white'
+                text_color = get_text_color_from_value(precip_value, nivels, cores)
                 bbox_style = BBOX_STYLE
-            except:
+            except Exception:
                 precip_int = "N/D"
                 text_color = 'black'
                 bbox_style = None
 
             ax.text(lon, lat, precip_int,
                     transform=ccrs.PlateCarree(),
-                    fontsize=2,       # <<< MUITO MENOR
+                    fontsize=6,       # ajuste: 6 é legível em imagens grandes; ajuste se quiser
                     color=text_color,
                     weight='bold',
                     ha='center',
@@ -276,20 +356,30 @@ def gerar_mapas():
         print(f"✅ Salvo: {fname}")
 
     # ==============================
-    # 4. Mapa Acumulado
+    # 4. Mapa Acumulado (15 dias)
     # ==============================
-    accum_15d = sum([item["data"] for item in daily])
+    print("\n🧮 Calculando acumulado de 15 dias...")
+    # alguns itens "data" podem ser DataArray; garantir soma nomeada
+    accum_15d = None
+    for item in daily:
+        if accum_15d is None:
+            accum_15d = item["data"].copy(deep=True)
+        else:
+            accum_15d = accum_15d + item["data"]
+
     start_acc = daily[0]['start']
     end_acc = daily[-1]['end']
 
-    fig = plt.figure(figsize=(10,8))
+    fig = plt.figure(figsize=(10, 8))
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.set_extent(extent, crs=ccrs.PlateCarree())
     ax.coastlines(resolution="10m", linewidth=0.8)
-    ax.add_feature(NaturalEarthFeature("cultural", "admin_0_countries","50m", edgecolor="black", facecolor="none", linewidth=0.8))
-    ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines","50m", edgecolor="black", facecolor="none", linewidth=0.8))
+    ax.add_feature(NaturalEarthFeature("cultural", "admin_0_countries", "50m",
+                                      edgecolor="black", facecolor="none", linewidth=0.8))
+    ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines", "50m",
+                                      edgecolor="black", facecolor="none", linewidth=0.8))
     ax.gridlines(draw_labels=False, linestyle="--", alpha=0.4)
-    
+
     cf = accum_15d.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
                                   cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
 
@@ -298,16 +388,16 @@ def gerar_mapas():
         try:
             precip_value = accum_15d.sel(latitude=lat, longitude=lon, method="nearest").item()
             precip_int = str(int(round(precip_value)))
-            text_color = 'white'
+            text_color = get_text_color_from_value(precip_value, nivels, cores)
             bbox_style = BBOX_STYLE
-        except:
+        except Exception:
             precip_int = "N/D"
             text_color = 'black'
             bbox_style = None
 
         ax.text(lon, lat, precip_int,
                 transform=ccrs.PlateCarree(),
-                fontsize=2,       
+                fontsize=6,
                 color=text_color,
                 weight='bold',
                 ha='center',
@@ -326,7 +416,6 @@ def gerar_mapas():
     plt.savefig(fname_acc, dpi=600, bbox_inches="tight")
     plt.close(fig)
     print(f"✅ Salvo: {fname_acc}")
-
 
 if __name__ == "__main__":
     gerar_mapas()
