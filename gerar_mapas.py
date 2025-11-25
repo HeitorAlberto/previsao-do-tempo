@@ -274,56 +274,56 @@ def gerar_mapas():
         plt.savefig(fname, dpi=600, bbox_inches="tight")
 
         # ==============================
-# ► NOVO MAPA: NORDESTE (DIÁRIO)
-# ==============================
-extent_ne = [-45, -32, -18, 0]  # recorte aproximado do Nordeste
+        # ► NOVO MAPA: NORDESTE (DIÁRIO)
+        # ==============================
+        extent_ne = [-45, -32, -18, 0]  # recorte aproximado do Nordeste
 
-fig_ne = plt.figure(figsize=(10,8))
-ax_ne = plt.axes(projection=ccrs.PlateCarree())
-ax_ne.set_extent(extent_ne, crs=ccrs.PlateCarree())
-ax_ne.coastlines(resolution="10m", linewidth=0.8)
-ax_ne.add_feature(NaturalEarthFeature("cultural", "admin_0_countries", "50m",
-                                      edgecolor="black", facecolor="none", linewidth=0.8))
-ax_ne.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines", "50m",
-                                      edgecolor="black", facecolor="none", linewidth=0.8))
-ax_ne.gridlines(draw_labels=False, linestyle="--", alpha=0.4)
+        fig_ne = plt.figure(figsize=(10,8))
+        ax_ne = plt.axes(projection=ccrs.PlateCarree())
+        ax_ne.set_extent(extent_ne, crs=ccrs.PlateCarree())
+        ax_ne.coastlines(resolution="10m", linewidth=0.8)
+        ax_ne.add_feature(NaturalEarthFeature("cultural", "admin_0_countries", "50m",
+                                            edgecolor="black", facecolor="none", linewidth=0.8))
+        ax_ne.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines", "50m",
+                                            edgecolor="black", facecolor="none", linewidth=0.8))
+        ax_ne.gridlines(draw_labels=False, linestyle="--", alpha=0.4)
 
-cf_ne = rain.plot.contourf(ax=ax_ne, transform=ccrs.PlateCarree(),
-                           cmap=color_map, norm=norma, levels=nivels,
-                           extend="max", add_colorbar=False)
+        cf_ne = rain.plot.contourf(ax=ax_ne, transform=ccrs.PlateCarree(),
+                                cmap=color_map, norm=norma, levels=nivels,
+                                extend="max", add_colorbar=False)
 
-# Plotar apenas cidades do Nordeste
-for city, (lat, lon) in CIDADES_BRASIL.items():
-    if -18 <= lat <= 0 and -45 <= lon <= -32:  # filtro do NE
-        try:
-            precip_value = rain.sel(latitude=lat, longitude=lon, method="nearest").item()
-            precip_int = str(int(round(precip_value)))
-            text_color = 'white'
-            bbox_style = BBOX_STYLE
-        except:
-            precip_int = "N/D"
-            text_color = 'black'
-            bbox_style = None
+    # Plotar apenas cidades do Nordeste
+    for city, (lat, lon) in CIDADES_BRASIL.items():
+        if -18 <= lat <= 0 and -45 <= lon <= -32:  # filtro do NE
+            try:
+                precip_value = rain.sel(latitude=lat, longitude=lon, method="nearest").item()
+                precip_int = str(int(round(precip_value)))
+                text_color = 'white'
+                bbox_style = BBOX_STYLE
+            except:
+                precip_int = "N/D"
+                text_color = 'black'
+                bbox_style = None
 
-        ax_ne.text(lon, lat, precip_int,
-                   transform=ccrs.PlateCarree(),
-                   fontsize=2, color=text_color, weight='bold',
-                   ha='center', va='center', bbox=bbox_style)
+            ax_ne.text(lon, lat, precip_int,
+                    transform=ccrs.PlateCarree(),
+                    fontsize=2, color=text_color, weight='bold',
+                    ha='center', va='center', bbox=bbox_style)
 
-        dia_semana = dias_semana_pt[start.strftime("%A")]
-        ax_ne.set_title(f"(NE) {start:%d-%m-%y} ({dia_semana})\nRodada ECMWF: {run_time:%d-%m-%Y %H:%MZ}",
-                        fontsize=11, weight="bold")
+            dia_semana = dias_semana_pt[start.strftime("%A")]
+            ax_ne.set_title(f"(NE) {start:%d-%m-%y} ({dia_semana})\nRodada ECMWF: {run_time:%d-%m-%Y %H:%MZ}",
+                            fontsize=11, weight="bold")
 
-        cbar_ne = plt.colorbar(cf_ne, ax=ax_ne, orientation="vertical",
-                            fraction=0.04, pad=0.02)
-        cbar_ne.set_ticks(tick_locs)
-        cbar_ne.set_ticklabels(tick_labels)
-        cbar_ne.set_label("Precipitação (mm/24h)")
+            cbar_ne = plt.colorbar(cf_ne, ax=ax_ne, orientation="vertical",
+                                fraction=0.04, pad=0.02)
+            cbar_ne.set_ticks(tick_locs)
+            cbar_ne.set_ticklabels(tick_labels)
+            cbar_ne.set_label("Precipitação (mm/24h)")
 
-        fname_ne = os.path.join(out_dir, f"nordeste{daynum:02d}.png")
-        plt.savefig(fname_ne, dpi=600, bbox_inches="tight")
-        plt.close(fig_ne)
-        print(f"✅ Salvo: {fname_ne}")
+            fname_ne = os.path.join(out_dir, f"nordeste{daynum:02d}.png")
+            plt.savefig(fname_ne, dpi=600, bbox_inches="tight")
+            plt.close(fig_ne)
+            print(f"✅ Salvo: {fname_ne}")
 
 
     # ==============================
@@ -377,56 +377,56 @@ for city, (lat, lon) in CIDADES_BRASIL.items():
     plt.savefig(fname_acc, dpi=600, bbox_inches="tight")
     
     # ==============================
-# ► NOVO MAPA ACUMULADO - NORDESTE
-# ==============================
-extent_ne = [-45, -32, -18, 0]
+    # ► NOVO MAPA ACUMULADO - NORDESTE
+    # ==============================
+    extent_ne = [-45, -32, -18, 0]
 
-fig_ne_acc = plt.figure(figsize=(10,8))
-ax_ne_acc = plt.axes(projection=ccrs.PlateCarree())
-ax_ne_acc.set_extent(extent_ne, crs=ccrs.PlateCarree())
-ax_ne_acc.coastlines(resolution="10m", linewidth=0.8)
-ax_ne_acc.add_feature(NaturalEarthFeature("cultural", "admin_0_countries", "50m",
-                                          edgecolor="black", facecolor="none", linewidth=0.8))
-ax_ne_acc.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines", "50m",
-                                          edgecolor="black", facecolor="none", linewidth=0.8))
-ax_ne_acc.gridlines(draw_labels=False, linestyle="--", alpha=0.4)
+    fig_ne_acc = plt.figure(figsize=(10,8))
+    ax_ne_acc = plt.axes(projection=ccrs.PlateCarree())
+    ax_ne_acc.set_extent(extent_ne, crs=ccrs.PlateCarree())
+    ax_ne_acc.coastlines(resolution="10m", linewidth=0.8)
+    ax_ne_acc.add_feature(NaturalEarthFeature("cultural", "admin_0_countries", "50m",
+                                            edgecolor="black", facecolor="none", linewidth=0.8))
+    ax_ne_acc.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines", "50m",
+                                            edgecolor="black", facecolor="none", linewidth=0.8))
+    ax_ne_acc.gridlines(draw_labels=False, linestyle="--", alpha=0.4)
 
-cf_ne_acc = accum_15d.plot.contourf(ax=ax_ne_acc, transform=ccrs.PlateCarree(),
-                                    cmap=color_map, norm=norma, levels=nivels,
-                                    extend="max", add_colorbar=False)
+    cf_ne_acc = accum_15d.plot.contourf(ax=ax_ne_acc, transform=ccrs.PlateCarree(),
+                                        cmap=color_map, norm=norma, levels=nivels,
+                                        extend="max", add_colorbar=False)
 
-for city, (lat, lon) in CIDADES_BRASIL.items():
-    if -18 <= lat <= 0 and -45 <= lon <= -32:
-        try:
-            precip_value = accum_15d.sel(latitude=lat, longitude=lon, method="nearest").item()
-            precip_int = str(int(round(precip_value)))
-            text_color = 'white'
-            bbox_style = BBOX_STYLE
-        except:
-            precip_int = "N/D"
-            text_color = 'black'
-            bbox_style = None
+    for city, (lat, lon) in CIDADES_BRASIL.items():
+        if -18 <= lat <= 0 and -45 <= lon <= -32:
+            try:
+                precip_value = accum_15d.sel(latitude=lat, longitude=lon, method="nearest").item()
+                precip_int = str(int(round(precip_value)))
+                text_color = 'white'
+                bbox_style = BBOX_STYLE
+            except:
+                precip_int = "N/D"
+                text_color = 'black'
+                bbox_style = None
 
-        ax_ne_acc.text(lon, lat, precip_int,
-                       transform=ccrs.PlateCarree(),
-                       fontsize=2, color=text_color, weight='bold',
-                       ha='center', va='center', bbox=bbox_style)
+            ax_ne_acc.text(lon, lat, precip_int,
+                        transform=ccrs.PlateCarree(),
+                        fontsize=2, color=text_color, weight='bold',
+                        ha='center', va='center', bbox=bbox_style)
 
-        ax_ne_acc.set_title(f"Precipitação acumulada - Nordeste (15 dias)\n"
-                            f"Período: {start_acc:%d-%m} até {end_acc:%d-%m}\n"
-                            f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
-                            fontsize=12, weight="bold")
+            ax_ne_acc.set_title(f"Precipitação acumulada - Nordeste (15 dias)\n"
+                                f"Período: {start_acc:%d-%m} até {end_acc:%d-%m}\n"
+                                f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
+                                fontsize=12, weight="bold")
 
-        cbar_ne_acc = plt.colorbar(cf_ne_acc, ax=ax_ne_acc, orientation="vertical",
-                                fraction=0.04, pad=0.02)
-        cbar_ne_acc.set_ticks(tick_locs)
-        cbar_ne_acc.set_ticklabels(tick_labels)
-        cbar_ne_acc.set_label("Precipitação (mm/15 dias)")
+            cbar_ne_acc = plt.colorbar(cf_ne_acc, ax=ax_ne_acc, orientation="vertical",
+                                    fraction=0.04, pad=0.02)
+            cbar_ne_acc.set_ticks(tick_locs)
+            cbar_ne_acc.set_ticklabels(tick_labels)
+            cbar_ne_acc.set_label("Precipitação (mm/15 dias)")
 
-        fname_ne_acc = os.path.join(out_dir, "nordeste15dias.png")
-        plt.savefig(fname_ne_acc, dpi=600, bbox_inches="tight")
-        plt.close(fig_ne_acc)
-        print(f"✅ Salvo: {fname_ne_acc}")
+            fname_ne_acc = os.path.join(out_dir, "nordeste15dias.png")
+            plt.savefig(fname_ne_acc, dpi=600, bbox_inches="tight")
+            plt.close(fig_ne_acc)
+            print(f"✅ Salvo: {fname_ne_acc}")
 
 
 
