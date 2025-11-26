@@ -20,7 +20,7 @@ header {
 }
 
 #titulo-site {
-    color: white;
+    color: #ff6c02;
     font-weight: bolder;
     flex-grow: 1;
 }
@@ -130,6 +130,7 @@ main {
     margin-bottom: 12px;
     text-align: center;
     color: #ff6c02;
+    text-transform: uppercase;
 }
 
 /* ===== Linhas internas ===== */
