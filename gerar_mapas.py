@@ -142,9 +142,9 @@ def gerar_mapas():
     fig = plt.figure(figsize=(10,8))
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.set_extent(extent, crs=ccrs.PlateCarree())
-    ax.coastlines(resolution="10m", linewidth=0.8)
-    ax.add_feature(NaturalEarthFeature("cultural", "admin_0_countries","50m", edgecolor="black", facecolor="none", linewidth=0.8))
-    ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines","50m", edgecolor="black", facecolor="none", linewidth=0.8))
+    ax.coastlines(resolution="10m", linewidth=0.4)
+    ax.add_feature(NaturalEarthFeature("cultural", "admin_0_countries","50m", edgecolor="black", facecolor="none", linewidth=0.4))
+    ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines","50m", edgecolor="black", facecolor="none", linewidth=0.4))
     ax.gridlines(draw_labels=False, linestyle="--", alpha=0.4)
     
     cf = accum_15d.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
