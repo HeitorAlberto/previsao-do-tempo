@@ -89,6 +89,12 @@ button {
     font-weight: bolder;
     border-radius: 8px;
     padding: 10px 20px;
+    background-color: white;
+    border: 1px solid white;
+}
+
+.btn-mapas:hover {
+    border: 1px solid black;
 }
 
 /* ===== Summary Card ===== */

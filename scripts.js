@@ -119,7 +119,8 @@ document.addEventListener("DOMContentLoaded", () => {
         precipitation: hourly.precipitation || [],
         wind_gusts_10m: hourly.wind_gusts_10m || [],
         cloud_cover: hourly.cloud_cover || [],
-        weather_code: hourly.weather_code || []
+        weather_code: hourly.weather_code || [],
+        apparent_temperature: hourly.apparent_temperature || []
     });
 
     const groupHourlyByDate = (times, arrays) => {
@@ -139,10 +140,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const summarizeDay = points => {
         return points.reduce((acc, p) => {
             const hour = new Date(p.time).getHours();
+
             acc.tMin = Math.min(acc.tMin, p.temperature_2m ?? acc.tMin);
             acc.tMax = Math.max(acc.tMax, p.temperature_2m ?? acc.tMax);
+
+            acc.sensMin = Math.min(acc.sensMin, p.apparent_temperature ?? acc.sensMin);
+            acc.sensMax = Math.max(acc.sensMax, p.apparent_temperature ?? acc.sensMax);
+
             acc.rhMin = Math.min(acc.rhMin, p.relative_humidity_2m ?? acc.rhMin);
             acc.rhMax = Math.max(acc.rhMax, p.relative_humidity_2m ?? acc.rhMax);
+
             acc.precipSum += p.precipitation ?? 0;
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
 
@@ -152,8 +159,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
             acc.weatherCodes.push(p.weather_code);
             return acc;
-        }, { tMin: Infinity, tMax: -Infinity, rhMin: Infinity, rhMax: -Infinity, precipSum: 0, gustMax: 0, cloudDay: [], cloudNight: [], weatherCodes: [] });
+
+        }, {
+            tMin: Infinity,
+            tMax: -Infinity,
+            sensMin: Infinity,
+            sensMax: -Infinity, 
+            rhMin: Infinity,
+            rhMax: -Infinity,
+            precipSum: 0,
+            gustMax: 0,
+            cloudDay: [],
+            cloudNight: [],
+            weatherCodes: []
+        });
     };
+
 
     // =====================
     // CLASSIFICAÇÃO
@@ -321,6 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
+            <div class="row temp"><p>Sensação term. (°C)</p><p>${isFinite(s.sensMin) ? s.sensMin.toFixed(0) : '-'}° a ${isFinite(s.sensMax) ? s.sensMax.toFixed(0) : '-'}°</p></div>
             <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
             <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
@@ -343,7 +365,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const url = new URL(forecastBase);
         url.searchParams.set('latitude', lat);
         url.searchParams.set('longitude', lon);
-        url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,weather_code');
+        url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,weather_code,apparent_temperature');
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
         url.searchParams.set('forecast_days', '15');
