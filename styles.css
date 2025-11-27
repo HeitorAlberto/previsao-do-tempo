@@ -1,11 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 
 /* ===== Base do site ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
     font-family: "Roboto", sans-serif;
     color: #000;
-    background: #fff;
+    background: #f0f0f0;
 }
 
 /* ===== HEADER ===== */
@@ -73,6 +79,7 @@ button {
     text-align: center;
     font-weight: bolder;
     margin-top: 20px;
+    font-size: 25px;
 }
 
 /* ===== Botão Mapas ===== */
@@ -80,7 +87,6 @@ button {
     text-decoration: none;
     color: black;
     font-weight: bolder;
-    background-color: #ececec;
     border-radius: 8px;
     padding: 10px 20px;
 }
@@ -91,12 +97,10 @@ button {
     max-width: 500px;
     padding: 8px 15px;
     margin: 30px auto 50px auto;
+    background-color: white;
 }
 
 #summaryCard .row {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid: 10px;
     text-align: center;
 }
 
@@ -116,13 +120,14 @@ main {
     grid-template-columns: 1fr 1fr 1fr;
     gap: 60px;
     padding: 0px 115px;
+    background: #f0f0f0;
 }
 
 /* ===== Cards ===== */
 .day {
-    border: 2px solid #000000;
     border-radius: 12px;
     padding: 16px 20px;
+    background-color: white;
 }
 
 .day .date {
@@ -147,7 +152,7 @@ main {
 
 .descricao-nuvens p {
     margin: 0px;
-    background-color: #e6e6e6;
+    background-color: #f0f0f0;
     border-radius: 8px;
     padding: 10px;
     text-align: center;
@@ -213,6 +218,7 @@ main {
     #locationName {
         width: 100%;
         margin-top: 10px;
+        font-size: 18px;
     }
 
     main {
@@ -221,7 +227,6 @@ main {
     }
 
     #summaryCard {
-        width: 90%;
         max-width: 350px;
         margin: 0 auto 40px auto;
     }
@@ -283,7 +288,7 @@ main {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding: 10px 15px;
+    padding: 20px 15px;
     overflow-x: auto;
     white-space: nowrap;
 }
@@ -294,7 +299,7 @@ main {
 
 .history-item {
     padding: 8px 12px;
-    border: 1px solid black;
+    border: 1px solid rgb(255, 255, 255);
     border-radius: 6px;
     background: white;
     cursor: pointer;
@@ -304,7 +309,7 @@ main {
 }
 
 .history-item:hover {
-    background-color: #e7e7e7;
+    border: 1px solid black;
 }
 
 /* remove barra feia do scroll */
