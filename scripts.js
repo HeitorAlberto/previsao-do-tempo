@@ -236,11 +236,11 @@ document.addEventListener("DOMContentLoaded", () => {
             card.className = 'day';
             card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
-            <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
-            <div class="row temp"><p>Sensação térmica (°C)</p><p>${isFinite(s.sensMin) ? s.sensMin.toFixed(0) : '-'}° a ${isFinite(s.sensMax) ? s.sensMax.toFixed(0) : '-'}°</p></div>
-            <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
-            <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
-            <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>`;
+            <div class="row temp"><p>Temperatura (°C)</p><p><strong>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</strong></p></div>
+            <div class="row temp"><p>Sensação térmica (°C)</p><p><strong>${isFinite(s.sensMin) ? s.sensMin.toFixed(0) : '-'}° a ${isFinite(s.sensMax) ? s.sensMax.toFixed(0) : '-'}°</strong></p></div>
+            <div class="row precip"><p>Chuva acumulada</p><p><strong>${s.precipSum.toFixed(0)} mm</strong></p></div>
+            <div class="row humidity"><p>Umidade</p><p><strong>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</strong></p></div>
+            <div class="row wind"><p>Rajadas de vento</p><p><strong>${s.gustMax.toFixed(0)} km/h</strong></p></div>`;
             
             cardsEl.appendChild(card);
         });
