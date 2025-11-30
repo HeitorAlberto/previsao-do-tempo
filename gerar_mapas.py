@@ -122,7 +122,7 @@ def gerar_mapas():
         ax.set_title(f"({daynum:02d}) {start:%d-%m-%y} ({dia_semana})\nRodada ECMWF: {run_time:%d-%m-%Y %H:%MZ}",
                       fontsize=11, weight="bold")
 
-        cbar = plt.colorbar(cf, ax=ax, orientation="vertical", fraction=0.04, pad=0.02)
+        cbar = plt.colorbar(cf, ax=ax, orientation="vertical", fraction=0.04, pad=0.02, drawedges=False)
         cbar.set_ticks(tick_locs)
         cbar.set_ticklabels(tick_labels)
         cbar.set_label("Precipitação (mm/24h)")
@@ -154,7 +154,7 @@ def gerar_mapas():
     ax.set_title(f"Precipitação acumulada - 15 dias\nPeríodo: {start_acc:%d-%m} até {end_acc:%d-%m}\nRodada ECMWF: {run_time:%d-%m-%Y %HZ}",
                   fontsize=12, weight="bold")
 
-    cbar = plt.colorbar(cf, ax=ax, orientation="vertical", fraction=0.04, pad=0.02)
+    cbar = plt.colorbar(cf, ax=ax, orientation="vertical", fraction=0.04, pad=0.02, drawedges=False)
     cbar.set_ticks(tick_locs)
     cbar.set_ticklabels(tick_labels)
     cbar.set_label("Precipitação (mm/15 dias)")
