@@ -110,7 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const city = address.city || address.town || address.village || address.municipality || '';
         const state = address.state || '';
         const country = address.country || '';
-        return `${city}${state ? ', ' + state : ''}`;
+        return `${city}${state ? ', ' + state : ''}${country ? ', ' + country : ''}`;
     };
 
     const prepareHourlyArrays = hourly => ({
@@ -153,9 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
             acc.precipSum += p.precipitation ?? 0;
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
 
-            const cloud = p.cloud_cover ?? 0;
-            if (hour >= 6 && hour < 18) acc.cloudDay.push(cloud);
-            else acc.cloudNight.push(cloud);
 
             acc.weatherCodes.push(p.weather_code);
             return acc;
@@ -176,107 +173,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
 
-    // =====================
-    // CLASSIFICAÇÃO
-    // =====================
-    
-
-    function isThunder(code) {
-        return code >= 95 && code <= 99;
-    }
-
-    function classifyFrequency(count) {
-        return count >= 3 ? "" : "";
-    }
-
-    function classifyRainByAccumulation(mm) {
-        if (mm < 0.5) return null;              
-        if (mm < 5) return "Chuva leve";
-        if (mm < 10) return "Chuva moderada";
-        return "Chuva forte";
-    }
-
-
-    function modeWithTieAverage(values) {
-        if (!values.length) return null;
-
-        const freq = new Map();
-        values.forEach(v => freq.set(v, (freq.get(v) || 0) + 1));
-
-        // frequência máxima
-        const maxFreq = Math.max(...freq.values());
-
-        // valores empatados
-        const tiedValues = [...freq.entries()]
-            .filter(([v, c]) => c === maxFreq)
-            .map(([v]) => v);
-
-        // moda única → retorna direto
-        if (tiedValues.length === 1) {
-            return tiedValues[0];
-        }
-
-        // empate → retorna média das modas
-        const avg = tiedValues.reduce((sum, v) => sum + v, 0) / tiedValues.length;
-        return avg;
-    }
-
-
-    function getThunderDescription(codes) {
-        const count = codes.filter(isThunder).length;
-        if (count === 0) return null;
-        return `Trovoadas ${classifyFrequency(count)}`;
-    }
-
-    function getSkyDescription(avgCloud) {
-        if (avgCloud < 20) return `Céu limpo`;
-        if (avgCloud < 50) return `Algumas nuvens`;
-        if (avgCloud < 85) return `Muitas nuvens`;
-        return `Nublado`;
-    }
-
-    function getCloudDescriptions(points) {
-        const periods = {
-            madrugada: points.filter(p => new Date(p.time).getHours() < 6),
-            manhã: points.filter(p => {
-                const h = new Date(p.time).getHours();
-                return h >= 6 && h < 12;
-            }),
-            tarde: points.filter(p => {
-                const h = new Date(p.time).getHours();
-                return h >= 12 && h < 18;
-            }),
-            noite: points.filter(p => new Date(p.time).getHours() >= 18)
-        };
-
-        const descriptions = {};
-        for (const [period, arr] of Object.entries(periods)) {
-            if (arr.length === 0) {
-                descriptions[period] = "Dados insuficientes";
-                continue;
-            }
-
-            // === Nebulosidade (usando sua moda com desempate) ===
-            const clouds = arr.map(p => p.cloud_cover);
-            const dominantCloud = modeWithTieAverage(clouds);
-            const sky = getSkyDescription(dominantCloud);
-
-            // === Chuva baseada no acumulado real ===
-            const precip = arr.reduce((sum, p) => sum + (p.precipitation ?? 0), 0);
-            const rainDesc = classifyRainByAccumulation(precip);
-
-            // === Trovoadas continuam baseadas em weather codes ===
-            const thunder = getThunderDescription(arr.map(p => p.weather_code));
-
-            const parts = [sky];
-            if (rainDesc) parts.push(rainDesc);
-            if (thunder) parts.push(thunder);
-
-            descriptions[period] = parts.join(" • ");
-        }
-
-        return descriptions;
-    }
 
 
     // =====================
@@ -335,23 +231,17 @@ document.addEventListener("DOMContentLoaded", () => {
         entries.forEach(([day, points]) => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
-            const descriptions = getCloudDescriptions(points);
 
             const card = document.createElement('div');
             card.className = 'day';
             card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
-            <div class="row temp"><p>Sensação term. (°C)</p><p>${isFinite(s.sensMin) ? s.sensMin.toFixed(0) : '-'}° a ${isFinite(s.sensMax) ? s.sensMax.toFixed(0) : '-'}°</p></div>
+            <div class="row temp"><p>Sensação térmica (°C)</p><p>${isFinite(s.sensMin) ? s.sensMin.toFixed(0) : '-'}° a ${isFinite(s.sensMax) ? s.sensMax.toFixed(0) : '-'}°</p></div>
             <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
-            <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-
-            <div class="descricao-nuvens"><p><strong>Madrugada</strong><br>${descriptions.madrugada}</p></div>
-            <div class="descricao-nuvens"><p><strong>Manhã</strong><br>${descriptions.manhã}</p></div>
-            <div class="descricao-nuvens"><p><strong>Tarde</strong><br>${descriptions.tarde}</p></div>
-            <div class="descricao-nuvens"><p><strong>Noite</strong><br>${descriptions.noite}</p></div>
-            `;
+            <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>`;
+            
             cardsEl.appendChild(card);
         });
 
