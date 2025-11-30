@@ -140,7 +140,6 @@ main {
     font-weight: 700;
     margin-bottom: 12px;
     text-align: center;
-    color: #ff6c02;
 }
 
 /* ===== Linhas internas ===== */
@@ -218,7 +217,7 @@ main {
     }
 
     #cityInput {
-        width: 90%;
+        width: 100%;
     }
 
     #locationName {
