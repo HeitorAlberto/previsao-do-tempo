@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // =====================
     // Histórico (máx 5 items)
-    // Agora persistente (localStorage)
+    // Persistente
     // =====================
     let searchHistory = [];
 
@@ -41,13 +41,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         searchHistory.unshift({ name, lat, lon });
 
-        // Remove o mais antigo (fim da lista), mantendo sempre 5 itens
         if (searchHistory.length > 5) searchHistory.pop();
 
         renderHistory();
         saveHistory();
     }
-
 
     function renderHistory() {
         historyContainer.innerHTML = "";
@@ -65,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =====================
-    // Cache no navegador
+    // Cache
     // =====================
     const CACHE_TTL_MINUTES = 60;
 
@@ -105,7 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-
     const getAddressText = address => {
         const city = address.city || address.town || address.village || address.municipality || '';
         const state = address.state || '';
@@ -113,12 +110,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${city}${state ? ', ' + state : ''}${country ? ', ' + country : ''}`;
     };
 
+    // =====================
+    // Prepara arrays horários (agora com low/mid/high)
+    // =====================
     const prepareHourlyArrays = hourly => ({
         temperature_2m: hourly.temperature_2m || [],
         relative_humidity_2m: hourly.relative_humidity_2m || [],
         precipitation: hourly.precipitation || [],
         wind_gusts_10m: hourly.wind_gusts_10m || [],
         cloud_cover: hourly.cloud_cover || [],
+        cloud_cover_low: hourly.cloud_cover_low || [],
+        cloud_cover_mid: hourly.cloud_cover_mid || [],
+        cloud_cover_high: hourly.cloud_cover_high || [],
         weather_code: hourly.weather_code || [],
         apparent_temperature: hourly.apparent_temperature || []
     });
@@ -137,6 +140,22 @@ document.addEventListener("DOMContentLoaded", () => {
         return map;
     };
 
+    // =====================
+    // Helper: converte percentuais LOW+MID em categorias textuais
+    // (usaremos a soma LOW+MID; HIGH é ignorado na descrição)
+    // =====================
+    function cloudCategoryFromLowMid(low, mid) {
+        const combined = Math.min(100, (low ?? 0) + (mid ?? 0));
+        if (combined <= 10) return "Céu limpo";
+        if (combined <= 30) return "Poucas nuvens";
+        if (combined <= 60) return "Parcialmente nublado";
+        if (combined <= 90) return "Muito nublado";
+        return "Encoberto";
+    }
+
+    // =====================
+    // Summarize por dia (preenche cloudDay/cloudNight com categorias)
+    // =====================
     const summarizeDay = points => {
         return points.reduce((acc, p) => {
             const hour = new Date(p.time).getHours();
@@ -153,15 +172,37 @@ document.addEventListener("DOMContentLoaded", () => {
             acc.precipSum += p.precipitation ?? 0;
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
 
-
             acc.weatherCodes.push(p.weather_code);
+
+            // ⭐ ADIÇÃO REVISADA — usar cloud_cover_low + cloud_cover_mid e calcular categoria (moda)
+            const low = (p.cloud_cover_low !== undefined) ? p.cloud_cover_low : null;
+            const mid = (p.cloud_cover_mid !== undefined) ? p.cloud_cover_mid : null;
+
+            // Se ambos undefined, tentamos fallback em cloud_cover (total), mas preferimos low/mid.
+            let category;
+            if (low === null && mid === null) {
+                // fallback: tenta usar cloud_cover total (divide proporcionalmente: assume tudo em mid)
+                const total = p.cloud_cover ?? 0;
+                // fallback strategy: use total as mid (conservative)
+                category = cloudCategoryFromLowMid(0, total);
+            } else {
+                category = cloudCategoryFromLowMid(low ?? 0, mid ?? 0);
+            }
+
+            if (hour >= 6 && hour < 18) {
+                acc.cloudDay.push(category);
+            } else {
+                acc.cloudNight.push(category);
+            }
+            // ⭐ FIM ADIÇÃO
+
             return acc;
 
         }, {
             tMin: Infinity,
             tMax: -Infinity,
             sensMin: Infinity,
-            sensMax: -Infinity, 
+            sensMax: -Infinity,
             rhMin: Infinity,
             rhMax: -Infinity,
             precipSum: 0,
@@ -171,6 +212,49 @@ document.addEventListener("DOMContentLoaded", () => {
             weatherCodes: []
         });
     };
+
+    
+    function chooseDescription(list, threshold = 0.6) {
+        if (!list || list.length === 0) return "-";
+
+        const priority = {
+            "Encoberto": 5,
+            "Muito nublado": 4,
+            "Parcialmente nublado": 3,
+            "Poucas nuvens": 2,
+            "Céu limpo": 1
+        };
+
+        // Conta ocorrências
+        const counts = {};
+        list.forEach(d => {
+            counts[d] = (counts[d] || 0) + 1;
+        });
+
+        // Ordena por frequência desc
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        const total = list.length;
+        const [topCat, topCount] = sorted[0];
+
+        // Se a top categoria atinge a meta -> devolve ela
+        if ((topCount / total) >= threshold) {
+            return topCat;
+        }
+
+        // Senão, pega todas as categorias que têm a maior frequência (podem ser múltiplas)
+        const topCountValue = topCount;
+        const tied = sorted.filter(([k, v]) => v === topCountValue).map(([k]) => k);
+
+        if (tied.length === 1) {
+            // A moda existe, mas não atingiu threshold; podemos:
+            //  - retornar a moda (aqui optamos por retornar a moda mesmo sem atingir threshold)
+            //  - ou retornar uma frase indicando variação (ver comentário abaixo)
+            return tied[0];
+        }
+
+
+        return `Nebulosidade variável `;
+    }
 
 
 
@@ -191,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             totalPrecip += s.precipSum;
 
-            if (s.precipSum.toFixed(0) >= 1) rainyDays++;  // Dia com chuva
+            if (s.precipSum.toFixed(0) >= 1) rainyDays++;
             if (s.precipSum > maxDailyPrecip) maxDailyPrecip = s.precipSum;
         }
 
@@ -221,7 +305,6 @@ document.addEventListener("DOMContentLoaded", () => {
         forecastSection.parentNode.insertBefore(card, forecastSection);
     };
 
-
     const renderDays = dayMapInput => {
         const dayMap = dayMapInput instanceof Map ? dayMapInput : new Map(dayMapInput);
         cardsEl.innerHTML = '';
@@ -234,13 +317,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const card = document.createElement('div');
             card.className = 'day';
+
+            // usamos a função que retorna main + variante (Formato B)
+            const dayDesc = chooseDescription(s.cloudDay);
+            const nightDesc = chooseDescription(s.cloudNight);
+
             card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
             <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
-            <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>`;
-            
+            <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
+
+            <div class="row clouds"><strong><p>Dia</p></strong><p>${dayDesc}</p></div>
+            <div class="row clouds"><strong><p>Noite</p></strong><p>${nightDesc}</p></div>
+            `;
+
             cardsEl.appendChild(card);
         });
 
@@ -254,7 +346,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const url = new URL(forecastBase);
         url.searchParams.set('latitude', lat);
         url.searchParams.set('longitude', lon);
-        url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,weather_code,apparent_temperature');
+        // ⭐ ADIÇÃO: pedir cloud_cover_low, cloud_cover_mid, cloud_cover_high
+        url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,weather_code,apparent_temperature');
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
         url.searchParams.set('forecast_days', '15');
@@ -336,7 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
     todayDate.textContent = `${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(today)} - ${new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(today)}`;
 
     // =====================
-    // Carrega histórico persistente ao iniciar
+    // Carrega histórico persistente
     // =====================
     searchHistory = loadHistory();
     renderHistory();
