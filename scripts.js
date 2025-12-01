@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         searchHistory.unshift({ name, lat, lon });
 
-        if (searchHistory.length > 5) searchHistory.pop();
+        if (searchHistory.length > 3) searchHistory.pop();
 
         renderHistory();
         saveHistory();
@@ -140,21 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return map;
     };
 
-    // =====================
-    // Helper: converte percentuais LOW+MID em categorias textuais
-    // (usaremos a soma LOW+MID; HIGH é ignorado na descrição)
-    // =====================
-    function cloudCategoryFromLowMid(low, mid) {
-        const combined = Math.min(100, (low ?? 0) + (mid ?? 0));
-        if (combined <= 10) return "Céu limpo";
-        if (combined <= 30) return "Poucas nuvens";
-        if (combined <= 80) return "Parcialmente nublado";
-        return "Nublado";
-    }
-
-    // =====================
-    // Summarize por dia (preenche cloudDay/cloudNight com categorias)
-    // =====================
     const summarizeDay = points => {
         return points.reduce((acc, p) => {
             const hour = new Date(p.time).getHours();
@@ -172,28 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
 
             acc.weatherCodes.push(p.weather_code);
-
-            // ⭐ ADIÇÃO REVISADA — usar cloud_cover_low + cloud_cover_mid e calcular categoria (moda)
-            const low = (p.cloud_cover_low !== undefined) ? p.cloud_cover_low : null;
-            const mid = (p.cloud_cover_mid !== undefined) ? p.cloud_cover_mid : null;
-
-            // Se ambos undefined, tentamos fallback em cloud_cover (total), mas preferimos low/mid.
-            let category;
-            if (low === null && mid === null) {
-                // fallback: tenta usar cloud_cover total (divide proporcionalmente: assume tudo em mid)
-                const total = p.cloud_cover ?? 0;
-                // fallback strategy: use total as mid (conservative)
-                category = cloudCategoryFromLowMid(0, total);
-            } else {
-                category = cloudCategoryFromLowMid(low ?? 0, mid ?? 0);
-            }
-
-            if (hour >= 6 && hour < 18) {
-                acc.cloudDay.push(category);
-            } else {
-                acc.cloudNight.push(category);
-            }
-            // ⭐ FIM ADIÇÃO
+            
 
             return acc;
 
@@ -206,54 +170,10 @@ document.addEventListener("DOMContentLoaded", () => {
             rhMax: -Infinity,
             precipSum: 0,
             gustMax: 0,
-            cloudDay: [],
-            cloudNight: [],
             weatherCodes: []
         });
     };
 
-    
-    function chooseDescription(list, threshold = 0.6) {
-        if (!list || list.length === 0) return "-";
-
-        const priority = {
-            "Encoberto": 5,
-            "Muito nublado": 4,
-            "Parcialmente nublado": 3,
-            "Poucas nuvens": 2,
-            "Céu limpo": 1
-        };
-
-        // Conta ocorrências
-        const counts = {};
-        list.forEach(d => {
-            counts[d] = (counts[d] || 0) + 1;
-        });
-
-        // Ordena por frequência desc
-        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-        const total = list.length;
-        const [topCat, topCount] = sorted[0];
-
-        // Se a top categoria atinge a meta -> devolve ela
-        if ((topCount / total) >= threshold) {
-            return topCat;
-        }
-
-        // Senão, pega todas as categorias que têm a maior frequência (podem ser múltiplas)
-        const topCountValue = topCount;
-        const tied = sorted.filter(([k, v]) => v === topCountValue).map(([k]) => k);
-
-        if (tied.length === 1) {
-            // A moda existe, mas não atingiu threshold; podemos:
-            //  - retornar a moda (aqui optamos por retornar a moda mesmo sem atingir threshold)
-            //  - ou retornar uma frase indicando variação (ver comentário abaixo)
-            return tied[0];
-        }
-
-
-        return `Nebulosidade variável `;
-    }
 
 
 
@@ -317,19 +237,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement('div');
             card.className = 'day';
 
-            // usamos a função que retorna main + variante (Formato B)
-            const dayDesc = chooseDescription(s.cloudDay);
-            const nightDesc = chooseDescription(s.cloudNight);
-
             card.innerHTML = `
             <div class="date">${labels.date} • ${labels.weekday}</div>
             <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
             <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
             <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
             <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-
-            <div class="row clouds"><strong><p>Dia</p></strong><p>${dayDesc}</p></div>
-            <div class="row clouds"><strong><p>Noite</p></strong><p>${nightDesc}</p></div>
             `;
 
             cardsEl.appendChild(card);
@@ -345,7 +258,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const url = new URL(forecastBase);
         url.searchParams.set('latitude', lat);
         url.searchParams.set('longitude', lon);
-        // ⭐ ADIÇÃO: pedir cloud_cover_low, cloud_cover_mid, cloud_cover_high
         url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,weather_code,apparent_temperature');
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
