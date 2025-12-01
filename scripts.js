@@ -148,9 +148,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const combined = Math.min(100, (low ?? 0) + (mid ?? 0));
         if (combined <= 10) return "Céu limpo";
         if (combined <= 30) return "Poucas nuvens";
-        if (combined <= 60) return "Parcialmente nublado";
-        if (combined <= 90) return "Muito nublado";
-        return "Encoberto";
+        if (combined <= 80) return "Parcialmente nublado";
+        return "Nublado";
     }
 
     // =====================
