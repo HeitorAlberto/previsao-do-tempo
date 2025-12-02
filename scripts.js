@@ -141,8 +141,43 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const summarizeDay = points => {
-        return points.reduce((acc, p) => {
+
+        // =============================
+        // SEPARAÇÃO DIA / NOITE
+        // =============================
+        const dia = [];
+        const noite = [];
+
+        points.forEach(p => {
             const hour = new Date(p.time).getHours();
+            if (hour >= 6 && hour < 18) {
+                dia.push(p.cloud_cover);
+            } else {
+                noite.push(p.cloud_cover);
+            }
+        });
+
+        // Categoria por valor (0–59 / 60–100)
+        const cloudCategory = v => (
+            v >= 60 ? "muitas nuvens/nublado" : "Algumas nuvens"
+        );
+
+        // Moda simples
+        function moda(arr) {
+            if (arr.length === 0) return "-";
+            const freq = {};
+            arr.forEach(v => freq[v] = (freq[v] || 0) + 1);
+            const most = Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0];
+            return cloudCategory(Number(most));
+        }
+
+        const cloudDay = moda(dia);
+        const cloudNight = moda(noite);
+
+        // =============================
+        // RESUMO DE DADOS DO DIA
+        // =============================
+        return points.reduce((acc, p) => {
 
             acc.tMin = Math.min(acc.tMin, p.temperature_2m ?? acc.tMin);
             acc.tMax = Math.max(acc.tMax, p.temperature_2m ?? acc.tMax);
@@ -157,7 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
 
             acc.weatherCodes.push(p.weather_code);
-            
 
             return acc;
 
@@ -170,11 +204,11 @@ document.addEventListener("DOMContentLoaded", () => {
             rhMax: -Infinity,
             precipSum: 0,
             gustMax: 0,
-            weatherCodes: []
+            weatherCodes: [],
+            cloudDay,
+            cloudNight
         });
     };
-
-
 
 
 
@@ -191,22 +225,39 @@ document.addEventListener("DOMContentLoaded", () => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
 
+            // ===============================
+            // Determinar descrição geral do dia
+            // ===============================
+            // score numérico: nublado = 1, parcialmente nublado = 0
+            const score =
+                (s.cloudDay === "muitas nuvens/nublado" ? 1 : 0) +
+                (s.cloudNight === "muitas nuvens/nublado" ? 1 : 0);
+
+            const cloudGroup = score >= 1 ? 1 : 0;
+
+
+            // ===============================
+            // Criar card
+            // ===============================
             const card = document.createElement('div');
             card.className = 'day';
 
             card.innerHTML = `
-            <div class="date">${labels.date} • ${labels.weekday}</div>
-            <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
-            <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
-            <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
-            <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-            `;
+        <div class="date">${labels.date} • ${labels.weekday}</div>
+        <div class="row temp"><p>Temperatura (°C)</p><p>${isFinite(s.tMin) ? s.tMin.toFixed(0) : '-'}° a ${isFinite(s.tMax) ? s.tMax.toFixed(0) : '-'}°</p></div>
+        <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
+        <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
+        <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
+        <div class="row clouds"><p>Dia</p><p>${s.cloudDay}</p></div>
+        <div class="row clouds"><p>Noite</p><p>${s.cloudNight}</p></div>
+        `;
 
             cardsEl.appendChild(card);
         });
 
         cityInput.value = '';
     };
+
 
     // =====================
     // Fetch API
@@ -215,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const url = new URL(forecastBase);
         url.searchParams.set('latitude', lat);
         url.searchParams.set('longitude', lon);
-        url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,weather_code,apparent_temperature');
+        url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,weather_code,apparent_temperature');
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
         url.searchParams.set('forecast_days', '15');
