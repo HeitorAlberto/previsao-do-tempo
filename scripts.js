@@ -181,54 +181,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // =====================
     // Renderização
     // =====================
-    const renderSummaryCard = dayMap => {
-        const existing = document.getElementById('summaryCard');
-        if (existing) existing.remove();
-
-        let totalPrecip = 0;
-        let rainyDays = 0;
-        let maxDailyPrecip = 0;
-
-        for (const [, points] of dayMap) {
-            const s = summarizeDay(points);
-
-            totalPrecip += s.precipSum;
-
-            if (s.precipSum.toFixed(0) >= 1) rainyDays++;
-            if (s.precipSum > maxDailyPrecip) maxDailyPrecip = s.precipSum;
-        }
-
-        const card = document.createElement('div');
-        card.id = 'summaryCard';
-        card.className = 'day';
-
-        card.innerHTML = `
-        <div class="date">Resumo para 15 dias</div>
-
-        <div class="row precip">
-            <p>Chuva acumulada</p>
-            <p>${totalPrecip.toFixed(0)} mm</p>
-        </div>
-
-        <div class="row precip">
-            <p>Dias de chuva</p>
-            <p>${rainyDays} de 15</p>
-        </div>
-
-        <div class="row precip">
-            <p>Maior acumulado em 24h</p>
-            <p>${maxDailyPrecip.toFixed(0)} mm</p>
-        </div>
-    `;
-
-        forecastSection.parentNode.insertBefore(card, forecastSection);
-    };
 
     const renderDays = dayMapInput => {
         const dayMap = dayMapInput instanceof Map ? dayMapInput : new Map(dayMapInput);
         cardsEl.innerHTML = '';
         const entries = Array.from(dayMap.entries()).slice(0, 15);
-        renderSummaryCard(dayMap);
 
         entries.forEach(([day, points]) => {
             const labels = formatDateLabel(day + 'T00:00:00');
