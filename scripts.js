@@ -140,29 +140,83 @@ document.addEventListener("DOMContentLoaded", () => {
         return map;
     };
 
+    function classifyRain(value) {
+        if (value <= 0) return "sem chuva";
+        if (value < 3) return "chuva fraca";
+        if (value <= 10) return "chuva moderada";
+        return "chuva forte";
+    }
+
+    function hasThunderstorm(codes) {
+        return codes.some(c => c === 95 || c === 96 || c === 99)
+            ? "trovoadas"
+            : null;
+    }
+
+    function combineDescription(cloud, rain, thunder) {
+        const parts = [];
+
+        if (cloud) parts.push(cloud);
+        if (rain && rain !== "sem chuva") parts.push(rain);
+        if (thunder) parts.push(thunder);
+
+        // se só houver nuvens (sem chuva, sem trovoadas)
+        if (parts.length === 1) return parts[0];
+
+        return parts.join(" • ");
+    }
+
+
     const summarizeDay = points => {
 
-        // =============================
-        // SEPARAÇÃO DIA / NOITE
-        // =============================
-        const dia = [];
+        const madrugada = [];
+        const manha = [];
+        const tarde = [];
         const noite = [];
 
+        const chuvaMadrugada = [];
+        const chuvaManha = [];
+        const chuvaTarde = [];
+        const chuvaNoite = [];
+
+        const thunderMadrugada = [];
+        const thunderManha = [];
+        const thunderTarde = [];
+        const thunderNoite = [];
+
+        // ==============================
+        // Separação por turnos
+        // ==============================
         points.forEach(p => {
             const hour = new Date(p.time).getHours();
-            if (hour >= 6 && hour < 18) {
-                dia.push(p.cloud_cover);
+            const cloud = p.cloud_cover;
+            const rain = p.precipitation ?? 0;
+            const wcode = p.weather_code;
+
+            if (hour < 6) {
+                madrugada.push(cloud);
+                chuvaMadrugada.push(rain);
+                thunderMadrugada.push(wcode);
+            } else if (hour < 12) {
+                manha.push(cloud);
+                chuvaManha.push(rain);
+                thunderManha.push(wcode);
+            } else if (hour < 18) {
+                tarde.push(cloud);
+                chuvaTarde.push(rain);
+                thunderTarde.push(wcode);
             } else {
-                noite.push(p.cloud_cover);
+                noite.push(cloud);
+                chuvaNoite.push(rain);
+                thunderNoite.push(wcode);
             }
         });
 
-        // Categoria por valor (0–59 / 60–100)
-        const cloudCategory = v => (
-            v >= 60 ? "muitas nuvens/nublado" : "Algumas nuvens"
-        );
+        // ==============================
+        // Moda das nuvens
+        // ==============================
+        const cloudCategory = v => v >= 60 ? "muitas nuvens/nublado" : "Algumas nuvens";
 
-        // Moda simples
         function moda(arr) {
             if (arr.length === 0) return "-";
             const freq = {};
@@ -171,14 +225,41 @@ document.addEventListener("DOMContentLoaded", () => {
             return cloudCategory(Number(most));
         }
 
-        const cloudDay = moda(dia);
-        const cloudNight = moda(noite);
+        const sum = arr => arr.reduce((a, b) => a + b, 0);
 
-        // =============================
-        // RESUMO DE DADOS DO DIA
-        // =============================
+        // ==============================
+        // Texto final por turno
+        // ==============================
+        const result = {
+            cloudMadrugada: combineDescription(
+                moda(madrugada),
+                classifyRain(sum(chuvaMadrugada)),
+                hasThunderstorm(thunderMadrugada)
+            ),
+
+            cloudManha: combineDescription(
+                moda(manha),
+                classifyRain(sum(chuvaManha)),
+                hasThunderstorm(thunderManha)
+            ),
+
+            cloudTarde: combineDescription(
+                moda(tarde),
+                classifyRain(sum(chuvaTarde)),
+                hasThunderstorm(thunderTarde)
+            ),
+
+            cloudNoite: combineDescription(
+                moda(noite),
+                classifyRain(sum(chuvaNoite)),
+                hasThunderstorm(thunderNoite)
+            )
+        };
+
+        // ==============================
+        // Estatísticas gerais do dia
+        // ==============================
         return points.reduce((acc, p) => {
-
             acc.tMin = Math.min(acc.tMin, p.temperature_2m ?? acc.tMin);
             acc.tMax = Math.max(acc.tMax, p.temperature_2m ?? acc.tMax);
 
@@ -194,7 +275,6 @@ document.addEventListener("DOMContentLoaded", () => {
             acc.weatherCodes.push(p.weather_code);
 
             return acc;
-
         }, {
             tMin: Infinity,
             tMax: -Infinity,
@@ -205,10 +285,10 @@ document.addEventListener("DOMContentLoaded", () => {
             precipSum: 0,
             gustMax: 0,
             weatherCodes: [],
-            cloudDay,
-            cloudNight
+            ...result
         });
     };
+
 
 
 
@@ -248,8 +328,11 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
         <div class="row humidity"><p>Umidade</p><p>${isFinite(s.rhMin) ? s.rhMin.toFixed(0) : '-'}% a ${isFinite(s.rhMax) ? s.rhMax.toFixed(0) : '-'}%</p></div>
         <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-        <div class="row clouds"><p>Dia</p><p>${s.cloudDay}</p></div>
-        <div class="row clouds"><p>Noite</p><p>${s.cloudNight}</p></div>
+        <div class="row clouds"><p><strong>Madrugada</strong></p><p>${s.cloudMadrugada}</p></div>
+        <div class="row clouds"><p><strong>Manhã</strong></p><p>${s.cloudManha}</p></div>
+        <div class="row clouds"><p><strong>Tarde</strong></p><p>${s.cloudTarde}</p></div>
+        <div class="row clouds"><p><strong>Noite</strong></p><p>${s.cloudNoite}</p></div>
+
         `;
 
             cardsEl.appendChild(card);
