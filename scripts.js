@@ -215,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // ==============================
         // Moda das nuvens
         // ==============================
-        const cloudCategory = v => v >= 60 ? "muitas nuvens/nublado" : "Algumas nuvens";
+        const cloudCategory = v => v >= 60 ? "muitas nuvens/nublado" : "algumas nuvens";
 
         function moda(arr) {
             if (arr.length === 0) return "-";
