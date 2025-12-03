@@ -168,9 +168,6 @@ main {
     background-color: #f0f0f0;
     border-radius: 8px;
     margin-bottom: 8px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
 }
 
 
