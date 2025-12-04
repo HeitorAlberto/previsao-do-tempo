@@ -165,7 +165,6 @@ main {
 
 .clouds {
     color: #000000;
-    background-color: #f0f0f0;
     border-radius: 8px;
     margin-bottom: 8px;
 }
@@ -229,7 +228,6 @@ main {
 
     .clouds {
         display: flex;
-        flex-direction: column;
         gap: 10px;
     }
 }
