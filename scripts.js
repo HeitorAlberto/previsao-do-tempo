@@ -111,19 +111,19 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
 
-    // ----------------------------------------------------------
-    // ✔ NOVA FUNÇÃO — LÓGICA FINAL DE NEBULOSIDADE
-    // ----------------------------------------------------------
-    function calcularNebulosidadeDoDia(cloudValues) {
-        if (!cloudValues || cloudValues.length === 0) return 0;
+    function calcularNebulosidade6h(cloudValues) {
+        if (!cloudValues || cloudValues.length === 0) return [];
 
-        const media = cloudValues.reduce((a, b) => a + b, 0) / cloudValues.length;
+        const grupos = [];
+        for (let i = 0; i < cloudValues.length; i += 6) {
+            const bloco = cloudValues.slice(i, i + 6);
+            const media = bloco.reduce((a, b) => a + b, 0) / bloco.length;
+            grupos.push(Math.round(media / 10) * 10);
+        }
 
-        const x = Math.round(media / 10) * 10;
-
-
-        return x;
+        return grupos; // Ex: [20, 40, 70, 50]
     }
+
 
 
 
@@ -206,7 +206,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
 
-            const cloudGroup = calcularNebulosidadeDoDia(s.cloud);
+            const cloudGroup = calcularNebulosidade6h(s.cloud);
 
             const card = document.createElement('div');
             card.className = 'day';
@@ -217,7 +217,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
                 <div class="row humidity"><p>Umidade</p><p>${s.rhMin.toFixed(0)}% a ${s.rhMax.toFixed(0)}%</p></div>
                 <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-                <div class="row clouds"><p>Nebulosidade</p><p>${cloudGroup}%</p></div>
+                <div class="row clouds">
+                    <p><strong>Nebulosidade (cada 6h)</strong></p>
+                    <p>${cloudGroup.join("% &nbsp; - &nbsp; ")}%</p>
+                </div>
+
             `;
 
             cardsEl.appendChild(card);

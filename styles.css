@@ -123,6 +123,7 @@ main {
     margin-bottom: 12px;
     text-align: center;
     font-size: 18px;
+    color: #ff6c02;
 }
 
 /* ===== Linhas internas ===== */
@@ -166,7 +167,11 @@ main {
 .clouds {
     color: #000000;
     border-radius: 8px;
-    margin-bottom: 8px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    background-color: #ffffff;
+    text-align: center;
 }
 
 
@@ -215,19 +220,18 @@ main {
 
     #cards {
         grid-template-columns: 1fr;
-        gap: 0px;
+        gap: 40px;
         padding: 0;
-        background-color: white;
     }
 
     .day {
         padding: 30px 10px;
         border-radius: 0px;
-        border-bottom: 2px solid lightgray;
     }
 
     .clouds {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr;
         gap: 10px;
     }
 }
