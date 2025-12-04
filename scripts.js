@@ -119,19 +119,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const media = cloudValues.reduce((a, b) => a + b, 0) / cloudValues.length;
 
-        const grupos = [25, 50, 75, 100];
-        let melhor = grupos[0];
-        let menorDif = Math.abs(media - grupos[0]);
+        const x = Math.round(media / 10) * 10;
 
-        for (const g of grupos) {
-            const dif = Math.abs(media - g);
-            if (dif < menorDif) {
-                menorDif = dif;
-                melhor = g;
-            }
-        }
 
-        return melhor;
+        return x;
     }
 
 
