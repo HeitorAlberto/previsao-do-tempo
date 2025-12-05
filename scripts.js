@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="row humidity"><p>Umidade</p><p>${s.rhMin.toFixed(0)}% a ${s.rhMax.toFixed(0)}%</p></div>
                 <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
                 <div class="row clouds">
-                    <p><strong>Nebulosidade (cada 6h)</strong></p>
+                    <p>Nebulosidade a cada 6h</p>
                     <p>${cloudGroup.join("% &nbsp; - &nbsp; ")}%</p>
                 </div>
 
