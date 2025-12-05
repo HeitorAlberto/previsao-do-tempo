@@ -55,10 +55,10 @@ def gerar_mapas():
     target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}.grib2")
 
     # ------------------------------
-    # LIMPAR SOMENTE GRIB2 ANTIGOS
+    # LIMPAR SOMENTE GRIB2 E IDX ANTIGOS
     # ------------------------------
     for f in os.listdir(out_dir):
-        if f.endswith(".grib2") and f != f"dados_ecmwf_{run_date_str}.grib2":
+        if (f.endswith(".grib2") or f.endswith(".idx")) and f != f"dados_ecmwf_{run_date_str}.grib2":
             os.remove(os.path.join(out_dir, f))
 
     steps_all = list(range(0,145,3)) + list(range(150,361,6))
