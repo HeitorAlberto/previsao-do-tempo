@@ -21,7 +21,6 @@ dias_semana_pt = {
     "Thursday": "quinta-feira", "Friday": "sexta-feira", "Saturday": "sábado", "Sunday": "domingo",
 }
 
-
 nivels = [0, 0.5, 2, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 cores = ["#FFFFFF","#cbcbcb","#797979","#5ce53d","#006000","#040CA5", "#3770FF","#94B3FF","#FFFF00",
           "#FFA500","#FF0000","#C00000","#800000","#330033","#660066","#c02ec0","#FFBFF5"]
@@ -54,6 +53,13 @@ def gerar_mapas():
     run_date_str = date_run.strftime("%Y%m%d")
     run_hour = 0
     target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}.grib2")
+
+    # ------------------------------
+    # LIMPAR SOMENTE GRIB2 ANTIGOS
+    # ------------------------------
+    for f in os.listdir(out_dir):
+        if f.endswith(".grib2") and f != f"dados_ecmwf_{run_date_str}.grib2":
+            os.remove(os.path.join(out_dir, f))
 
     steps_all = list(range(0,145,3)) + list(range(150,361,6))
     request_params = {
@@ -117,7 +123,6 @@ def gerar_mapas():
         cf = rain.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
                                  cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
 
-
         dia_semana = dias_semana_pt[start.strftime("%A")]
         ax.set_title(f"({daynum:02d}) {start:%d-%m-%y} ({dia_semana})\nRodada ECMWF: {run_time:%d-%m-%Y %H:%MZ}",
                       fontsize=11, weight="bold")
@@ -149,7 +154,6 @@ def gerar_mapas():
     
     cf = accum_15d.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
                                   cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
-
 
     ax.set_title(f"Precipitação acumulada - 15 dias\nPeríodo: {start_acc:%d-%m} até {end_acc:%d-%m}\nRodada ECMWF: {run_time:%d-%m-%Y %HZ}",
                   fontsize=12, weight="bold")
