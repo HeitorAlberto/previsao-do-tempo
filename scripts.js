@@ -14,19 +14,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const historyContainer = document.getElementById("historyContainer");
 
     // =====================
-    // Histórico (máx 3 items)
-    // Persistente
+    // Histórico
     // =====================
     let searchHistory = [];
 
     function loadHistory() {
         const saved = localStorage.getItem("search_history");
         if (!saved) return [];
-        try {
-            return JSON.parse(saved);
-        } catch {
-            return [];
-        }
+        try { return JSON.parse(saved); } catch { return []; }
     }
 
     function saveHistory() {
@@ -97,10 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const year = d.getFullYear();
         const weekday = d.toLocaleDateString('pt-BR', { weekday: 'long' });
 
-        return {
-            date: `${day}/${month}/${year}`,
-            weekday
-        };
+        return { date: `${day}/${month}/${year}`, weekday };
     }
 
     const getAddressText = address => {
@@ -110,33 +102,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${city}${state ? ', ' + state : ''}${country ? ', ' + country : ''}`;
     };
 
-
-    function calcularNebulosidade6h(cloudValues) {
-        if (!cloudValues || cloudValues.length === 0) return [];
-
-        const grupos = [];
-        for (let i = 0; i < cloudValues.length; i += 6) {
-            const bloco = cloudValues.slice(i, i + 6);
-            const media = bloco.reduce((a, b) => a + b, 0) / bloco.length;
-            grupos.push(Math.round(media / 10) * 10);
-        }
-
-        return grupos; // Ex: [20, 40, 70, 50]
-    }
-
-
-
-
+    
     // =====================
-    // Prepara arrays horários
+    // Prepara arrays
     // =====================
     const prepareHourlyArrays = hourly => ({
         temperature_2m: hourly.temperature_2m || [],
         relative_humidity_2m: hourly.relative_humidity_2m || [],
         precipitation: hourly.precipitation || [],
         wind_gusts_10m: hourly.wind_gusts_10m || [],
-        cloud_cover: hourly.cloud_cover || [],
-        weather_code: hourly.weather_code || [],
         apparent_temperature: hourly.apparent_temperature || [],
     });
 
@@ -157,9 +131,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return map;
     };
 
-
+    // =====================
+    // Sumarização diária
+    // =====================
     const summarizeDay = points => {
-        return points.reduce((acc, p) => {
+        const s = points.reduce((acc, p) => {
 
             acc.tMin = Math.min(acc.tMin, p.temperature_2m ?? acc.tMin);
             acc.tMax = Math.max(acc.tMax, p.temperature_2m ?? acc.tMax);
@@ -173,9 +149,6 @@ document.addEventListener("DOMContentLoaded", () => {
             acc.precipSum += p.precipitation ?? 0;
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
 
-            // Armazena nebulosidade arredondada em múltiplos de 10
-            const cloudVal = Math.round((p.cloud_cover ?? 0) / 10) * 10;
-            acc.cloud.push(cloudVal);
 
             return acc;
 
@@ -188,10 +161,10 @@ document.addEventListener("DOMContentLoaded", () => {
             rhMax: -Infinity,
             precipSum: 0,
             gustMax: 0,
-            cloud: []
         });
-    };
 
+        return s;
+    };
 
     // =====================
     // Renderização
@@ -206,21 +179,19 @@ document.addEventListener("DOMContentLoaded", () => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
 
-            const cloudGroup = calcularNebulosidade6h(s.cloud);
-
             const card = document.createElement('div');
             card.className = 'day';
 
             card.innerHTML = `
                 <div class="date">${labels.date} • ${labels.weekday}</div>
+
                 <div class="row temp"><p>Temperatura (°C)</p><p>${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°</p></div>
+
                 <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
+
                 <div class="row humidity"><p>Umidade</p><p>${s.rhMin.toFixed(0)}% a ${s.rhMax.toFixed(0)}%</p></div>
+
                 <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
-                <div class="row clouds">
-                    <p>Nebulosidade a cada 6h</p>
-                    <p>${cloudGroup.join("% &nbsp; - &nbsp; ")}%</p>
-                </div>
 
             `;
 
@@ -230,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
         cityInput.value = '';
     };
 
-
     // =====================
     // Fetch API
     // =====================
@@ -238,7 +208,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const url = new URL(forecastBase);
         url.searchParams.set('latitude', lat);
         url.searchParams.set('longitude', lon);
-        url.searchParams.set('hourly', 'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,weather_code,apparent_temperature');
+        url.searchParams.set(
+            'hourly',
+            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,cloud_cover_low,cloud_cover_mid,weather_code,apparent_temperature'
+        );
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
         url.searchParams.set('forecast_days', '15');
@@ -248,7 +221,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return res.json();
     }
-
 
     async function searchLocation(query) {
         const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`;
@@ -262,7 +234,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return { name, lat: parseFloat(place.lat), lon: parseFloat(place.lon) };
     }
-
 
     // =====================
     // Load Forecast
@@ -299,7 +270,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-
     // =====================
     // Eventos
     // =====================
@@ -326,7 +296,6 @@ document.addEventListener("DOMContentLoaded", () => {
             () => locationName.textContent = 'Erro ao obter localização'
         );
     });
-
 
     // =====================
     // Data atual
