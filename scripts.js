@@ -102,7 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${city}${state ? ', ' + state : ''}${country ? ', ' + country : ''}`;
     };
 
-    
+
     // =====================
     // Prepara arrays
     // =====================
@@ -111,6 +111,8 @@ document.addEventListener("DOMContentLoaded", () => {
         relative_humidity_2m: hourly.relative_humidity_2m || [],
         precipitation: hourly.precipitation || [],
         wind_gusts_10m: hourly.wind_gusts_10m || [],
+        cloud_cover_low: hourly.cloud_cover_low || [],     // <— RESTAURADO
+        cloud_cover_mid: hourly.cloud_cover_mid || [],     // <— RESTAURADO
         apparent_temperature: hourly.apparent_temperature || [],
     });
 
@@ -148,7 +150,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             acc.precipSum += p.precipitation ?? 0;
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
-
 
             return acc;
 
@@ -210,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
         url.searchParams.set('longitude', lon);
         url.searchParams.set(
             'hourly',
-            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,cloud_cover_low,cloud_cover_mid,weather_code,apparent_temperature'
+            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover_low,cloud_cover_mid,apparent_temperature'
         );
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
