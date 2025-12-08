@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <div class="row precip"><p>Chuva acumulada (mm)</p><p>${s.precipSum.toFixed(1)}</p></div>
 
-                <div class="row humidity"><p>Umidade (%)</p><p>${s.rhMin.toFixed(0)}% a ${s.rhMax.toFixed(0)}</p></div>
+                <div class="row humidity"><p>Umidade (%)</p><p>${s.rhMin.toFixed(0)} a ${s.rhMax.toFixed(0)}</p></div>
 
                 <div class="row wind"><p>Rajadas de vento (km/h)</p><p>${s.gustMax.toFixed(0)}</p></div>
 
