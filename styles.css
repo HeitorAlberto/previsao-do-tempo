@@ -123,7 +123,6 @@ main {
     margin-bottom: 12px;
     text-align: center;
     font-size: 18px;
-    color: #ff6c02;
 }
 
 /* ===== Linhas internas ===== */
@@ -131,6 +130,7 @@ main {
     display: flex;
     justify-content: space-between;
     padding: 16px 8px;
+    border-bottom: 1px solid lightgray;
 }
 
 .descricao-nuvens {
@@ -166,12 +166,6 @@ main {
 
 .clouds {
     color: #000000;
-    border-radius: 8px;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-    background-color: #ffffff;
-    text-align: center;
 }
 
 
