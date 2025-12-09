@@ -168,18 +168,18 @@ document.addEventListener("DOMContentLoaded", () => {
             cloudValues: []  // <-- novo array
         });
 
-        // ------ cálculo da mediana ------
+        // ------ cálculo da média aritmética ------
+        // ------ cálculo da média aritmética ------
         if (s.cloudValues.length === 0) {
-            s.cloudMedian = 0;
+            s.cloudMean = 0;
         } else {
-            s.cloudValues.sort((a, b) => a - b);
-            const mid = Math.floor(s.cloudValues.length / 2);
+            const sum = s.cloudValues.reduce((acc, v) => acc + v, 0);
+            s.cloudMean = sum / s.cloudValues.length;
 
-            s.cloudMedian =
-                s.cloudValues.length % 2 === 0
-                    ? (s.cloudValues[mid - 1] + s.cloudValues[mid]) / 2
-                    : s.cloudValues[mid];
+            // arredondar para 10, 20, 30... 100
+            s.cloudMean = Math.round(s.cloudMean / 10) * 10;
         }
+
 
         return s;
     };
@@ -204,15 +204,15 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div class="date">${labels.date} • ${labels.weekday}</div>
 
-                <div class="row temp"><p>Temperatura (°C)</p><p>${s.tMin.toFixed(0)} a ${s.tMax.toFixed(0)}</p></div>
+                <div class="row temp"><p>Temperatura</p><p>${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°</p></div>
 
-                <div class="row precip"><p>Chuva acumulada (mm)</p><p>${s.precipSum.toFixed(1)}</p></div>
+                <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
 
-                <div class="row humidity"><p>Umidade (%)</p><p>${s.rhMin.toFixed(0)} a ${s.rhMax.toFixed(0)}</p></div>
+                <div class="row humidity"><p>Umidade</p><p>${s.rhMin.toFixed(0)}% a ${s.rhMax.toFixed(0)}%</p></div>
 
-                <div class="row wind"><p>Rajadas de vento (km/h)</p><p>${s.gustMax.toFixed(0)}</p></div>
+                <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
 
-                <div class="row clouds"><p>Nebulosidade (%)</p><p>${s.cloudMedian.toFixed(0)}</p></div>
+                <div class="row clouds"><p>Nebulosidade</p><p>${s.cloudMean.toFixed(0)}%</p></div>
             `;
 
             cardsEl.appendChild(card);
