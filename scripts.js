@@ -102,7 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${city}${state ? ', ' + state : ''}${country ? ', ' + country : ''}`;
     };
 
-
     // =====================
     // Prepara arrays
     // =====================
@@ -111,8 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
         relative_humidity_2m: hourly.relative_humidity_2m || [],
         precipitation: hourly.precipitation || [],
         wind_gusts_10m: hourly.wind_gusts_10m || [],
-        cloud_cover_low: hourly.cloud_cover_low || [],     // <— RESTAURADO
-        cloud_cover_mid: hourly.cloud_cover_mid || [],     // <— RESTAURADO
+        cloud_cover: hourly.cloud_cover || [],
         apparent_temperature: hourly.apparent_temperature || [],
     });
 
@@ -151,6 +149,11 @@ document.addEventListener("DOMContentLoaded", () => {
             acc.precipSum += p.precipitation ?? 0;
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
 
+            // <-- nova coleta para mediana
+            if (p.cloud_cover !== undefined && p.cloud_cover !== null) {
+                acc.cloudValues.push(p.cloud_cover);
+            }
+
             return acc;
 
         }, {
@@ -162,10 +165,25 @@ document.addEventListener("DOMContentLoaded", () => {
             rhMax: -Infinity,
             precipSum: 0,
             gustMax: 0,
+            cloudValues: []  // <-- novo array
         });
+
+        // ------ cálculo da mediana ------
+        if (s.cloudValues.length === 0) {
+            s.cloudMedian = 0;
+        } else {
+            s.cloudValues.sort((a, b) => a - b);
+            const mid = Math.floor(s.cloudValues.length / 2);
+
+            s.cloudMedian =
+                s.cloudValues.length % 2 === 0
+                    ? (s.cloudValues[mid - 1] + s.cloudValues[mid]) / 2
+                    : s.cloudValues[mid];
+        }
 
         return s;
     };
+
 
     // =====================
     // Renderização
@@ -194,6 +212,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <div class="row wind"><p>Rajadas de vento (km/h)</p><p>${s.gustMax.toFixed(0)}</p></div>
 
+                <div class="row clouds"><p>Nebulosidade (%)</p><p>${s.cloudMedian.toFixed(0)}</p></div>
             `;
 
             cardsEl.appendChild(card);
@@ -211,7 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
         url.searchParams.set('longitude', lon);
         url.searchParams.set(
             'hourly',
-            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover_low,cloud_cover_mid,apparent_temperature'
+            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,apparent_temperature'
         );
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
