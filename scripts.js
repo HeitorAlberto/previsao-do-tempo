@@ -175,10 +175,18 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             const sum = s.cloudValues.reduce((acc, v) => acc + v, 0);
             s.cloudMean = sum / s.cloudValues.length;
-
-            // arredondar para 10, 20, 30... 100
             s.cloudMean = Math.round(s.cloudMean / 10) * 10;
         }
+
+        // classificação
+        if (s.cloudMean <= 40) {
+            s.cloudLevel = "Baixa";
+        } else if (s.cloudMean <= 60) {
+            s.cloudLevel = "Moderada";
+        } else {
+            s.cloudLevel = "Alta";
+        }
+
 
 
         return s;
@@ -212,7 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
 
-                <div class="row clouds"><p>Nebulosidade</p><p>${s.cloudMean.toFixed(0)}%</p></div>
+                <div class="row clouds"><p>Nebulosidade</p><p>${s.cloudLevel} (${s.cloudMean}%)</p></div>
             `;
 
             cardsEl.appendChild(card);
