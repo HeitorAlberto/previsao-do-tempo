@@ -168,8 +168,9 @@ document.addEventListener("DOMContentLoaded", () => {
             cloudValues: []  // <-- novo array
         });
 
-        // ------ cálculo da média aritmética ------
-        // ------ cálculo da média aritmética ------
+        // --------------------------
+        // MÉDIA
+        // --------------------------
         if (s.cloudValues.length === 0) {
             s.cloudMean = 0;
         } else {
@@ -178,14 +179,26 @@ document.addEventListener("DOMContentLoaded", () => {
             s.cloudMean = Math.round(s.cloudMean / 10) * 10;
         }
 
-        // classificação
-        if (s.cloudMean <= 40) {
+        // --------------------------
+        // MODA POR AGRUPAMENTO
+        // --------------------------
+        let count = { baixa: 0, moderada: 0, alta: 0 };
+
+        for (const v of s.cloudValues) {
+            if (v <= 40) count.baixa++;
+            else if (v <= 70) count.moderada++;
+            else count.alta++;
+        }
+
+        // escolhe a categoria dominante
+        if (count.baixa >= count.moderada && count.baixa >= count.alta) {
             s.cloudLevel = "Baixa";
-        } else if (s.cloudMean <= 60) {
+        } else if (count.moderada >= count.baixa && count.moderada >= count.alta) {
             s.cloudLevel = "Moderada";
         } else {
             s.cloudLevel = "Alta";
         }
+
 
 
 
@@ -220,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
 
-                <div class="row clouds"><p>Nebulosidade</p><p>${s.cloudLevel} (${s.cloudMean}%)</p></div>
+                <div class="row clouds"><p>Nebulosidade</p><p>${s.cloudLevel}</p></div>
             `;
 
             cardsEl.appendChild(card);
