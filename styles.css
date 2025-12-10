@@ -209,6 +209,7 @@ main {
 
     main {
         margin-top: 20px;
+        padding: 0px 10px;
     }
 
     #cards {
@@ -219,7 +220,7 @@ main {
 
     .day {
         padding: 30px 10px;
-        border-radius: 0px;
+        border-radius: 8px;
     }
 
     .clouds {
