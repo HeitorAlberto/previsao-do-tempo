@@ -125,6 +125,10 @@ main {
     font-size: 18px;
 }
 
+.day img {
+    width: 100px;
+}
+
 /* ===== Linhas internas ===== */
 .row {
     display: flex;
@@ -165,6 +169,9 @@ main {
 
 .clouds {
     color: #000000;
+    background-color: rgb(237, 237, 237);
+    border-radius: 8px;
+    justify-content: center;
 }
 
 
@@ -222,6 +229,8 @@ main {
         padding: 30px 10px;
         border-radius: 8px;
     }
+
+
 
     .clouds {
         gap: 10px;
