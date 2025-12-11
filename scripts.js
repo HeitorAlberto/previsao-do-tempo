@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // categoria dominante
         if (count.baixa >= count.moderada && count.baixa >= count.alta && count.baixa >= count.extrema) {
-            s.cloudLevel = 'Céu limpo / Poucas nuvens';
+            s.cloudLevel = 'Poucas nuvens';
         }
         else if (count.moderada >= count.baixa && count.moderada >= count.alta && count.moderada >= count.extrema) {
             s.cloudLevel = 'Nebulosidade variável';
