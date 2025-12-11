@@ -225,7 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div class="date">${labels.date} • ${labels.weekday}</div>
 
-                <div class="row clouds"><p style="color: gray">${s.cloudLevel}</p></div>
+                <div class="row clouds"><p>${s.cloudLevel}</p></div>
 
                 <div class="row temp"><p>Temperatura</p><p>${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°</p></div>
 
