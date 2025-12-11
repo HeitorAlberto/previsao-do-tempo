@@ -192,11 +192,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // escolhe a categoria dominante
         if (count.baixa >= count.moderada && count.baixa >= count.alta) {
-            s.cloudLevel = "Baixa";
+            s.cloudLevel = "Poucas nuvens";
         } else if (count.moderada >= count.baixa && count.moderada >= count.alta) {
-            s.cloudLevel = "Moderada";
+            s.cloudLevel = "Muitas nuvens com aberturas";
         } else {
-            s.cloudLevel = "Alta";
+            s.cloudLevel = "Nublado / encoberto";
         }
 
 
@@ -225,6 +225,8 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div class="date">${labels.date} • ${labels.weekday}</div>
 
+                <div class="row clouds"><p style="color: gray">${s.cloudLevel}</p></div>
+
                 <div class="row temp"><p>Temperatura</p><p>${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°</p></div>
 
                 <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
@@ -233,7 +235,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
 
-                <div class="row clouds"><p>Nebulosidade</p><p>${s.cloudLevel}</p></div>
             `;
 
             cardsEl.appendChild(card);
