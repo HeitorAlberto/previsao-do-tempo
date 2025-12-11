@@ -195,13 +195,13 @@ document.addEventListener("DOMContentLoaded", () => {
             s.cloudLevel = 'Céu limpo / Poucas nuvens';
         }
         else if (count.moderada >= count.baixa && count.moderada >= count.alta && count.moderada >= count.extrema) {
-            s.cloudLevel = 'Muitas nuvens com aberturas';
+            s.cloudLevel = 'Nebulosidade variável';
         }
         else if (count.alta >= count.baixa && count.alta >= count.moderada && count.alta >= count.extrema) {
-            s.cloudLevel = 'Nublado / Encoberto';
+            s.cloudLevel = 'Muitas nuvens / Nublado';
         }
         else {
-            s.cloudLevel = 'Nublado / Encoberto';
+            s.cloudLevel = 'Muitas nuvens / Nublado';
         }
 
 
