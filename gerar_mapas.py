@@ -120,8 +120,13 @@ def gerar_mapas():
         ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines","50m", edgecolor="black", facecolor="none", linewidth=0.4))
         ax.gridlines(draw_labels=False, linestyle="--", alpha=0.4)
         
-        cf = rain.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
-                                 cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
+        cf = rain.plot.contourf(
+        ax=ax, transform=ccrs.PlateCarree(),
+        cmap=color_map, norm=norma,
+        levels=nivels, extend="max",
+        add_colorbar=False,
+        add_labels=False)
+
 
         dia_semana = dias_semana_pt[start.strftime("%A")]
         
@@ -170,8 +175,14 @@ def gerar_mapas():
     ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines","50m", edgecolor="black", facecolor="none", linewidth=0.4))
     ax.gridlines(draw_labels=False, linestyle="--", alpha=0.4)
     
-    cf = accum_15d.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
-                                  cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
+    cf = accum_15d.plot.contourf(
+    ax=ax, transform=ccrs.PlateCarree(),
+    cmap=color_map, norm=norma,
+    levels=nivels, extend="max",
+    add_colorbar=False,
+    add_labels=False)
+
+
 
    # Esquerda – período do acumulado
     ax.text(
