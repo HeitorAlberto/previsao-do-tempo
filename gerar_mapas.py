@@ -96,6 +96,7 @@ def gerar_mapas():
             ax=ax, transform=ccrs.PlateCarree(),
             cmap=color_map, norm=norma,
             levels=nivels, extend="max",
+            extendrect=True,
             add_colorbar=False, add_labels=False
         )
 
@@ -109,9 +110,9 @@ def gerar_mapas():
         ax.text(1.0, 1.0,
                 f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
                 transform=ax.transAxes, ha="right",
-                va="bottom", fontsize=10)
+                va="bottom", fontsize=10, fontweight="bold")
 
-        cax = fig.add_axes([0.92, 0.08, 0.02, 0.84])
+        cax = fig.add_axes([0.905, 0.08, 0.028, 0.84])
         cbar = plt.colorbar(cf, cax=cax)
         cbar.set_ticks(tick_locs)
         cbar.set_ticklabels(tick_labels)
@@ -141,6 +142,7 @@ def gerar_mapas():
         ax=ax, transform=ccrs.PlateCarree(),
         cmap=color_map, norm=norma,
         levels=nivels, extend="max",
+        extendrect=True,
         add_colorbar=False, add_labels=False
     )
 
@@ -153,9 +155,10 @@ def gerar_mapas():
     ax.text(1.0, 1.0,
             f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
             transform=ax.transAxes, ha="right",
-            va="bottom", fontsize=10)
+            va="bottom", fontsize=10, fontweight="bold")
 
-    cax = fig.add_axes([0.92, 0.08, 0.02, 0.84])
+    cax = fig.add_axes([0.905, 0.08, 0.028, 0.84])
+
     cbar = plt.colorbar(cf, cax=cax)
     cbar.set_ticks(tick_locs)
     cbar.set_ticklabels(tick_labels)
