@@ -110,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
         relative_humidity_2m: hourly.relative_humidity_2m || [],
         precipitation: hourly.precipitation || [],
         wind_gusts_10m: hourly.wind_gusts_10m || [],
-        cloud_cover: hourly.cloud_cover || [],
         apparent_temperature: hourly.apparent_temperature || [],
     });
 
@@ -149,10 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
             acc.precipSum += p.precipitation ?? 0;
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m ?? 0);
 
-            // <-- nova coleta para mediana
-            if (p.cloud_cover !== undefined && p.cloud_cover !== null) {
-                acc.cloudValues.push(p.cloud_cover);
-            }
+            
 
             return acc;
 
@@ -164,47 +160,8 @@ document.addEventListener("DOMContentLoaded", () => {
             rhMin: Infinity,
             rhMax: -Infinity,
             precipSum: 0,
-            gustMax: 0,
-            cloudValues: []  // <-- novo array
+            gustMax: 0
         });
-
-        // --------------------------
-        // MÉDIA
-        // --------------------------
-        if (s.cloudValues.length === 0) {
-            s.cloudMean = 0;
-        } else {
-            const sum = s.cloudValues.reduce((acc, v) => acc + v, 0);
-            s.cloudMean = sum / s.cloudValues.length;
-        }
-
-        // --------------------------
-        // MODA POR AGRUPAMENTO
-        // --------------------------
-        const count = { baixa: 0, moderada: 0, alta: 0, extrema: 0 };
-
-        for (const v of s.cloudValues) {
-            if (v <= 40) count.baixa++;
-            else if (v <= 65) count.moderada++;
-            else if (v <= 85) count.alta++;
-            else count.extrema++;
-        }
-
-        // categoria dominante
-        if (count.baixa >= count.moderada && count.baixa >= count.alta && count.baixa >= count.extrema) {
-            s.cloudLevel = 'Poucas nuvens';
-        }
-        else if (count.moderada >= count.baixa && count.moderada >= count.alta && count.moderada >= count.extrema) {
-            s.cloudLevel = 'Nebulosidade variável';
-        }
-        else if (count.alta >= count.baixa && count.alta >= count.moderada && count.alta >= count.extrema) {
-            s.cloudLevel = 'Nublado';
-        }
-        else {
-            s.cloudLevel = 'Nublado';
-        }
-
-
 
 
 
@@ -231,9 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div class="date">${labels.date} • ${labels.weekday}</div>
             
-                <div class="row clouds">
-                    <p>${s.cloudLevel}</p>
-                </div>
 
                 <div class="row temp"><p>Temperatura</p><p>${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°</p></div>
 
