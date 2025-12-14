@@ -110,7 +110,7 @@ def gerar_mapas():
         ax.text(1.0, 1.0,
                 f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
                 transform=ax.transAxes, ha="right",
-                va="bottom", fontsize=10, fontweight="bold")
+                va="bottom", fontsize=12, fontweight="bold")
 
         cax = fig.add_axes([0.898, 0.08, 0.030, 0.84])
 
@@ -156,7 +156,7 @@ def gerar_mapas():
     ax.text(1.0, 1.0,
             f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
             transform=ax.transAxes, ha="right",
-            va="bottom", fontsize=10, fontweight="bold")
+            va="bottom", fontsize=12, fontweight="bold")
 
     cax = fig.add_axes([0.898, 0.08, 0.030, 0.84])
 
