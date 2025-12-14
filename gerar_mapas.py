@@ -112,7 +112,7 @@ def gerar_mapas():
                 transform=ax.transAxes, ha="right",
                 va="bottom", fontsize=12, fontweight="bold")
 
-        cax = fig.add_axes([0.898, 0.08, 0.030, 0.84])
+        cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
 
         cbar = plt.colorbar(cf, cax=cax)
         cbar.set_ticks(tick_locs)
@@ -158,7 +158,8 @@ def gerar_mapas():
             transform=ax.transAxes, ha="right",
             va="bottom", fontsize=12, fontweight="bold")
 
-    cax = fig.add_axes([0.898, 0.08, 0.030, 0.84])
+    cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
+
 
 
     cbar = plt.colorbar(cf, cax=cax)
