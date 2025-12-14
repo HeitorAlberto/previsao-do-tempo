@@ -85,7 +85,7 @@ def gerar_mapas():
         ax = plt.axes(projection=ccrs.PlateCarree())
 
         ax.set_extent(extent)
-        ax.set_position([0.02, 0.08, 0.88, 0.84])
+        ax.set_position([0.02, 0.08, 0.878, 0.84])
         ax.coastlines("10m", linewidth=0.4)
         ax.add_feature(NaturalEarthFeature("cultural","admin_0_countries","50m",
                                            edgecolor="black", facecolor="none", linewidth=0.4))
@@ -112,7 +112,8 @@ def gerar_mapas():
                 transform=ax.transAxes, ha="right",
                 va="bottom", fontsize=10, fontweight="bold")
 
-        cax = fig.add_axes([0.905, 0.08, 0.028, 0.84])
+        cax = fig.add_axes([0.898, 0.08, 0.030, 0.84])
+
         cbar = plt.colorbar(cf, cax=cax)
         cbar.set_ticks(tick_locs)
         cbar.set_ticklabels(tick_labels)
@@ -131,7 +132,7 @@ def gerar_mapas():
     ax = plt.axes(projection=ccrs.PlateCarree())
 
     ax.set_extent(extent)
-    ax.set_position([0.02, 0.08, 0.88, 0.84])
+    ax.set_position([0.02, 0.08, 0.878, 0.84])
     ax.coastlines("10m", linewidth=0.4)
     ax.add_feature(NaturalEarthFeature("cultural","admin_0_countries","50m",
                                        edgecolor="black", facecolor="none", linewidth=0.4))
@@ -157,7 +158,8 @@ def gerar_mapas():
             transform=ax.transAxes, ha="right",
             va="bottom", fontsize=10, fontweight="bold")
 
-    cax = fig.add_axes([0.905, 0.08, 0.028, 0.84])
+    cax = fig.add_axes([0.898, 0.08, 0.030, 0.84])
+
 
     cbar = plt.colorbar(cf, cax=cax)
     cbar.set_ticks(tick_locs)
