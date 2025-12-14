@@ -124,8 +124,26 @@ def gerar_mapas():
                                  cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
 
         dia_semana = dias_semana_pt[start.strftime("%A")]
-        ax.set_title(f"({daynum:02d}) {start:%d-%m-%y} ({dia_semana})\nRodada ECMWF: {run_time:%d-%m-%Y %H:%MZ}",
-                      fontsize=11, weight="bold")
+        
+        # Título à esquerda
+        ax.text(
+            0.0, 1.04,
+            f"({daynum:02d}) {start:%d-%m-%Y} ({dia_semana})",
+            transform=ax.transAxes,
+            ha="left", va="bottom",
+            fontsize=12,
+            fontweight="bold"
+        )
+
+        # Título à direita
+        ax.text(
+            1.0, 1.04,
+            f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
+            transform=ax.transAxes,
+            ha="right", va="bottom",
+            fontsize=10
+        )
+
 
         cbar = plt.colorbar(cf, ax=ax, orientation="vertical", fraction=0.04, pad=0.02, drawedges = False)
         cbar.set_ticks(tick_locs)
@@ -155,8 +173,25 @@ def gerar_mapas():
     cf = accum_15d.plot.contourf(ax=ax, transform=ccrs.PlateCarree(),
                                   cmap=color_map, norm=norma, levels=nivels, extend="max", add_colorbar=False)
 
-    ax.set_title(f"Precipitação acumulada - 15 dias\nPeríodo: {start_acc:%d-%m} até {end_acc:%d-%m}\nRodada ECMWF: {run_time:%d-%m-%Y %HZ}",
-                  fontsize=12, weight="bold")
+   # Esquerda – período do acumulado
+    ax.text(
+        0.0, 1.04,
+        f"Precipitação acumulada (15 dias)\nPeríodo: {start_acc:%d-%m} até {end_acc:%d-%m}",
+        transform=ax.transAxes,
+        ha="left", va="bottom",
+        fontsize=12,
+        fontweight="bold"
+    )
+
+    # Direita – rodada do modelo
+    ax.text(
+        1.0, 1.04,
+        f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
+        transform=ax.transAxes,
+        ha="right", va="bottom",
+        fontsize=10
+    )
+
 
     cbar = plt.colorbar(cf, ax=ax, orientation="vertical", fraction=0.04, pad=0.02, drawedges = False)
     cbar.set_ticks(tick_locs)
