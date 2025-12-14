@@ -198,10 +198,10 @@ document.addEventListener("DOMContentLoaded", () => {
             s.cloudLevel = 'Nebulosidade variável';
         }
         else if (count.alta >= count.baixa && count.alta >= count.moderada && count.alta >= count.extrema) {
-            s.cloudLevel = 'Muitas nuvens / Nublado';
+            s.cloudLevel = 'Nublado';
         }
         else {
-            s.cloudLevel = 'Muitas nuvens / Nublado';
+            s.cloudLevel = 'Nublado';
         }
 
 
@@ -231,7 +231,9 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div class="date">${labels.date} • ${labels.weekday}</div>
             
-                <div class="row clouds"><p>${s.cloudLevel}</p></div>
+                <div class="row clouds">
+                    <p>${s.cloudLevel}</p>
+                </div>
 
                 <div class="row temp"><p>Temperatura</p><p>${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°</p></div>
 

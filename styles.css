@@ -169,8 +169,6 @@ main {
 
 .clouds {
     color: #000000;
-    background-color: rgb(237, 237, 237);
-    border-radius: 8px;
     justify-content: center;
 }
 
