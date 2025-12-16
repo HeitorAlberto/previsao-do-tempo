@@ -191,6 +191,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function openDetails(points) {
+       
+        document.body.style.overflow = "hidden";
+
         detailsOverlay.innerHTML = "";
         detailsOverlay.style.display = "flex";
 
@@ -223,7 +226,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const closeBtn = document.createElement("button");
         closeBtn.className = "btn-detalhes";
         closeBtn.textContent = "Fechar";
-        closeBtn.onclick = () => detailsOverlay.style.display = "none";
+        
+        closeBtn.onclick = () => {
+            detailsOverlay.style.display = "none";
+            document.body.style.overflow = "";
+        };
+
 
         modal.appendChild(closeBtn);
         detailsOverlay.appendChild(modal);
