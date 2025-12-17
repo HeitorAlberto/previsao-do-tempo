@@ -216,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
             block.className = "details-block";
             block.innerHTML = `
                 <h4>${name}</h4>
-                <p>Nebulosidade em ${s.clouds}%</p>
+                <p>Nebulosidade: ${s.clouds}%</p>
                 <p>Chuva acumulada: ${s.rain} mm</p>
                 <p>${s.thunder ? "Possibilidade de trovoadas" : ""}</p>
             `;
