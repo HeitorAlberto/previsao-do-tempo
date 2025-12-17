@@ -212,6 +212,7 @@ main {
     margin-bottom: 10px;
     display: grid;
     gap: 10px;
+    text-align: center;
 }
 
 /* ===== Mobile adjustments ===== */
