@@ -277,7 +277,7 @@ main {
     }
 
     .details-modal {
-        height: 92%;
+        height: auto;
         max-width: none;
         border-radius: 8px;
         overflow-y: auto;
