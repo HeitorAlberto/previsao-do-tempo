@@ -185,10 +185,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let cloudText = "";
         if (cloudAvg <= 20) cloudText = "Céu limpo";
-        else if (cloudAvg <= 40) cloudText = "Poucas nuvens";
-        else if (cloudAvg <= 70) cloudText = "Parcialmente nublado";
-        else if (cloudAvg <= 90) cloudText = "Nublado";
-        else cloudText = "Encoberto";
+        else if (cloudAvg <= 40) cloudText = "Nebulosidade baixa";
+        else if (cloudAvg <= 70) cloudText = "Nebulosidade moderada";
+        else if (cloudAvg <= 90) cloudText = "Nebulosidade alta";
+        else cloudText = "Céu nublado";
 
         return {
             clouds: cloudText,
@@ -224,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
             block.className = "details-block";
             block.innerHTML = `
                 <h4>${name}</h4>
-                <p>Nebulosidade: ${s.clouds}%</p>
+                <p>${s.clouds}</p>
                 <p>Chuva acumulada: ${s.rain} mm</p>
                 <p>${s.thunder ? "Possibilidade de trovoadas" : ""}</p>
             `;
