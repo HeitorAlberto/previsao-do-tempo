@@ -183,12 +183,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const rainSum = points.reduce((s, p) => s + p.precipitation, 0);
         const thunder = points.some(p => p.weathercode >= 95);
 
+        let cloudText = "";
+        if (cloudAvg <= 20) cloudText = "Céu limpo";
+        else if (cloudAvg <= 40) cloudText = "Poucas nuvens";
+        else if (cloudAvg <= 70) cloudText = "Parcialmente nublado";
+        else if (cloudAvg <= 90) cloudText = "Nublado";
+        else cloudText = "Encoberto";
+
         return {
-            clouds: cloudAvg.toFixed(0),
+            clouds: cloudText,
             rain: rainSum.toFixed(1),
             thunder
         };
     }
+
 
     function openDetails(points) {
        
