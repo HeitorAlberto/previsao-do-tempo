@@ -19,9 +19,24 @@ dias_semana_pt = {
     "Thursday": "quinta-feira", "Friday": "sexta-feira", "Saturday": "sábado", "Sunday": "domingo",
 }
 
-nivels = [0, 0.5, 2, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
-cores = ["#FFFFFF","#cbcbcb","#797979","#5ce53d","#006000","#040CA5", "#3770FF","#94B3FF",
-         "#FFFF00","#FFA500","#FF0000","#C00000","#800000","#330033","#660066","#c02ec0","#FFBFF5"]
+nivels = [
+    0, 0.5,
+    1, 2, 5, 7, 10,
+    15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500
+]
+
+cores = [
+    "#FFFFFF",
+    "#E0E0E0",
+    "#C8C8C8",
+    "#A8A8A8",
+    "#8A8A8A",
+    "#6F6F6F",
+    "#00d165", "#006000", "#040CA5", "#3770FF", "#94B3FF",
+    "#FFFF00", "#FFA500", "#FF0000", "#C00000", "#800000",
+    "#330033", "#660066", "#c02ec0", "#FFBFF5"
+]
+
 
 color_map = ListedColormap(cores)
 norma = BoundaryNorm(nivels, color_map.N)
