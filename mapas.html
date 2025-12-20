@@ -2,49 +2,101 @@
 <html lang="pt-BR">
 
 <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
         <title>Previsão 15 dias - ECMWF</title>
+
         <style>
-                @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100..900&display=swap');
 
                 body {
-                font-family: "Roboto", sans-serif;
-                margin: 0;
-                padding: 0;
-                background: #eae9e9;
+                        margin: 0;
+                        background: #eae9e9;
+                        font-family: Roboto, sans-serif;
                 }
 
-                body div {
-                max-width: 90vw; 
-                margin: 0 auto; 
-                display: grid;
-                grid-template-columns: 1fr;
-                justify-content: center; 
-                align-items: center;
-                gap: 50px;
+                /* ===== DESKTOP VIEWER ===== */
+                @media (min-width: 801px) {
+                        body {
+                                height: 100vh;
+                                overflow: hidden;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                        }
+
+                        #viewer {
+                                position: relative;
+                                width: 100%;
+                                height: 100%;
+                        }
+
+                        #viewer img {
+                                position: absolute;
+                                inset: 0;
+                                margin: auto;
+                                max-width: 90vw;
+                                max-height: 100vh;
+                                display: none;
+                        }
+
+                        #viewer img.active {
+                                display: block;
+                        }
+
+                        button {
+                                position: absolute;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                background: rgba(0, 0, 0, 0.6);
+                                color: #fff;
+                                border: none;
+                                padding: 14px 18px;
+                                font-size: 16px;
+                                cursor: pointer;
+                                z-index: 10;
+                        }
+
+                        #prev {
+                                left: 10px;
+                        }
+
+                        #next {
+                                right: 10px;
+                        }
+
+                        button:hover {
+                                background: rgba(0, 0, 0, 0.8);
+                        }
                 }
 
-                body img {
-                height: 100vh;
-                display: block; 
-                margin: 0 auto;
-                }
+                /* ===== MOBILE (SCROLL NORMAL) ===== */
+                @media (max-width: 800px) {
+                        #viewer {
+                                padding: 20px 0;
+                        }
 
-                @media(max-width:800px) {
-                        body img {
+                        #viewer img {
                                 width: 100%;
                                 height: auto;
+                                display: block;
+                                margin-bottom: 40px;
                         }
-                        
-                }
 
+                        button {
+                                display: none;
+                        }
+                }
         </style>
 </head>
 
 <body>
-        <div>
-                <img src="mapas/01.png" alt="Mapa dia 1">
+
+        <div id="viewer">
+                <button id="prev">Anterior</button>
+                <button id="next">Próximo</button>
+
+                <img src="mapas/01.png" alt="Mapa dia 1" class="active">
                 <img src="mapas/02.png" alt="Mapa dia 2">
                 <img src="mapas/03.png" alt="Mapa dia 3">
                 <img src="mapas/04.png" alt="Mapa dia 4">
@@ -61,6 +113,27 @@
                 <img src="mapas/15.png" alt="Mapa dia 15">
                 <img src="mapas/acumulado-15-dias.png" alt="Acumulado 15 dias">
         </div>
+
+        <script>
+                if (window.matchMedia('(min-width: 801px)').matches) {
+                        const images = document.querySelectorAll('#viewer img');
+                        let index = 0;
+
+                        function showImage(i) {
+                                images[index].classList.remove('active');
+                                index = Math.max(0, Math.min(i, images.length - 1));
+                                images[index].classList.add('active');
+                        }
+
+                        document.getElementById('prev').onclick = () => showImage(index - 1);
+                        document.getElementById('next').onclick = () => showImage(index + 1);
+
+                        document.addEventListener('keydown', e => {
+                                if (e.key === 'ArrowLeft') showImage(index - 1);
+                                if (e.key === 'ArrowRight') showImage(index + 1);
+                        });
+                }
+        </script>
 
 </body>
 
