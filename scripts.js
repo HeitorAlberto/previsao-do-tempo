@@ -213,20 +213,20 @@ document.addEventListener("DOMContentLoaded", () => {
             "Céu limpo|Nebulosidade baixa": "Predomínio de céu limpo",
             "Nebulosidade baixa|Céu limpo": "Predomínio de céu limpo",
 
-            "Nebulosidade baixa|Nebulosidade moderada": "Nebulosidade aumentando",
+            "Nebulosidade baixa|Nebulosidade moderada": "Nebulosidade baixa a moderada",
             "Nebulosidade moderada|Nebulosidade baixa": "Nebulosidade diminuindo",
 
-            "Nebulosidade moderada|Nebulosidade alta": "Nebulosidade aumentando",
-            "Nebulosidade alta|Nebulosidade moderada": "Nebulosidade alta",
+            "Nebulosidade moderada|Nebulosidade alta": "Nebulosidade moderada a alta",
+            "Nebulosidade alta|Nebulosidade moderada": "Nebulosidade alta a moderada",
 
-            "Nebulosidade baixa|Nebulosidade alta": "Nebulosidade aumentando",
-            "Nebulosidade alta|Nebulosidade baixa": "Nebulosidade diminuindo",
+            "Nebulosidade baixa|Nebulosidade alta": "Nebulosidade aumenta a tarde",
+            "Nebulosidade alta|Nebulosidade baixa": "Nebulosidade diminuindo a tarde",
 
-            "Céu limpo|Nebulosidade moderada": "Nebulosidade aumentando",
-            "Nebulosidade moderada|Céu limpo": "Nebulosidade diminuindo",
+            "Céu limpo|Nebulosidade moderada": "Nebulosidade aumentando a tarde",
+            "Nebulosidade moderada|Céu limpo": "Nebulosidade diminuindo a tarde",
 
-            "Céu limpo|Nebulosidade alta": "Nebulosidade aumentando",
-            "Nebulosidade alta|Céu limpo": "Nebulosidade diminuindo"
+            "Céu limpo|Nebulosidade alta": "Nebulosidade aumentando a tarde",
+            "Nebulosidade alta|Céu limpo": "Nebulosidade diminuindo a tarde"
         };
 
         return map[`${m}|${t}`] || m || t;
