@@ -216,17 +216,17 @@ document.addEventListener("DOMContentLoaded", () => {
             "Nebulosidade baixa|Nebulosidade moderada": "Nebulosidade baixa a moderada",
             "Nebulosidade moderada|Nebulosidade baixa": "Nebulosidade diminuindo",
 
-            "Nebulosidade moderada|Nebulosidade alta": "Nebulosidade moderada a alta",
-            "Nebulosidade alta|Nebulosidade moderada": "Nebulosidade alta a moderada",
+            "Nebulosidade moderada|Nebulosidade alta": "Nebulosidade alta",
+            "Nebulosidade alta|Nebulosidade moderada": "Nebulosidade alta",
 
-            "Nebulosidade baixa|Nebulosidade alta": "Nebulosidade aumenta a tarde",
-            "Nebulosidade alta|Nebulosidade baixa": "Nebulosidade diminuindo a tarde",
+            "Nebulosidade baixa|Nebulosidade alta": "Nebulosidade aumentando",
+            "Nebulosidade alta|Nebulosidade baixa": "Nebulosidade diminuindo",
 
-            "Céu limpo|Nebulosidade moderada": "Nebulosidade aumentando a tarde",
-            "Nebulosidade moderada|Céu limpo": "Nebulosidade diminuindo a tarde",
+            "Céu limpo|Nebulosidade moderada": "Nebulosidade aumentando",
+            "Nebulosidade moderada|Céu limpo": "Nebulosidade diminuindo",
 
-            "Céu limpo|Nebulosidade alta": "Nebulosidade aumentando a tarde",
-            "Nebulosidade alta|Céu limpo": "Nebulosidade diminuindo a tarde"
+            "Céu limpo|Nebulosidade alta": "Nebulosidade alta à tarde",
+            "Nebulosidade alta|Céu limpo": "Nebulosidade alta pela manhã"
         };
 
         return map[`${m}|${t}`] || m || t;
