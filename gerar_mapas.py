@@ -19,23 +19,21 @@ dias_semana_pt = {
     "Thursday": "quinta-feira", "Friday": "sexta-feira", "Saturday": "sábado", "Sunday": "domingo",
 }
 
-nivels = [
-    0, 0.5,
-    1, 2, 5, 7, 10,
-    15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500
-]
+nivels = [0, 0.5, 1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
+
 
 cores = [
-    "#FFFFFF",
-    "#E0E0E0",
-    "#AFAFAF",
-    "#6B6B6B",
-    "#9AFF9A",
-    "#41D741",
-    "#00A100", "#006000", "#1C23AA", "#3770FF", "#A6BEFA",
-    "#FFFF00", "#FFA500", "#FF0000", "#C00000", "#800000",
-    "#330033", "#660066", "#c02ec0", "#FFBFF5"
+    "#FFFFFF", "#E0E0E0",
+    "#AFAFAF", "#6B6B6B",
+    "#9AFF9A",         
+    "#41D741",          
+    "#009600",
+    "#1C23AA", "#3770FF", "#A6BEFA",
+    "#FFFF00", "#FFA500", "#FF0000",
+    "#C00000", "#800000",
+    "#330033", "#660066", "#c02ec0"
 ]
+
 
 
 color_map = ListedColormap(cores)
