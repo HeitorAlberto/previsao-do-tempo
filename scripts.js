@@ -184,11 +184,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const thunder = points.some(p => p.weathercode >= 95);
 
         let cloudText = "";
-        if (cloudAvg <= 20) cloudText = "Céu limpo";
+        if (cloudAvg <= 20) cloudText = "Céu aberto";
         else if (cloudAvg <= 40) cloudText = "Nebulosidade baixa";
         else if (cloudAvg <= 70) cloudText = "Nebulosidade moderada";
-        else if (cloudAvg <= 90) cloudText = "Nebulosidade alta";
-        else cloudText = "Céu nublado";
+        else if (cloudAvg <= 90) cloudText = "Nebulosidade intensa";
+        else cloudText = "Céu fechado";
 
         return {
             clouds: cloudText,
@@ -216,17 +216,17 @@ document.addEventListener("DOMContentLoaded", () => {
             "Nebulosidade baixa|Nebulosidade moderada": "Nebulosidade baixa a moderada",
             "Nebulosidade moderada|Nebulosidade baixa": "Nebulosidade diminuindo",
 
-            "Nebulosidade moderada|Nebulosidade alta": "Nebulosidade alta",
-            "Nebulosidade alta|Nebulosidade moderada": "Nebulosidade alta",
+            "Nebulosidade moderada|Nebulosidade intensa": "Nebulosidade intensa",
+            "Nebulosidade intensa|Nebulosidade moderada": "Nebulosidade intensa",
 
-            "Nebulosidade baixa|Nebulosidade alta": "Nebulosidade aumentando",
-            "Nebulosidade alta|Nebulosidade baixa": "Nebulosidade diminuindo",
+            "Nebulosidade baixa|Nebulosidade intensa": "Nebulosidade aumentando",
+            "Nebulosidade intensa|Nebulosidade baixa": "Nebulosidade diminuindo",
 
             "Céu limpo|Nebulosidade moderada": "Nebulosidade aumentando",
             "Nebulosidade moderada|Céu limpo": "Nebulosidade diminuindo",
 
-            "Céu limpo|Nebulosidade alta": "Nebulosidade alta à tarde",
-            "Nebulosidade alta|Céu limpo": "Nebulosidade alta pela manhã"
+            "Céu limpo|Nebulosidade intensa": "Nebulosidade intensa à tarde",
+            "Nebulosidade intensa|Céu limpo": "Nebulosidade intensa pela manhã"
         };
 
         return map[`${m}|${t}`] || m || t;
@@ -258,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
             block.innerHTML = `
                 <h4>${name}</h4>
                 <p>${s.clouds}</p>
-                <p>Chuva acumulada: ${s.rain} mm</p>
+                <p>${s.rain} mm de chuva</p>
                 <p>${s.thunder ? "Possibilidade de trovoadas" : ""}</p>
             `;
             modal.appendChild(block);
