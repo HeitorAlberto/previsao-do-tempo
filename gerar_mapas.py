@@ -21,20 +21,14 @@ dias_semana_pt = {
 
 nivels = [0, 0.5, 1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 
-
 cores = [
-    "#FFFFFF", "#E0E0E0",
-    "#AFAFAF", "#6B6B6B",
-    "#9AFF9A",         
-    "#41D741",          
-    "#009600",
+    "#FFFFFF", "#E0E0E0", "#AFAFAF", "#6B6B6B",
+    "#9AFF9A", "#41D741", "#009600",
     "#1C23AA", "#3770FF", "#A6BEFA",
     "#FFFF00", "#FFA500", "#FF0000",
     "#C00000", "#800000",
     "#330033", "#660066", "#c02ec0"
 ]
-
-
 
 color_map = ListedColormap(cores)
 norma = BoundaryNorm(nivels, color_map.N)
@@ -48,9 +42,9 @@ extent = [-85, -30, -35, 10]
 out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
 
-# ======================================================
+# ==============================
 # 2. Baixar ECMWF e processar
-# ======================================================
+# ==============================
 def gerar_mapas():
     client = Client(source="azure")
 
@@ -76,9 +70,9 @@ def gerar_mapas():
 
     ds = xr.open_dataset(target_file, engine="cfgrib",
                          filter_by_keys={"typeOfLevel": "surface"})
+
     tp_mm = ds["tp"] * 1000.0
     run_time = pd.to_datetime(tp_mm.time.item()).to_pydatetime()
-
     step_times = run_time + pd.to_timedelta(tp_mm.step.values, unit="h")
 
     daily = []
@@ -105,7 +99,16 @@ def gerar_mapas():
         ax.add_feature(NaturalEarthFeature("cultural","admin_1_states_provinces_lines","50m",
                                            edgecolor="black", facecolor="none", linewidth=0.4))
 
-        cf = item["data"].plot.contourf(
+        # --- INTERPOLAÇÃO ---
+        data_plot = item["data"].interp(
+            latitude=np.linspace(item["data"].latitude.min(),
+                                  item["data"].latitude.max(), 400),
+            longitude=np.linspace(item["data"].longitude.min(),
+                                   item["data"].longitude.max(), 400),
+            method="linear"
+        )
+
+        cf = data_plot.plot.contourf(
             ax=ax, transform=ccrs.PlateCarree(),
             cmap=color_map, norm=norma,
             levels=nivels, extend="max",
@@ -126,7 +129,6 @@ def gerar_mapas():
                 va="bottom", fontsize=12, fontweight="bold")
 
         cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
-
         cbar = plt.colorbar(cf, cax=cax)
         cbar.set_ticks(tick_locs)
         cbar.set_ticklabels(tick_labels)
@@ -141,6 +143,12 @@ def gerar_mapas():
     # ==============================
     accum = sum(d["data"] for d in daily)
 
+    accum_plot = accum.interp(
+        latitude=np.linspace(accum.latitude.min(), accum.latitude.max(), 400),
+        longitude=np.linspace(accum.longitude.min(), accum.longitude.max(), 400),
+        method="linear"
+    )
+
     fig = plt.figure(figsize=(10, 8))
     ax = plt.axes(projection=ccrs.PlateCarree())
 
@@ -152,7 +160,7 @@ def gerar_mapas():
     ax.add_feature(NaturalEarthFeature("cultural","admin_1_states_provinces_lines","50m",
                                        edgecolor="black", facecolor="none", linewidth=0.4))
 
-    cf = accum.plot.contourf(
+    cf = accum_plot.plot.contourf(
         ax=ax, transform=ccrs.PlateCarree(),
         cmap=color_map, norm=norma,
         levels=nivels, extend="max",
@@ -172,9 +180,6 @@ def gerar_mapas():
             va="bottom", fontsize=12, fontweight="bold")
 
     cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
-
-
-
     cbar = plt.colorbar(cf, cax=cax)
     cbar.set_ticks(tick_locs)
     cbar.set_ticklabels(tick_labels)
