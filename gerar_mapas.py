@@ -56,7 +56,7 @@ def gerar_mapas():
         if (f.endswith(".grib2") or f.endswith(".idx")) and f != os.path.basename(target_file):
             os.remove(os.path.join(out_dir, f))
 
-    steps_all = list(range(0,145,3)) + list(range(150,361,6))
+    steps_all = list(range(0, 145, 3)) + list(range(150, 361, 6))
     client.retrieve(
         date=run_date_str,
         time=0,
@@ -68,8 +68,11 @@ def gerar_mapas():
         target=target_file
     )
 
-    ds = xr.open_dataset(target_file, engine="cfgrib",
-                         filter_by_keys={"typeOfLevel": "surface"})
+    ds = xr.open_dataset(
+        target_file,
+        engine="cfgrib",
+        filter_by_keys={"typeOfLevel": "surface"}
+    )
 
     tp_mm = ds["tp"] * 1000.0
     run_time = pd.to_datetime(tp_mm.time.item()).to_pydatetime()
@@ -94,39 +97,59 @@ def gerar_mapas():
         ax.set_extent(extent)
         ax.set_position([0.02, 0.08, 0.878, 0.84])
         ax.coastlines("10m", linewidth=0.4)
-        ax.add_feature(NaturalEarthFeature("cultural","admin_0_countries","50m",
-                                           edgecolor="black", facecolor="none", linewidth=0.4))
-        ax.add_feature(NaturalEarthFeature("cultural","admin_1_states_provinces_lines","50m",
-                                           edgecolor="black", facecolor="none", linewidth=0.4))
+        ax.add_feature(NaturalEarthFeature(
+            "cultural", "admin_0_countries", "50m",
+            edgecolor="black", facecolor="none", linewidth=0.4
+        ))
+        ax.add_feature(NaturalEarthFeature(
+            "cultural", "admin_1_states_provinces_lines", "50m",
+            edgecolor="black", facecolor="none", linewidth=0.4
+        ))
 
-        # --- INTERPOLAÇÃO ---
+        # -------- INTERPOLAÇÃO --------
         data_plot = item["data"].interp(
-            latitude=np.linspace(item["data"].latitude.min(),
-                                  item["data"].latitude.max(), 400),
-            longitude=np.linspace(item["data"].longitude.min(),
-                                   item["data"].longitude.max(), 400),
+            latitude=np.linspace(
+                item["data"].latitude.min().values,
+                item["data"].latitude.max().values,
+                400
+            ),
+            longitude=np.linspace(
+                item["data"].longitude.min().values,
+                item["data"].longitude.max().values,
+                400
+            ),
             method="linear"
         )
 
         cf = data_plot.plot.contourf(
-            ax=ax, transform=ccrs.PlateCarree(),
-            cmap=color_map, norm=norma,
-            levels=nivels, extend="max",
+            ax=ax,
+            transform=ccrs.PlateCarree(),
+            cmap=color_map,
+            norm=norma,
+            levels=nivels,
+            extend="max",
             extendrect=True,
-            add_colorbar=False, add_labels=False
+            add_colorbar=False,
+            add_labels=False
         )
 
         dia = dias_semana_pt[item["start"].strftime("%A")]
 
-        ax.text(0.0, 1.0,
-                f"({i+1:02d}) {item['start']:%d-%m-%Y} ({dia})",
-                transform=ax.transAxes, ha="left",
-                va="bottom", fontsize=12, fontweight="bold")
+        ax.text(
+            0.0, 1.0,
+            f"({i+1:02d}) {item['start']:%d-%m-%Y} ({dia})",
+            transform=ax.transAxes,
+            ha="left", va="bottom",
+            fontsize=12, fontweight="bold"
+        )
 
-        ax.text(1.0, 1.0,
-                f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
-                transform=ax.transAxes, ha="right",
-                va="bottom", fontsize=12, fontweight="bold")
+        ax.text(
+            1.0, 1.0,
+            f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
+            transform=ax.transAxes,
+            ha="right", va="bottom",
+            fontsize=12, fontweight="bold"
+        )
 
         cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
         cbar = plt.colorbar(cf, cax=cax)
@@ -134,8 +157,10 @@ def gerar_mapas():
         cbar.set_ticklabels(tick_labels)
         cbar.set_label("Precipitação (mm/24h)")
 
-        plt.savefig(os.path.join(out_dir, f"{i+1:02d}.png"),
-                    dpi=300, bbox_inches="tight", pad_inches=0.03)
+        plt.savefig(
+            os.path.join(out_dir, f"{i+1:02d}.png"),
+            dpi=300, bbox_inches="tight", pad_inches=0.03
+        )
         plt.close()
 
     # ==============================
@@ -144,8 +169,16 @@ def gerar_mapas():
     accum = sum(d["data"] for d in daily)
 
     accum_plot = accum.interp(
-        latitude=np.linspace(accum.latitude.min(), accum.latitude.max(), 400),
-        longitude=np.linspace(accum.longitude.min(), accum.longitude.max(), 400),
+        latitude=np.linspace(
+            accum.latitude.min().values,
+            accum.latitude.max().values,
+            400
+        ),
+        longitude=np.linspace(
+            accum.longitude.min().values,
+            accum.longitude.max().values,
+            400
+        ),
         method="linear"
     )
 
@@ -155,29 +188,43 @@ def gerar_mapas():
     ax.set_extent(extent)
     ax.set_position([0.02, 0.08, 0.878, 0.84])
     ax.coastlines("10m", linewidth=0.4)
-    ax.add_feature(NaturalEarthFeature("cultural","admin_0_countries","50m",
-                                       edgecolor="black", facecolor="none", linewidth=0.4))
-    ax.add_feature(NaturalEarthFeature("cultural","admin_1_states_provinces_lines","50m",
-                                       edgecolor="black", facecolor="none", linewidth=0.4))
+    ax.add_feature(NaturalEarthFeature(
+        "cultural", "admin_0_countries", "50m",
+        edgecolor="black", facecolor="none", linewidth=0.4
+    ))
+    ax.add_feature(NaturalEarthFeature(
+        "cultural", "admin_1_states_provinces_lines", "50m",
+        edgecolor="black", facecolor="none", linewidth=0.4
+    ))
 
     cf = accum_plot.plot.contourf(
-        ax=ax, transform=ccrs.PlateCarree(),
-        cmap=color_map, norm=norma,
-        levels=nivels, extend="max",
+        ax=ax,
+        transform=ccrs.PlateCarree(),
+        cmap=color_map,
+        norm=norma,
+        levels=nivels,
+        extend="max",
         extendrect=True,
-        add_colorbar=False, add_labels=False
+        add_colorbar=False,
+        add_labels=False
     )
 
-    ax.text(0.0, 1.0,
-            f"Precipitação acumulada (15 dias)\n"
-            f"Período: {daily[0]['start']:%d-%m} até {daily[-1]['end']:%d-%m}",
-            transform=ax.transAxes, ha="left",
-            va="bottom", fontsize=12, fontweight="bold")
+    ax.text(
+        0.0, 1.0,
+        f"Precipitação acumulada (15 dias)\n"
+        f"Período: {daily[0]['start']:%d-%m} até {daily[-1]['end']:%d-%m}",
+        transform=ax.transAxes,
+        ha="left", va="bottom",
+        fontsize=12, fontweight="bold"
+    )
 
-    ax.text(1.0, 1.0,
-            f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
-            transform=ax.transAxes, ha="right",
-            va="bottom", fontsize=12, fontweight="bold")
+    ax.text(
+        1.0, 1.0,
+        f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
+        transform=ax.transAxes,
+        ha="right", va="bottom",
+        fontsize=12, fontweight="bold"
+    )
 
     cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
     cbar = plt.colorbar(cf, cax=cax)
@@ -185,8 +232,10 @@ def gerar_mapas():
     cbar.set_ticklabels(tick_labels)
     cbar.set_label("Precipitação (mm/15 dias)")
 
-    plt.savefig(os.path.join(out_dir, "acumulado-15-dias.png"),
-                dpi=300, bbox_inches="tight", pad_inches=0.03)
+    plt.savefig(
+        os.path.join(out_dir, "acumulado-15-dias.png"),
+        dpi=300, bbox_inches="tight", pad_inches=0.03
+    )
     plt.close()
 
 if __name__ == "__main__":
