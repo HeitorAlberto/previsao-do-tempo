@@ -12,6 +12,13 @@ import os, warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 # ==============================
+# ANTIALIASING GLOBAL (IMPORTANTE)
+# ==============================
+plt.rcParams["path.simplify"] = True
+plt.rcParams["path.simplify_threshold"] = 0.1
+plt.rcParams["agg.path.chunksize"] = 10000
+
+# ==============================
 # 1. Configurações iniciais
 # ==============================
 dias_semana_pt = {
@@ -106,31 +113,16 @@ def gerar_mapas():
             edgecolor="black", facecolor="none", linewidth=0.4
         ))
 
-        # -------- INTERPOLAÇÃO --------
-        data_plot = item["data"].interp(
-            latitude=np.linspace(
-                item["data"].latitude.min().values,
-                item["data"].latitude.max().values,
-                400
-            ),
-            longitude=np.linspace(
-                item["data"].longitude.min().values,
-                item["data"].longitude.max().values,
-                400
-            ),
-            method="linear"
-        )
-
-        cf = data_plot.plot.contourf(
-            ax=ax,
-            transform=ccrs.PlateCarree(),
+        # ---- DESENHO COM ANTIALIASING (SEM INTERPOLAR DADOS) ----
+        cf = ax.contourf(
+            item["data"].longitude,
+            item["data"].latitude,
+            item["data"],
+            levels=nivels,
             cmap=color_map,
             norm=norma,
-            levels=nivels,
-            extend="max",
-            extendrect=True,
-            add_colorbar=False,
-            add_labels=False
+            transform=ccrs.PlateCarree(),
+            antialiased=True
         )
 
         dia = dias_semana_pt[item["start"].strftime("%A")]
@@ -168,20 +160,6 @@ def gerar_mapas():
     # ==============================
     accum = sum(d["data"] for d in daily)
 
-    accum_plot = accum.interp(
-        latitude=np.linspace(
-            accum.latitude.min().values,
-            accum.latitude.max().values,
-            400
-        ),
-        longitude=np.linspace(
-            accum.longitude.min().values,
-            accum.longitude.max().values,
-            400
-        ),
-        method="linear"
-    )
-
     fig = plt.figure(figsize=(10, 8))
     ax = plt.axes(projection=ccrs.PlateCarree())
 
@@ -197,16 +175,15 @@ def gerar_mapas():
         edgecolor="black", facecolor="none", linewidth=0.4
     ))
 
-    cf = accum_plot.plot.contourf(
-        ax=ax,
-        transform=ccrs.PlateCarree(),
+    cf = ax.contourf(
+        accum.longitude,
+        accum.latitude,
+        accum,
+        levels=nivels,
         cmap=color_map,
         norm=norma,
-        levels=nivels,
-        extend="max",
-        extendrect=True,
-        add_colorbar=False,
-        add_labels=False
+        transform=ccrs.PlateCarree(),
+        antialiased=True
     )
 
     ax.text(
