@@ -197,42 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-    // =====================
-    // NOVO: descrição de nuvem manhã/tarde
-    // =====================
-    function getCloudDescription(points) {
-        const shifts = splitByShift(points);
-
-        const m = summarizeShift(shifts.Manhã)?.clouds;
-        const t = summarizeShift(shifts.Tarde)?.clouds;
-
-        if (!m && !t) return "";
-        if (m === t) return m;
-
-        const map = {
-            "Céu limpo|Nebulosidade baixa": "Predomínio de céu limpo",
-            "Nebulosidade baixa|Céu limpo": "Predomínio de céu limpo",
-
-            "Nebulosidade baixa|Nebulosidade moderada": "Nebulosidade baixa a moderada",
-            "Nebulosidade moderada|Nebulosidade baixa": "Nebulosidade diminuindo",
-
-            "Nebulosidade moderada|Nebulosidade intensa": "Nebulosidade intensa",
-            "Nebulosidade intensa|Nebulosidade moderada": "Nebulosidade intensa",
-
-            "Nebulosidade baixa|Nebulosidade intensa": "Nebulosidade aumentando",
-            "Nebulosidade intensa|Nebulosidade baixa": "Nebulosidade diminuindo",
-
-            "Céu limpo|Nebulosidade moderada": "Nebulosidade aumentando",
-            "Nebulosidade moderada|Céu limpo": "Nebulosidade diminuindo",
-
-            "Céu limpo|Nebulosidade intensa": "Nebulosidade intensa à tarde",
-            "Nebulosidade intensa|Céu limpo": "Nebulosidade intensa pela manhã"
-        };
-
-        return map[`${m}|${t}`] || m || t;
-    }
-
-
 
     function openDetails(points) {
         document.body.style.overflow = "hidden";
@@ -289,16 +253,12 @@ document.addEventListener("DOMContentLoaded", () => {
         entries.forEach(([day, points]) => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
-            const cloudText = getCloudDescription(points);
 
             const card = document.createElement('div');
             card.className = 'day';
 
             card.innerHTML = `
                 <div class="date">${labels.date} • ${labels.weekday}</div>
-
-                ${cloudText ? `<div class="row"><p>${cloudText}</p></div>` : ""}
-
                 <div class="row temp"><p>Temperatura</p><p>${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°</p></div>
                 <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(1)} mm</p></div>
                 <div class="row humidity"><p>Umidade</p><p>${s.rhMin.toFixed(0)}% a ${s.rhMax.toFixed(0)}%</p></div>
