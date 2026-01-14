@@ -210,11 +210,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const labels = formatDateLabel(points[0].time);
         modal.innerHTML = `
-            <h3 style="margin-bottom:12px; text-align:center">
-                ${labels.date} • ${labels.weekday}
-            </h3>
-            <div class="hourly-grid"></div>
-        `;
+        <h3 style="margin-bottom:12px; text-align:center">
+            ${labels.date} • ${labels.weekday}
+        </h3>
+        <div class="hourly-grid"></div>
+    `;
 
         const grid = modal.querySelector(".hourly-grid");
 
@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const currentHour = now.getHours();
         const todayStr = now.toISOString().split("T")[0];
 
-        points.forEach(p => {
+        points.forEach((p, index) => {
             const dateObj = new Date(p.time);
             const hour = dateObj.getHours().toString().padStart(2, "0");
             const pointDateStr = p.time.split("T")[0];
@@ -239,12 +239,16 @@ document.addEventListener("DOMContentLoaded", () => {
             else cloudText = "Céu encoberto";
 
             const block = document.createElement("div");
-            block.className = "hour-block" + (isCurrentHour ? " current-hour" : "");
+            block.className =
+                "hour-block" +
+                (isCurrentHour ? " current-hour" : "") +
+                ((index + 1) % 6 === 0 ? " hour-group-gap" : "");
+
             block.innerHTML = `
-                <strong>${hour}:00</strong>
-                <span>${cloudText}</span> -
-                <span>${p.precipitation.toFixed(1)} mm</span>
-            `;
+            <strong>${hour}:00</strong>
+            <span>${cloudText}</span> -
+            <span>${p.precipitation.toFixed(1)} mm</span>
+        `;
 
             grid.appendChild(block);
         });
@@ -260,6 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.appendChild(closeBtn);
         detailsOverlay.appendChild(modal);
     }
+
 
     // =====================
     // Renderização

@@ -210,6 +210,10 @@ main {
     color: #722600;
 }
 
+.hour-group-gap {
+    margin-bottom: 40px;
+}
+
 /* ===== GRID hora a hora ===== */
 .hourly-grid {
     display: grid;
