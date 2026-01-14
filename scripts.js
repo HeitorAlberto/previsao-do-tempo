@@ -197,41 +197,61 @@ document.addEventListener("DOMContentLoaded", () => {
         };
     }
 
-
+    // =====================
+    // Modal Detalhes (COM HORA ATUAL DESTACADA)
+    // =====================
     function openDetails(points) {
         document.body.style.overflow = "hidden";
-
         detailsOverlay.innerHTML = "";
         detailsOverlay.style.display = "flex";
 
         const modal = document.createElement("div");
-        const labels = formatDateLabel(points[0].time);
-
         modal.className = "details-modal";
+
+        const labels = formatDateLabel(points[0].time);
         modal.innerHTML = `
-        <h3 style="margin-bottom:12px; text-align: center">${labels.date} • ${labels.weekday}</h3>`;
+            <h3 style="margin-bottom:12px; text-align:center">
+                ${labels.date} • ${labels.weekday}
+            </h3>
+            <div class="hourly-grid"></div>
+        `;
 
-        const shifts = splitByShift(points);
+        const grid = modal.querySelector(".hourly-grid");
 
-        for (const name in shifts) {
-            const s = summarizeShift(shifts[name]);
-            if (!s) continue;
+        const now = new Date();
+        const currentHour = now.getHours();
+        const todayStr = now.toISOString().split("T")[0];
+
+        points.forEach(p => {
+            const dateObj = new Date(p.time);
+            const hour = dateObj.getHours().toString().padStart(2, "0");
+            const pointDateStr = p.time.split("T")[0];
+
+            const isCurrentHour =
+                pointDateStr === todayStr &&
+                dateObj.getHours() === currentHour;
+
+            let cloudText = "";
+            if (p.cloud_cover <= 20) cloudText = "Céu aberto";
+            else if (p.cloud_cover <= 40) cloudText = "Poucas nuvens";
+            else if (p.cloud_cover <= 70) cloudText = "Parcialmente nublado";
+            else if (p.cloud_cover <= 90) cloudText = "Muito nublado";
+            else cloudText = "Céu encoberto";
 
             const block = document.createElement("div");
-            block.className = "details-block";
+            block.className = "hour-block" + (isCurrentHour ? " current-hour" : "");
             block.innerHTML = `
-                <h4>${name}</h4>
-                <p>${s.clouds}</p>
-                <p>${s.rain} mm de chuva</p>
-                <p>${s.thunder ? "Possibilidade de trovoadas" : ""}</p>
+                <strong>${hour}:00</strong>
+                <span>${cloudText}</span> -
+                <span>${p.precipitation.toFixed(1)} mm</span>
             `;
-            modal.appendChild(block);
-        }
+
+            grid.appendChild(block);
+        });
 
         const closeBtn = document.createElement("button");
         closeBtn.className = "btn-detalhes";
         closeBtn.textContent = "Fechar";
-
         closeBtn.onclick = () => {
             detailsOverlay.style.display = "none";
             document.body.style.overflow = "";

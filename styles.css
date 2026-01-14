@@ -95,7 +95,6 @@ button {
     border: 1px solid black;
 }
 
-
 /* ===== Layout principal ===== */
 main {
     margin-top: 40px;
@@ -173,7 +172,6 @@ main {
     border-radius: 8px;
 }
 
-
 /* ===== Botão Detalhes ===== */
 .btn-detalhes {
     background: #000;
@@ -202,23 +200,42 @@ main {
     background: #fff;
     border-radius: 12px;
     padding: 20px;
-    width: 90%;
-    max-width: 420px;
+    width: 95%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
-.details-block {
-    background-color: rgb(228, 228, 228);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 10px;
+.current-hour {
+    color: #722600;
+}
+
+/* ===== GRID hora a hora ===== */
+.hourly-grid {
     display: grid;
-    gap: 10px;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+/* ===== Bloco de cada hora ===== */
+.hour-block {
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    padding: 10px;
     text-align: center;
+    justify-content: center;
+    font-size: 16px;
+    display: flex;
+    gap: 6px;
+}
+
+.hour-block strong {
+    font-size: 15px;
 }
 
 /* ===== Mobile adjustments ===== */
 @media(max-width:800px) {
-
 
     header {
         flex-direction: column;
@@ -271,23 +288,23 @@ main {
         border-radius: 8px;
     }
 
-
-
     .clouds {
         gap: 10px;
     }
 
     .details-modal {
-        height: auto;
         max-width: none;
+        max-height: 95vh;
         border-radius: 8px;
         overflow-y: auto;
     }
 
+    .hourly-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
-
-/* GRID de períodos */
+/* ===== GRID de períodos (mantido) ===== */
 .grid-periods {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -307,7 +324,7 @@ main {
     margin-top: 0;
 }
 
-/* Itens de hora */
+/* ===== Itens de hora (mantido) ===== */
 .hour-item {
     padding: 40px 12px;
     text-align: center;
@@ -317,15 +334,7 @@ main {
     margin: 4px 0;
 }
 
-
-
-
-
-
-
-
-
-/* HISTÓRICO */
+/* ===== HISTÓRICO ===== */
 #historyContainer {
     display: flex;
     align-items: center;
@@ -365,7 +374,7 @@ main {
     border-radius: 4px;
 }
 
-/* Mobile — funciona naturalmente como carrossel */
+/* Mobile — carrossel */
 @media (max-width: 600px) {
     #historyContainer {
         gap: 8px;
