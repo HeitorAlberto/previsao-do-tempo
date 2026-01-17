@@ -13,13 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const historyContainer = document.getElementById("historyContainer");
 
     // =====================
-    // Modal Detalhes
-    // =====================
-    const detailsOverlay = document.createElement("div");
-    detailsOverlay.className = "details-overlay";
-    document.body.appendChild(detailsOverlay);
-
-    // =====================
     // Histórico
     // =====================
     let searchHistory = [];
@@ -48,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function renderHistory() {
-        historyContainer.innerHTML = "Histórico de buscas: ";
+        historyContainer.innerHTML = "Histórico de buscas:";
         historyContainer.style.fontWeight = "bolder";
 
         searchHistory.forEach(item => {
@@ -107,16 +100,13 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // =====================
-    // Prepara arrays
+    // Processamento horário (somente para cálculo diário)
     // =====================
     const prepareHourlyArrays = hourly => ({
         temperature_2m: hourly.temperature_2m || [],
         relative_humidity_2m: hourly.relative_humidity_2m || [],
         precipitation: hourly.precipitation || [],
         wind_gusts_10m: hourly.wind_gusts_10m || [],
-        apparent_temperature: hourly.apparent_temperature || [],
-        cloud_cover: hourly.cloud_cover || [],
-        weathercode: hourly.weathercode || [],
         time: hourly.time || []
     });
 
@@ -128,18 +118,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (!map.has(day)) map.set(day, []);
 
-            const point = {};
-            for (const key in arrays) point[key] = arrays[key][i];
-            point.time = times[i];
-
-            map.get(day).push(point);
+            map.get(day).push({
+                temperature_2m: arrays.temperature_2m[i],
+                relative_humidity_2m: arrays.relative_humidity_2m[i],
+                precipitation: arrays.precipitation[i],
+                wind_gusts_10m: arrays.wind_gusts_10m[i]
+            });
         }
         return map;
     };
 
-    // =====================
-    // Sumarização diária
-    // =====================
     const summarizeDay = points => {
         return points.reduce((acc, p) => {
             acc.tMin = Math.min(acc.tMin, p.temperature_2m);
@@ -160,122 +148,12 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // =====================
-    // Turnos
-    // =====================
-    function splitByShift(points) {
-        const shifts = { Madrugada: [], Manhã: [], Tarde: [], Noite: [] };
-
-        points.forEach(p => {
-            const h = new Date(p.time).getHours();
-            if (h < 6) shifts.Madrugada.push(p);
-            else if (h < 12) shifts.Manhã.push(p);
-            else if (h < 18) shifts.Tarde.push(p);
-            else shifts.Noite.push(p);
-        });
-
-        return shifts;
-    }
-
-    function summarizeShift(points) {
-        if (!points.length) return null;
-
-        const cloudAvg = points.reduce((s, p) => s + p.cloud_cover, 0) / points.length;
-        const rainSum = points.reduce((s, p) => s + p.precipitation, 0);
-        const thunder = points.some(p => p.weathercode >= 95);
-
-        let cloudText = "";
-        if (cloudAvg <= 20) cloudText = "Céu aberto";
-        else if (cloudAvg <= 40) cloudText = "Nebulosidade baixa";
-        else if (cloudAvg <= 70) cloudText = "Nebulosidade moderada";
-        else if (cloudAvg <= 90) cloudText = "Nebulosidade intensa";
-        else cloudText = "Céu fechado";
-
-        return {
-            clouds: cloudText,
-            rain: rainSum.toFixed(1),
-            thunder
-        };
-    }
-
-    // =====================
-    // Modal Detalhes (COM HORA ATUAL DESTACADA)
-    // =====================
-    function openDetails(points) {
-        document.body.style.overflow = "hidden";
-        detailsOverlay.innerHTML = "";
-        detailsOverlay.style.display = "flex";
-
-        const modal = document.createElement("div");
-        modal.className = "details-modal";
-
-        const labels = formatDateLabel(points[0].time);
-        modal.innerHTML = `
-        <h3 style="margin-bottom:12px; text-align:center">
-            ${labels.date} • ${labels.weekday}
-        </h3>
-        <div class="hourly-grid"></div>
-    `;
-
-        const grid = modal.querySelector(".hourly-grid");
-
-        const now = new Date();
-        const currentHour = now.getHours();
-        const todayStr = now.toISOString().split("T")[0];
-
-        points.forEach((p, index) => {
-            const dateObj = new Date(p.time);
-            const hour = dateObj.getHours().toString().padStart(2, "0");
-            const pointDateStr = p.time.split("T")[0];
-
-            const isCurrentHour =
-                pointDateStr === todayStr &&
-                dateObj.getHours() === currentHour;
-
-            let cloudText = "";
-            if (p.cloud_cover <= 20) cloudText = "Céu aberto";
-            else if (p.cloud_cover <= 40) cloudText = "Poucas nuvens";
-            else if (p.cloud_cover <= 70) cloudText = "Parcialmente nublado";
-            else if (p.cloud_cover <= 90) cloudText = "Muito nublado";
-            else cloudText = "Céu encoberto";
-
-            const block = document.createElement("div");
-            block.className =
-                "hour-block" +
-                (isCurrentHour ? " current-hour" : "") +
-                ((index + 1) % 6 === 0 ? " hour-group-gap" : "");
-
-            block.innerHTML = `
-            <strong>${hour}:00</strong>
-            <span>${cloudText}</span> -
-            <span>${p.precipitation.toFixed(1)} mm</span>
-        `;
-
-            grid.appendChild(block);
-        });
-
-        const closeBtn = document.createElement("button");
-        closeBtn.className = "btn-detalhes";
-        closeBtn.textContent = "Fechar";
-        closeBtn.onclick = () => {
-            detailsOverlay.style.display = "none";
-            document.body.style.overflow = "";
-        };
-
-        modal.appendChild(closeBtn);
-        detailsOverlay.appendChild(modal);
-    }
-
-
-    // =====================
     // Renderização
     // =====================
-    const renderDays = dayMapInput => {
-        const dayMap = dayMapInput instanceof Map ? dayMapInput : new Map(dayMapInput);
+    const renderDays = dayMap => {
         cardsEl.innerHTML = '';
 
-        const entries = Array.from(dayMap.entries()).slice(0, 15);
-
-        entries.forEach(([day, points]) => {
+        Array.from(dayMap.entries()).slice(0, 15).forEach(([day, points]) => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
 
@@ -290,12 +168,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
             `;
 
-            const btn = document.createElement("button");
-            btn.className = "btn-detalhes";
-            btn.textContent = "Detalhes";
-            btn.onclick = () => openDetails(points);
-
-            card.appendChild(btn);
             cardsEl.appendChild(card);
         });
 
@@ -303,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // =====================
-    // Fetch API
+    // API
     // =====================
     async function fetchForecast(lat, lon, timezone = 'auto') {
         const url = new URL(forecastBase);
@@ -311,14 +183,14 @@ document.addEventListener("DOMContentLoaded", () => {
         url.searchParams.set('longitude', lon);
         url.searchParams.set(
             'hourly',
-            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover,apparent_temperature,weathercode'
+            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m'
         );
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
         url.searchParams.set('forecast_days', '15');
 
         const res = await fetch(url);
-        if (!res.ok) throw new Error('Erro ao buscar previsão');
+        if (!res.ok) throw new Error();
 
         return res.json();
     }
@@ -328,12 +200,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const res = await fetch(url);
         const data = await res.json();
 
-        if (!data[0]) throw new Error('Local não encontrado');
+        if (!data[0]) throw new Error();
 
         const place = data[0];
-        const name = getAddressText(place.address || {});
-
-        return { name, lat: parseFloat(place.lat), lon: parseFloat(place.lon) };
+        return {
+            name: getAddressText(place.address || {}),
+            lat: parseFloat(place.lat),
+            lon: parseFloat(place.lon)
+        };
     }
 
     async function loadForecast(lat, lon) {
@@ -395,7 +269,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Init
     // =====================
     const today = new Date();
-    todayDate.textContent = `${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(today)} - ${new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(today)}`;
+    todayDate.textContent =
+        `${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(today)} - 
+         ${new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(today)}`;
 
     searchHistory = loadHistory();
     renderHistory();

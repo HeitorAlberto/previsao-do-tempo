@@ -172,7 +172,7 @@ main {
     border-radius: 8px;
 }
 
-/* ===== Botão Detalhes ===== */
+/* ===== Botão Detalhes (mantido, mesmo sem modal) ===== */
 .btn-detalhes {
     background: #000;
     color: #fff;
@@ -183,59 +183,6 @@ main {
     font-weight: bold;
     margin-top: 12px;
     width: 100%;
-}
-
-/* ===== Modal Detalhes ===== */
-.details-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-}
-
-.details-modal {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px;
-    width: 95%;
-    max-width: 900px;
-    max-height: 90vh;
-    overflow-y: auto;
-}
-
-.current-hour {
-    color: #722600;
-}
-
-.hour-group-gap {
-    margin-bottom: 40px;
-}
-
-/* ===== GRID hora a hora ===== */
-.hourly-grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 12px;
-    margin-bottom: 16px;
-}
-
-/* ===== Bloco de cada hora ===== */
-.hour-block {
-    background-color: #f0f0f0;
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-    justify-content: center;
-    font-size: 16px;
-    display: flex;
-    gap: 6px;
-}
-
-.hour-block strong {
-    font-size: 15px;
 }
 
 /* ===== Mobile adjustments ===== */
@@ -295,47 +242,6 @@ main {
     .clouds {
         gap: 10px;
     }
-
-    .details-modal {
-        max-width: none;
-        max-height: 95vh;
-        border-radius: 8px;
-        overflow-y: auto;
-    }
-
-    .hourly-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* ===== GRID de períodos (mantido) ===== */
-.grid-periods {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-    padding: 16px;
-}
-
-.period-block {
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    padding: 12px;
-    background: #fafafa;
-}
-
-.period-block h3 {
-    text-align: center;
-    margin-top: 0;
-}
-
-/* ===== Itens de hora (mantido) ===== */
-.hour-item {
-    padding: 40px 12px;
-    text-align: center;
-}
-
-.hour-item p {
-    margin: 4px 0;
 }
 
 /* ===== HISTÓRICO ===== */
@@ -368,7 +274,6 @@ main {
     border: 1px solid black;
 }
 
-/* remove barra feia do scroll */
 #historyContainer::-webkit-scrollbar {
     height: 6px;
 }
@@ -378,7 +283,6 @@ main {
     border-radius: 4px;
 }
 
-/* Mobile — carrossel */
 @media (max-width: 600px) {
     #historyContainer {
         gap: 8px;
