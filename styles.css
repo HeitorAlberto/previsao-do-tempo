@@ -9,7 +9,7 @@
 
 body {
     font-family: "Roboto", sans-serif;
-    background: #f0f0f0;
+    background: #333333;
 }
 
 /* ===== HEADER ===== */
@@ -62,6 +62,7 @@ button {
     width: 100px;
 }
 
+
 /* ===== Referências ===== */
 .open-meteo-ref {
     text-decoration: none;
@@ -78,16 +79,17 @@ button {
     font-weight: bolder;
     margin-top: 20px;
     font-size: 25px;
+    color: white;
 }
 
 /* ===== Botão Mapas ===== */
 .btn-mapas {
     text-decoration: none;
-    color: black;
+    color: white;
     font-weight: bolder;
     border-radius: 8px;
     padding: 10px 20px;
-    background-color: white;
+    background-color: #333333;
     border: 1px solid white;
 }
 
@@ -105,16 +107,18 @@ main {
 #cards {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 12px;
+    gap: 50px;
     padding: 0px 115px;
-    background: #f0f0f0;
+    background: #333333;
 }
 
 /* ===== Cards ===== */
 .day {
     border-radius: 12px;
     padding: 16px 20px;
-    background-color: white;
+    background-color: #333333;
+    color: white;
+    border: 2px solid white;
 }
 
 .day .date {
@@ -156,6 +160,7 @@ main {
 .row p {
     margin: 0;
     font-size: 18px;
+    color: white;
 }
 
 /* ===== Classes de dados ===== */
@@ -253,6 +258,7 @@ main {
     padding: 20px 15px;
     overflow-x: auto;
     white-space: nowrap;
+    color: white;
 }
 
 #historyContainer p {
@@ -261,13 +267,14 @@ main {
 
 .history-item {
     padding: 8px 12px;
-    border: 1px solid rgb(255, 255, 255);
+    border: 1px solid white;
     border-radius: 6px;
-    background: white;
+    background: #333333;
     cursor: pointer;
     display: inline-flex;
     flex: 0 0 auto;
     font-size: 14px;
+    color: white;
 }
 
 .history-item:hover {
