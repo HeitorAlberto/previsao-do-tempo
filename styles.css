@@ -9,7 +9,7 @@
 
 body {
     font-family: "Roboto", sans-serif;
-    background: #333333;
+    background: #1d1d1d;
 }
 
 /* ===== HEADER ===== */
@@ -90,11 +90,11 @@ button {
     border-radius: 8px;
     padding: 10px 20px;
     background-color: #333333;
-    border: 1px solid white;
+    border: 1px solid #333333;
 }
 
 .btn-mapas:hover {
-    border: 1px solid black;
+    border: 1px solid white;
 }
 
 /* ===== Layout principal ===== */
@@ -109,7 +109,7 @@ main {
     grid-template-columns: 1fr 1fr 1fr;
     gap: 50px;
     padding: 0px 115px;
-    background: #333333;
+    background: #1d1d1d;
 }
 
 /* ===== Cards ===== */
@@ -118,7 +118,6 @@ main {
     padding: 16px 20px;
     background-color: #333333;
     color: white;
-    border: 2px solid white;
 }
 
 .day .date {
@@ -267,7 +266,7 @@ main {
 
 .history-item {
     padding: 8px 12px;
-    border: 1px solid white;
+    border: 1px solid #333333;
     border-radius: 6px;
     background: #333333;
     cursor: pointer;
@@ -278,7 +277,7 @@ main {
 }
 
 .history-item:hover {
-    border: 1px solid black;
+    border: 1px solid lightgray;
 }
 
 #historyContainer::-webkit-scrollbar {
