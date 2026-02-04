@@ -53,7 +53,7 @@ os.makedirs(out_dir, exist_ok=True)
 # 2. Baixar ECMWF e processar
 # ==============================
 def gerar_mapas():
-    client = Client(source="azure")
+    client = Client(source="ecmwf")
 
     now_br = datetime.utcnow() - timedelta(hours=3)
     run_date_str = now_br.strftime("%Y%m%d")
