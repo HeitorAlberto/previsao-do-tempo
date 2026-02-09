@@ -55,31 +55,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =====================
-    // Cache
-    // =====================
-    const CACHE_TTL_MINUTES = 60;
-
-    function getWeatherCache(lat, lon) {
-        const key = `weather_${lat}_${lon}`;
-        const cached = localStorage.getItem(key);
-        if (!cached) return null;
-
-        const { data, timestamp } = JSON.parse(cached);
-        const age = (Date.now() - timestamp) / (1000 * 60);
-        if (age > CACHE_TTL_MINUTES) return null;
-
-        return data;
-    }
-
-    function saveWeatherCache(lat, lon, data) {
-        const key = `weather_${lat}_${lon}`;
-        localStorage.setItem(key, JSON.stringify({
-            data,
-            timestamp: Date.now()
-        }));
-    }
-
-    // =====================
     // Utilitários
     // =====================
     function formatDateLabel(dateStr) {
@@ -100,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // =====================
-    // Processamento horário (somente para cálculo diário)
+    // Processamento horário
     // =====================
     const prepareHourlyArrays = hourly => ({
         temperature_2m: hourly.temperature_2m || [],
@@ -216,11 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
         locationName.textContent = "Carregando...";
 
         try {
-            let forecast = getWeatherCache(lat, lon);
-            if (!forecast) {
-                forecast = await fetchForecast(lat, lon);
-                saveWeatherCache(lat, lon, forecast);
-            }
+            const forecast = await fetchForecast(lat, lon);
 
             const dayMap = groupHourlyByDate(
                 forecast.hourly.time,
