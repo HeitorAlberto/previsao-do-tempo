@@ -183,7 +183,7 @@ def gerar_mapas():
         cmap=color_map,
         norm=norma,
         transform=ccrs.PlateCarree(),
-        antialiased=True
+        antialiased=False
     )
 
     ax.text(
