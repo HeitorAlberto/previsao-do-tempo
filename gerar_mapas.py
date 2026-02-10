@@ -4,59 +4,50 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from cartopy.feature import NaturalEarthFeature
-from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.colors import ListedColormap
 import numpy as np
 import pandas as pd
 import os, warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-# ==============================
-# ANTIALIASING GLOBAL
-# ==============================
 plt.rcParams["path.simplify"] = True
 plt.rcParams["path.simplify_threshold"] = 0.0
 plt.rcParams["agg.path.chunksize"] = 10000
 
-# ==============================
-# CONFIG
-# ==============================
 dias_semana_pt = {
-    "Monday": "segunda-feira", "Tuesday": "terça-feira", "Wednesday": "quarta-feira",
-    "Thursday": "quinta-feira", "Friday": "sexta-feira", "Saturday": "sábado", "Sunday": "domingo",
+    "Monday": "segunda-feira","Tuesday": "terça-feira","Wednesday": "quarta-feira",
+    "Thursday": "quinta-feira","Friday": "sexta-feira","Saturday": "sábado","Sunday": "domingo",
 }
 
 cores = [
-    "#FFFFFF", "#E8E8E8", "#AFAFAF", "#666666",
-    "#58E058", "#005B12", "#82ABFE",
-    "#232CD7", "#12005C", "#FFD586",
-    "#FFC04C", "#E99700", "#FF0000",
-    "#C00000", "#800000",
-    "#330033", "#660066", "#c02ec0"
+    "#FFFFFF","#E8E8E8","#AFAFAF","#666666",
+    "#58E058","#005B12","#82ABFE",
+    "#232CD7","#12005C","#FFD586",
+    "#FFC04C","#E99700","#FF0000",
+    "#C00000","#800000",
+    "#330033","#660066","#c02ec0"
 ]
 
-color_map = LinearSegmentedColormap.from_list("chuva", cores, N=256)
+color_map = ListedColormap(cores)
 
 extent = [-85, -30, -35, 10]
 out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
 
-# ==============================
-# FUNÇÃO PRINCIPAL
-# ==============================
 def gerar_mapas():
+
     client = Client(source="ecmwf")
 
     now_br = datetime.utcnow() - timedelta(hours=3)
     run_date_str = now_br.strftime("%Y%m%d")
     target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}.grib2")
 
-    # limpa gribs antigos
     for f in os.listdir(out_dir):
         if (f.endswith(".grib2") or f.endswith(".idx")) and f != os.path.basename(target_file):
             os.remove(os.path.join(out_dir, f))
 
-    steps_all = list(range(0, 145, 3)) + list(range(150, 361, 6))
+    steps_all = list(range(0,145,3)) + list(range(150,361,6))
 
     client.retrieve(
         date=run_date_str,
@@ -69,25 +60,19 @@ def gerar_mapas():
         target=target_file
     )
 
-    ds = xr.open_dataset(
-        target_file,
-        engine="cfgrib",
-        filter_by_keys={"typeOfLevel": "surface"}
-    )
+    ds = xr.open_dataset(target_file, engine="cfgrib",
+                         filter_by_keys={"typeOfLevel": "surface"})
 
     tp_mm = ds["tp"] * 1000.0
 
     run_time = pd.to_datetime(tp_mm.time.item()).to_pydatetime()
     step_times = run_time + pd.to_timedelta(tp_mm.step.values, unit="h")
 
-    # ==============================
-    # ACUMULADOS DIÁRIOS — AJUSTE BRASIL
-    # dia civil BRT = UTC+3
-    # ==============================
-    daily = []
-    base_shift = timedelta(hours=3)
+    base_shift = timedelta(hours=3)  # Brasil
 
+    daily = []
     for d in range(15):
+
         start = run_time + base_shift + timedelta(days=d)
         end = start + timedelta(hours=24)
 
@@ -98,29 +83,24 @@ def gerar_mapas():
 
         daily.append({
             "data": data,
-            "start": start - base_shift,  # rótulo em BRT
+            "start": start - base_shift,
             "end": end - base_shift
         })
 
-    # ==============================
-    # MAPAS DIÁRIOS
-    # ==============================
-    for i, item in enumerate(daily):
-        fig = plt.figure(figsize=(10, 8))
+    # ================= MAPAS DIÁRIOS =================
+    for i,item in enumerate(daily):
+
+        fig = plt.figure(figsize=(10,8))
         ax = plt.axes(projection=ccrs.PlateCarree())
 
         ax.set_extent(extent)
-        ax.set_position([0.02, 0.08, 0.878, 0.84])
+        ax.set_position([0.02,0.08,0.878,0.84])
         ax.coastlines("10m", linewidth=0.4)
 
-        ax.add_feature(NaturalEarthFeature(
-            "cultural", "admin_0_countries", "50m",
-            edgecolor="black", facecolor="none", linewidth=0.4
-        ))
-        ax.add_feature(NaturalEarthFeature(
-            "cultural", "admin_1_states_provinces_lines", "50m",
-            edgecolor="black", facecolor="none", linewidth=0.4
-        ))
+        ax.add_feature(NaturalEarthFeature("cultural","admin_0_countries","50m",
+                                           edgecolor="black",facecolor="none",linewidth=0.4))
+        ax.add_feature(NaturalEarthFeature("cultural","admin_1_states_provinces_lines","50m",
+                                           edgecolor="black",facecolor="none",linewidth=0.4))
 
         cf = ax.contourf(
             item["data"].longitude,
@@ -128,57 +108,40 @@ def gerar_mapas():
             item["data"],
             cmap=color_map,
             transform=ccrs.PlateCarree(),
-            antialiased=True
+            antialiased=False   # pixel fiel
         )
 
         dia = dias_semana_pt[item["start"].strftime("%A")]
 
-        ax.text(
-            0.0, 1.0,
-            f"({i+1:02d}) {item['start']:%d-%m-%Y} ({dia})",
-            transform=ax.transAxes,
-            ha="left", va="bottom",
-            fontsize=12, fontweight="bold"
-        )
+        ax.text(0,1,f"({i+1:02d}) {item['start']:%d-%m-%Y} ({dia})",
+                transform=ax.transAxes,ha="left",va="bottom",
+                fontsize=12,fontweight="bold")
 
-        ax.text(
-            1.0, 1.0,
-            f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
-            transform=ax.transAxes,
-            ha="right", va="bottom",
-            fontsize=12, fontweight="bold"
-        )
+        ax.text(1,1,f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
+                transform=ax.transAxes,ha="right",va="bottom",
+                fontsize=12,fontweight="bold")
 
-        cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
-        cbar = plt.colorbar(cf, cax=cax)
-        cbar.set_label("Precipitação (mm/24h)")
+        cax = fig.add_axes([0.895,0.08,0.032,0.84])
+        plt.colorbar(cf,cax=cax,label="Precipitação (mm/24h)")
 
-        plt.savefig(
-            os.path.join(out_dir, f"{i+1:02d}.png"),
-            dpi=400, bbox_inches="tight", pad_inches=0.03
-        )
+        plt.savefig(os.path.join(out_dir,f"{i+1:02d}.png"),
+                    dpi=300,bbox_inches="tight",pad_inches=0.03)
         plt.close()
 
-    # ==============================
-    # ACUMULADO 15 DIAS
-    # ==============================
+    # ================= ACUMULADO =================
     accum = sum(d["data"] for d in daily)
 
-    fig = plt.figure(figsize=(10, 8))
+    fig = plt.figure(figsize=(10,8))
     ax = plt.axes(projection=ccrs.PlateCarree())
 
     ax.set_extent(extent)
-    ax.set_position([0.02, 0.08, 0.878, 0.84])
+    ax.set_position([0.02,0.08,0.878,0.84])
     ax.coastlines("10m", linewidth=0.4)
 
-    ax.add_feature(NaturalEarthFeature(
-        "cultural", "admin_0_countries", "50m",
-        edgecolor="black", facecolor="none", linewidth=0.4
-    ))
-    ax.add_feature(NaturalEarthFeature(
-        "cultural", "admin_1_states_provinces_lines", "50m",
-        edgecolor="black", facecolor="none", linewidth=0.4
-    ))
+    ax.add_feature(NaturalEarthFeature("cultural","admin_0_countries","50m",
+                                       edgecolor="black",facecolor="none",linewidth=0.4))
+    ax.add_feature(NaturalEarthFeature("cultural","admin_1_states_provinces_lines","50m",
+                                       edgecolor="black",facecolor="none",linewidth=0.4))
 
     cf = ax.contourf(
         accum.longitude,
@@ -186,34 +149,14 @@ def gerar_mapas():
         accum,
         cmap=color_map,
         transform=ccrs.PlateCarree(),
-        antialiased=True
+        antialiased=False
     )
 
-    ax.text(
-        0.0, 1.0,
-        f"Precipitação acumulada (15 dias)\n"
-        f"Período: {daily[0]['start']:%d-%m} até {daily[-1]['end']:%d-%m}",
-        transform=ax.transAxes,
-        ha="left", va="bottom",
-        fontsize=12, fontweight="bold"
-    )
+    cax = fig.add_axes([0.895,0.08,0.032,0.84])
+    plt.colorbar(cf,cax=cax,label="Precipitação (mm/15 dias)")
 
-    ax.text(
-        1.0, 1.0,
-        f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
-        transform=ax.transAxes,
-        ha="right", va="bottom",
-        fontsize=12, fontweight="bold"
-    )
-
-    cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
-    cbar = plt.colorbar(cf, cax=cax)
-    cbar.set_label("Precipitação (mm/15 dias)")
-
-    plt.savefig(
-        os.path.join(out_dir, "acumulado-15-dias.png"),
-        dpi=400, bbox_inches="tight", pad_inches=0.03
-    )
+    plt.savefig(os.path.join(out_dir,"acumulado-15-dias.png"),
+                dpi=300,bbox_inches="tight",pad_inches=0.03)
     plt.close()
 
 
