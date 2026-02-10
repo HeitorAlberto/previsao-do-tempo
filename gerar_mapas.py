@@ -19,7 +19,7 @@ plt.rcParams["path.simplify_threshold"] = 0.0
 plt.rcParams["agg.path.chunksize"] = 10000
 
 # ==============================
-# 1. Configurações iniciais
+# CONFIG
 # ==============================
 dias_semana_pt = {
     "Monday": "segunda-feira", "Tuesday": "terça-feira", "Wednesday": "quarta-feira",
@@ -35,7 +35,6 @@ cores = [
     "#330033", "#660066", "#c02ec0"
 ]
 
-# colormap contínuo (suave)
 color_map = LinearSegmentedColormap.from_list("chuva", cores, N=256)
 
 extent = [-85, -30, -35, 10]
@@ -43,7 +42,7 @@ out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
 
 # ==============================
-# 2. Baixar ECMWF e processar
+# FUNÇÃO PRINCIPAL
 # ==============================
 def gerar_mapas():
     client = Client(source="ecmwf")
@@ -52,6 +51,7 @@ def gerar_mapas():
     run_date_str = now_br.strftime("%Y%m%d")
     target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}.grib2")
 
+    # limpa gribs antigos
     for f in os.listdir(out_dir):
         if (f.endswith(".grib2") or f.endswith(".idx")) and f != os.path.basename(target_file):
             os.remove(os.path.join(out_dir, f))
@@ -76,20 +76,34 @@ def gerar_mapas():
     )
 
     tp_mm = ds["tp"] * 1000.0
+
     run_time = pd.to_datetime(tp_mm.time.item()).to_pydatetime()
     step_times = run_time + pd.to_timedelta(tp_mm.step.values, unit="h")
 
+    # ==============================
+    # ACUMULADOS DIÁRIOS — AJUSTE BRASIL
+    # dia civil BRT = UTC+3
+    # ==============================
     daily = []
+    base_shift = timedelta(hours=3)
+
     for d in range(15):
-        start = run_time + timedelta(days=d)
+        start = run_time + base_shift + timedelta(days=d)
         end = start + timedelta(hours=24)
+
         i0 = np.argmin(np.abs(step_times - start))
         i1 = np.argmin(np.abs(step_times - end))
+
         data = tp_mm.isel(step=i1) if d == 0 else tp_mm.isel(step=i1) - tp_mm.isel(step=i0)
-        daily.append({"data": data, "start": start, "end": end})
+
+        daily.append({
+            "data": data,
+            "start": start - base_shift,  # rótulo em BRT
+            "end": end - base_shift
+        })
 
     # ==============================
-    # 3. Mapas diários
+    # MAPAS DIÁRIOS
     # ==============================
     for i, item in enumerate(daily):
         fig = plt.figure(figsize=(10, 8))
@@ -146,7 +160,7 @@ def gerar_mapas():
         plt.close()
 
     # ==============================
-    # 4. Mapa acumulado
+    # ACUMULADO 15 DIAS
     # ==============================
     accum = sum(d["data"] for d in daily)
 
