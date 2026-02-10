@@ -4,7 +4,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from cartopy.feature import NaturalEarthFeature
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 import pandas as pd
 import os, warnings
@@ -12,10 +12,10 @@ import os, warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 # ==============================
-# ANTIALIASING GLOBAL (IMPORTANTE)
+# ANTIALIASING GLOBAL
 # ==============================
 plt.rcParams["path.simplify"] = True
-plt.rcParams["path.simplify_threshold"] = 0.1
+plt.rcParams["path.simplify_threshold"] = 0.0
 plt.rcParams["agg.path.chunksize"] = 10000
 
 # ==============================
@@ -26,8 +26,6 @@ dias_semana_pt = {
     "Thursday": "quinta-feira", "Friday": "sexta-feira", "Saturday": "sábado", "Sunday": "domingo",
 }
 
-nivels = [0, 0.5, 1, 2, 5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
-
 cores = [
     "#FFFFFF", "#E8E8E8", "#AFAFAF", "#666666",
     "#58E058", "#005B12", "#82ABFE",
@@ -37,15 +35,10 @@ cores = [
     "#330033", "#660066", "#c02ec0"
 ]
 
-color_map = ListedColormap(cores)
-norma = BoundaryNorm(nivels, color_map.N)
-
-tick_locs = [(nivels[i] + nivels[i+1]) / 2 for i in range(len(nivels)-1)]
-tick_labels = [f"{nivels[i]}–{nivels[i+1]}" for i in range(len(nivels)-1)]
-tick_labels[-1] = f">{nivels[-2]}"
+# colormap contínuo (suave)
+color_map = LinearSegmentedColormap.from_list("chuva", cores, N=256)
 
 extent = [-85, -30, -35, 10]
-
 out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
 
@@ -64,6 +57,7 @@ def gerar_mapas():
             os.remove(os.path.join(out_dir, f))
 
     steps_all = list(range(0, 145, 3)) + list(range(150, 361, 6))
+
     client.retrieve(
         date=run_date_str,
         time=0,
@@ -104,6 +98,7 @@ def gerar_mapas():
         ax.set_extent(extent)
         ax.set_position([0.02, 0.08, 0.878, 0.84])
         ax.coastlines("10m", linewidth=0.4)
+
         ax.add_feature(NaturalEarthFeature(
             "cultural", "admin_0_countries", "50m",
             edgecolor="black", facecolor="none", linewidth=0.4
@@ -113,14 +108,11 @@ def gerar_mapas():
             edgecolor="black", facecolor="none", linewidth=0.4
         ))
 
-        # ---- DESENHO COM ANTIALIASING (SEM INTERPOLAR DADOS) ----
         cf = ax.contourf(
             item["data"].longitude,
             item["data"].latitude,
             item["data"],
-            levels=nivels,
             cmap=color_map,
-            norm=norma,
             transform=ccrs.PlateCarree(),
             antialiased=True
         )
@@ -145,13 +137,11 @@ def gerar_mapas():
 
         cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
         cbar = plt.colorbar(cf, cax=cax)
-        cbar.set_ticks(tick_locs)
-        cbar.set_ticklabels(tick_labels)
         cbar.set_label("Precipitação (mm/24h)")
 
         plt.savefig(
             os.path.join(out_dir, f"{i+1:02d}.png"),
-            dpi=300, bbox_inches="tight", pad_inches=0.03
+            dpi=400, bbox_inches="tight", pad_inches=0.03
         )
         plt.close()
 
@@ -166,6 +156,7 @@ def gerar_mapas():
     ax.set_extent(extent)
     ax.set_position([0.02, 0.08, 0.878, 0.84])
     ax.coastlines("10m", linewidth=0.4)
+
     ax.add_feature(NaturalEarthFeature(
         "cultural", "admin_0_countries", "50m",
         edgecolor="black", facecolor="none", linewidth=0.4
@@ -179,11 +170,9 @@ def gerar_mapas():
         accum.longitude,
         accum.latitude,
         accum,
-        levels=nivels,
         cmap=color_map,
-        norm=norma,
         transform=ccrs.PlateCarree(),
-        antialiased=False
+        antialiased=True
     )
 
     ax.text(
@@ -205,15 +194,14 @@ def gerar_mapas():
 
     cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
     cbar = plt.colorbar(cf, cax=cax)
-    cbar.set_ticks(tick_locs)
-    cbar.set_ticklabels(tick_labels)
     cbar.set_label("Precipitação (mm/15 dias)")
 
     plt.savefig(
         os.path.join(out_dir, "acumulado-15-dias.png"),
-        dpi=300, bbox_inches="tight", pad_inches=0.03
+        dpi=400, bbox_inches="tight", pad_inches=0.03
     )
     plt.close()
+
 
 if __name__ == "__main__":
     gerar_mapas()
