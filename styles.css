@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
 
 /* ===== Base do site ===== */
 * {
@@ -8,8 +8,7 @@
 }
 
 body {
-    font-family: "Roboto", sans-serif;
-    background: #1d1d1d;
+    font-family: "Ubuntu", sans-serif;
 }
 
 /* ===== HEADER ===== */
@@ -66,11 +65,12 @@ button {
 /* ===== Referências ===== */
 .open-meteo-ref {
     text-decoration: none;
-    color: #2ab300;
+    color: black;
+    font-weight: bolder;
 }
 
 .open-meteo-ref:hover {
-    color: #155c00;
+    color: red;
 }
 
 /* ===== Título de Localização ===== */
@@ -79,22 +79,17 @@ button {
     font-weight: bolder;
     margin-top: 20px;
     font-size: 25px;
-    color: white;
 }
 
 /* ===== Botão Mapas ===== */
 .btn-mapas {
     text-decoration: none;
-    color: white;
     font-weight: bolder;
     border-radius: 8px;
     padding: 10px 20px;
     background-color: #333333;
     border: 1px solid #333333;
-}
-
-.btn-mapas:hover {
-    border: 1px solid white;
+    color: white;
 }
 
 /* ===== Layout principal ===== */
@@ -109,15 +104,13 @@ main {
     grid-template-columns: 1fr 1fr 1fr;
     gap: 50px;
     padding: 0px 115px;
-    background: #1d1d1d;
 }
 
 /* ===== Cards ===== */
 .day {
     border-radius: 12px;
     padding: 16px 20px;
-    background-color: #333333;
-    color: white;
+    border: 2px solid black;
 }
 
 .day .date {
@@ -159,7 +152,6 @@ main {
 .row p {
     margin: 0;
     font-size: 18px;
-    color: white;
 }
 
 /* ===== Classes de dados ===== */
@@ -174,19 +166,6 @@ main {
     background-color: #efefef;
     justify-content: center;
     border-radius: 8px;
-}
-
-/* ===== Botão Detalhes (mantido, mesmo sem modal) ===== */
-.btn-detalhes {
-    background: #000;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 12px;
-    width: 100%;
 }
 
 /* ===== Mobile adjustments ===== */
@@ -257,7 +236,6 @@ main {
     padding: 20px 15px;
     overflow-x: auto;
     white-space: nowrap;
-    color: white;
 }
 
 #historyContainer p {
