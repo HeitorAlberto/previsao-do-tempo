@@ -62,7 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const day = String(d.getDate()).padStart(2, '0');
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const year = d.getFullYear();
-        const weekday = d.toLocaleDateString('pt-BR', { weekday: 'long' });
+        const weekday = d.toLocaleDateString('pt-BR', { weekday: 'short' });
 
         return { date: `${day}/${month}/${year}`, weekday };
     }
@@ -136,14 +136,25 @@ document.addEventListener("DOMContentLoaded", () => {
             card.className = 'day';
 
             card.innerHTML = `
-                <div class="date">${labels.date} • ${labels.weekday}</div>
-                
-                <div class="row temp"><p>Temperatura</p><p>${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°</p></div>
-                
-                <div class="row precip"><p>Chuva acumulada</p><p>${s.precipSum.toFixed(0)} mm</p></div>
-                
-                <div class="row wind"><p>Rajadas de vento</p><p>${s.gustMax.toFixed(0)} km/h</p></div>
+                <div class="day-line">
+                    <div class="date-line">
+                        ${labels.date} - ${labels.weekday}
+                    </div>
+
+                    <div class="badge badge-temp">
+                        ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
+                    </div>
+
+                    <div class="badge badge-precip">
+                        ${s.precipSum.toFixed(0)} mm
+                    </div>
+
+                    <div class="badge badge-wind">
+                        ${s.gustMax.toFixed(0)} km/h
+                    </div>
+                </div>
             `;
+
 
             cardsEl.appendChild(card);
         });
