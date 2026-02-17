@@ -101,7 +101,7 @@ main {
 #cards {
     display: grid;
     grid-template-columns: 1fr;
-    width: 900px;
+    width: 970px;
     gap: 50px;
     padding: 0px 115px;
     justify-self: center;
@@ -136,7 +136,7 @@ main {
     padding: 6px 10px;
     border-radius: 8px;
     white-space: nowrap;
-    width: 110px;
+    width: 150px;
     text-align: center;
 }
 

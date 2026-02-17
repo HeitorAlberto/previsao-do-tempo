@@ -142,15 +142,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
 
                     <div class="badge badge-temp">
-                        ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
+                       🌡️ ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
                     </div>
 
                     <div class="badge badge-precip">
-                        ${s.precipSum.toFixed(0)} mm
+                       ☔ ${s.precipSum.toFixed(0)} mm
                     </div>
 
                     <div class="badge badge-wind">
-                        ${s.gustMax.toFixed(0)} km/h
+                       🍃 ${s.gustMax.toFixed(0)} km/h
                     </div>
                 </div>
             `;
