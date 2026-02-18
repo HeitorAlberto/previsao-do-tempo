@@ -135,25 +135,28 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement('div');
             card.className = 'day';
 
+            const isWeekend = ['sáb.', 'dom.'].includes(labels.weekday.toLowerCase());
+
             card.innerHTML = `
                 <div class="day-line">
-                    <div class="date-line">
+                    <div class="date-line" style="${isWeekend ? 'color: darkgoldenrod;' : ''}">
                         ${labels.date} - ${labels.weekday}
                     </div>
 
                     <div class="badge badge-temp">
-                       🌡️ ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
+                    🌡️ ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
                     </div>
 
                     <div class="badge badge-precip">
-                       ☔ ${s.precipSum.toFixed(0)} mm
+                    ☔ ${s.precipSum.toFixed(0)} mm
                     </div>
 
                     <div class="badge badge-wind">
-                       🍃 ${s.gustMax.toFixed(0)} km/h
+                    🍃 ${s.gustMax.toFixed(0)} km/h
                     </div>
                 </div>
             `;
+
 
 
             cardsEl.appendChild(card);
