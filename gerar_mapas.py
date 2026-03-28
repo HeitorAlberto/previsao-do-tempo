@@ -89,10 +89,10 @@ def gerar_mapas():
     step_times = run_time + pd.to_timedelta(tp_mm.step.values, unit="h")
 
     # ==========================================
-    # AJUSTE DIA BRASIL (ÚNICA MUDANÇA REAL)
+    # AJUSTE DIA BRASIL
     # ==========================================
     daily = []
-    base_shift = timedelta(hours=3)  # BRT = UTC-3 → corte diário = +3 UTC
+    base_shift = timedelta(hours=3)
 
     for d in range(15):
         start = run_time + base_shift + timedelta(days=d)
@@ -110,7 +110,7 @@ def gerar_mapas():
         })
 
     # ==============================
-    # Mapas diários (INALTERADO)
+    # Mapas diários (PIXELADOS)
     # ==============================
     for i, item in enumerate(daily):
 
@@ -131,15 +131,15 @@ def gerar_mapas():
             edgecolor="black", facecolor="none", linewidth=0.4
         ))
 
-        cf = ax.contourf(
+        # ALTERAÇÃO AQUI
+        cf = ax.pcolormesh(
             item["data"].longitude,
             item["data"].latitude,
             item["data"],
-            levels=nivels,
             cmap=color_map,
             norm=norma,
-            transform=ccrs.PlateCarree(),
-            antialiased=True
+            shading="nearest",
+            transform=ccrs.PlateCarree()
         )
 
         dia = dias_semana_pt[item["start"].strftime("%A")]
@@ -173,7 +173,7 @@ def gerar_mapas():
         plt.close()
 
     # ==============================
-    # Acumulado 15 dias (INALTERADO)
+    # Acumulado 15 dias (PIXELADO)
     # ==============================
     accum = sum(d["data"] for d in daily)
 
@@ -193,15 +193,15 @@ def gerar_mapas():
         edgecolor="black", facecolor="none", linewidth=0.4
     ))
 
-    cf = ax.contourf(
+    # ALTERAÇÃO AQUI
+    cf = ax.pcolormesh(
         accum.longitude,
         accum.latitude,
         accum,
-        levels=nivels,
         cmap=color_map,
         norm=norma,
-        transform=ccrs.PlateCarree(),
-        antialiased=True
+        shading="nearest",
+        transform=ccrs.PlateCarree()
     )
 
     ax.text(
