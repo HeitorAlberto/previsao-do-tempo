@@ -29,12 +29,12 @@ dias_semana_pt = {
 nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 
 cores = [
-    "#FFFFFF", "#F7F7F7", "#D1D5DB",
-    "#C7F9CC", "#95D5B2", "#CDE7FF",
-    "#A5C8FF", "#BDB2FF", "#FFF1C1",
-    "#FFE8A3", "#FFD6A5", "#FFCAD4",
-    "#F4A7B9", "#E5989B",
-    "#E0BBE4", "#D0A2F7"
+    "#FFFFFF", "#EFEFEF", "#A8B0BA",
+    "#90EFA0", "#52C97A", "#A9D6FF",
+    "#6FB6FF", "#8F96FF", "#FFE58A",
+    "#FFC94D", "#FFB87A", "#FF8FA3",
+    "#EB5E73", "#D1495B",
+    "#C39AF0", "#A66BE8"
 ]
 
 color_map = ListedColormap(cores)
