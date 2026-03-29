@@ -29,11 +29,11 @@ dias_semana_pt = {
 nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 
 cores = [
-    "#FFFFFF", "#A8B0BA",  # cinza
+    "#F4F4F5", "#A8B0BA",  # cinza
     "#90EFA0", "#52C97A",  # verde
     "#A9D6FF", "#6FB6FF",  # azul
-    "#FFE58A", "#FFBB1E",  # amarelo
-    "#FFB87A", "#F08A3E",  # laranja
+    "#FFFB78", "#FFF70B",  # amarelo 
+    "#FFAD66", "#F08A3E",  # laranja 
     "#FF8FA3", "#D1495B",  # vermelho
     "#D2A679", "#8B5E3C",  # marrom
     "#C39AF0", "#A66BE8"   # roxo
