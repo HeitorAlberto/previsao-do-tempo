@@ -31,12 +31,12 @@ nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 cores = [
     "#F4F4F5", "#A8B0BA",  # cinza
     "#90EFA0", "#52C97A",  # verde
-    "#A9D6FF", "#6FB6FF",  # azul
-    "#FFF799", "#E6C200",  # amarelo 
-    "#FFAD66", "#F08A3E",  # laranja 
-    "#FF8FA3", "#D1495B",  # vermelho
+    "#8FC9FF", "#3A9AF9",  # azul
+    "#FFF06A", "#E6C200",  # amarelo 
+    "#FFA85C", "#E68235",  # laranja 
+    "#FF6464", "#D62F45",  # vermelho
     "#D2A679", "#8B5E3C",  # marrom
-    "#C39AF0", "#A66BE8"   # roxo
+    "#C39AF0", "#A65DFA"   # roxo
 ]
 
 color_map = ListedColormap(cores)
