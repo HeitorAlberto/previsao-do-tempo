@@ -34,7 +34,7 @@ cores = [
     "#8FC9FF", "#3A9AF9",  # azul
     "#FFF06A", "#E6C200",  # amarelo 
     "#FFA85C", "#E68235",  # laranja 
-    "#FF6464", "#D62F45",  # vermelho
+    "#FF3D3D", "#BA0019",  # vermelho
     "#D2A679", "#8B5E3C",  # marrom
     "#C39AF0", "#A65DFA"   # roxo
 ]
