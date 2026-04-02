@@ -29,14 +29,14 @@ dias_semana_pt = {
 nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 
 cores = [
-    "#F4F4F5", "#A8B0BA",
-    "#90EFA0", "#2A9A50",
-    "#8FC9FF", "#3A9AF9",
-    "#FFF06A", "#E6C200",
-    "#FF9742", "#DC6A00",
-    "#FF3D3D", "#BA0019",
-    "#D2A679", "#8B5E3C",
-    "#C39AF0", "#A65DFA"
+    "#F4F4F5", "#A8B0BA",  # cinza
+    "#90EFA0", "#2A9A50",  # verde
+    "#8FC9FF", "#3A9AF9",  # azul
+    "#FFF06A", "#E6C200",  # amarelo 
+    "#FF9742", "#DC6A00",  # laranja 
+    "#FF3D3D", "#BA0019",  # vermelho
+    "#D2A679", "#8B5E3C",  # marrom
+    "#C39AF0", "#A65DFA"   # roxo
 ]
 
 color_map = ListedColormap(cores)
@@ -112,7 +112,7 @@ def gerar_mapas():
         })
 
     # ==============================
-    # Mapas diários (SUAVIZADO 2x2)
+    # Mapas diários (PIXELADOS)
     # ==============================
     for i, item in enumerate(daily):
 
@@ -133,13 +133,11 @@ def gerar_mapas():
             edgecolor="black", facecolor="none", linewidth=0.4
         ))
 
-        # SUAVIZAÇÃO 2x2
-        data_plot = item["data"].rolling(latitude=2, longitude=2, center=True).mean()
-
+        # ALTERAÇÃO AQUI
         cf = ax.pcolormesh(
-            data_plot.longitude,
-            data_plot.latitude,
-            data_plot,
+            item["data"].longitude,
+            item["data"].latitude,
+            item["data"],
             cmap=color_map,
             norm=norma,
             shading="nearest",
@@ -177,7 +175,7 @@ def gerar_mapas():
         plt.close()
 
     # ==============================
-    # Acumulado 15 dias (SUAVIZADO 2x2)
+    # Acumulado 15 dias (PIXELADO)
     # ==============================
     accum = sum(d["data"] for d in daily)
 
@@ -197,13 +195,11 @@ def gerar_mapas():
         edgecolor="black", facecolor="none", linewidth=0.4
     ))
 
-    # SUAVIZAÇÃO 2x2
-    accum_plot = accum.rolling(latitude=2, longitude=2, center=True).mean()
-
+    # ALTERAÇÃO AQUI
     cf = ax.pcolormesh(
-        accum_plot.longitude,
-        accum_plot.latitude,
-        accum_plot,
+        accum.longitude,
+        accum.latitude,
+        accum,
         cmap=color_map,
         norm=norma,
         shading="nearest",
