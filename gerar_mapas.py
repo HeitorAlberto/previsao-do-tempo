@@ -30,7 +30,7 @@ nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 
 cores = [
     "#F4F4F5", "#A8B0BA",  # cinza
-    "#90EFA0", "#52C97A",  # verde
+    "#90EFA0", "#2A9A50",  # verde
     "#8FC9FF", "#3A9AF9",  # azul
     "#FFF06A", "#E6C200",  # amarelo 
     "#FF9742", "#DC6A00",  # laranja 
