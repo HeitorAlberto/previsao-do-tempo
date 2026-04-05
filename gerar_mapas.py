@@ -12,7 +12,7 @@ import os, warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 # ==============================
-# ANTIALIASING GLOBAL (ORIGINAL)
+# ANTIALIASING GLOBAL
 # ==============================
 plt.rcParams["path.simplify"] = True
 plt.rcParams["path.simplify_threshold"] = 0.1
@@ -29,14 +29,14 @@ dias_semana_pt = {
 nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 
 cores = [
-    "#F4F4F5", "#A8B0BA",  # cinza
-    "#90EFA0", "#2A9A50",  # verde
-    "#8FC9FF", "#3A9AF9",  # azul
-    "#FFF06A", "#E6C200",  # amarelo 
-    "#FF9742", "#DC6A00",  # laranja 
-    "#FF3D3D", "#BA0019",  # vermelho
-    "#D2A679", "#8B5E3C",  # marrom
-    "#C39AF0", "#A65DFA"   # roxo
+    "#F4F4F5", "#A8B0BA",
+    "#90EFA0", "#2A9A50",
+    "#8FC9FF", "#3A9AF9",
+    "#FFF06A", "#E6C200",
+    "#FF9742", "#DC6A00",
+    "#FF3D3D", "#BA0019",
+    "#D2A679", "#8B5E3C",
+    "#C39AF0", "#A65DFA"
 ]
 
 color_map = ListedColormap(cores)
@@ -90,9 +90,9 @@ def gerar_mapas():
     run_time = pd.to_datetime(tp_mm.time.item()).to_pydatetime()
     step_times = run_time + pd.to_timedelta(tp_mm.step.values, unit="h")
 
-    # ==========================================
-    # AJUSTE DIA BRASIL
-    # ==========================================
+    # ==============================
+    # Ajuste diário
+    # ==============================
     daily = []
     base_shift = timedelta(hours=3)
 
@@ -112,7 +112,7 @@ def gerar_mapas():
         })
 
     # ==============================
-    # Mapas diários (PIXELADOS)
+    # Mapas diários (SUAVES)
     # ==============================
     for i, item in enumerate(daily):
 
@@ -133,14 +133,13 @@ def gerar_mapas():
             edgecolor="black", facecolor="none", linewidth=0.4
         ))
 
-        # ALTERAÇÃO AQUI
-        cf = ax.pcolormesh(
+        cf = ax.contourf(
             item["data"].longitude,
             item["data"].latitude,
             item["data"],
+            levels=nivels,
             cmap=color_map,
             norm=norma,
-            shading="nearest",
             transform=ccrs.PlateCarree()
         )
 
@@ -175,7 +174,7 @@ def gerar_mapas():
         plt.close()
 
     # ==============================
-    # Acumulado 15 dias (PIXELADO)
+    # Acumulado 15 dias (SUAVE)
     # ==============================
     accum = sum(d["data"] for d in daily)
 
@@ -195,14 +194,13 @@ def gerar_mapas():
         edgecolor="black", facecolor="none", linewidth=0.4
     ))
 
-    # ALTERAÇÃO AQUI
-    cf = ax.pcolormesh(
+    cf = ax.contourf(
         accum.longitude,
         accum.latitude,
         accum,
+        levels=nivels,
         cmap=color_map,
         norm=norma,
-        shading="nearest",
         transform=ccrs.PlateCarree()
     )
 
