@@ -15,7 +15,7 @@
                         font-family: Roboto, sans-serif;
                 }
 
-                /* ===== DESKTOP VIEWER ===== */
+                /* ===== DESKTOP ===== */
                 @media (min-width: 801px) {
                         body {
                                 height: 100vh;
@@ -29,6 +29,10 @@
                                 position: relative;
                                 width: 100%;
                                 height: 100%;
+                        }
+
+                        #viewer a {
+                                display: contents;
                         }
 
                         #viewer img {
@@ -52,7 +56,6 @@
                                 color: #fff;
                                 border: none;
                                 padding: 14px 18px;
-                                font-size: 16px;
                                 cursor: pointer;
                                 z-index: 10;
                                 border-radius: 8px;
@@ -66,20 +69,33 @@
                                 right: 10px;
                         }
 
-                        button:hover {
-                                background: rgba(0, 0, 0, 0.8);
+                        /* ===== LUPA ===== */
+                        #lens {
+                                position: fixed;
+                                width: 320px;
+                                height: 320px;
+                                border: 2px solid #000;
+                                border-radius: 50%;
+                                display: none;
+                                pointer-events: none;
+                                z-index: 999;
+                                background-repeat: no-repeat;
+                                background-color: #fff;
                         }
                 }
 
-                /* ===== MOBILE (SCROLL NORMAL) ===== */
+                /* ===== MOBILE ===== */
                 @media (max-width: 800px) {
                         #viewer {
                                 padding: 20px 0;
                         }
 
+                        #viewer a {
+                                display: block;
+                        }
+
                         #viewer img {
                                 width: 100%;
-                                height: auto;
                                 display: block;
                                 margin-bottom: 40px;
                         }
@@ -97,28 +113,33 @@
                 <button id="prev">Anterior</button>
                 <button id="next">Próximo</button>
 
-                <img src="mapas/01.png" alt="Mapa dia 1" class="active">
-                <img src="mapas/02.png" alt="Mapa dia 2">
-                <img src="mapas/03.png" alt="Mapa dia 3">
-                <img src="mapas/04.png" alt="Mapa dia 4">
-                <img src="mapas/05.png" alt="Mapa dia 5">
-                <img src="mapas/06.png" alt="Mapa dia 6">
-                <img src="mapas/07.png" alt="Mapa dia 7">
-                <img src="mapas/08.png" alt="Mapa dia 8">
-                <img src="mapas/09.png" alt="Mapa dia 9">
-                <img src="mapas/10.png" alt="Mapa dia 10">
-                <img src="mapas/11.png" alt="Mapa dia 11">
-                <img src="mapas/12.png" alt="Mapa dia 12">
-                <img src="mapas/13.png" alt="Mapa dia 13">
-                <img src="mapas/14.png" alt="Mapa dia 14">
-                <img src="mapas/15.png" alt="Mapa dia 15">
-                <img src="mapas/acumulado-15-dias.png" alt="Acumulado 15 dias">
+                <a href="mapas/01.png" target="_blank"><img src="mapas/01.png" class="active"></a>
+                <a href="mapas/02.png" target="_blank"><img src="mapas/02.png"></a>
+                <a href="mapas/03.png" target="_blank"><img src="mapas/03.png"></a>
+                <a href="mapas/04.png" target="_blank"><img src="mapas/04.png"></a>
+                <a href="mapas/05.png" target="_blank"><img src="mapas/05.png"></a>
+                <a href="mapas/06.png" target="_blank"><img src="mapas/06.png"></a>
+                <a href="mapas/07.png" target="_blank"><img src="mapas/07.png"></a>
+                <a href="mapas/08.png" target="_blank"><img src="mapas/08.png"></a>
+                <a href="mapas/09.png" target="_blank"><img src="mapas/09.png"></a>
+                <a href="mapas/10.png" target="_blank"><img src="mapas/10.png"></a>
+                <a href="mapas/11.png" target="_blank"><img src="mapas/11.png"></a>
+                <a href="mapas/12.png" target="_blank"><img src="mapas/12.png"></a>
+                <a href="mapas/13.png" target="_blank"><img src="mapas/13.png"></a>
+                <a href="mapas/14.png" target="_blank"><img src="mapas/14.png"></a>
+                <a href="mapas/15.png" target="_blank"><img src="mapas/15.png"></a>
+                <a href="mapas/acumulado-15-dias.png" target="_blank"><img src="mapas/acumulado-15-dias.png"></a>
+
+                <div id="lens"></div>
         </div>
 
         <script>
                 if (window.matchMedia('(min-width: 801px)').matches) {
+
                         const images = document.querySelectorAll('#viewer img');
                         let index = 0;
+
+                        const lens = document.getElementById('lens');
 
                         function showImage(i) {
                                 images[index].classList.remove('active');
@@ -132,6 +153,42 @@
                         document.addEventListener('keydown', e => {
                                 if (e.key === 'ArrowLeft') showImage(index - 1);
                                 if (e.key === 'ArrowRight') showImage(index + 1);
+                        });
+
+                        const zoom = 0.8;
+
+                        images.forEach(img => {
+
+                                img.addEventListener('mouseenter', () => {
+                                        lens.style.display = 'block';
+                                        lens.style.backgroundImage = `url(${img.src})`;
+                                });
+
+                                img.addEventListener('mouseleave', () => {
+                                        lens.style.display = 'none';
+                                });
+
+                                img.addEventListener('mousemove', (e) => {
+                                        const rect = img.getBoundingClientRect();
+
+                                        const x = e.clientX - rect.left;
+                                        const y = e.clientY - rect.top;
+
+                                        const scaleX = img.naturalWidth / rect.width;
+                                        const scaleY = img.naturalHeight / rect.height;
+
+                                        // CENTRALIZA NO CURSOR
+                                        lens.style.left = (e.clientX - lens.offsetWidth / 2) + 'px';
+                                        lens.style.top = (e.clientY - lens.offsetHeight / 2) + 'px';
+
+                                        lens.style.backgroundSize =
+                                                (img.naturalWidth * zoom) + 'px ' +
+                                                (img.naturalHeight * zoom) + 'px';
+
+                                        lens.style.backgroundPosition =
+                                                (-x * scaleX * zoom + lens.offsetWidth / 2) + 'px ' +
+                                                (-y * scaleY * zoom + lens.offsetHeight / 2) + 'px';
+                                });
                         });
                 }
         </script>
