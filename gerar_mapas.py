@@ -4,7 +4,7 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from cartopy.feature import NaturalEarthFeature
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 import pandas as pd
 import os, warnings
@@ -28,20 +28,26 @@ dias_semana_pt = {
 
 nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 
-cores = [
-    "#F4F4F5", "#A8B0BA",
-    "#90EFA0", "#2A9A50",
-    "#8FC9FF", "#3A9AF9",
-    "#FFF06A", "#E6C200",
-    "#FF9742", "#C66000",
-    "#FF6E6E", "#BA0019",
-    "#D2A679", "#8B5E3C",
-    "#C39AF0", "#A65DFA"
+# pares de cores (início → fim da faixa)
+cores_pares = [
+    ("#F4F4F5", "#A8B0BA"),
+    ("#90EFA0", "#2A9A50"),
+    ("#8FC9FF", "#3A9AF9"),
+    ("#FFF06A", "#E6C200"),
+    ("#FF9742", "#DC6A00"),
+    ("#FF3D3D", "#BA0019"),
+    ("#D2A679", "#8B5E3C"),
+    ("#C39AF0", "#A65DFA")
 ]
 
-color_map = ListedColormap(cores)
-norma = BoundaryNorm(nivels, color_map.N)
+# cria gradiente contínuo
+cores_gradiente = []
+for c1, c2 in cores_pares:
+    cores_gradiente.extend([c1, c2])
 
+color_map = LinearSegmentedColormap.from_list("chuva", cores_gradiente, N=256)
+
+# ticks continuam iguais
 tick_locs = [(nivels[i] + nivels[i+1]) / 2 for i in range(len(nivels)-1)]
 tick_labels = [f"{nivels[i]}–{nivels[i+1]}" for i in range(len(nivels)-1)]
 tick_labels[-1] = f">{nivels[-2]}"
@@ -112,7 +118,7 @@ def gerar_mapas():
         })
 
     # ==============================
-    # Mapas diários (SUAVES)
+    # Mapas diários
     # ==============================
     for i, item in enumerate(daily):
 
@@ -139,7 +145,6 @@ def gerar_mapas():
             item["data"],
             levels=nivels,
             cmap=color_map,
-            norm=norma,
             transform=ccrs.PlateCarree()
         )
 
@@ -174,7 +179,7 @@ def gerar_mapas():
         plt.close()
 
     # ==============================
-    # Acumulado 15 dias (SUAVE)
+    # Acumulado 15 dias
     # ==============================
     accum = sum(d["data"] for d in daily)
 
@@ -200,7 +205,6 @@ def gerar_mapas():
         accum,
         levels=nivels,
         cmap=color_map,
-        norm=norma,
         transform=ccrs.PlateCarree()
     )
 
