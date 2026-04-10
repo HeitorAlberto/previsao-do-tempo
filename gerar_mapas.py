@@ -40,14 +40,27 @@ cores_pares = [
     ("#C39AF0", "#A65DFA")
 ]
 
-# cria gradiente contínuo
-cores_gradiente = []
-for c1, c2 in cores_pares:
-    cores_gradiente.extend([c1, c2])
+# ==============================
+# COLORMAP CORRETO (ALINHADO)
+# ==============================
+vmin, vmax = nivels[0], nivels[-1]
+norm_levels = [(v - vmin) / (vmax - vmin) for v in nivels]
 
-color_map = LinearSegmentedColormap.from_list("chuva", cores_gradiente, N=256)
+colors_list = []
 
-# ticks continuam iguais
+for i in range(len(cores_pares)):
+    c1, c2 = cores_pares[i]
+    start = norm_levels[2*i]
+    end = norm_levels[2*i + 1]
+
+    colors_list.append((start, c1))
+    colors_list.append((end, c2))
+
+color_map = LinearSegmentedColormap.from_list("chuva", colors_list)
+
+# ==============================
+# Colorbar
+# ==============================
 tick_locs = [(nivels[i] + nivels[i+1]) / 2 for i in range(len(nivels)-1)]
 tick_labels = [f"{nivels[i]}–{nivels[i+1]}" for i in range(len(nivels)-1)]
 tick_labels[-1] = f">{nivels[-2]}"
