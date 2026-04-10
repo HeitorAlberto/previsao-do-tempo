@@ -4,7 +4,6 @@ import xarray as xr
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from cartopy.feature import NaturalEarthFeature
-from matplotlib.colors import LinearSegmentedColormap
 import numpy as np
 import pandas as pd
 import os, warnings
@@ -28,39 +27,6 @@ dias_semana_pt = {
 
 nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 
-# pares de cores (início → fim da faixa)
-cores_pares = [
-    ("#F4F4F5", "#A8B0BA"),
-    ("#90EFA0", "#2A9A50"),
-    ("#8FC9FF", "#3A9AF9"),
-    ("#FFF06A", "#E6C200"),
-    ("#FF9742", "#DC6A00"),
-    ("#FF3D3D", "#BA0019"),
-    ("#D2A679", "#8B5E3C"),
-    ("#C39AF0", "#A65DFA")
-]
-
-# ==============================
-# COLORMAP CORRETO (ALINHADO)
-# ==============================
-vmin, vmax = nivels[0], nivels[-1]
-norm_levels = [(v - vmin) / (vmax - vmin) for v in nivels]
-
-colors_list = []
-
-for i in range(len(cores_pares)):
-    c1, c2 = cores_pares[i]
-    start = norm_levels[2*i]
-    end = norm_levels[2*i + 1]
-
-    colors_list.append((start, c1))
-    colors_list.append((end, c2))
-
-color_map = LinearSegmentedColormap.from_list("chuva", colors_list)
-
-# ==============================
-# Colorbar
-# ==============================
 tick_locs = [(nivels[i] + nivels[i+1]) / 2 for i in range(len(nivels)-1)]
 tick_labels = [f"{nivels[i]}–{nivels[i+1]}" for i in range(len(nivels)-1)]
 tick_labels[-1] = f">{nivels[-2]}"
@@ -157,7 +123,7 @@ def gerar_mapas():
             item["data"].latitude,
             item["data"],
             levels=nivels,
-            cmap=color_map,
+            cmap="viridis",
             transform=ccrs.PlateCarree()
         )
 
@@ -217,7 +183,7 @@ def gerar_mapas():
         accum.latitude,
         accum,
         levels=nivels,
-        cmap=color_map,
+        cmap="viridis",
         transform=ccrs.PlateCarree()
     )
 
