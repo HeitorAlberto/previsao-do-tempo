@@ -11,16 +11,10 @@ import os, warnings
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-# ==============================
-# ANTIALIASING GLOBAL
-# ==============================
 plt.rcParams["path.simplify"] = True
 plt.rcParams["path.simplify_threshold"] = 0.1
 plt.rcParams["agg.path.chunksize"] = 10000
 
-# ==============================
-# Configurações iniciais
-# ==============================
 dias_semana_pt = {
     "Monday": "segunda-feira", "Tuesday": "terça-feira", "Wednesday": "quarta-feira",
     "Thursday": "quinta-feira", "Friday": "sexta-feira", "Saturday": "sábado", "Sunday": "domingo",
@@ -51,9 +45,6 @@ extent = [-85, -30, -35, 10]
 out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
 
-# ==============================
-# Baixar ECMWF e processar
-# ==============================
 def gerar_mapas():
 
     client = Client(source="ecmwf")
@@ -90,9 +81,6 @@ def gerar_mapas():
     run_time = pd.to_datetime(tp_mm.time.item()).to_pydatetime()
     step_times = run_time + pd.to_timedelta(tp_mm.step.values, unit="h")
 
-    # ==============================
-    # Ajuste diário
-    # ==============================
     daily = []
     base_shift = timedelta(hours=3)
 
@@ -111,16 +99,13 @@ def gerar_mapas():
             "end": end - base_shift
         })
 
-    # ==============================
-    # Mapas diários (SUAVES)
-    # ==============================
     for i, item in enumerate(daily):
 
         fig = plt.figure(figsize=(10, 8))
         ax = plt.axes(projection=ccrs.PlateCarree())
 
         ax.set_extent(extent)
-        ax.set_position([0.02, 0.08, 0.878, 0.84])
+        ax.set_position([0.02, 0.08, 0.86, 0.84])
 
         ax.coastlines("10m", linewidth=0.4)
 
@@ -161,7 +146,7 @@ def gerar_mapas():
             fontsize=12, fontweight="bold"
         )
 
-        cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
+        cax = fig.add_axes([0.90, 0.08, 0.032, 0.84])
         cbar = plt.colorbar(cf, cax=cax)
         cbar.set_ticks(tick_locs)
         cbar.set_ticklabels(tick_labels)
@@ -173,16 +158,13 @@ def gerar_mapas():
         )
         plt.close()
 
-    # ==============================
-    # Acumulado 15 dias (SUAVE)
-    # ==============================
     accum = sum(d["data"] for d in daily)
 
     fig = plt.figure(figsize=(10, 8))
     ax = plt.axes(projection=ccrs.PlateCarree())
 
     ax.set_extent(extent)
-    ax.set_position([0.02, 0.08, 0.878, 0.84])
+    ax.set_position([0.02, 0.08, 0.86, 0.84])
     ax.coastlines("10m", linewidth=0.4)
 
     ax.add_feature(NaturalEarthFeature(
@@ -221,7 +203,7 @@ def gerar_mapas():
         fontsize=12, fontweight="bold"
     )
 
-    cax = fig.add_axes([0.895, 0.08, 0.032, 0.84])
+    cax = fig.add_axes([0.90, 0.08, 0.032, 0.84])
     cbar = plt.colorbar(cf, cax=cax)
     cbar.set_ticks(tick_locs)
     cbar.set_ticklabels(tick_labels)
