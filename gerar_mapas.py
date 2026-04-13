@@ -105,8 +105,6 @@ def gerar_mapas():
         ax = plt.axes(projection=ccrs.PlateCarree())
 
         ax.set_extent(extent)
-        ax.set_position([0.02, 0.08, 0.86, 0.84])
-
         ax.coastlines("10m", linewidth=0.4)
 
         ax.add_feature(NaturalEarthFeature(
@@ -146,8 +144,7 @@ def gerar_mapas():
             fontsize=12, fontweight="bold"
         )
 
-        cax = fig.add_axes([0.90, 0.08, 0.032, 0.84])
-        cbar = plt.colorbar(cf, cax=cax)
+        cbar = plt.colorbar(cf, ax=ax, pad=0.03)
         cbar.set_ticks(tick_locs)
         cbar.set_ticklabels(tick_labels)
         cbar.set_label("Precipitação (mm/24h)")
@@ -164,7 +161,6 @@ def gerar_mapas():
     ax = plt.axes(projection=ccrs.PlateCarree())
 
     ax.set_extent(extent)
-    ax.set_position([0.02, 0.08, 0.86, 0.84])
     ax.coastlines("10m", linewidth=0.4)
 
     ax.add_feature(NaturalEarthFeature(
@@ -203,8 +199,7 @@ def gerar_mapas():
         fontsize=12, fontweight="bold"
     )
 
-    cax = fig.add_axes([0.90, 0.08, 0.032, 0.84])
-    cbar = plt.colorbar(cf, cax=cax)
+    cbar = plt.colorbar(cf, ax=ax, pad=0.03)
     cbar.set_ticks(tick_locs)
     cbar.set_ticklabels(tick_labels)
     cbar.set_label("Precipitação (mm/15 dias)")
