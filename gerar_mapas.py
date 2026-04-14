@@ -102,18 +102,18 @@ def plotar_textos(ax, ds):
     bbox = dict(facecolor='white', alpha=0.7, pad=2)
 
     ax.text(0.01, 0.99, montar_texto(capitais["Norte"], ds),
-            transform=ax.transAxes, ha="left", va="top", fontsize=8, bbox=bbox)
+            transform=ax.transAxes, ha="left", va="top", fontsize=8, linespacing=1.5, bbox=bbox)
 
     ax.text(0.99, 0.99, montar_texto(capitais["Nordeste"], ds),
-            transform=ax.transAxes, ha="right", va="top", fontsize=8, bbox=bbox)
+            transform=ax.transAxes, ha="right", va="top", fontsize=8, linespacing=1.5, bbox=bbox)
 
     ax.text(0.01, 0.01, montar_texto(capitais["Centro-Oeste"], ds),
-            transform=ax.transAxes, ha="left", va="bottom", fontsize=8, bbox=bbox)
+            transform=ax.transAxes, ha="left", va="bottom", fontsize=8, linespacing=1.5, bbox=bbox)
 
     sudeste_sul = {**capitais["Sudeste"], **capitais["Sul"]}
 
     ax.text(0.99, 0.01, montar_texto(sudeste_sul, ds),
-            transform=ax.transAxes, ha="right", va="bottom", fontsize=8, bbox=bbox)
+            transform=ax.transAxes, ha="right", va="bottom", fontsize=8, linespacing=1.5, bbox=bbox)
 
 def gerar_mapas():
 
