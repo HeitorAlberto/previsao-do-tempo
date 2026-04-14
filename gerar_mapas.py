@@ -45,6 +45,76 @@ extent = [-85, -30, -35, 10]
 out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
 
+# =========================
+# CAPITAIS
+# =========================
+capitais = {
+    "Norte": {
+        "Rio Branco(AC)": (-9.97, -67.81),
+        "Manaus(AM)": (-3.10, -60.02),
+        "Boa Vista(RR)": (2.82, -60.67),
+        "Belém(PA)": (-1.45, -48.50),
+        "Macapá(AP)": (0.03, -51.05),
+        "Palmas(TO)": (-10.24, -48.35),
+        "Porto Velho(RO)": (-8.76, -63.90),
+    },
+    "Nordeste": {
+        "São Luís(MA)": (-2.53, -44.30),
+        "Teresina(PI)": (-5.09, -42.80),
+        "Fortaleza(CE)": (-3.72, -38.54),
+        "Natal(RN)": (-5.79, -35.21),
+        "João Pessoa(PB)": (-7.12, -34.86),
+        "Recife(PE)": (-8.05, -34.90),
+        "Maceió(AL)": (-9.66, -35.74),
+        "Aracaju(SE)": (-10.91, -37.07),
+        "Salvador(BA)": (-12.97, -38.50),
+    },
+    "Centro-Oeste": {
+        "Cuiabá(MT)": (-15.60, -56.10),
+        "Campo Grande(MS)": (-20.45, -54.62),
+        "Goiânia(GO)": (-16.68, -49.25),
+        "Brasília(DF)": (-15.78, -47.93),
+    },
+    "Sudeste": {
+        "Belo Horizonte(MG)": (-19.92, -43.94),
+        "Vitória(ES)": (-20.32, -40.34),
+        "Rio de Janeiro(RJ)": (-22.91, -43.17),
+        "São Paulo(SP)": (-23.55, -46.63),
+    },
+    "Sul": {
+        "Curitiba(PR)": (-25.43, -49.27),
+        "Florianópolis(SC)": (-27.59, -48.55),
+        "Porto Alegre(RS)": (-30.03, -51.23),
+    }
+}
+
+def get_valor(ds, lat, lon):
+    ponto = ds.sel(latitude=lat, longitude=lon, method="nearest")
+    return float(ponto.values)
+
+def montar_texto(regiao, ds):
+    return "\n".join([
+        f"{cidade} - {get_valor(ds, lat, lon):.0f}mm"
+        for cidade, (lat, lon) in regiao.items()
+    ])
+
+def plotar_textos(ax, ds):
+    bbox = dict(facecolor='white', alpha=0.7, pad=2)
+
+    ax.text(0.01, 0.99, montar_texto(capitais["Norte"], ds),
+            transform=ax.transAxes, ha="left", va="top", fontsize=8, bbox=bbox)
+
+    ax.text(0.99, 0.99, montar_texto(capitais["Nordeste"], ds),
+            transform=ax.transAxes, ha="right", va="top", fontsize=8, bbox=bbox)
+
+    ax.text(0.01, 0.01, montar_texto(capitais["Centro-Oeste"], ds),
+            transform=ax.transAxes, ha="left", va="bottom", fontsize=8, bbox=bbox)
+
+    sudeste_sul = {**capitais["Sudeste"], **capitais["Sul"]}
+
+    ax.text(0.99, 0.01, montar_texto(sudeste_sul, ds),
+            transform=ax.transAxes, ha="right", va="bottom", fontsize=8, bbox=bbox)
+
 def gerar_mapas():
 
     client = Client(source="ecmwf")
@@ -144,6 +214,9 @@ def gerar_mapas():
             fontsize=12, fontweight="bold"
         )
 
+        # ADIÇÃO
+        plotar_textos(ax, item["data"])
+
         cbar = plt.colorbar(cf, ax=ax, pad=0.03)
         cbar.set_ticks(tick_locs)
         cbar.set_ticklabels(tick_labels)
@@ -198,6 +271,9 @@ def gerar_mapas():
         ha="right", va="bottom",
         fontsize=12, fontweight="bold"
     )
+
+    # ADIÇÃO
+    plotar_textos(ax, accum)
 
     cbar = plt.colorbar(cf, ax=ax, pad=0.03)
     cbar.set_ticks(tick_locs)
