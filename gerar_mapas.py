@@ -36,18 +36,11 @@ cores = [
 color_map = ListedColormap(cores)
 norma = BoundaryNorm(nivels, color_map.N)
 
-tick_locs = [(nivels[i] + nivels[i+1]) / 2 for i in range(len(nivels)-1)]
-tick_labels = [f"{nivels[i]}–{nivels[i+1]}" for i in range(len(nivels)-1)]
-tick_labels[-1] = f">{nivels[-2]}"
-
 extent = [-85, -30, -35, 10]
 
 out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
 
-# =========================
-# CAPITAIS
-# =========================
 capitais = {
     "Norte": {
         "Rio Branco(AC)": (-9.97, -67.81),
@@ -114,6 +107,13 @@ def plotar_textos(ax, ds):
 
     ax.text(0.99, 0.01, montar_texto(sudeste_sul, ds),
             transform=ax.transAxes, ha="right", va="bottom", fontsize=8, linespacing=1.5, bbox=bbox)
+
+def configurar_colorbar(cf, ax, label):
+    cbar = plt.colorbar(cf, ax=ax, pad=0.03)
+    cbar.set_ticks(nivels)
+    cbar.set_ticklabels([str(n) for n in nivels])
+    cbar.set_label(label)
+    return cbar
 
 def gerar_mapas():
 
@@ -214,13 +214,9 @@ def gerar_mapas():
             fontsize=12, fontweight="bold"
         )
 
-        # ADIÇÃO
         plotar_textos(ax, item["data"])
 
-        cbar = plt.colorbar(cf, ax=ax, pad=0.03)
-        cbar.set_ticks(tick_locs)
-        cbar.set_ticklabels(tick_labels)
-        cbar.set_label("Precipitação (mm/24h)")
+        configurar_colorbar(cf, ax, "Precipitação (mm/24h)")
 
         plt.savefig(
             os.path.join(out_dir, f"{i+1:02d}.png"),
@@ -272,13 +268,9 @@ def gerar_mapas():
         fontsize=12, fontweight="bold"
     )
 
-    # ADIÇÃO
     plotar_textos(ax, accum)
 
-    cbar = plt.colorbar(cf, ax=ax, pad=0.03)
-    cbar.set_ticks(tick_locs)
-    cbar.set_ticklabels(tick_labels)
-    cbar.set_label("Precipitação (mm/15 dias)")
+    configurar_colorbar(cf, ax, "Precipitação (mm/15 dias)")
 
     plt.savefig(
         os.path.join(out_dir, "acumulado-15-dias.png"),
