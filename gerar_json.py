@@ -26,18 +26,14 @@ FILES = {
 with open("cidades.json", encoding="utf-8-sig") as f:
     cidades = json.load(f)
 
-def get(ds, var, lat, lon):
-    return float(ds[var].sel(latitude=lat, longitude=lon, method="nearest").values)
-
 # =========================
-# SAFE VARIABLE GETTER
+# SAFE INTERPOLATION
 # =========================
 
-def get_var(ds, candidates):
-    for c in candidates:
-        if c in ds.data_vars:
-            return ds[c]
-    raise KeyError(f"Nenhuma variável encontrada em {candidates}. Disponíveis: {list(ds.data_vars)}")
+def get(da, lat, lon):
+    return float(
+        da.interp(latitude=lat, longitude=lon).values
+    )
 
 # =========================
 # DOWNLOAD
@@ -98,19 +94,16 @@ def gerar():
     ds_wind = xr.open_dataset(FILES["wind"], engine="cfgrib", backend_kwargs={"indexpath": ""})
 
     # =========================
-    # SAFE VARIABLE MAPPING
+    # EXTRACAO DE VARIAVEIS
     # =========================
 
-    tp = get_var(ds_tp, ["tp"]) * 1000.0
-
-    tmax = get_var(ds_tmax, ["mx2t3"]) - 273.15
-    tmin = get_var(ds_tmin, ["mn2t3"]) - 273.15
-
-    # cfgrib pode expor como fg10
-    wind = get_var(ds_wind, ["10fg", "fg10"])
+    tp = ds_tp["tp"] * 1000.0
+    tmax = ds_tmax["mx2t3"] - 273.15
+    tmin = ds_tmin["mn2t3"] - 273.15
+    wind = ds_wind["fg10"]  # nome correto no cfgrib
 
     # =========================
-    # TIME AXIS
+    # TEMPO
     # =========================
 
     run_time = pd.to_datetime(tp.time.item()).to_pydatetime()
@@ -121,7 +114,7 @@ def gerar():
     resultado = {c["nome"]: {} for c in cidades}
 
     # =========================
-    # LOOP DIÁRIO
+    # LOOP DIARIO (5 DIAS)
     # =========================
 
     for d in range(5):
@@ -147,14 +140,14 @@ def gerar():
             lon = c["longitude"]
 
             resultado[nome][data_str] = {
-                "chuva": round(get(chuva, "tp", lat, lon), 1),
-                "temp_max": round(get(tmax_d, None, lat, lon), 1),
-                "temp_min": round(get(tmin_d, None, lat, lon), 1),
-                "vento_max": round(get(wind_d, None, lat, lon), 1)
+                "chuva": round(get(chuva, lat, lon), 1),
+                "temp_max": round(get(tmax_d, lat, lon), 1),
+                "temp_min": round(get(tmin_d, lat, lon), 1),
+                "vento_max": round(get(wind_d, lat, lon), 1)
             }
 
     # =========================
-    # SAVE JSON
+    # SALVAR JSON
     # =========================
 
     out = os.path.join(json_dir, "previsao.json")
