@@ -27,13 +27,11 @@ with open("cidades.json", encoding="utf-8-sig") as f:
     cidades = json.load(f)
 
 # =========================
-# SAFE INTERPOLATION
+# INTERPOLAÇÃO SEGURA
 # =========================
 
 def get(da, lat, lon):
-    return float(
-        da.interp(latitude=lat, longitude=lon).values
-    )
+    return float(da.interp(latitude=lat, longitude=lon).values)
 
 # =========================
 # DOWNLOAD
@@ -84,27 +82,15 @@ def gerar():
 
     baixar(client, run_date)
 
-    # =========================
-    # OPEN GRIBS
-    # =========================
-
     ds_tp = xr.open_dataset(FILES["tp"], engine="cfgrib", backend_kwargs={"indexpath": ""})
     ds_tmax = xr.open_dataset(FILES["tmax"], engine="cfgrib", backend_kwargs={"indexpath": ""})
     ds_tmin = xr.open_dataset(FILES["tmin"], engine="cfgrib", backend_kwargs={"indexpath": ""})
     ds_wind = xr.open_dataset(FILES["wind"], engine="cfgrib", backend_kwargs={"indexpath": ""})
 
-    # =========================
-    # EXTRACAO DE VARIAVEIS
-    # =========================
-
     tp = ds_tp["tp"] * 1000.0
     tmax = ds_tmax["mx2t3"] - 273.15
     tmin = ds_tmin["mn2t3"] - 273.15
-    wind = ds_wind["fg10"]  # nome correto no cfgrib
-
-    # =========================
-    # TEMPO
-    # =========================
+    wind = ds_wind["fg10"]
 
     run_time = pd.to_datetime(tp.time.item()).to_pydatetime()
     steps = run_time + pd.to_timedelta(tp.step.values, unit="h")
@@ -114,7 +100,7 @@ def gerar():
     resultado = {c["nome"]: {} for c in cidades}
 
     # =========================
-    # LOOP DIARIO (5 DIAS)
+    # DIAS
     # =========================
 
     for d in range(5):
@@ -122,14 +108,20 @@ def gerar():
         start = run_time + base + timedelta(days=d)
         end = start + timedelta(hours=24)
 
-        i0 = np.argmin(np.abs(steps - start))
-        i1 = np.argmin(np.abs(steps - end))
+        mask = (steps > start) & (steps <= end)
 
-        chuva = tp.isel(step=i1) if d == 0 else tp.isel(step=i1) - tp.isel(step=i0)
+        if not np.any(mask):
+            continue
 
-        tmax_d = tmax.isel(step=slice(i0, i1)).max("step")
-        tmin_d = tmin.isel(step=slice(i0, i1)).min("step")
-        wind_d = wind.isel(step=slice(i0, i1)).max("step")
+        chuva_sel = tp.sel(step=mask)
+        tmax_sel = tmax.sel(step=mask)
+        tmin_sel = tmin.sel(step=mask)
+        wind_sel = wind.sel(step=mask)
+
+        chuva = chuva_sel.sum("step")
+        tmax_d = tmax_sel.max("step")
+        tmin_d = tmin_sel.min("step")
+        wind_d = wind_sel.max("step")
 
         data_str = (start - base).strftime("%Y-%m-%d")
 
@@ -147,7 +139,7 @@ def gerar():
             }
 
     # =========================
-    # SALVAR JSON
+    # OUTPUT
     # =========================
 
     out = os.path.join(json_dir, "previsao.json")
