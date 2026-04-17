@@ -37,22 +37,22 @@ def gerar_json():
     target_file = f"dados_{run_date_str}.grib2"
 
     # =========================
-    # LIMPAR ARQUIVOS ANTIGOS
+    # LIMPAR GRIBS ANTIGOS
     # =========================
 
     for f in os.listdir():
         if f.startswith("dados_") and (f.endswith(".grib2") or f.endswith(".idx")):
-            if f != os.path.basename(target_file):
+            if f != target_file:
                 os.remove(f)
 
     # =========================
-    # VERIFICAR SE JÁ EXISTE
+    # BAIXAR OU REUTILIZAR
     # =========================
 
     if os.path.exists(target_file):
-        print("GRIB já existe. Reutilizando arquivo...")
+        print("GRIB já existe. Reutilizando...")
     else:
-        print("Baixando novo GRIB...")
+        print("Baixando GRIB...")
 
         steps_all = list(range(0, 145, 3))  # até 5 dias
 
@@ -119,8 +119,8 @@ def gerar_json():
         for cidade in cidades:
 
             nome = cidade["nome"]
-            lat = cidade["lat"]
-            lon = cidade["lon"]
+            lat = cidade["latitude"]
+            lon = cidade["longitude"]
 
             resultado[nome][data_str] = {
                 "chuva": round(get_valor(chuva, lat, lon), 1),

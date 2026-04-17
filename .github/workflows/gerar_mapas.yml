@@ -2,7 +2,6 @@ name: Atualizar Mapas ECMWF
 
 on:
   schedule:
-    # Executa todos os dias às 6h (9h UTC)
     - cron: "0 9 * * *"
   workflow_dispatch:
 
@@ -11,27 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Clona o repositório
       - name: Checkout
         uses: actions/checkout@v3
 
-      # Instala dependências do sistema e Python
       - name: Instalar dependências
         run: |
           sudo apt-get update
-          sudo apt-get install -y libeccodes0 libproj-dev proj-data proj-bin libgeos-dev
+          sudo apt-get install -y libproj-dev proj-data proj-bin libgeos-dev
           pip install --upgrade pip
-          pip install ecmwf-opendata cartopy cfgrib eccodes xarray matplotlib  pandas numpy scipy
+          pip install ecmwf-opendata cartopy xarray matplotlib pandas numpy scipy cfgrib[eccodes]
 
-      # Executa o script Python que gera os mapas
       - name: Gerar mapas ECMWF
         run: python gerar_mapas.py
 
-      # Faz commit e push das novas imagens (somente se houver mudanças)
-      - name: Commit e Push dos novos mapas
+      - name: Gerar JSON
+        run: python gerar_json.py
+
+      - name: Commit e Push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add mapas/
-          git commit -m "Atualização automática dos mapas ECMWF" || echo "Sem mudanças"
+          git add mapas/ json/
+          git commit -m "Atualização automática mapas + JSON ECMWF" || echo "Sem mudanças"
           git push origin main
