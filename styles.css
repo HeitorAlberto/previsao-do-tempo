@@ -11,7 +11,7 @@ body {
     font-family: "Ubuntu", sans-serif;
 }
 
-/* ===== HEADER ===== */
+/* ===== HEADER (Mantido Original) ===== */
 header {
     display: flex;
     justify-content: space-between;
@@ -61,17 +61,6 @@ button {
     width: 100px;
 }
 
-/* ===== Referências ===== */
-.open-meteo-ref {
-    text-decoration: none;
-    color: black;
-    font-weight: bolder;
-}
-
-.open-meteo-ref:hover {
-    color: red;
-}
-
 /* ===== Título de Localização ===== */
 #locationName {
     text-align: center;
@@ -80,66 +69,57 @@ button {
     font-size: 25px;
 }
 
-/* ===== Botão Mapas ===== */
-.btn-mapas {
-    text-decoration: none;
-    font-weight: bolder;
-    border-radius: 8px;
-    padding: 10px 20px;
-    background-color: #333333;
-    border: 1px solid #333333;
-    color: white;
-}
-
-/* ===== Layout principal ===== */
-main {
-    margin-top: 40px;
-    margin-bottom: 40px;
-}
-
-/* ===== GRID dos Cards ===== */
+/* ===== GRID dos Cards (MODIFICADO: 3 Colunas) ===== */
 #cards {
     display: grid;
-    grid-template-columns: 1fr;
-    width: 970px;
-    gap: 50px;
-    padding: 0px 115px;
-    justify-self: center;
-    font-size: 20px;
+    grid-template-columns: repeat(3, 1fr);
+    /* Define as 3 colunas */
+    width: 100%;
+    max-width: 1100px;
+    /* Largura máxima para não espalhar demais no monitor ultra-wide */
+    gap: 30px;
+    padding: 20px 115px;
+    /* Mantendo seu padding original */
+    margin: 40px auto;
+    /* Centraliza o grid na tela */
 }
 
-/* ===== Cards ===== */
+/* ===== Cards (MODIFICADO: Empilhado) ===== */
 .day {
     border-radius: 12px;
-    padding: 14px 18px;
+    padding: 20px;
+    border: 1px solid #eee;
+    /* Um leve contorno para separar os cards no grid */
 }
 
-/* ===== NOVO layout em linha ===== */
 .day-line {
     display: flex;
+    flex-direction: column;
+    /* Faz os itens ficarem um abaixo do outro */
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: 12px;
-    flex-wrap: wrap;
-}
-
-/* data */
-.date-line {
-    font-weight: 700;
-    font-size: 20px;
-    min-width: 140px;
-}
-
-/* ===== Badges ===== */
-.badge {
-    padding: 6px 10px;
-    border-radius: 8px;
-    white-space: nowrap;
-    width: 150px;
     text-align: center;
 }
 
-/* cores leves quase transparentes */
+/* Data e Dia */
+.date-line {
+    font-weight: 700;
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+/* ===== Badges (Ajustados para ocupar o card) ===== */
+.badge {
+    padding: 8px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    width: 100%;
+    /* Badge agora ocupa a largura do card */
+    max-width: 200px;
+    text-align: center;
+}
+
 .badge-temp {
     background: rgba(255, 140, 0, 0.15);
     border: 1px solid rgba(255, 140, 0, 0.25);
@@ -155,45 +135,6 @@ main {
     border: 1px solid rgba(0, 170, 90, 0.25);
 }
 
-/* ===== Linhas antigas (mantidas para compatibilidade) ===== */
-.row {
-    display: flex;
-    justify-content: space-between;
-    padding: 16px 8px;
-}
-
-.row p {
-    margin: 0;
-    font-size: 18px;
-}
-
-.descricao-nuvens {
-    justify-content: space-between;
-    padding: 6px 0px;
-    margin: 0px;
-}
-
-.descricao-nuvens p {
-    margin: 0px;
-    background-color: #f0f0f0;
-    border-radius: 8px;
-    padding: 10px;
-    text-align: center;
-}
-
-.temp,
-.precip,
-.humidity,
-.wind {
-    color: #000000;
-}
-
-.clouds {
-    background-color: #efefef;
-    justify-content: center;
-    border-radius: 8px;
-}
-
 /* ===== HISTÓRICO ===== */
 #historyContainer {
     display: flex;
@@ -205,111 +146,38 @@ main {
     white-space: nowrap;
 }
 
-#historyContainer p {
-    font-weight: bolder;
-}
-
 .history-item {
     padding: 8px 12px;
     border: 1px solid #333333;
     border-radius: 6px;
     background: #333333;
     cursor: pointer;
-    display: inline-flex;
-    flex: 0 0 auto;
-    font-size: 14px;
     color: white;
+    font-size: 14px;
 }
 
-.history-item:hover {
-    border: 1px solid lightgray;
+/* ===== Ajustes Mobile (Mantendo a lógica original) ===== */
+@media(max-width:1000px) {
+    #cards {
+        grid-template-columns: repeat(2, 1fr);
+        /* 2 colunas em telas médias */
+        padding: 20px 50px;
+    }
 }
 
-#historyContainer::-webkit-scrollbar {
-    height: 6px;
-}
-
-#historyContainer::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
-}
-
-/* ===== Mobile adjustments ===== */
-@media(max-width:800px) {
-
+@media(max-width:700px) {
     header {
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 12px;
         padding: 20px;
-        text-align: center;
-    }
-
-    #titulo-site {
-        margin: 0;
-        width: 100%;
-    }
-
-    #searchForm {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        max-width: 320px;
-        gap: 10px;
-    }
-
-    #searchForm>button {
-        width: 100%;
-    }
-
-    #cityInput {
-        width: 100%;
-    }
-
-    #locationName {
-        width: 100%;
-        margin-top: 10px;
-    }
-
-    main {
-        margin-top: 20px;
-        padding: 0px 10px;
     }
 
     #cards {
         grid-template-columns: 1fr;
-        gap: 40px;
-        padding: 0;
-        width: auto;
+        /* 1 coluna no celular */
+        padding: 20px;
     }
 
-    .day {
-        padding: 18px 12px;
-        border-radius: 8px;
-    }
-
-    .day-line {
-        justify-content: center;
-        text-align: center;
-    }
-
-    .date-line {
+    #cityInput {
         width: 100%;
-    }
-
-    .clouds {
-        gap: 10px;
-    }
-}
-
-@media (max-width: 600px) {
-    #historyContainer {
-        gap: 8px;
-        justify-content: left;
-    }
-
-    .history-item {
-        padding: 6px 10px;
     }
 }
