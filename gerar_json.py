@@ -12,8 +12,11 @@ import os, json
 json_dir = "json"
 os.makedirs(json_dir, exist_ok=True)
 
+GRIB_TP = "tp.grib2"
+GRIB_TEMP = "temp_wind.grib2"
+
 # =========================
-# CARREGAR CIDADES
+# CIDADES
 # =========================
 
 with open("cidades.json", encoding="utf-8-sig") as f:
@@ -24,6 +27,42 @@ def get_valor(ds, lat, lon):
     return float(ponto.values)
 
 # =========================
+# DOWNLOAD GRIBS
+# =========================
+
+def baixar_gribs(client, run_date):
+
+    steps = list(range(0, 145, 3))
+
+    # --- PRECIPITAÇÃO ---
+    if not os.path.exists(GRIB_TP):
+        print("Baixando TP...")
+        client.retrieve(
+            date=run_date,
+            time=0,
+            step=steps,
+            param="tp",
+            type="fc",
+            levtype="sfc",
+            stream="oper",
+            target=GRIB_TP
+        )
+
+    # --- TEMPERATURA + VENTO ---
+    if not os.path.exists(GRIB_TEMP):
+        print("Baixando TEMP/WIND...")
+        client.retrieve(
+            date=run_date,
+            time=0,
+            step=steps,
+            param="mx2t3/mn2t3/10fg",
+            type="fc",
+            levtype="sfc",
+            stream="oper",
+            target=GRIB_TEMP
+        )
+
+# =========================
 # MAIN
 # =========================
 
@@ -32,72 +71,45 @@ def gerar_json():
     client = Client(source="azure")
 
     now_br = datetime.utcnow() - timedelta(hours=3)
-    run_date_str = now_br.strftime("%Y%m%d")
+    run_date = now_br.strftime("%Y%m%d")
 
-    target_file = f"dados_{run_date_str}.grib2"
-
-    # =========================
-    # LIMPAR GRIBS ANTIGOS
-    # =========================
-
+    # limpa arquivos antigos
     for f in os.listdir():
-        if f.startswith("dados_") and (f.endswith(".grib2") or f.endswith(".idx")):
-            if f != target_file:
-                os.remove(f)
+        if f.startswith("dados_") and f.endswith(".grib2"):
+            os.remove(f)
+
+    baixar_gribs(client, run_date)
 
     # =========================
-    # BAIXAR OU REUTILIZAR
+    # ABRIR GRIBS SEPARADOS
     # =========================
 
-    if os.path.exists(target_file):
-        print("GRIB já existe. Reutilizando...")
-    else:
-        print("Baixando GRIB...")
-
-        steps_all = list(range(0, 145, 3))  # até 5 dias
-
-        client.retrieve(
-            date=run_date_str,
-            time=0,
-            step=steps_all,
-            param="tp/mx2t3/mn2t3/10fg",
-            type="fc",
-            levtype="sfc",
-            stream="oper",
-            target=target_file
-        )
-
-    # =========================
-    # ABRIR GRIB
-    # =========================
-
-    ds = xr.open_dataset(
-        target_file,
+    ds_tp = xr.open_dataset(
+        GRIB_TP,
         engine="cfgrib",
         backend_kwargs={"indexpath": ""}
     )
 
-    # =========================
-    # VARIÁVEIS
-    # =========================
+    ds_temp = xr.open_dataset(
+        GRIB_TEMP,
+        engine="cfgrib",
+        backend_kwargs={"indexpath": ""}
+    )
 
-    tp = ds["tp"] * 1000.0
-    mx2t3 = ds["mx2t3"] - 273.15
-    mn2t3 = ds["mn2t3"] - 273.15
-    gust = ds["10fg"]
+    tp = ds_tp["tp"] * 1000.0
+    tmax = ds_temp["mx2t3"] - 273.15
+    tmin = ds_temp["mn2t3"] - 273.15
+    wind = ds_temp["10fg"]
 
     run_time = pd.to_datetime(tp.time.item()).to_pydatetime()
     step_times = run_time + pd.to_timedelta(tp.step.values, unit="h")
 
     base_shift = timedelta(hours=3)
 
-    resultado = {}
-
-    for cidade in cidades:
-        resultado[cidade["nome"]] = {}
+    resultado = {c["nome"]: {} for c in cidades}
 
     # =========================
-    # LOOP DIÁRIO (5 dias)
+    # LOOP DIÁRIO
     # =========================
 
     for d in range(5):
@@ -110,9 +122,9 @@ def gerar_json():
 
         chuva = tp.isel(step=i1) if d == 0 else tp.isel(step=i1) - tp.isel(step=i0)
 
-        tmax = mx2t3.isel(step=slice(i0, i1)).max(dim="step")
-        tmin = mn2t3.isel(step=slice(i0, i1)).min(dim="step")
-        rajada = gust.isel(step=slice(i0, i1)).max(dim="step")
+        tmax_d = tmax.isel(step=slice(i0, i1)).max(dim="step")
+        tmin_d = tmin.isel(step=slice(i0, i1)).min(dim="step")
+        wind_d = wind.isel(step=slice(i0, i1)).max(dim="step")
 
         data_str = (start - base_shift).strftime("%Y-%m-%d")
 
@@ -124,16 +136,18 @@ def gerar_json():
 
             resultado[nome][data_str] = {
                 "chuva": round(get_valor(chuva, lat, lon), 1),
-                "temp_max": round(get_valor(tmax, lat, lon), 1),
-                "temp_min": round(get_valor(tmin, lat, lon), 1),
-                "vento_rajada": round(get_valor(rajada, lat, lon), 1)
+                "temp_max": round(get_valor(tmax_d, lat, lon), 1),
+                "temp_min": round(get_valor(tmin_d, lat, lon), 1),
+                "vento_rajada": round(get_valor(wind_d, lat, lon), 1)
             }
 
     # =========================
     # SALVAR JSON
     # =========================
 
-    with open(os.path.join(json_dir, "previsao.json"), "w", encoding="utf-8") as f:
+    out_file = os.path.join(json_dir, "previsao.json")
+
+    with open(out_file, "w", encoding="utf-8") as f:
         json.dump(resultado, f, indent=2, ensure_ascii=False)
 
     print("JSON gerado com sucesso.")
