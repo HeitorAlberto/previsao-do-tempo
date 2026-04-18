@@ -117,7 +117,7 @@ def configurar_colorbar(cf, ax, label):
 
 def gerar_mapas():
 
-    client = Client(source="ecmwf")
+    client = Client(source="azure")
 
     now_br = datetime.utcnow() - timedelta(hours=3)
     run_date_str = now_br.strftime("%Y%m%d")
