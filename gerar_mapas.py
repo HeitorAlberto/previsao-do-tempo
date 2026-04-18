@@ -171,7 +171,7 @@ def gerar_mapas():
 
     for i, item in enumerate(daily):
 
-        fig = plt.figure(figsize=(10, 8))
+        fig = plt.figure(figsize=(12, 8))
         ax = plt.axes(projection=ccrs.PlateCarree())
 
         ax.set_extent(extent)
@@ -226,7 +226,7 @@ def gerar_mapas():
 
     accum = sum(d["data"] for d in daily)
 
-    fig = plt.figure(figsize=(10, 8))
+    fig = plt.figure(figsize=(12, 8))
     ax = plt.axes(projection=ccrs.PlateCarree())
 
     ax.set_extent(extent)
