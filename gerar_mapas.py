@@ -227,7 +227,7 @@ def gerar_mapas():
         configurar_colorbar(cf, ax, "Precipitação (mm/24h)")
 
         plt.savefig(os.path.join(out_dir, f"{i+1:02d}.png"),
-                    dpi=150, bbox_inches="tight", pad_inches=0.03)
+                    dpi=250, bbox_inches="tight", pad_inches=0.03)
         plt.close()
 
     accum = sum(d["data"] for d in daily)
@@ -284,7 +284,7 @@ def gerar_mapas():
     configurar_colorbar(cf, ax, "Precipitação (mm/15 dias)")
 
     plt.savefig(os.path.join(out_dir, "acumulado-15-dias.png"),
-                dpi=150, bbox_inches="tight", pad_inches=0.03)
+                dpi=250, bbox_inches="tight", pad_inches=0.03)
     plt.close()
 
 
