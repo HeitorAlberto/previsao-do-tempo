@@ -22,6 +22,9 @@ dias_semana_pt = {
 
 nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 
+# 👉 níveis usados apenas para isolinhas (remove 0 e 1 mm)
+nivels_iso = [3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
+
 cores = [
     "#FFFFFF", "#A8B0BA",
     "#90EFA0", "#2A9A50",
@@ -200,10 +203,9 @@ def gerar_mapas():
             item["data"].longitude,
             item["data"].latitude,
             item["data"],
-            levels=nivels,
+            levels=nivels_iso,
             colors="#444444",
             linewidths=0.25,
-            linestyles="solid",
             alpha=0.6,
             transform=ccrs.PlateCarree(),
             zorder=2
@@ -211,29 +213,21 @@ def gerar_mapas():
 
         dia = dias_semana_pt[item["start"].strftime("%A")]
 
-        ax.text(
-            0.0, 1.0,
-            f"({i+1:02d}) {item['start']:%d-%m-%Y} ({dia})",
-            transform=ax.transAxes,
-            ha="left", va="bottom",
-            fontsize=12, fontweight="bold"
-        )
+        ax.text(0.0, 1.0,
+                f"({i+1:02d}) {item['start']:%d-%m-%Y} ({dia})",
+                transform=ax.transAxes, ha="left", va="bottom",
+                fontsize=12, fontweight="bold")
 
-        ax.text(
-            1.0, 1.0,
-            f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
-            transform=ax.transAxes,
-            ha="right", va="bottom",
-            fontsize=12, fontweight="bold"
-        )
+        ax.text(1.0, 1.0,
+                f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
+                transform=ax.transAxes, ha="right", va="bottom",
+                fontsize=12, fontweight="bold")
 
         plotar_textos(ax, item["data"])
         configurar_colorbar(cf, ax, "Precipitação (mm/24h)")
 
-        plt.savefig(
-            os.path.join(out_dir, f"{i+1:02d}.png"),
-            dpi=300, bbox_inches="tight", pad_inches=0.03
-        )
+        plt.savefig(os.path.join(out_dir, f"{i+1:02d}.png"),
+                    dpi=300, bbox_inches="tight", pad_inches=0.03)
         plt.close()
 
     accum = sum(d["data"] for d in daily)
@@ -267,39 +261,30 @@ def gerar_mapas():
         accum.longitude,
         accum.latitude,
         accum,
-        levels=nivels,
+        levels=nivels_iso,
         colors="#444444",
         linewidths=0.25,
-        linestyles="solid",
         alpha=0.6,
         transform=ccrs.PlateCarree(),
         zorder=2
     )
 
-    ax.text(
-        0.0, 1.0,
-        f"Precipitação acumulada (15 dias)\n"
-        f"Período: {daily[0]['start']:%d-%m} até {daily[-1]['end']:%d-%m}",
-        transform=ax.transAxes,
-        ha="left", va="bottom",
-        fontsize=12, fontweight="bold"
-    )
+    ax.text(0.0, 1.0,
+            f"Precipitação acumulada (15 dias)\n"
+            f"Período: {daily[0]['start']:%d-%m} até {daily[-1]['end']:%d-%m}",
+            transform=ax.transAxes, ha="left", va="bottom",
+            fontsize=12, fontweight="bold")
 
-    ax.text(
-        1.0, 1.0,
-        f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
-        transform=ax.transAxes,
-        ha="right", va="bottom",
-        fontsize=12, fontweight="bold"
-    )
+    ax.text(1.0, 1.0,
+            f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
+            transform=ax.transAxes, ha="right", va="bottom",
+            fontsize=12, fontweight="bold")
 
     plotar_textos(ax, accum)
     configurar_colorbar(cf, ax, "Precipitação (mm/15 dias)")
 
-    plt.savefig(
-        os.path.join(out_dir, "acumulado-15-dias.png"),
-        dpi=300, bbox_inches="tight", pad_inches=0.03
-    )
+    plt.savefig(os.path.join(out_dir, "acumulado-15-dias.png"),
+                dpi=300, bbox_inches="tight", pad_inches=0.03)
     plt.close()
 
 
