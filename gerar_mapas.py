@@ -199,17 +199,6 @@ def gerar_mapas():
             transform=ccrs.PlateCarree()
         )
 
-        ax.contour(
-            item["data"].longitude,
-            item["data"].latitude,
-            item["data"],
-            levels=nivels_iso,
-            colors="#444444",
-            linewidths=0.25,
-            alpha=0.6,
-            transform=ccrs.PlateCarree(),
-            zorder=2
-        )
 
         dia = dias_semana_pt[item["start"].strftime("%A")]
 
@@ -257,17 +246,6 @@ def gerar_mapas():
         transform=ccrs.PlateCarree()
     )
 
-    ax.contour(
-        accum.longitude,
-        accum.latitude,
-        accum,
-        levels=nivels_iso,
-        colors="#444444",
-        linewidths=0.25,
-        alpha=0.6,
-        transform=ccrs.PlateCarree(),
-        zorder=2
-    )
 
     ax.text(0.0, 1.0,
             f"Precipitação acumulada (15 dias)\n"
