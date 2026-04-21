@@ -196,6 +196,17 @@ def gerar_mapas():
             transform=ccrs.PlateCarree()
         )
 
+        # isolinhas (bordas)
+        ax.contour(
+            item["data"].longitude,
+            item["data"].latitude,
+            item["data"],
+            levels=nivels,
+            colors="black",
+            linewidths=0.4,
+            transform=ccrs.PlateCarree()
+        )
+
         dia = dias_semana_pt[item["start"].strftime("%A")]
 
         ax.text(
@@ -215,7 +226,6 @@ def gerar_mapas():
         )
 
         plotar_textos(ax, item["data"])
-
         configurar_colorbar(cf, ax, "Precipitação (mm/24h)")
 
         plt.savefig(
@@ -251,6 +261,17 @@ def gerar_mapas():
         transform=ccrs.PlateCarree()
     )
 
+    # isolinhas (bordas)
+    ax.contour(
+        accum.longitude,
+        accum.latitude,
+        accum,
+        levels=nivels,
+        colors="black",
+        linewidths=0.4,
+        transform=ccrs.PlateCarree()
+    )
+
     ax.text(
         0.0, 1.0,
         f"Precipitação acumulada (15 dias)\n"
@@ -269,7 +290,6 @@ def gerar_mapas():
     )
 
     plotar_textos(ax, accum)
-
     configurar_colorbar(cf, ax, "Precipitação (mm/15 dias)")
 
     plt.savefig(
