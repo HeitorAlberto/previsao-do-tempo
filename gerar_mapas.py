@@ -196,15 +196,17 @@ def gerar_mapas():
             transform=ccrs.PlateCarree()
         )
 
-        # isolinhas (bordas)
         ax.contour(
             item["data"].longitude,
             item["data"].latitude,
             item["data"],
             levels=nivels,
-            colors="black",
-            linewidths=0.4,
-            transform=ccrs.PlateCarree()
+            colors="#444444",
+            linewidths=0.25,
+            linestyles="solid",
+            alpha=0.6,
+            transform=ccrs.PlateCarree(),
+            zorder=2
         )
 
         dia = dias_semana_pt[item["start"].strftime("%A")]
@@ -261,15 +263,17 @@ def gerar_mapas():
         transform=ccrs.PlateCarree()
     )
 
-    # isolinhas (bordas)
     ax.contour(
         accum.longitude,
         accum.latitude,
         accum,
         levels=nivels,
-        colors="black",
-        linewidths=0.4,
-        transform=ccrs.PlateCarree()
+        colors="#444444",
+        linewidths=0.25,
+        linestyles="solid",
+        alpha=0.6,
+        transform=ccrs.PlateCarree(),
+        zorder=2
     )
 
     ax.text(
