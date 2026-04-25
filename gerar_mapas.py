@@ -72,7 +72,7 @@ def configurar_colorbar(cf, ax, label):
 def salvar_otimizado(caminho_base):
     # Salva primeiro como WebP via Matplotlib
     temp_path = caminho_base.replace(".png", ".webp")
-    plt.savefig(temp_path, format='webp', dpi=150, bbox_inches="tight", pad_inches=0.03)
+    plt.savefig(temp_path, format='webp', dpi=250, bbox_inches="tight", pad_inches=0.03)
     
     # Usa Pillow para aplicar uma compressão extra sem perdas visuais
     img = Image.open(temp_path)
