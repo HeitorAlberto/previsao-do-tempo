@@ -18,7 +18,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libproj-dev proj-data proj-bin libgeos-dev
           pip install --upgrade pip
-          pip install ecmwf-opendata cartopy xarray matplotlib pandas numpy scipy cfgrib[eccodes]
+          # 👉 Adicionado Pillow aqui
+          pip install ecmwf-opendata cartopy xarray matplotlib pandas numpy scipy cfgrib[eccodes] Pillow
 
       - name: Gerar mapas ECMWF
         run: python gerar_mapas.py
@@ -27,6 +28,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add mapas/
-          git commit -m "Atualização automática mapas" || echo "Sem mudanças"
+          
+          # Adiciona os novos arquivos .webp
+          git add mapas/*.webp
+          
+          # Opcional: Remove os .png antigos do git para economizar espaço
+          git rm mapas/*.png --ignore-unmatch
+          
+          git commit -m "Atualização automática mapas (WebP Otimizado)" || echo "Sem mudanças"
           git push origin main
