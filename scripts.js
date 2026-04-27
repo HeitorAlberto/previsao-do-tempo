@@ -82,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
         relative_humidity_2m: hourly.relative_humidity_2m || [],
         precipitation: hourly.precipitation || [],
         wind_gusts_10m: hourly.wind_gusts_10m || [],
+        weather_code: hourly.weather_code || [],
         time: hourly.time || []
     });
 
@@ -97,7 +98,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 temperature_2m: arrays.temperature_2m[i],
                 relative_humidity_2m: arrays.relative_humidity_2m[i],
                 precipitation: arrays.precipitation[i],
-                wind_gusts_10m: arrays.wind_gusts_10m[i]
+                wind_gusts_10m: arrays.wind_gusts_10m[i],
+                weather_code: arrays.weather_code[i]
             });
         }
         return map;
@@ -123,6 +125,61 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // =====================
+    // Weather (impacto + frequência)
+    // =====================
+    const weatherPriority = {
+        0: 1, 1: 1, 2: 1, 3: 2,
+        45: 3, 48: 3,
+        51: 4, 53: 4, 55: 5,
+        61: 5, 63: 6, 65: 7,
+        71: 5,
+        80: 6, 81: 7, 82: 8,
+        95: 9, 96: 10, 99: 10
+    };
+
+    const weatherCodeText = {
+        0: "Céu limpo",
+        1: "Principalmente limpo",
+        2: "Parcialmente nublado",
+        3: "Nublado",
+        45: "Neblina",
+        48: "Neblina com gelo",
+        51: "Garoa leve",
+        53: "Garoa",
+        55: "Garoa intensa",
+        61: "Chuva leve",
+        63: "Chuva",
+        65: "Chuva forte",
+        71: "Neve leve",
+        80: "Pancadas de chuva",
+        81: "Pancadas moderadas",
+        82: "Pancadas fortes",
+        95: "Tempestade",
+        96: "Tempestade com granizo",
+        99: "Tempestade severa"
+    };
+
+    function getImpactWeather(points) {
+        let worstCode = null;
+        let worstPriority = -1;
+
+        points.forEach(p => {
+
+            const code = p.weather_code;
+            const priority = weatherPriority[code] || 0;
+
+            if (priority > worstPriority) {
+                worstPriority = priority;
+                worstCode = code;
+            }
+            
+        });
+
+        return weatherCodeText[worstCode] || "Condição indefinida";
+
+    }
+
+    // =====================
     // Renderização
     // =====================
     const renderDays = dayMap => {
@@ -131,6 +188,8 @@ document.addEventListener("DOMContentLoaded", () => {
         Array.from(dayMap.entries()).slice(0, 15).forEach(([day, points]) => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
+
+            const description = getImpactWeather(points);
 
             const card = document.createElement('div');
             card.className = 'day';
@@ -154,10 +213,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="badge badge-wind">
                     🍃 ${s.gustMax.toFixed(0)} km/h
                     </div>
+
+                    <div class="weather-text">
+                        ${description}
+                    </div>
                 </div>
             `;
-
-
 
             cardsEl.appendChild(card);
         });
@@ -174,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
         url.searchParams.set('longitude', lon);
         url.searchParams.set(
             'hourly',
-            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m'
+            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,weather_code'
         );
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
