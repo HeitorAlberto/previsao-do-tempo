@@ -82,12 +82,12 @@ document.addEventListener("DOMContentLoaded", () => {
         relative_humidity_2m: hourly.relative_humidity_2m || [],
         precipitation: hourly.precipitation || [],
         wind_gusts_10m: hourly.wind_gusts_10m || [],
-        weather_code: hourly.weather_code || [],
         time: hourly.time || []
     });
 
     const groupHourlyByDate = (times, arrays) => {
         const map = new Map();
+
         for (let i = 0; i < times.length; i++) {
             const d = new Date(times[i]);
             const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -98,10 +98,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 temperature_2m: arrays.temperature_2m[i],
                 relative_humidity_2m: arrays.relative_humidity_2m[i],
                 precipitation: arrays.precipitation[i],
-                wind_gusts_10m: arrays.wind_gusts_10m[i],
-                weather_code: arrays.weather_code[i]
+                wind_gusts_10m: arrays.wind_gusts_10m[i]
             });
         }
+
         return map;
     };
 
@@ -125,58 +125,66 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // =====================
-    // Weather (impacto + frequência)
+    // NOVA LÓGICA DE CHUVA (sem weathercode)
     // =====================
-    const weatherPriority = {
-        0: 1, 1: 1, 2: 1, 3: 2,
-        45: 3, 48: 3,
-        51: 4, 53: 4, 55: 5,
-        61: 5, 63: 6, 65: 7,
-        71: 5,
-        80: 6, 81: 7, 82: 8,
-        95: 9, 96: 10, 99: 10
-    };
-
-    const weatherCodeText = {
-        0: "Céu limpo",
-        1: "Principalmente limpo",
-        2: "Parcialmente nublado",
-        3: "Nublado",
-        45: "Neblina",
-        48: "Neblina com gelo",
-        51: "Garoa leve",
-        53: "Garoa",
-        55: "Garoa intensa",
-        61: "Chuva leve",
-        63: "Chuva",
-        65: "Chuva forte",
-        71: "Neve leve",
-        80: "Pancadas de chuva",
-        81: "Pancadas moderadas",
-        82: "Pancadas fortes",
-        95: "Tempestade",
-        96: "Tempestade com granizo",
-        99: "Tempestade severa"
-    };
-
     function getImpactWeather(points) {
-        let worstCode = null;
-        let worstPriority = -1;
 
-        points.forEach(p => {
+        let precipSum = 0;
+        let precipHours = 0;
+        let precipMax = 0;
 
-            const code = p.weather_code;
-            const priority = weatherPriority[code] || 0;
+        for (let i = 0; i < points.length; i++) {
+            const v = points[i].precipitation;
 
-            if (priority > worstPriority) {
-                worstPriority = priority;
-                worstCode = code;
-            }
-            
-        });
+            precipSum += v;
 
-        return weatherCodeText[worstCode] || "Condição indefinida";
+            if (v > 0.1) precipHours++;
+            if (v > precipMax) precipMax = v;
+        }
 
+        if (precipSum < 0.5) {
+            return "Sem chuva relevante";
+        }
+
+        // =====================
+        // 1. CLASSIFICA INTENSIDADE
+        // =====================
+        let intensity;
+        if (precipMax <= 2) intensity = "chuva fraca";
+        else if (precipMax <= 4) intensity = "chuva moderada";
+        else intensity = "chuva forte";
+
+        // =====================
+        // 2. CLASSIFICA FREQUÊNCIA
+        // =====================
+        let frequency;
+        if (precipHours >= 8) frequency = "frequente";
+        else if (precipHours >= 3) frequency = "moderada";
+        else frequency = "esparsa";
+
+        // =====================
+        // 3. AJUSTE SEMÂNTICO (casos naturais)
+        // =====================
+        if (precipHours >= 8 && precipMax <= 2) {
+            return "chuva fraca persistente";
+        }
+
+        if (precipHours >= 8 && precipMax > 4) {
+            return "chuva forte frequente";
+        }
+
+        if (precipHours >= 3 && precipMax > 4) {
+            return "pancadas fortes";
+        }
+
+        if (precipHours >= 3 && precipMax <= 2) {
+            return "chuva fraca a moderada";
+        }
+
+        // =====================
+        // 4. COMBINAÇÃO GENÉRICA
+        // =====================
+        return `${intensity} ${frequency}`;
     }
 
     // =====================
@@ -188,7 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
         Array.from(dayMap.entries()).slice(0, 15).forEach(([day, points]) => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
-
             const description = getImpactWeather(points);
 
             const card = document.createElement('div');
@@ -235,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
         url.searchParams.set('longitude', lon);
         url.searchParams.set(
             'hourly',
-            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,weather_code'
+            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m'
         );
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
