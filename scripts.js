@@ -160,13 +160,13 @@ document.addEventListener("DOMContentLoaded", () => {
         let frequency;
         if (precipHours >= 8) frequency = "frequente";
         else if (precipHours >= 3) frequency = "moderada";
-        else frequency = "esparsa";
+        else frequency = "isolada";
 
         // =====================
         // 3. AJUSTE SEMÂNTICO (casos naturais)
         // =====================
         if (precipHours >= 8 && precipMax <= 2) {
-            return "chuva fraca persistente";
+            return "chuva fraca frequente";
         }
 
         if (precipHours >= 8 && precipMax > 4) {
@@ -174,11 +174,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (precipHours >= 3 && precipMax > 4) {
-            return "pancadas fortes";
+            return "Algumas pancadas de chuva forte";
         }
 
         if (precipHours >= 3 && precipMax <= 2) {
-            return "chuva fraca a moderada";
+            return "chuva fraca isolada";
         }
 
         // =====================
