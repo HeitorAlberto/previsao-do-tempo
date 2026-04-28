@@ -207,7 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
 
                     <div class="badge badge-precip">
-                    ☔ ${s.precipSum.toFixed(0)} mm
+                    ☔ ${s.precipSum.toFixed(1)} mm
                     </div>
 
                     <div class="badge badge-wind">
