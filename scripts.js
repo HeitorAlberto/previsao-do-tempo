@@ -154,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (avg < 10) return "• Céu limpo.";
         if (avg < 30) return "• Poucas nuvens.";
         if (avg < 65) return "• Céu entre nuvens.";
-        if (avg < 85) return "• Predominantemente nublado.";
+        if (avg < 85) return "• Nublado em maior parte.";
         return "• Céu encoberto.";
     }
 
