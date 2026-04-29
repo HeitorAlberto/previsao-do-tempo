@@ -82,6 +82,8 @@ document.addEventListener("DOMContentLoaded", () => {
         relative_humidity_2m: hourly.relative_humidity_2m || [],
         precipitation: hourly.precipitation || [],
         wind_gusts_10m: hourly.wind_gusts_10m || [],
+        cloud_cover_low: hourly.cloud_cover_low || [],
+        cloud_cover_mid: hourly.cloud_cover_mid || [],
         time: hourly.time || []
     });
 
@@ -98,7 +100,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 temperature_2m: arrays.temperature_2m[i],
                 relative_humidity_2m: arrays.relative_humidity_2m[i],
                 precipitation: arrays.precipitation[i],
-                wind_gusts_10m: arrays.wind_gusts_10m[i]
+                wind_gusts_10m: arrays.wind_gusts_10m[i],
+                cloud_cover_low: arrays.cloud_cover_low[i],
+                cloud_cover_mid: arrays.cloud_cover_mid[i]
             });
         }
 
@@ -125,65 +129,67 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // =====================
-    // NOVA LÓGICA DE CHUVA (sem weathercode)
+    // LÓGICA DE NUVENS (Baixas e Médias)
+    // =====================
+    // =====================
+    // LÓGICA DE NUVENS (Ajustada para maior variabilidade)
+    // =====================
+    function getCloudDescription(points) {
+        // 1. Filtramos para pegar apenas o período onde há luz solar (ex: das 06h às 18h)
+        // Se o array tiver menos que 24 pontos (ex: final do forecast), usamos o que tiver.
+        const daytimePoints = points.filter((p, index) => {
+            // Como o dia começa em 00:00, os índices 6 a 18 representam o dia.
+            return index >= 6 && index <= 18;
+        });
+
+        const targetPoints = daytimePoints.length > 0 ? daytimePoints : points;
+
+        const avg = targetPoints.reduce((acc, p) => {
+            // Nuvens baixas são muito mais impactantes visualmente
+            const combined = (p.cloud_cover_low * 0.8) + (p.cloud_cover_mid * 0.2);
+            return acc + combined;
+        }, 0) / targetPoints.length;
+
+        // 2. Buckets ajustados para maior variação nas pontas
+        if (avg < 10) return "• Céu limpo.";
+        if (avg < 30) return "• Poucas nuvens.";
+        if (avg < 65) return "• Céu entre nuvens.";
+        if (avg < 85) return "• Predominantemente nublado.";
+        return "• Céu encoberto.";
+    }
+
+    // =====================
+    // LÓGICA DE CHUVA
     // =====================
     function getImpactWeather(points) {
-
         let precipSum = 0;
         let precipHours = 0;
         let precipMax = 0;
 
         for (let i = 0; i < points.length; i++) {
             const v = points[i].precipitation;
-
             precipSum += v;
-
             if (v > 0.1) precipHours++;
             if (v > precipMax) precipMax = v;
         }
 
-        if (precipSum < 0.5) {
-            return "Sem chuva relevante";
-        }
+        if (precipSum < 0.5) return "• Sem chuva relevante.";
 
-        // =====================
-        // 1. CLASSIFICA INTENSIDADE
-        // =====================
         let intensity;
-        if (precipMax <= 2) intensity = "chuva fraca";
-        else if (precipMax <= 4) intensity = "chuva moderada";
-        else intensity = "chuva forte";
+        if (precipMax <= 2) intensity = "• Chuva fraca";
+        else if (precipMax <= 4) intensity = "• Chuva moderada";
+        else intensity = "• Chuva forte";
 
-        // =====================
-        // 2. CLASSIFICA FREQUÊNCIA
-        // =====================
         let frequency;
-        if (precipHours >= 8) frequency = "frequente";
-        else if (precipHours >= 3) frequency = "moderada";
-        else frequency = "isolada";
+        if (precipHours >= 8) frequency = "frequente.";
+        else if (precipHours >= 3) frequency = "moderada.";
+        else frequency = "isolada.";
 
-        // =====================
-        // 3. AJUSTE SEMÂNTICO (casos naturais)
-        // =====================
-        if (precipHours >= 8 && precipMax <= 2) {
-            return "chuva fraca frequente";
-        }
+        if (precipHours >= 8 && precipMax <= 2) return "• Chuva fraca frequente.";
+        if (precipHours >= 8 && precipMax > 4) return "• Chuva forte frequente.";
+        if (precipHours >= 3 && precipMax > 4) return "• Algumas pancadas de chuva forte.";
+        if (precipHours >= 3 && precipMax <= 2) return "• Chuva fraca isolada.";
 
-        if (precipHours >= 8 && precipMax > 4) {
-            return "chuva forte frequente";
-        }
-
-        if (precipHours >= 3 && precipMax > 4) {
-            return "Algumas pancadas de chuva forte";
-        }
-
-        if (precipHours >= 3 && precipMax <= 2) {
-            return "chuva fraca isolada";
-        }
-
-        // =====================
-        // 4. COMBINAÇÃO GENÉRICA
-        // =====================
         return `${intensity} ${frequency}`;
     }
 
@@ -196,7 +202,8 @@ document.addEventListener("DOMContentLoaded", () => {
         Array.from(dayMap.entries()).slice(0, 15).forEach(([day, points]) => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
-            const description = getImpactWeather(points);
+            const rainDescription = getImpactWeather(points);
+            const cloudDescription = getCloudDescription(points);
 
             const card = document.createElement('div');
             card.className = 'day';
@@ -210,19 +217,20 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
 
                     <div class="badge badge-temp">
-                    🌡️ ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
+                        🌡️ ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
                     </div>
 
                     <div class="badge badge-precip">
-                    ☔ ${s.precipSum.toFixed(1)} mm
+                        ☔ ${s.precipSum.toFixed(1)} mm
                     </div>
 
                     <div class="badge badge-wind">
-                    🍃 ${s.gustMax.toFixed(0)} km/h
+                        🍃 ${s.gustMax.toFixed(0)} km/h
                     </div>
 
                     <div class="weather-text">
-                        ${description}
+                        <div>${rainDescription}</div>
+                        <div>${cloudDescription}</div>
                     </div>
                 </div>
             `;
@@ -242,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
         url.searchParams.set('longitude', lon);
         url.searchParams.set(
             'hourly',
-            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m'
+            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover_low,cloud_cover_mid'
         );
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
@@ -289,7 +297,8 @@ document.addEventListener("DOMContentLoaded", () => {
             locationName.textContent = "🗺️ " + resolvedName;
             addToHistory(resolvedName, lat, lon);
 
-        } catch {
+        } catch (e) {
+            console.error(e);
             locationName.textContent = "Erro ao carregar previsão";
         }
     }
