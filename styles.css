@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400..800&display=swap');
-/* ===== Base do site ===== */
+
+/* ===== Base ===== */
 * {
     margin: 0;
     padding: 0;
@@ -10,7 +11,7 @@ body {
     font-family: "Baloo 2", sans-serif;
 }
 
-/* ===== HEADER (Mantido Original) ===== */
+/* ===== HEADER ===== */
 header {
     display: flex;
     justify-content: space-between;
@@ -60,7 +61,7 @@ button {
     width: 100px;
 }
 
-/* ===== Título de Localização ===== */
+/* ===== Local ===== */
 #locationName {
     text-align: center;
     font-weight: bolder;
@@ -68,68 +69,65 @@ button {
     font-size: 25px;
 }
 
-.open-meteo-ref {
-    color: #008a00;
-    text-decoration: none;
-    font-weight: bolder;
-}
-
-.open-meteo-ref:hover {
-    text-decoration: underline;
-}
-
+.open-meteo-ref,
 .btn-mapas {
     color: #008a00;
     text-decoration: none;
     font-weight: bolder;
 }
 
+.open-meteo-ref:hover,
 .btn-mapas:hover {
     text-decoration: underline;
 }
 
-/* ===== GRID dos Cards (MODIFICADO: 3 Colunas) ===== */
+/* ===== LISTA (substitui grid) ===== */
 #cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Define as 3 colunas */
     width: 100%;
-    max-width: 1100px; /* Largura máxima para não espalhar demais no monitor ultra-wide */
-    gap: 30px;
-    padding: 20px 115px; /* Mantendo seu padding original */
-    margin: 40px auto; /* Centraliza o grid na tela */
+    max-width: 1100px;
+    padding: 20px 115px;
+    margin: 40px auto;
 }
 
-/* ===== Cards (MODIFICADO: Empilhado) ===== */
+
+/* ===== LINHA DE DIA ===== */
 .day {
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #eee; /* Um leve contorno para separar os cards no grid */
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
 }
 
-.day-line {
+/* Estrutura geral */
+.day-row {
     display: flex;
-    flex-direction: column; /* Faz os itens ficarem um abaixo do outro */
+    flex-direction: column;
+    gap: 15px;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
-    text-align: center;
+    padding: 10px 0px;
 }
 
-/* Data e Dia */
+/* Data */
 .date-line {
     font-weight: 700;
-    font-size: 20px;
-    margin-bottom: 5px;
+    font-size: 18px;
 }
 
-/* ===== Badges (Ajustados para ocupar o card) ===== */
+/* Fim de semana */
+.weekend {
+    color: darkgoldenrod;
+}
+
+/* Linha principal (dados) */
+.main-info {
+    display: flex;
+    gap: 40px;
+}
+
+/* Badges */
 .badge {
-    padding: 8px 10px;
-    border-radius: 8px;
-    white-space: nowrap;
-    width: 100%; /* Badge agora ocupa a largura do card */
-    max-width: 200px;
-    text-align: center;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    width: auto;
 }
 
 .badge-temp {
@@ -145,6 +143,15 @@ button {
 .badge-wind {
     background: rgba(0, 170, 90, 0.15);
     border: 1px solid rgba(0, 170, 90, 0.25);
+}
+
+/* Frases lado a lado */
+.weather-text {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    font-weight: bolder;
+    color: #858585;
 }
 
 /* ===== HISTÓRICO ===== */
@@ -168,12 +175,20 @@ button {
     font-size: 14px;
 }
 
-/* ===== Ajustes Mobile (Mantendo a lógica original) ===== */
+/* ===== MOBILE ===== */
 @media(max-width:1000px) {
     #cards {
-        grid-template-columns: repeat(2, 1fr); /* 2 colunas em telas médias */
         padding: 20px 50px;
     }
+
+    .badge {
+        align-self: center;
+    }
+
+    .weather-text {
+        text-align: center;
+    }
+
 }
 
 @media(max-width:700px) {
@@ -183,11 +198,20 @@ button {
     }
 
     #cards {
-        grid-template-columns: 1fr; /* 1 coluna no celular */
         padding: 20px;
     }
 
     #cityInput {
         width: 100%;
+    }
+
+    .main-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .weather-text {
+        flex-direction: column;
+        gap: 5px;
     }
 }

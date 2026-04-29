@@ -151,11 +151,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 0) / targetPoints.length;
 
         // 2. Buckets ajustados para maior variação nas pontas
-        if (avg < 10) return "• Céu limpo.";
-        if (avg < 30) return "• Poucas nuvens.";
-        if (avg < 65) return "• Céu entre nuvens.";
-        if (avg < 85) return "• Nublado em maior parte.";
-        return "• Céu encoberto.";
+        if (avg < 10) return "Céu limpo";
+        if (avg < 30) return "Poucas nuvens";
+        if (avg < 65) return "Sol entre nuvens";
+        if (avg < 85) return "Nublado em maior parte";
+        return "Céu encoberto";
     }
 
     // =====================
@@ -173,22 +173,22 @@ document.addEventListener("DOMContentLoaded", () => {
             if (v > precipMax) precipMax = v;
         }
 
-        if (precipSum < 0.5) return "• Sem chuva relevante.";
+        if (precipSum < 0.5) return "Sem chuva relevante";
 
         let intensity;
-        if (precipMax <= 2) intensity = "• Chuva fraca";
-        else if (precipMax <= 4) intensity = "• Chuva moderada";
-        else intensity = "• Chuva forte";
+        if (precipMax <= 2) intensity = "Chuva fraca";
+        else if (precipMax <= 4) intensity = "Chuva moderada";
+        else intensity = "Chuva forte";
 
         let frequency;
-        if (precipHours >= 8) frequency = "frequente.";
-        else if (precipHours >= 3) frequency = "moderada.";
-        else frequency = "isolada.";
+        if (precipHours >= 8) frequency = "frequente";
+        else if (precipHours >= 3) frequency = "moderada";
+        else frequency = "isolada";
 
-        if (precipHours >= 8 && precipMax <= 2) return "• Chuva fraca frequente.";
-        if (precipHours >= 8 && precipMax > 4) return "• Chuva forte frequente.";
-        if (precipHours >= 3 && precipMax > 4) return "• Algumas pancadas de chuva forte.";
-        if (precipHours >= 3 && precipMax <= 2) return "• Chuva fraca isolada.";
+        if (precipHours >= 8 && precipMax <= 2) return "Chuva fraca frequente";
+        if (precipHours >= 8 && precipMax > 4) return "Chuva forte frequente";
+        if (precipHours >= 3 && precipMax > 4) return "Algumas pancadas de chuva forte";
+        if (precipHours >= 3 && precipMax <= 2) return "Chuva fraca isolada";
 
         return `${intensity} ${frequency}`;
     }
@@ -211,29 +211,32 @@ document.addEventListener("DOMContentLoaded", () => {
             const isWeekend = ['sáb.', 'dom.'].includes(labels.weekday.toLowerCase());
 
             card.innerHTML = `
-                <div class="day-line">
-                    <div class="date-line" style="${isWeekend ? 'color: darkgoldenrod;' : ''}">
-                        ${labels.date} - ${labels.weekday}
-                    </div>
+                    <div class="day-row">
 
-                    <div class="badge badge-temp">
-                        🌡️ ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
-                    </div>
+                        <div class="date-line ${isWeekend ? 'weekend' : ''}">
+                            ${labels.date} - ${labels.weekday}
+                        </div>
 
-                    <div class="badge badge-precip">
-                        ☔ ${s.precipSum.toFixed(1)} mm
-                    </div>
+                        <div class="main-info">
+                            <div class="badge badge-temp">
+                                🌡️ ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
+                            </div>
 
-                    <div class="badge badge-wind">
-                        🍃 ${s.gustMax.toFixed(0)} km/h
-                    </div>
+                            <div class="badge badge-precip">
+                                ☔ ${s.precipSum.toFixed(1)} mm
+                            </div>
 
-                    <div class="weather-text">
-                        <div>${rainDescription}</div>
-                        <div>${cloudDescription}</div>
+                            <div class="badge badge-wind">
+                                🍃 ${s.gustMax.toFixed(0)} km/h
+                            </div>
+                        </div>
+
+                        <div class="weather-text">
+                            <span>${rainDescription} &ensp; • &ensp;  ${cloudDescription}</span>
+                        </div>
+
                     </div>
-                </div>
-            `;
+                `;
 
             cardsEl.appendChild(card);
         });
