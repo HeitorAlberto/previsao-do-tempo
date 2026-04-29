@@ -232,7 +232,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
 
                         <div class="weather-text">
-                            <span>${rainDescription} &ensp; • &ensp;  ${cloudDescription}</span>
+                            <span> ${rainDescription} </span>
+                            <span> ${cloudDescription} </span>
                         </div>
 
                     </div>
