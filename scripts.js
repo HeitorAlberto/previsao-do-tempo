@@ -176,19 +176,19 @@ document.addEventListener("DOMContentLoaded", () => {
         if (precipSum < 0.5) return "Sem chuva relevante";
 
         let intensity;
-        if (precipMax <= 2) intensity = "Chuva fraca";
+        if (precipMax <= 2) intensity = "Chuva";
         else if (precipMax <= 4) intensity = "Chuva moderada";
         else intensity = "Chuva forte";
 
         let frequency;
-        if (precipHours >= 8) frequency = "frequente";
-        else if (precipHours >= 3) frequency = "moderada";
-        else frequency = "isolada";
+        if (precipHours >= 8) frequency = "a qualquer hora";
+        else if (precipHours >= 3) frequency = "eventual";
+        else frequency = "passageira";
 
-        if (precipHours >= 8 && precipMax <= 2) return "Chuva fraca frequente";
-        if (precipHours >= 8 && precipMax > 4) return "Chuva forte frequente";
+        if (precipHours >= 8 && precipMax <= 2) return "Chuva a qualquer hora";
+        if (precipHours >= 8 && precipMax > 4) return "Chuva forte a qualquer hora";
         if (precipHours >= 3 && precipMax > 4) return "Algumas pancadas de chuva forte";
-        if (precipHours >= 3 && precipMax <= 2) return "Chuva fraca isolada";
+        if (precipHours >= 3 && precipMax <= 2) return "Chuva pontual";
 
         return `${intensity} ${frequency}`;
     }
