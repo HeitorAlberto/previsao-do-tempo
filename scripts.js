@@ -140,6 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (v > precipMax) precipMax = v;
         }
 
+        // Filtro de ruído
         if (precipSum < 0.5 && precipHours < 2) {
             return "Sem chuva relevante";
         }
@@ -152,11 +153,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (precipMax >= 5 && precipHours <= 3) {
             intensity = "Chuva forte";
         }
-        // Limite para chuva muito distribuída (frequente = mais fraca)
+        // Limite para chuva muito distribuída
         else if (precipHours >= 8 && precipSum < 10) {
             intensity = "Chuva fraca";
         }
-        // Regra geral
+        // Regra principal
         else if (precipSum < 5) {
             intensity = "Chuva fraca";
         }
@@ -167,14 +168,35 @@ document.addEventListener("DOMContentLoaded", () => {
             intensity = "Chuva forte";
         }
 
-        // Frequência
+        // Frequência (com ajuste de linguagem)
         let frequency;
-        if (precipHours >= 10) frequency = "frequente";
-        else if (precipHours >= 5) frequency = "em vários momentos";
-        else if (precipHours >= 2) frequency = "em uma ou duas pancadas";
-        else frequency = "isolada";
 
-        return `${intensity} ${frequency}`;
+        if (precipHours >= 10) {
+            frequency = (intensity === "Chuva fraca")
+                ? "ao longo do dia"
+                : "frequente";
+        }
+        else if (precipHours >= 5) {
+            frequency = "em vários momentos";
+        }
+        else if (precipHours >= 2) {
+            frequency = "em uma ou duas pancadas";
+        }
+        else {
+            frequency = "isolada";
+        }
+
+        // 🔴 Detecção de pancadas fortes dentro do dia
+        const hasStrongEvent = precipMax >= 5;
+
+        let description = `${intensity} ${frequency}`;
+
+        // Complemento inteligente (sem exagerar)
+        if (hasStrongEvent && intensity !== "Chuva forte") {
+            description += " com pancadas fortes";
+        }
+
+        return description;
     }
 
     const renderDays = dayMap => {
