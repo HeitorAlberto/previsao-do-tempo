@@ -147,18 +147,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const avgRain = precipSum / (precipHours || 1);
 
+        // 🔴 Detecta pancadas fortes
+        const hasStrongEvent = precipMax >= 5;
+
         let intensity;
 
-        // Pancada forte isolada
-        if (precipMax >= 5 && precipHours <= 3) {
-            intensity = "Chuva forte";
+        // Pancada forte dominante (substitui tudo)
+        if (hasStrongEvent && precipHours <= 3) {
+            return precipHours <= 1
+                ? "Pancadas fortes isoladas"
+                : "Pancadas fortes em alguns momentos";
         }
-        // Limite para chuva muito distribuída
-        else if (precipHours >= 8 && precipSum < 10) {
-            intensity = "Chuva fraca";
-        }
-        // Regra principal
-        else if (precipSum < 5) {
+
+        // Intensidade base (mais conservadora)
+        if (precipSum < 5) {
             intensity = "Chuva fraca";
         }
         else if (precipSum < 15 && avgRain < 5) {
@@ -168,32 +170,24 @@ document.addEventListener("DOMContentLoaded", () => {
             intensity = "Chuva forte";
         }
 
-        // Frequência (com ajuste de linguagem)
+        // Frequência simplificada (3 níveis)
         let frequency;
 
-        if (precipHours >= 10) {
-            frequency = (intensity === "Chuva fraca")
-                ? "ao longo do dia"
-                : "frequente";
+        if (precipHours >= 8) {
+            frequency = "ao longo do dia";
         }
-        else if (precipHours >= 5) {
-            frequency = "em vários momentos";
-        }
-        else if (precipHours >= 2) {
-            frequency = "em uma ou duas pancadas";
+        else if (precipHours >= 3) {
+            frequency = "em alguns momentos";
         }
         else {
             frequency = "isolada";
         }
 
-        // 🔴 Detecção de pancadas fortes dentro do dia
-        const hasStrongEvent = precipMax >= 5;
-
         let description = `${intensity} ${frequency}`;
 
-        // Complemento inteligente (sem exagerar)
+        // Complemento leve para pancadas fortes dentro de dias moderados
         if (hasStrongEvent && intensity !== "Chuva forte") {
-            description += " com pancadas fortes";
+            description += " com risco de pancadas fortes";
         }
 
         return description;
