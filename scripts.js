@@ -1,8 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    // =====================
-    // Configurações e elementos
-    // =====================
     const forecastBase = 'https://api.open-meteo.com/v1/forecast';
     const model = 'ecmwf_ifs';
     const cityInput = document.getElementById('cityInput');
@@ -12,9 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const todayDate = document.getElementById('todayDate');
     const historyContainer = document.getElementById("historyContainer");
 
-    // =====================
-    // Histórico
-    // =====================
     let searchHistory = [];
 
     function loadHistory() {
@@ -54,9 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // =====================
-    // Utilitários
-    // =====================
     function formatDateLabel(dateStr) {
         const d = new Date(dateStr);
         const day = String(d.getDate()).padStart(2, '0');
@@ -74,9 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return `${city}${state ? ', ' + state : ''}${country ? ', ' + country : ''}`;
     };
 
-    // =====================
-    // Processamento horário
-    // =====================
     const prepareHourlyArrays = hourly => ({
         temperature_2m: hourly.temperature_2m || [],
         relative_humidity_2m: hourly.relative_humidity_2m || [],
@@ -113,44 +101,26 @@ document.addEventListener("DOMContentLoaded", () => {
         return points.reduce((acc, p) => {
             acc.tMin = Math.min(acc.tMin, p.temperature_2m);
             acc.tMax = Math.max(acc.tMax, p.temperature_2m);
-            acc.rhMin = Math.min(acc.rhMin, p.relative_humidity_2m);
-            acc.rhMax = Math.max(acc.rhMax, p.relative_humidity_2m);
             acc.precipSum += p.precipitation;
             acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m);
             return acc;
         }, {
             tMin: Infinity,
             tMax: -Infinity,
-            rhMin: Infinity,
-            rhMax: -Infinity,
             precipSum: 0,
             gustMax: 0
         });
     };
 
-    // =====================
-    // LÓGICA DE NUVENS (Baixas e Médias)
-    // =====================
-    // =====================
-    // LÓGICA DE NUVENS (Ajustada para maior variabilidade)
-    // =====================
     function getCloudDescription(points) {
-        // 1. Filtramos para pegar apenas o período onde há luz solar (ex: das 06h às 18h)
-        // Se o array tiver menos que 24 pontos (ex: final do forecast), usamos o que tiver.
-        const daytimePoints = points.filter((p, index) => {
-            // Como o dia começa em 00:00, os índices 6 a 18 representam o dia.
-            return index >= 6 && index <= 18;
-        });
-
+        const daytimePoints = points.filter((_, index) => index >= 6 && index <= 18);
         const targetPoints = daytimePoints.length > 0 ? daytimePoints : points;
 
         const avg = targetPoints.reduce((acc, p) => {
-            // Nuvens baixas são muito mais impactantes visualmente
             const combined = (p.cloud_cover_low * 0.8) + (p.cloud_cover_mid * 0.2);
             return acc + combined;
         }, 0) / targetPoints.length;
 
-        // 2. Buckets ajustados para maior variação nas pontas
         if (avg < 10) return "Céu limpo";
         if (avg < 30) return "Poucas nuvens";
         if (avg < 65) return "Sol entre nuvens";
@@ -158,44 +128,55 @@ document.addEventListener("DOMContentLoaded", () => {
         return "Céu encoberto";
     }
 
-    // =====================
-    // LÓGICA DE CHUVA
-    // =====================
     function getImpactWeather(points) {
         let precipSum = 0;
         let precipHours = 0;
         let precipMax = 0;
 
-        for (let i = 0; i < points.length; i++) {
-            const v = points[i].precipitation;
+        for (let p of points) {
+            const v = p.precipitation;
             precipSum += v;
             if (v > 0.1) precipHours++;
             if (v > precipMax) precipMax = v;
         }
 
-        if (precipSum < 0.5) return "Sem chuva relevante";
+        if (precipSum < 0.5 && precipHours < 2) {
+            return "Sem chuva relevante";
+        }
+
+        const avgRain = precipSum / (precipHours || 1);
 
         let intensity;
-        if (precipMax <= 2) intensity = "Chuva";
-        else if (precipMax <= 4) intensity = "Chuva moderada";
-        else intensity = "Chuva forte";
 
+        // Pancada forte isolada
+        if (precipMax >= 5 && precipHours <= 3) {
+            intensity = "Chuva forte";
+        }
+        // Limite para chuva muito distribuída (frequente = mais fraca)
+        else if (precipHours >= 8 && precipSum < 10) {
+            intensity = "Chuva fraca";
+        }
+        // Regra geral
+        else if (precipSum < 5) {
+            intensity = "Chuva fraca";
+        }
+        else if (precipSum < 15 && avgRain < 5) {
+            intensity = "Chuva moderada";
+        }
+        else {
+            intensity = "Chuva forte";
+        }
+
+        // Frequência
         let frequency;
-        if (precipHours >= 8) frequency = "a qualquer hora";
-        else if (precipHours >= 3) frequency = "eventual";
-        else frequency = "passageira";
-
-        if (precipHours >= 8 && precipMax <= 2) return "Chuva a qualquer hora";
-        if (precipHours >= 8 && precipMax > 4) return "Chuva forte a qualquer hora";
-        if (precipHours >= 3 && precipMax > 4) return "Algumas pancadas de chuva forte";
-        if (precipHours >= 3 && precipMax <= 2) return "Chuva pontual";
+        if (precipHours >= 10) frequency = "frequente";
+        else if (precipHours >= 5) frequency = "em vários momentos";
+        else if (precipHours >= 2) frequency = "em uma ou duas pancadas";
+        else frequency = "isolada";
 
         return `${intensity} ${frequency}`;
     }
 
-    // =====================
-    // Renderização
-    // =====================
     const renderDays = dayMap => {
         cardsEl.innerHTML = '';
 
@@ -203,7 +184,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
             const rainDescription = getImpactWeather(points);
-            const cloudDescription = getCloudDescription(points);
+            let cloudDescription = getCloudDescription(points);
+
+            // Ajuste de consistência
+            const precipHours = points.filter(p => p.precipitation > 0.1).length;
+            if (cloudDescription === "Poucas nuvens" && precipHours >= 5) {
+                cloudDescription = "Sol entre nuvens";
+            }
 
             const card = document.createElement('div');
             card.className = 'day';
@@ -211,33 +198,31 @@ document.addEventListener("DOMContentLoaded", () => {
             const isWeekend = ['sáb.', 'dom.'].includes(labels.weekday.toLowerCase());
 
             card.innerHTML = `
-                    <div class="day-row">
-
-                        <div class="date-line ${isWeekend ? 'weekend' : ''}">
-                            ${labels.date} - ${labels.weekday}
-                        </div>
-
-                        <div class="main-info">
-                            <div class="badge badge-temp">
-                                🌡️ ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
-                            </div>
-
-                            <div class="badge badge-precip">
-                                ☔ ${s.precipSum.toFixed(1)} mm
-                            </div>
-
-                            <div class="badge badge-wind">
-                                🍃 ${s.gustMax.toFixed(0)} km/h
-                            </div>
-                        </div>
-
-                        <div class="weather-text">
-                            <span> ${rainDescription} </span>
-                            <span> ${cloudDescription} </span>
-                        </div>
-
+                <div class="day-row">
+                    <div class="date-line ${isWeekend ? 'weekend' : ''}">
+                        ${labels.date} - ${labels.weekday}
                     </div>
-                `;
+
+                    <div class="main-info">
+                        <div class="badge badge-temp">
+                            🌡️ ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
+                        </div>
+
+                        <div class="badge badge-precip">
+                            ☔ ${s.precipSum.toFixed(1)} mm
+                        </div>
+
+                        <div class="badge badge-wind">
+                            🍃 ${s.gustMax.toFixed(0)} km/h
+                        </div>
+                    </div>
+
+                    <div class="weather-text">
+                        <span>${rainDescription}</span>
+                        <span>${cloudDescription}</span>
+                    </div>
+                </div>
+            `;
 
             cardsEl.appendChild(card);
         });
@@ -245,16 +230,13 @@ document.addEventListener("DOMContentLoaded", () => {
         cityInput.value = '';
     };
 
-    // =====================
-    // API
-    // =====================
     async function fetchForecast(lat, lon, timezone = 'auto') {
         const url = new URL(forecastBase);
         url.searchParams.set('latitude', lat);
         url.searchParams.set('longitude', lon);
         url.searchParams.set(
             'hourly',
-            'temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,cloud_cover_low,cloud_cover_mid'
+            'temperature_2m,precipitation,wind_gusts_10m,cloud_cover_low,cloud_cover_mid'
         );
         url.searchParams.set('models', model);
         url.searchParams.set('timezone', timezone);
@@ -307,9 +289,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // =====================
-    // Eventos
-    // =====================
     searchForm.addEventListener('submit', async e => {
         e.preventDefault();
         const q = cityInput.value.trim();
@@ -333,9 +312,6 @@ document.addEventListener("DOMContentLoaded", () => {
         );
     });
 
-    // =====================
-    // Init
-    // =====================
     const today = new Date();
     todayDate.textContent =
         `${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(today)} - 
