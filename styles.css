@@ -150,8 +150,14 @@ button {
     display: flex;
     gap: 20px;
     font-size: 14px;
-    font-weight: bolder;
-    color: #5b5b5b;
+    font-weight: bold;
+    color: #666666;
+}
+
+.weather-text span {
+    background-color: #f1f1f1;
+    border-radius: 6px;
+    padding: 0px 8px;
 }
 
 
@@ -206,8 +212,9 @@ button {
     }
 
     .weather-text {
-        flex-direction: column;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 5px;
-        text-align: center;
     }
 }
