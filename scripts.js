@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const day = String(d.getDate()).padStart(2, '0');
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const year = d.getFullYear();
-        const weekday = d.toLocaleDateString('pt-BR', { weekday: 'short' });
+        const weekday = d.toLocaleDateString('pt-BR', { weekday: 'long' });
 
         return { date: `${day}/${month}/${year}`, weekday };
     }
@@ -232,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const card = document.createElement('div');
             card.className = 'day';
 
-            const isWeekend = ['sáb.', 'dom.'].includes(labels.weekday.toLowerCase());
+            const isWeekend = ['sábado', 'domingo'].includes(labels.weekday.toLowerCase());
 
             card.innerHTML = `
                 <div class="day-row">
