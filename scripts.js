@@ -167,21 +167,24 @@ document.addEventListener("DOMContentLoaded", () => {
         // 5. classificação final
         // =========================
 
-        // dia estável (quase não muda de faixa)
+        // Encoberto dominante
+        if (avg >= 80) return "Encoberto";
+
+        // dia estável
         if (changes <= 1) {
             if (avg < 20) return "Céu limpo";
             if (avg < 50) return "Poucas nuvens";
-            if (avg < 80) return "Nublado";
-            return "Encoberto";
+            return "Nublado";
         }
 
-        // leve alternância entre faixas próximas
+        // leve alternância (sem instabilidade forte)
         if (changes <= 3) {
             if (avg < 50) return "Parcialmente nublado";
+            if (avg < 75) return "Nublado";
             return "Nebulosidade variável";
         }
 
-        // alta alternância entre estados reais
+        // alta alternância (somente aqui faz sentido ser genérico)
         return "Nebulosidade variável";
     }
 
@@ -199,19 +202,34 @@ document.addEventListener("DOMContentLoaded", () => {
             return "Sem chuva relevante";
         }
 
-        // Intensidade baseada exclusivamente no acumulado
+        // Intensidade base (impacto total)
         let intensity;
         if (precipSum < 5) intensity = "Chuva fraca";
         else if (precipSum < 15) intensity = "Chuva moderada";
         else intensity = "Chuva forte";
 
-        // Frequência simples
-        let frequency;
-        if (precipHours >= 8) frequency = "frequente";
-        else if (precipHours >= 3) frequency = "em alguns momentos do dia";
-        else frequency = "Isolada";
+        // Detecta padrão de distribuição
+        let pattern;
+        if (precipHours >= 8) {
+            pattern = "frequente";
+        } else if (precipHours >= 3) {
+            pattern = "em alguns momentos do dia";
+        } else {
+            pattern = "isolada";
+        }
 
-        return `${intensity} ${frequency}`;
+        // Ajuste de coerência (ponto crítico da sua observação)
+        // chuva fraca muito espalhada não deve soar como "moderada frequente"
+        if (intensity === "Chuva moderada" && precipSum < 10 && precipHours >= 6) {
+            intensity = "Chuva fraca";
+        }
+
+        // casos de pancadas concentradas
+        if (precipHours <= 2 && precipSum >= 5) {
+            pattern = "em pancadas";
+        }
+
+        return `${intensity} ${pattern}`;
     }
 
     const renderDays = dayMap => {
