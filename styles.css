@@ -41,7 +41,7 @@ input[type=text],
 button {
     font-family: inherit;
     border-radius: 8px;
-    padding: 0px 14px;
+    padding: 5px 14px;
     border: 1px solid #333;
 }
 
@@ -61,6 +61,7 @@ button {
     background: #4e4e4e;
     color: #fff;
     font-weight: 600;
+    font-size: 1.1rem;
     width: 100px;
 }
 
@@ -189,7 +190,7 @@ button {
     }
 
     #locationName {
-        font-size: 1rem;
+        font-size: 1.5rem;
     }
 
 

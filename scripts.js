@@ -135,10 +135,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Estabilidade (Céu que não muda muito)
         if (delta < 30) {
-            if (maxCloud < 25) return "Céu limpo";
-            if (maxCloud < 55) return "Sol com poucas nuvens";
-            if (maxCloud < 85) return "Predomínio de nuvens";
-            return "Céu totalmente encoberto";
+            if (maxCloud < 25) return "Céu limpo.";
+            if (maxCloud < 55) return "Sol e algumas nuvens.";
+            if (maxCloud < 85) return "Predomínio de nuvens.";
+            return "Céu totalmente encoberto.";
         }
 
         // Transições (O "drama" do dia)
@@ -148,23 +148,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // O dia abrindo
         if (avg1 - avg2 > 35) {
-            return avg2 < 30 ? "Nublado pela manhã, abrindo à tarde" : "Céu limpando ao longo do dia";
+            return avg2 < 30 ? "Nublado pela manhã, abrindo à tarde." : "Céu limpando ao longo do dia.";
         }
 
         // O dia fechando
         if (avg2 - avg1 > 35) {
-            return avg1 < 30 ? "Sol pela manhã com aumento de nuvens" : "Céu fechando ao longo do dia";
+            return avg1 < 30 ? "Sol pela manhã com aumento de nuvens." : "Céu fechando ao longo do dia.";
         }
 
-        return "Sol entre nuvens";
+        return "Sol e nebulosidade variável.";
     }
 
     // --- DESCRIÇÃO DE CHUVA ---
     function getVolumeDescription(totalVolume) {
-        if (totalVolume < 1) return "Sem chuva relevante";
-        if (totalVolume < 5) return "Acumulado baixo";
-        if (totalVolume < 20) return "Acumulado moderado";
-        return "Acumulado alto";
+        if (totalVolume < 1) return "Sem chuva relevante.";
+        if (totalVolume < 5) return "Acumulado baixo.";
+        if (totalVolume < 20) return "Acumulado moderado.";
+        return "Acumulado alto.";
     }
 
     function getIntensityPattern(points) {
@@ -177,17 +177,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // A PANCADA FORTE (O pico se sobressai)
         if (maxIntensity > 5 && maxIntensity >= (totalVolume * 0.7)) {
-            return "Pancada forte isolada";
+            return "Pancada forte isolada.";
         }
 
         // FREQUÊNCIA
-        if (precipHours >= 8) return "Chuva persistente";
-        if (precipHours >= 3) return "Chuva em alguns períodos";
+        if (precipHours >= 8) return "Chuva persistente.";
+        if (precipHours >= 3) return "Chuva em alguns períodos.";
 
         // INTENSIDADE BAIXA
-        if (maxIntensity < 2) return "Chuvisco passageiro";
+        if (maxIntensity < 2) return "Chuvisco passageiro.";
 
-        return "Instabilidade isolada";
+        return "Instabilidade isolada.";
     }
     
     function getIntensityPattern(points) {
@@ -202,23 +202,23 @@ document.addEventListener("DOMContentLoaded", () => {
         // --- DEFINIÇÃO DE INTENSIDADE (Baseada no Pico) ---
         let intensity = "";
         if (maxIntensity < 2) intensity = "Chuviscos leves";
-        else if (maxIntensity < 7) intensity = "Pancadas de chuva moderada";
-        else intensity = "Pancadas de chuva forte";
+        else if (maxIntensity < 7) intensity = "Chuva moderada";
+        else intensity = "Chuva forte";
 
         // --- DEFINIÇÃO DE FREQUÊNCIA/DISTRIBUIÇÃO ---
         let frequency = "";
 
         // Caso 1: Ao longo do dia (Persistente ou recorrente)
         if (precipHours >= 6) {
-            frequency = "ao longo do dia";
+            frequency = "ao longo do dia.";
         }
         // Caso 2: Em alguns períodos (Intermitente)
         else if (precipHours >= 3) {
-            frequency = "em alguns períodos";
+            frequency = "em alguns períodos.";
         }
         // Caso 3: Eventual ou Isolado (Rápido)
         else {
-            frequency = "eventuais";
+            frequency = "eventuais.";
         }
 
         return `${intensity} ${frequency}`;
