@@ -128,43 +128,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- DESCRIÇÃO DE NUVENS ---
     function getCloudDescription(points) {
-        // 1. Extração dos períodos (Horário Comercial/Útil)
-        // Slice extrai: [início, fim_antes_de]
-        const morning = points.slice(6, 12);   // 06:00 às 11:00
-        const afternoon = points.slice(12, 18); // 12:00 às 17:00
-        const evening = points.slice(18, 22);   // 18:00 às 21:00
+        const blocks = get3hBlocks(points);
+        const maxCloud = Math.max(...blocks);
+        const minCloud = Math.min(...blocks);
+        const delta = maxCloud - minCloud;
 
-        // Função auxiliar para média simples
-        const getAvg = (arr) => arr.reduce((a, b) => a + b.cloudCover, 0) / arr.length;
-
-        const avgM = getAvg(morning);
-        const avgA = getAvg(afternoon);
-        const avgE = getAvg(evening);
-        const avgDay = (avgM + avgA + avgE) / 3;
-
-        // 2. Testes de Tendência (O "Movimento" do céu)
-        const threshold = 30; // Diferença mínima para considerar que o tempo "mudou"
-
-        // Caso A: O dia abrindo (Melhoria)
-        if (avgM - avgA > threshold) {
-            return avgA < 30 ? "Nublado pela manhã, abrindo à tarde" : "Nuvens diminuem ao longo do dia";
+        // Estabilidade (Céu que não muda muito)
+        if (delta < 30) {
+            if (maxCloud < 25) return "Céu limpo";
+            if (maxCloud < 55) return "Sol com poucas nuvens";
+            if (maxCloud < 85) return "Predomínio de nuvens";
+            return "Céu totalmente encoberto";
         }
 
-        // Caso B: O dia fechando (Piora)
-        if (avgA - avgM > threshold) {
-            return avgM < 30 ? "Sol pela manhã com aumento de nuvens" : "Céu fechando ao longo do dia";
+        // Transições (O "drama" do dia)
+        const mid = Math.floor(blocks.length / 2);
+        const avg1 = blocks.slice(0, mid).reduce((a, b) => a + b, 0) / mid;
+        const avg2 = blocks.slice(mid).reduce((a, b) => a + b, 0) / (blocks.length - mid);
+
+        // O dia abrindo
+        if (avg1 - avg2 > 35) {
+            return avg2 < 30 ? "Nublado pela manhã, abrindo à tarde" : "Céu limpando ao longo do dia";
         }
 
-        // Caso C: Mudança tardia (Virada na noite)
-        if (avgE - avgA > 40) {
-            return "Céu fechando ao anoitecer";
+        // O dia fechando
+        if (avg2 - avg1 > 35) {
+            return avg1 < 30 ? "Sol pela manhã com aumento de nuvens" : "Céu fechando ao longo do dia";
         }
 
-        // 3. Casos Estáticos (Quando não há grande variação entre períodos)
-        if (avgDay < 20) return "Céu limpo";
-        if (avgDay < 50) return "Sol entre nuvens";
-        if (avgDay < 85) return "Predomínio de nuvens";
-        return "Céu encoberto";
+        return "Sol entre nuvens";
     }
 
     // --- DESCRIÇÃO DE CHUVA ---
