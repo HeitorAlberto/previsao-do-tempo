@@ -113,84 +113,105 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     function getCloudDescription(points) {
-        const daytimePoints = points.filter((_, index) => index >= 6 && index <= 18);
-        const targetPoints = daytimePoints.length > 0 ? daytimePoints : points;
 
-        const avg = targetPoints.reduce((acc, p) => {
-            const combined = (p.cloud_cover_low * 0.8) + (p.cloud_cover_mid * 0.2);
-            return acc + combined;
-        }, 0) / targetPoints.length;
+        // =========================
+        // 1. média por blocos de 3h
+        // =========================
+        const step = 3;
+        const blocks = [];
 
-        if (avg < 10) return "Céu limpo";
-        if (avg < 30) return "Poucas nuvens";
-        if (avg < 65) return "Sol entre nuvens";
-        if (avg < 85) return "Nublado em maior parte";
-        return "Céu encoberto";
+        for (let i = 0; i < points.length; i += step) {
+            const slice = points.slice(i, i + step);
+
+            const avg =
+                slice.reduce((acc, p) => {
+                    return acc + (
+                        (p.cloud_cover_low * 0.8) +
+                        (p.cloud_cover_mid * 0.2)
+                    );
+                }, 0) / slice.length;
+
+            blocks.push(avg);
+        }
+
+        // =========================
+        // 2. transforma em "categorias perceptuais"
+        // =========================
+        function bucket(v) {
+            if (v < 20) return 0; // céu limpo
+            if (v < 50) return 1; // poucas nuvens
+            if (v < 80) return 2; // nublado
+            return 3;             // encoberto
+        }
+
+        const buckets = blocks.map(bucket);
+
+        // =========================
+        // 3. mede mudanças reais de estado
+        // =========================
+        let changes = 0;
+
+        for (let i = 1; i < buckets.length; i++) {
+            if (buckets[i] !== buckets[i - 1]) {
+                changes++;
+            }
+        }
+
+        // =========================
+        // 4. média geral para descrição base
+        // =========================
+        const avg =
+            blocks.reduce((a, b) => a + b, 0) / blocks.length;
+
+        // =========================
+        // 5. classificação final
+        // =========================
+
+        // dia estável (quase não muda de faixa)
+        if (changes <= 1) {
+            if (avg < 20) return "Céu limpo";
+            if (avg < 50) return "Poucas nuvens";
+            if (avg < 80) return "Nublado";
+            return "Encoberto";
+        }
+
+        // leve alternância entre faixas próximas
+        if (changes <= 3) {
+            if (avg < 50) return "Parcialmente nublado";
+            return "Nebulosidade variável";
+        }
+
+        // alta alternância entre estados reais
+        return "Nebulosidade variável";
     }
 
     function getImpactWeather(points) {
         let precipSum = 0;
         let precipHours = 0;
-        let precipMax = 0;
 
         for (let p of points) {
             const v = p.precipitation;
             precipSum += v;
             if (v > 0.1) precipHours++;
-            if (v > precipMax) precipMax = v;
         }
 
-        // Filtro de ruído
         if (precipSum < 0.5 && precipHours < 2) {
             return "Sem chuva relevante";
         }
 
-        const avgRain = precipSum / (precipHours || 1);
-
-        // 🔴 Detecta pancadas fortes
-        const hasStrongEvent = precipMax >= 5;
-
+        // Intensidade baseada exclusivamente no acumulado
         let intensity;
+        if (precipSum < 5) intensity = "Chuva fraca";
+        else if (precipSum < 15) intensity = "Chuva moderada";
+        else intensity = "Chuva forte";
 
-        // Pancada forte dominante (substitui tudo)
-        if (hasStrongEvent && precipHours <= 3) {
-            return precipHours <= 1
-                ? "Pancadas fortes isoladas"
-                : "Pancadas fortes em alguns momentos";
-        }
-
-        // Intensidade base (mais conservadora)
-        if (precipSum < 5) {
-            intensity = "Chuva fraca";
-        }
-        else if (precipSum < 15 && avgRain < 5) {
-            intensity = "Chuva moderada";
-        }
-        else {
-            intensity = "Chuva forte";
-        }
-
-        // Frequência simplificada (3 níveis)
+        // Frequência simples
         let frequency;
+        if (precipHours >= 8) frequency = "frequente";
+        else if (precipHours >= 3) frequency = "em alguns momentos do dia";
+        else frequency = "Isolada";
 
-        if (precipHours >= 8) {
-            frequency = "ao longo do dia";
-        }
-        else if (precipHours >= 3) {
-            frequency = "em alguns momentos";
-        }
-        else {
-            frequency = "isolada";
-        }
-
-        let description = `${intensity} ${frequency}`;
-
-        // Complemento leve para pancadas fortes dentro de dias moderados
-        if (hasStrongEvent && intensity !== "Chuva forte") {
-            description += " com risco de pancadas fortes";
-        }
-
-        return description;
+        return `${intensity} ${frequency}`;
     }
 
     const renderDays = dayMap => {
