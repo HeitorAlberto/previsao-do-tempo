@@ -69,6 +69,7 @@ button {
     text-align: center;
     font-weight: bolder;
     margin-top: 20px;
+    font-size: 1.8rem;
 }
 
 .open-meteo-ref,
@@ -145,16 +146,14 @@ button {
 /* Texto clima */
 .weather-text {
     display: flex;
+    flex-direction: column;
     gap: 20px;
     font-weight: bold;
     color: #666666;
+    text-align: center;
 }
 
-.weather-text span {
-    background-color: #f1f1f1;
-    border-radius: 6px;
-    padding: 0px 8px;
-}
+
 
 /* ===== HISTÓRICO ===== */
 #historyContainer {
@@ -174,6 +173,7 @@ button {
     background: #333333;
     cursor: pointer;
     color: white;
+    font-weight: 100;
 }
 
 /* ===== MOBILE ===== */
@@ -186,6 +186,10 @@ button {
     header {
         flex-direction: column;
         padding: 20px;
+    }
+
+    #locationName {
+        font-size: 1rem;
     }
 
 

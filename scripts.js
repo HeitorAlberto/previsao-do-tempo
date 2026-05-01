@@ -41,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
         searchHistory.forEach(item => {
             const div = document.createElement("div");
             div.className = "history-item";
-            div.style.fontWeight = "400";
             div.textContent = item.name;
             div.onclick = () => loadForecast(item.lat, item.lon);
             historyContainer.appendChild(div);
@@ -112,124 +111,125 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    function getCloudDescription(points) {
-
-        // =========================
-        // 1. média por blocos de 3h
-        // =========================
+    // --- FUNÇÃO DE SUPORTE ---
+    const get3hBlocks = (points) => {
         const step = 3;
         const blocks = [];
-
         for (let i = 0; i < points.length; i += step) {
             const slice = points.slice(i, i + step);
-
-            const avg =
-                slice.reduce((acc, p) => {
-                    return acc + (
-                        (p.cloud_cover_low * 0.8) +
-                        (p.cloud_cover_mid * 0.2)
-                    );
-                }, 0) / slice.length;
-
+            if (slice.length === 0) continue;
+            const avg = slice.reduce((acc, p) =>
+                acc + ((p.cloud_cover_low * 0.8) + (p.cloud_cover_mid * 0.2)), 0
+            ) / slice.length;
             blocks.push(avg);
         }
+        return blocks;
+    };
 
-        // =========================
-        // 2. transforma em "categorias perceptuais"
-        // =========================
-        function bucket(v) {
-            if (v < 20) return 0; // céu limpo
-            if (v < 50) return 1; // poucas nuvens
-            if (v < 80) return 2; // nublado
-            return 3;             // encoberto
+    // --- DESCRIÇÃO DE NUVENS ---
+    function getCloudDescription(points) {
+        // 1. Extração dos períodos (Horário Comercial/Útil)
+        // Slice extrai: [início, fim_antes_de]
+        const morning = points.slice(6, 12);   // 06:00 às 11:00
+        const afternoon = points.slice(12, 18); // 12:00 às 17:00
+        const evening = points.slice(18, 22);   // 18:00 às 21:00
+
+        // Função auxiliar para média simples
+        const getAvg = (arr) => arr.reduce((a, b) => a + b.cloudCover, 0) / arr.length;
+
+        const avgM = getAvg(morning);
+        const avgA = getAvg(afternoon);
+        const avgE = getAvg(evening);
+        const avgDay = (avgM + avgA + avgE) / 3;
+
+        // 2. Testes de Tendência (O "Movimento" do céu)
+        const threshold = 30; // Diferença mínima para considerar que o tempo "mudou"
+
+        // Caso A: O dia abrindo (Melhoria)
+        if (avgM - avgA > threshold) {
+            return avgA < 30 ? "Nublado pela manhã, abrindo à tarde" : "Nuvens diminuem ao longo do dia";
         }
 
-        const buckets = blocks.map(bucket);
-
-        // =========================
-        // 3. mede mudanças reais de estado
-        // =========================
-        let changes = 0;
-
-        for (let i = 1; i < buckets.length; i++) {
-            if (buckets[i] !== buckets[i - 1]) {
-                changes++;
-            }
+        // Caso B: O dia fechando (Piora)
+        if (avgA - avgM > threshold) {
+            return avgM < 30 ? "Sol pela manhã com aumento de nuvens" : "Céu fechando ao longo do dia";
         }
 
-        // =========================
-        // 4. média geral para descrição base
-        // =========================
-        const avg =
-            blocks.reduce((a, b) => a + b, 0) / blocks.length;
-
-        // =========================
-        // 5. classificação final
-        // =========================
-
-        // Encoberto dominante
-        if (avg >= 80) return "Encoberto";
-
-        // dia estável
-        if (changes <= 1) {
-            if (avg < 20) return "Céu limpo";
-            if (avg < 50) return "Poucas nuvens";
-            return "Nublado";
+        // Caso C: Mudança tardia (Virada na noite)
+        if (avgE - avgA > 40) {
+            return "Céu fechando ao anoitecer";
         }
 
-        // leve alternância (sem instabilidade forte)
-        if (changes <= 3) {
-            if (avg < 50) return "Parcialmente nublado";
-            if (avg < 75) return "Nublado";
-            return "Nebulosidade variável";
-        }
-
-        // alta alternância (somente aqui faz sentido ser genérico)
-        return "Nebulosidade variável";
+        // 3. Casos Estáticos (Quando não há grande variação entre períodos)
+        if (avgDay < 20) return "Céu limpo";
+        if (avgDay < 50) return "Sol entre nuvens";
+        if (avgDay < 85) return "Predomínio de nuvens";
+        return "Céu encoberto";
     }
 
-    function getImpactWeather(points) {
-        let precipSum = 0;
-        let precipHours = 0;
+    // --- DESCRIÇÃO DE CHUVA ---
+    function getVolumeDescription(totalVolume) {
+        if (totalVolume < 1) return "Sem chuva relevante";
+        if (totalVolume < 5) return "Acumulado baixo";
+        if (totalVolume < 20) return "Acumulado moderado";
+        return "Acumulado alto";
+    }
 
-        for (let p of points) {
-            const v = p.precipitation;
-            precipSum += v;
-            if (v > 0.1) precipHours++;
+    function getIntensityPattern(points) {
+        const hourlyValues = points.map(p => p.precipitation);
+        const maxIntensity = Math.max(...hourlyValues);
+        const totalVolume = hourlyValues.reduce((a, b) => a + b, 0);
+        const precipHours = hourlyValues.filter(v => v > 0.1).length;
+
+        if (totalVolume < 1) return "";
+
+        // A PANCADA FORTE (O pico se sobressai)
+        if (maxIntensity > 5 && maxIntensity >= (totalVolume * 0.7)) {
+            return "Pancada forte isolada";
         }
 
-        if (precipSum < 0.5 && precipHours < 2) {
-            return "Sem chuva relevante";
+        // FREQUÊNCIA
+        if (precipHours >= 8) return "Chuva persistente";
+        if (precipHours >= 3) return "Chuva em alguns períodos";
+
+        // INTENSIDADE BAIXA
+        if (maxIntensity < 2) return "Chuvisco passageiro";
+
+        return "Instabilidade isolada";
+    }
+    
+    function getIntensityPattern(points) {
+        const hourlyValues = points.map(p => p.precipitation);
+        const maxIntensity = Math.max(...hourlyValues);
+        const totalVolume = hourlyValues.reduce((a, b) => a + b, 0);
+        const precipHours = hourlyValues.filter(v => v > 0.1).length;
+
+        // Filtro de irrelevância (abaixo de 1mm ignoramos a dinâmica)
+        if (totalVolume < 1) return "";
+
+        // --- DEFINIÇÃO DE INTENSIDADE (Baseada no Pico) ---
+        let intensity = "";
+        if (maxIntensity < 2) intensity = "Chuviscos leves";
+        else if (maxIntensity < 7) intensity = "Pancadas de chuva moderada";
+        else intensity = "Pancadas de chuva forte";
+
+        // --- DEFINIÇÃO DE FREQUÊNCIA/DISTRIBUIÇÃO ---
+        let frequency = "";
+
+        // Caso 1: Ao longo do dia (Persistente ou recorrente)
+        if (precipHours >= 6) {
+            frequency = "ao longo do dia";
+        }
+        // Caso 2: Em alguns períodos (Intermitente)
+        else if (precipHours >= 3) {
+            frequency = "em alguns períodos";
+        }
+        // Caso 3: Eventual ou Isolado (Rápido)
+        else {
+            frequency = "eventuais";
         }
 
-        // Intensidade base (impacto total)
-        let intensity;
-        if (precipSum < 5) intensity = "Chuva fraca";
-        else if (precipSum < 15) intensity = "Chuva moderada";
-        else intensity = "Chuva forte";
-
-        // Detecta padrão de distribuição
-        let pattern;
-        if (precipHours >= 8) {
-            pattern = "frequente";
-        } else if (precipHours >= 3) {
-            pattern = "em alguns momentos do dia";
-        } else {
-            pattern = "isolada";
-        }
-
-        // Ajuste de coerência (ponto crítico da sua observação)
-        // chuva fraca muito espalhada não deve soar como "moderada frequente"
-        if (intensity === "Chuva moderada" && precipSum < 10 && precipHours >= 6) {
-            intensity = "Chuva fraca";
-        }
-
-        // casos de pancadas concentradas
-        if (precipHours <= 2 && precipSum >= 5) {
-            pattern = "em pancadas";
-        }
-
-        return `${intensity} ${pattern}`;
+        return `${intensity} ${frequency}`;
     }
 
     const renderDays = dayMap => {
@@ -238,14 +238,10 @@ document.addEventListener("DOMContentLoaded", () => {
         Array.from(dayMap.entries()).slice(0, 15).forEach(([day, points]) => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
-            const rainDescription = getImpactWeather(points);
-            let cloudDescription = getCloudDescription(points);
+            const volumeLabel = getVolumeDescription(s.precipSum);
+            const intensityLabel = getIntensityPattern(points);
+            const cloudLabel = getCloudDescription(points);
 
-            // Ajuste de consistência
-            const precipHours = points.filter(p => p.precipitation > 0.1).length;
-            if (cloudDescription === "Poucas nuvens" && precipHours >= 5) {
-                cloudDescription = "Sol entre nuvens";
-            }
 
             const card = document.createElement('div');
             card.className = 'day';
@@ -273,8 +269,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
 
                     <div class="weather-text">
-                        <span>${rainDescription}</span>
-                        <span>${cloudDescription}</span>
+                        ${volumeLabel ? `<span>${volumeLabel}</span>` : ''}
+                        
+                        ${intensityLabel && intensityLabel !== "Tempo firme" ? `<span>${volumeLabel ? ' ' : ''}${intensityLabel}</span>`
+                                        : ''}
+                        
+                        ${cloudLabel
+                                        ? `<span>${(volumeLabel || (intensityLabel && intensityLabel !== "Tempo firme")) ? ' ' : ''}${cloudLabel}</span>`
+                                        : ''}
                     </div>
                 </div>
             `;
