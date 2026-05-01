@@ -102,7 +102,7 @@ button {
     flex-direction: column;
     gap: 15px;
     align-items: center;
-    padding: 10px 0px;
+    padding: 20px 0px 50px 0px;
 }
 
 /* Data */
