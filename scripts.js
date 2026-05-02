@@ -163,9 +163,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function getVolumeDescription(totalVolume) {
         if (totalVolume == 0) return "Sem previsão de chuva"
         if (totalVolume < 1) return "Sem chuva relevante.";
-        if (totalVolume < 10) return "Acumulado baixo.";
-        if (totalVolume < 25) return "Acumulado moderado.";
-        return "Acumulado alto.";
+        if (totalVolume < 10) return "Acumulado baixo em 24 horas.";
+        if (totalVolume < 25) return "Acumulado moderado em 24 horas.";
+        return "Acumulado alto em 24 horas.";
     }
 
     function getIntensityPattern(points) {
