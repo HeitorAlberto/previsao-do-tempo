@@ -135,9 +135,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Estabilidade (Céu que não muda muito)
         if (delta < 45) {
-            if (maxCloud < 50) return "Poucas nuvens";
+            if (maxCloud < 50) return "Poucas nuvens.";
             if (maxCloud < 80) return "Muitas nuvens, aberturas rápidas.";
-            return "Nublado";
+            return "Nublado.";
         }
 
         // Transições (O "drama" do dia)
@@ -160,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- DESCRIÇÃO DE CHUVA ---
     function getVolumeDescription(totalVolume) {
-        if (totalVolume == 0) return "Sem previsão de chuva"
+        if (totalVolume == 0) return "Sem previsão de chuva."
         if (totalVolume < 1) return "Sem chuva relevante.";
         if (totalVolume < 10) return "Acumulado baixo em 24 horas.";
         if (totalVolume < 25) return "Acumulado moderado em 24 horas.";
