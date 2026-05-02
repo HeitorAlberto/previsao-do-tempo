@@ -154,6 +154,24 @@ button {
     text-align: center;
 }
 
+.weather-text span {
+    border-radius: 6px;
+    margin-bottom: 12px;
+    box-shadow: #333;
+}
+
+
+.weather-text img {
+    height: 20px;
+    vertical-align: middle;
+    margin-left: 5px;
+}
+
+.weather-text .emoji {
+    font-size: 30px;
+    vertical-align: middle;
+    border: none;
+}
 
 
 /* ===== HISTÓRICO ===== */
@@ -195,7 +213,7 @@ button {
 
 
     #cards {
-        padding: 20px;
+        padding: 12px;
     }
 
     #cityInput {
