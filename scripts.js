@@ -135,9 +135,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Estabilidade (Céu que não muda muito)
         if (delta < 45) {
-            if (maxCloud < 50) return "Poucas nuvens <span class='emoji'>🌤️</span>";
-            if (maxCloud < 80) return "Muitas nuvens <span class='emoji'>🌥️</span>";
-            return "Nublado <span class='emoji'>☁️</span>";
+            if (maxCloud < 50) return "➔ Poucas nuvens <span class='emoji'>🌤️</span>";
+            if (maxCloud < 80) return "➔ Muitas nuvens <span class='emoji'>🌥️</span>";
+            return "➔ Nublado <span class='emoji'>☁️</span>";
         }
 
         // Transições (O "drama" do dia)
@@ -147,24 +147,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // O dia abrindo
         if (avg1 - avg2 > 35) {
-            return avg2 < 30 ? "Nublado pela manhã, abrindo à tarde <span class='emoji'>🌥️</span>" : "Céu limpando ao longo do dia <span class='emoji'>🌥️</span>";
+            return avg2 < 30 ? "➔ Nublado pela manhã, abrindo à tarde <span class='emoji'>🌥️</span>" : "➔ Céu limpando ao longo do dia <span class='emoji'>🌥️</span>";
         }
 
         // O dia fechando
         if (avg2 - avg1 > 35) {
-            return avg1 < 30 ? "Aumento de nuvens ao longo do dia <span class='emoji'>🌥️</span>" : "Céu fechando ao longo do dia <span class='emoji'>🌥️</span>";
+            return avg1 < 30 ? "➔ Aumento de nuvens ao longo do dia <span class='emoji'>🌥️</span>" : "➔ Céu fechando ao longo do dia <span class='emoji'>🌥️</span>";
         }
 
-        return "Nuvens variando muito <span class='emoji'>🌥️</span>";
+        return "➔ Nuvens variando muito <span class='emoji'>🌥️</span>";
     }
 
     // --- DESCRIÇÃO DE CHUVA ---
     function getVolumeDescription(totalVolume) {
-        if (totalVolume == 0) return 'Sem previsão de chuva <img src="sem-chuva.png">';
-        if (totalVolume < 1) return 'Sem chuva relevante <img src="sem-chuva.png">';
-        if (totalVolume < 10) return 'Acumulado baixo em 24 horas <img src="chuva-fraca.png">';
-        if (totalVolume < 25) return 'Acumulado moderado em 24 horas <img src="chuva-moderada.png">';
-        return 'Acumulado alto em 24 horas <img src="chuva-forte.png">';
+        if (totalVolume == 0) return '➔ Sem previsão de chuva <img src="sem-chuva.png">';
+        if (totalVolume < 1) return '➔ Sem chuva relevante <img src="sem-chuva.png">';
+        if (totalVolume < 10) return '➔ Acumulado baixo em 24 horas <img src="chuva-fraca.png">';
+        if (totalVolume < 25) return '➔ Acumulado moderado em 24 horas <img src="chuva-moderada.png">';
+        return '➔ Acumulado alto em 24 horas <img src="chuva-forte.png">';
     }
 
     function getIntensityPattern(points) {
@@ -177,17 +177,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // A PANCADA FORTE (O pico se sobressai)
         if (maxIntensity > 5 && maxIntensity >= (totalVolume * 0.7)) {
-            return "Pancada forte isolada.";
+            return "➔ Pancada forte isolada.";
         }
 
         // FREQUÊNCIA
-        if (precipHours >= 8) return "Chuva persistente.";
-        if (precipHours >= 3) return "Chuva em alguns períodos.";
+        if (precipHours >= 8) return "➔ Chuva persistente.";
+        if (precipHours >= 3) return "➔ Chuva em alguns períodos.";
 
         // INTENSIDADE BAIXA
-        if (maxIntensity < 2) return "Chuvisco passageiro.";
+        if (maxIntensity < 2) return "➔ Chuvisco passageiro.";
 
-        return "Instabilidade isolada.";
+        return "➔ Instabilidade isolada.";
     }
     
     function getIntensityPattern(points) {
@@ -201,9 +201,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // --- DEFINIÇÃO DE INTENSIDADE (Baseada no Pico) ---
         let intensity = "";
-        if (maxIntensity < 2) intensity = "Chuva leve";
-        else if (maxIntensity < 7) intensity = "Chuva moderada";
-        else intensity = "Chuva forte";
+        if (maxIntensity < 2) intensity = "➔ Chuva leve";
+        else if (maxIntensity < 7) intensity = "➔ Chuva moderada";
+        else intensity = "➔ Chuva forte";
 
         // --- DEFINIÇÃO DE FREQUÊNCIA/DISTRIBUIÇÃO ---
         let frequency = "";
