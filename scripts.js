@@ -135,10 +135,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Estabilidade (Céu que não muda muito)
         if (delta < 30) {
-            if (maxCloud < 25) return "Céu limpo.";
-            if (maxCloud < 55) return "Sol e algumas nuvens.";
-            if (maxCloud < 85) return "Predomínio de nuvens.";
-            return "Céu totalmente encoberto.";
+            if (maxCloud < 40) return "Sol e poucas nuvens";
+            if (maxCloud < 75) return "Sol e muitas nuvens";
+            return "Nublado";
         }
 
         // Transições (O "drama" do dia)
