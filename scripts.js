@@ -161,9 +161,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- DESCRIÇÃO DE CHUVA ---
     function getVolumeDescription(totalVolume) {
+        if (totalVolume == 0) return "Sem previsão de chuva"
         if (totalVolume < 1) return "Sem chuva relevante.";
-        if (totalVolume < 5) return "Acumulado baixo.";
-        if (totalVolume < 20) return "Acumulado moderado.";
+        if (totalVolume < 10) return "Acumulado baixo.";
+        if (totalVolume < 25) return "Acumulado moderado.";
         return "Acumulado alto.";
     }
 
@@ -201,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // --- DEFINIÇÃO DE INTENSIDADE (Baseada no Pico) ---
         let intensity = "";
-        if (maxIntensity < 2) intensity = "Chuviscos leves";
+        if (maxIntensity < 2) intensity = "Chuva leve";
         else if (maxIntensity < 7) intensity = "Chuva moderada";
         else intensity = "Chuva forte";
 
@@ -210,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Caso 1: Ao longo do dia (Persistente ou recorrente)
         if (precipHours >= 6) {
-            frequency = "ao longo do dia.";
+            frequency = "em vários momentos.";
         }
         // Caso 2: Em alguns períodos (Intermitente)
         else if (precipHours >= 3) {
