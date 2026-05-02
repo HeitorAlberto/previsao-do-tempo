@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const delta = maxCloud - minCloud;
 
         // Estabilidade (Céu que não muda muito)
-        if (delta < 30) {
+        if (delta < 45) {
             if (maxCloud < 40) return "Sol e poucas nuvens";
             if (maxCloud < 75) return "Sol e muitas nuvens";
             return "Nublado";
@@ -155,7 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return avg1 < 30 ? "Sol pela manhã com aumento de nuvens." : "Céu fechando ao longo do dia.";
         }
 
-        return "Sol e nebulosidade variável.";
+        return "Sol entre nuvens ao longo do dia.";
     }
 
     // --- DESCRIÇÃO DE CHUVA ---
