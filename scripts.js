@@ -135,8 +135,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Estabilidade (Céu que não muda muito)
         if (delta < 45) {
-            if (maxCloud < 40) return "Sol e poucas nuvens";
-            if (maxCloud < 75) return "Sol e muitas nuvens";
+            if (maxCloud < 50) return "Poucas nuvens";
+            if (maxCloud < 80) return "Muitas nuvens, aberturas rápidas.";
             return "Nublado";
         }
 
@@ -152,10 +152,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // O dia fechando
         if (avg2 - avg1 > 35) {
-            return avg1 < 30 ? "Sol pela manhã com aumento de nuvens." : "Céu fechando ao longo do dia.";
+            return avg1 < 30 ? "Aumento de nuvens ao longo do dia." : "Céu fechando ao longo do dia.";
         }
 
-        return "Sol entre nuvens ao longo do dia.";
+        return "Nuvens variando muito.";
     }
 
     // --- DESCRIÇÃO DE CHUVA ---
