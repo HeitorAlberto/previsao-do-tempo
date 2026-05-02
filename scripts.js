@@ -167,62 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return 'Acumulado alto <img src="chuva-forte.png">';
     }
 
-    function getIntensityPattern(points) {
-        const hourlyValues = points.map(p => p.precipitation);
-        const maxIntensity = Math.max(...hourlyValues);
-        const totalVolume = hourlyValues.reduce((a, b) => a + b, 0);
-        const precipHours = hourlyValues.filter(v => v > 0.1).length;
-
-        if (totalVolume < 1) return "";
-
-        // A PANCADA FORTE (O pico se sobressai)
-        if (maxIntensity > 5 && maxIntensity >= (totalVolume * 0.7)) {
-            return "Pancada forte isolada.";
-        }
-
-        // FREQUÊNCIA
-        if (precipHours >= 8) return "Chuva persistente.";
-        if (precipHours >= 3) return "Chuva em alguns períodos.";
-
-        // INTENSIDADE BAIXA
-        if (maxIntensity < 2) return "Chuvisco passageiro.";
-
-        return "Instabilidade isolada.";
-    }
     
-    function getIntensityPattern(points) {
-        const hourlyValues = points.map(p => p.precipitation);
-        const maxIntensity = Math.max(...hourlyValues);
-        const totalVolume = hourlyValues.reduce((a, b) => a + b, 0);
-        const precipHours = hourlyValues.filter(v => v > 0.1).length;
-
-        // Filtro de irrelevância (abaixo de 1mm ignoramos a dinâmica)
-        if (totalVolume < 1) return "";
-
-        // --- DEFINIÇÃO DE INTENSIDADE (Baseada no Pico) ---
-        let intensity = "";
-        if (maxIntensity < 2) intensity = "Chuva leve";
-        else if (maxIntensity < 7) intensity = "Chuva moderada";
-        else intensity = "Chuva forte";
-
-        // --- DEFINIÇÃO DE FREQUÊNCIA/DISTRIBUIÇÃO ---
-        let frequency = "";
-
-        // Caso 1: Ao longo do dia (Persistente ou recorrente)
-        if (precipHours >= 6) {
-            frequency = "em vários momentos.";
-        }
-        // Caso 2: Em alguns períodos (Intermitente)
-        else if (precipHours >= 3) {
-            frequency = "em alguns períodos.";
-        }
-        // Caso 3: Eventual ou Isolado (Rápido)
-        else {
-            frequency = "eventuais.";
-        }
-
-        return `${intensity} ${frequency}`;
-    }
 
     const renderDays = dayMap => {
         cardsEl.innerHTML = '';
@@ -231,7 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const labels = formatDateLabel(day + 'T00:00:00');
             const s = summarizeDay(points);
             const volumeLabel = getVolumeDescription(s.precipSum);
-            const intensityLabel = getIntensityPattern(points);
             const cloudLabel = getCloudDescription(points);
 
 
@@ -263,8 +207,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="weather-text">
                         ${volumeLabel ? `<span>${volumeLabel}</span>` : ''}
                         
-                        ${intensityLabel && intensityLabel !== "Tempo firme" ? `<span>${volumeLabel ? ' ' : ''}${intensityLabel}</span>`
-                                        : ''}
                         
                         ${cloudLabel
                                         ? `<span>${(volumeLabel || (intensityLabel && intensityLabel !== "Tempo firme")) ? ' ' : ''}${cloudLabel}</span>`

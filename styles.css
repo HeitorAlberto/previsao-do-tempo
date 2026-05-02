@@ -85,18 +85,21 @@ button {
     text-decoration: underline;
 }
 
+#forecastSection {
+    background-color: #f4f4f4;
+}
+
 /* ===== LISTA ===== */
 #cards {
-    width: 100%;
-    max-width: 1100px;
-    padding: 20px 115px;
-    margin: 40px auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
 }
 
 /* ===== DIA ===== */
 .day {
-    border-bottom: 3px solid #eee;
     padding: 30px 0;
+    background-color: white;
 }
 
 .day-row {
@@ -161,14 +164,13 @@ button {
 
 
 .weather-text img {
-    height: 20px;
+    height: 15px;
     vertical-align: middle;
     margin-left: 5px;
 }
 
 .weather-text .emoji {
-    font-size: 30px;
-    vertical-align: middle;
+    vertical-align: bottom;
     border: none;
     text-shadow: 1px 1px 2px #000;
     box-shadow: none;
@@ -177,9 +179,10 @@ button {
 
 /* ===== HISTÓRICO ===== */
 #historyContainer {
-    display: flex;
+    display: grid;
     align-items: center;
     justify-content: center;
+    text-align: center;
     gap: 10px;
     padding: 20px 15px;
     overflow-x: auto;
@@ -196,8 +199,18 @@ button {
     font-weight: 100;
 }
 
+@media (max-width:1000px) {
+    #cards {
+        display: grid;
+        grid-template-columns: 1fr;
+        row-gap: 2px;
+        column-gap: 0px;
+     }
+
+}
+
 /* ===== MOBILE ===== */
-@media(max-width:1000px) {
+@media(max-width:600px) {
 
     body {
         font-size: 1.1rem;
@@ -213,10 +226,6 @@ button {
     }
 
 
-    #cards {
-        padding: 12px;
-    }
-
     #cityInput {
         width: 100%;
     }
@@ -231,20 +240,31 @@ button {
         text-align: center;
     }
 
+    .day {
+        padding: 50px 10px;
+    }
+
+    .day-row {
+        align-items: start;
+    }
+
     .main-info {
         display: flex;
         flex-wrap: wrap;
-        justify-content: center;
+        align-self: center;
         gap: 12px;
     }
 
     .weather-text {
         display: flex;
         flex-wrap: wrap;
-        justify-content: center;
         gap: 5px;
         text-align: center;
         font-size: 1rem;
+    }
+
+    .weather-text span {
+        text-align: left;
     }
 }
 
