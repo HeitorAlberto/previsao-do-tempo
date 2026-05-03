@@ -128,24 +128,23 @@ button {
 }
 
 /* Badges */
-.badge {
-    padding: 2px 12px;
-    border-radius: 6px;
-}
-
 .badge-temp {
-    background: rgba(255, 140, 0, 0.15);
-    border: 1px solid rgba(255, 140, 0, 0.25);
+    color: orange;
+    text-shadow: 2px 2px 4px black;
+    font-weight: bold;
+    
 }
 
 .badge-precip {
-    background: rgba(0, 140, 255, 0.15);
-    border: 1px solid rgba(0, 140, 255, 0.25);
+    color: blue;
+    text-shadow: 2px 2px 4px black;
+    font-weight: bold;
 }
 
 .badge-wind {
-    background: rgba(0, 170, 90, 0.15);
-    border: 1px solid rgba(0, 170, 90, 0.25);
+    color: green;
+    text-shadow: 2px 2px 4px black;
+    font-weight: bold;
 }
 
 /* Texto clima */
