@@ -160,11 +160,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- DESCRIÇÃO DE CHUVA ---
     function getVolumeDescription(totalVolume) {
-        if (totalVolume == 0) return 'Sem previsão de chuva <img src="sem-chuva.png">';
-        if (totalVolume < 1) return 'Sem chuva relevante <img src="sem-chuva.png">';
-        if (totalVolume < 10) return 'Acumulado baixo <img src="chuva-fraca.png">';
-        if (totalVolume < 25) return 'Acumulado moderado <img src="chuva-moderada.png">';
-        return 'Acumulado alto <img src="chuva-forte.png">';
+        if (totalVolume == 0) return 'Sem previsão de chuva';
+        if (totalVolume < 1) return 'Sem chuva relevante';
+        if (totalVolume < 10) return 'Acumulado baixo 💧';
+        if (totalVolume < 25) return 'Acumulado moderado 💧💧';
+        return 'Acumulado alto 💧💧💧';
     }
 
     
