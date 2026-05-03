@@ -258,7 +258,7 @@ button {
         display: flex;
         flex-wrap: wrap;
         gap: 5px;
-        font-size: 18px;
+        font-size: 30px;
     }
 
     .weather-text span {
