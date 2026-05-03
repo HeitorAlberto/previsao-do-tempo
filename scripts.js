@@ -162,10 +162,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function getVolumeDescription(totalVolume) {
         if (totalVolume === 0) return '🪣 Sem previsão de chuva.';
         if (totalVolume <= 0.9) return '🪣 Sem chuva relevante.';
-        if (totalVolume < 10) return '🪣 Acumulado baixo.';
-        if (totalVolume < 25) return '⚠️ Acumulado moderado.';
-        if (totalVolume < 80) return '⚠️ Acumulado alto.';
-        return '⚠️ Acumulado extremo.';
+        if (totalVolume < 10) return '🪣 Chuva leve.';
+        if (totalVolume < 25) return '⚠️ Chuva moderada.';
+        if (totalVolume < 80) return '⚠️ Chuva forte.';
+        return '⚠️ Chuva muito forte.';
     }
     
 
