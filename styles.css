@@ -129,21 +129,21 @@ button {
 
 /* Badges */
 .badge-temp {
-    color: orange;
-    text-shadow: 2px 2px 4px black;
+    color: lightorange;
+    text-shadow: 1px 1px 2px black;
     font-weight: bold;
     
 }
 
 .badge-precip {
-    color: blue;
-    text-shadow: 2px 2px 4px black;
+    color: lightblue;
+    text-shadow: 1px 1px 2px black;
     font-weight: bold;
 }
 
 .badge-wind {
-    color: green;
-    text-shadow: 2px 2px 4px black;
+    color: lightgreen;
+    text-shadow: 1px 1px 2px black;
     font-weight: bold;
 }
 
