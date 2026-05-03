@@ -135,9 +135,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Estabilidade (Céu que não muda muito)
         if (delta < 45) {
-            if (maxCloud < 50) return "Poucas nuvens <span class='emoji'>🌤️</span>";
-            if (maxCloud < 80) return "Muitas nuvens <span class='emoji'>🌥️</span>";
-            return "Nublado <span class='emoji'>☁️</span>";
+            if (maxCloud < 50) return "<span class='emoji'>🌤️</span> Poucas nuvens.";
+            if (maxCloud < 80) return "<span class='emoji'>🌥️</span> Muitas nuvens.";
+            return "<span class='emoji'>☁️</span> Nublado.";
         }
 
         // Transições (O "drama" do dia)
@@ -147,26 +147,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // O dia abrindo
         if (avg1 - avg2 > 35) {
-            return avg2 < 30 ? "Nublado pela manhã, abrindo à tarde <span class='emoji'>🌥️</span>" : "Céu limpando ao longo do dia <span class='emoji'>🌥️</span>";
+            return avg2 < 30 ? "<span class='emoji'>🌥️</span> Nublado pela manhã, abrindo à tarde." : "<span class='emoji'>🌥️</span> Céu limpando ao longo do dia.";
         }
 
         // O dia fechando
         if (avg2 - avg1 > 35) {
-            return avg1 < 30 ? "Aumento de nuvens ao longo do dia <span class='emoji'>🌥️</span>" : "Céu fechando ao longo do dia <span class='emoji'>🌥️</span>";
+            return avg1 < 30 ? "<span class='emoji'>🌥️</span> Aumento de nuvens ao longo do dia." : "<span class='emoji'>🌥️</span> Céu fechando ao longo do dia.";
         }
 
-        return "Nuvens variando muito <span class='emoji'>🌥️</span>";
+        return "<span class='emoji'>🌥️</span> Nuvens variando muito.";
     }
 
     // --- DESCRIÇÃO DE CHUVA ---
     function getVolumeDescription(totalVolume) {
-        if (totalVolume == 0) return 'Sem previsão de chuva';
-        if (totalVolume < 1) return 'Sem chuva relevante';
-        if (totalVolume < 10) return 'Acumulado baixo 💧';
-        if (totalVolume < 25) return 'Acumulado moderado 💧💧';
-        return 'Acumulado alto 💧💧💧';
+        if (totalVolume === 0) return '🪣 Sem previsão de chuva.';
+        if (totalVolume <= 0.9) return '🪣 Sem chuva relevante.';
+        if (totalVolume < 10) return '🪣 Acumulado baixo.';
+        if (totalVolume < 25) return '⚠️ Acumulado moderado.';
+        if (totalVolume < 80) return '⚠️ Acumulado alto.';
+        return '⚠️ Acumulado extremo.';
     }
-
     
 
     const renderDays = dayMap => {

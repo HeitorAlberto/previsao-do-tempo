@@ -112,7 +112,7 @@ button {
 /* Data */
 .date-line {
     font-weight: bolder;
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     align-self: center;
 }
 
@@ -125,34 +125,16 @@ button {
 .main-info {
     display: flex;
     gap: 40px;
+    font-size: 1.5rem;
+    color: #666666;
 }
 
-/* Badges */
-.badge-temp {
-    color: lightorange;
-    text-shadow: 1px 1px 2px black;
-    font-weight: bold;
-    
-}
-
-.badge-precip {
-    color: lightblue;
-    text-shadow: 1px 1px 2px black;
-    font-weight: bold;
-}
-
-.badge-wind {
-    color: lightgreen;
-    text-shadow: 1px 1px 2px black;
-    font-weight: bold;
-}
 
 /* Texto clima */
 .weather-text {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    font-weight: bold;
     color: #666666;
     text-align: center;
 }
@@ -170,10 +152,14 @@ button {
 }
 
 .weather-text .emoji {
-    vertical-align: bottom;
+    vertical-align: middle;
     border: none;
     text-shadow: 1px 1px 2px #000;
     box-shadow: none;
+}
+
+.emoji-acumulado {
+    font-size: 0.8rem;
 }
 
 
@@ -244,23 +230,26 @@ button {
         padding: 50px 10px;
     }
 
+    .day-row {
+        align-items:normal;
+    }
 
 
     .main-info {
         display: flex;
         flex-wrap: wrap;
-        align-self: center;
-        gap: 12px;
+        justify-content: center;
+        gap: 25px;
     }
 
     .weather-text {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: 1fr;
         gap: 5px;
-        font-size: 30px;
+        font-size: 22px;
     }
 
     .weather-text span {
-        text-align: center;
+        text-align: left;
     }
 }
