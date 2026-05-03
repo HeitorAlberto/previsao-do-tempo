@@ -105,7 +105,7 @@ button {
 .day-row {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 45px;
     align-items: center;
 }
 
@@ -127,6 +127,12 @@ button {
     gap: 40px;
     font-size: 1.5rem;
     color: #666666;
+}
+
+.badge {
+    box-shadow: 1px 1px 10px rgb(179, 179, 179);
+    border-radius: 8px;
+    padding: 0px 12px;
 }
 
 
@@ -237,15 +243,17 @@ button {
 
     .main-info {
         display: flex;
+        flex-direction: row;
         flex-wrap: wrap;
         justify-content: center;
+        align-items: center;
         gap: 25px;
     }
 
     .weather-text {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 5px;
+        gap: 15px;
         font-size: 22px;
     }
 
