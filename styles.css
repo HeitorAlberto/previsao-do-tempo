@@ -113,6 +113,7 @@ button {
 .date-line {
     font-weight: bolder;
     font-size: 1.3rem;
+    align-self: center;
 }
 
 /* Fim de semana */
@@ -244,9 +245,7 @@ button {
         padding: 50px 10px;
     }
 
-    .day-row {
-        align-items: start;
-    }
+
 
     .main-info {
         display: flex;
@@ -259,18 +258,10 @@ button {
         display: flex;
         flex-wrap: wrap;
         gap: 5px;
-        text-align: center;
-        font-size: 1rem;
+        font-size: 3cqw;
     }
 
     .weather-text span {
-        text-align: left;
-    }
-}
-
-
-@media(max-width:400px) {
-    .weather-text {
-        font-size: 0.9rem;
+        text-align: center;
     }
 }
