@@ -7,6 +7,31 @@
             "Oeste Catarinense",
             "Vale do Itajaí",
             "Noroeste Rio-grandense",
+            "Centro Ocidental Rio-grandense",
+            "Metropolitana de Curitiba",
+            "Grande Florianópolis",
+            "Metropolitana de Porto Alegre",
+            "Nordeste Rio-grandense",
+            "Sudeste Paranaense",
+            "Centro Oriental Rio-grandense",
+            "Norte Catarinense",
+            "Centro-Sul Paranaense",
+            "Sul Catarinense",
+            "Sudoeste Paranaense",
+            "Centro Oriental Paranaense"
+        ],
+        "inicio": "2026-05-04 11:00:00.0",
+        "fim": "2026-05-05 06:00:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54231"
+    },
+    {
+        "evento": "Tempestade",
+        "severidade": "Baixo",
+        "areas": [
+            "Serrana",
+            "Oeste Catarinense",
+            "Vale do Itajaí",
+            "Noroeste Rio-grandense",
             "Metropolitana de Curitiba",
             "Grande Florianópolis",
             "Metropolitana de Porto Alegre",
@@ -20,7 +45,7 @@
         ],
         "inicio": "2026-05-04 15:00:00.0",
         "fim": "2026-05-05 06:00:00.0",
-        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54229"
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54230"
     },
     {
         "evento": "Tempestade",
