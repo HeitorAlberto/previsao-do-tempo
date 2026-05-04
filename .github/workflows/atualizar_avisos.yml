@@ -1,0 +1,30 @@
+name: Atualizar Avisos INMET
+on:
+  schedule:
+    - cron: '0 * * * *' # Executa a cada hora cheia
+  workflow_dispatch: # Permite que você rode manualmente para testar
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Instalar Dependências
+        run: pip install requests
+
+      - name: Rodar Script do INMET
+        run: python avisos-inmet/processar_avisos.py
+
+      - name: Commitar e dar Push
+        run: |
+          git config --global user.name 'Github Action'
+          git config --global user.email 'action@github.com'
+          git add avisos-inmet/alertas_ativos.json
+          git commit -m "Automação: Atualizando alertas INMET" || exit 0
+          git push
