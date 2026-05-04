@@ -1,8 +1,8 @@
 name: Atualizar Avisos INMET
 on:
   schedule:
-    - cron: '0 * * * *' # Executa a cada hora cheia
-  workflow_dispatch: # Permite que você rode manualmente para testar
+    - cron: '0 * * * *' # Roda a cada hora
+  workflow_dispatch: # Permite rodar manual
 
 jobs:
   build:
@@ -18,13 +18,17 @@ jobs:
       - name: Instalar Dependências
         run: pip install requests
 
-      - name: Rodar Script do INMET
-        run: python avisos-inmet/processar_avisos.py
+      - name: Rodar Base IBGE (Referência)
+        run: python avisos-inmet/gerar_base.py # Roda o código do IBGE
+
+      - name: Rodar Avisos INMET (Alertas)
+        run: python avisos-inmet/processar_avisos.py # Roda o código do INMET
 
       - name: Commitar e dar Push
         run: |
           git config --global user.name 'Github Action'
           git config --global user.email 'action@github.com'
+          git add avisos-inmet/referencia_locais.json
           git add avisos-inmet/alertas_ativos.json
-          git commit -m "Automação: Atualizando alertas INMET" || exit 0
+          git commit -m "Automação: Atualizando base IBGE e alertas INMET" || exit 0
           git push
