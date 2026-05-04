@@ -85,9 +85,9 @@ function exibirBanner(alertas) {
     const forecastSection = document.getElementById('forecastSection');
 
     const estilos = {
-        "VERMELHO": { bg: "#f8d7da", border: "#f8d7da", texto: "#000" },
-        "LARANJA": { bg: "#ffc198", border: "#ffc198", texto: "#000" },
-        "AMARELO": { bg: "#fffc97", border: "#fffc97", texto: "#000" }
+        "VERMELHO": { bg: "#ffc3c8", border: "#f8d7da", texto: "#000" },
+        "LARANJA": { bg: "#ffdec0", border: "#ffc198", texto: "#000" },
+        "AMARELO": { bg: "#fffdbf", border: "#fffc97", texto: "#000" }
     };
 
     const container = document.createElement('div');
