@@ -236,6 +236,10 @@ button {
         text-align: center;
     }
 
+    #alerta-inmet-container {
+        max-width: 90%;
+    }
+
     .day {
         padding: 50px 10px;
     }

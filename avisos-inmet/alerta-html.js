@@ -1,12 +1,16 @@
 export async function verificarAlertasInmet(cidade, estado) {
-    // Remove qualquer aviso anterior para não duplicar
     const avisoAntigo = document.getElementById('alerta-inmet-container');
     if (avisoAntigo) avisoAntigo.remove();
 
     try {
-        const chaveBusca = `${cidade} - ${estado}`.toUpperCase();
+        const normalize = str =>
+            str
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toUpperCase();
 
-        // Busca as bases no seu repositório GitHub
+        const cidadeNormalizada = normalize(cidade);
+
         const [resRef, resAlertas] = await Promise.all([
             fetch('avisos-inmet/referencia_locais.json'),
             fetch('avisos-inmet/alertas_ativos.json')
@@ -17,65 +21,119 @@ export async function verificarAlertasInmet(cidade, estado) {
         const referencia = await resRef.json();
         const alertasAtivos = await resAlertas.json();
 
-        // 1. Acha a mesorregião do usuário
-        const dadosLocal = referencia[chaveBusca];
-        if (!dadosLocal) return;
-
-        const mesoUsuario = dadosLocal.meso.toLowerCase();
-
-        // 2. Cruza com os alertas ativos
-        const alertaParaExibir = alertasAtivos.find(alerta =>
-            alerta.areas.some(area => area.toLowerCase() === mesoUsuario)
+        const entrada = Object.entries(referencia).find(([key]) =>
+            normalize(key).startsWith(cidadeNormalizada)
         );
 
-        // 3. Se houver alerta, injeta no HTML
-        if (alertaParaExibir) {
-            exibirBanner(alertaParaExibir);
-        }
+        if (!entrada) return;
+
+        const dadosLocal = entrada[1];
+        const mesoUsuario = dadosLocal.meso.toLowerCase();
+
+        const agora = new Date();
+
+        const alertasFiltrados = alertasAtivos
+            .filter(alerta =>
+                alerta.areas.some(area => area.toLowerCase() === mesoUsuario)
+            )
+            .map(a => ({
+                ...a,
+                inicioDate: new Date(a.inicio || a.inicioISO || a.fim),
+                fimDate: new Date(a.fim)
+            }))
+            .filter(a => a.fimDate > agora);
+
+        if (alertasFiltrados.length === 0) return;
+
+        const peso = (sev) => {
+            if (sev === "Extremo") return 3;
+            if (sev === "Médio") return 2;
+            return 1;
+        };
+
+        const selecionados = alertasFiltrados
+            .sort((a, b) => {
+                const diffInicio = a.inicioDate - b.inicioDate;
+                if (diffInicio !== 0) return diffInicio;
+                return peso(b.severidade) - peso(a.severidade);
+            })
+            .slice(0, 2);
+
+        exibirBanner(selecionados);
+
     } catch (err) {
         console.error("Erro ao carregar alertas:", err);
     }
 }
 
-function exibirBanner(alerta) {
+// 🔧 converte severidade → padrão INMET
+function getCorInmet(severidade) {
+    if (severidade === "Extremo") return "VERMELHO";
+    if (severidade === "Médio") return "LARANJA";
+    return "AMARELO";
+}
+
+function formatarData(data) {
+    const d = new Date(data);
+    const hora = d.getHours().toString().padStart(2, '0') + "h";
+    const dia = d.toLocaleDateString('pt-BR');
+    return `${hora} de ${dia}`;
+}
+
+function exibirBanner(alertas) {
     const main = document.querySelector('main');
     const forecastSection = document.getElementById('forecastSection');
 
-    // Cores baseadas na severidade do seu script Python
     const estilos = {
-        "Baixo": { bg: "#fff3cd", border: "#ffeeba", texto: "#856404" },   // Amarelo
-        "Médio": { bg: "#fff3cd", border: "#ffa000", texto: "#856404" },   // Laranja
-        "Extremo": { bg: "#f8d7da", border: "#f5c6cb", texto: "#721c24" }  // Vermelho
+        "VERMELHO": { bg: "#f8d7da", border: "#f8d7da", texto: "#000" },
+        "LARANJA": { bg: "#ffc198", border: "#ffc198", texto: "#000" },
+        "AMARELO": { bg: "#fffc97", border: "#fffc97", texto: "#000" }
     };
 
-    const estilo = estilos[alerta.severidade] || estilos["Baixo"];
-
-    const banner = document.createElement('div');
-    banner.id = 'alerta-inmet-container';
-    banner.style.cssText = `
-        background-color: ${estilo.bg};
-        border: 2px solid ${estilo.border};
-        color: ${estilo.texto};
-        padding: 15px;
+    const container = document.createElement('div');
+    container.id = 'alerta-inmet-container';
+    container.style.cssText = `
         margin: 0 auto 30px auto;
-        max-width: 800px;
-        border-radius: 8px;
-        text-align: center;
-        font-family: sans-serif;
+        width: 700px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
     `;
 
-    banner.innerHTML = `
-        <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 5px;">
-            ⚠️ AVISO INMET: ${alerta.evento.toUpperCase()} (${alerta.severidade})
-        </div>
-        <div style="font-size: 0.9em; margin-bottom: 10px;">
-            Válido até: ${alerta.fim}
-        </div>
-        <a href="${alerta.link}" target="_blank" style="color: ${estilo.texto}; font-weight: bold; text-decoration: underline;">
-            Ver detalhes oficiais
-        </a>
-    `;
+    alertas.forEach(alerta => {
+        const cor = getCorInmet(alerta.severidade);
+        const estilo = estilos[cor];
 
-    // Insere antes da seção de cards
-    main.insertBefore(banner, forecastSection);
+        const bloco = document.createElement('div');
+        bloco.style.cssText = `
+            background-color: ${estilo.bg};
+            border: 2px solid ${estilo.border};
+            color: ${estilo.texto};
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        `;
+
+        const inicio = formatarData(alerta.inicio || alerta.inicioISO || alerta.fim);
+        const fim = formatarData(alerta.fim);
+
+        bloco.innerHTML = `
+            <div style="font-weight: bold; font-size: 1.05em; margin-bottom: 6px;">
+                ⚠️ ALERTA ${cor} INMET - ${alerta.evento.toUpperCase()}
+            </div>
+
+            <div style="font-size: 0.9em; margin-bottom: 10px;">
+                ${inicio} até ${fim}
+            </div>
+
+            <a href="${alerta.link}" target="_blank"
+                style="color: ${estilo.texto}; font-weight: bold; text-decoration: underline;">
+                Ver detalhes oficiais
+            </a>
+        `;
+
+        container.appendChild(bloco);
+    });
+
+    main.insertBefore(container, forecastSection);
 }

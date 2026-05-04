@@ -1,3 +1,5 @@
+import { verificarAlertasInmet } from './avisos-inmet/alerta-html.js';
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const forecastBase = 'https://api.open-meteo.com/v1/forecast';
@@ -10,6 +12,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const historyContainer = document.getElementById("historyContainer");
 
     let searchHistory = [];
+
+    const estadosParaSigla = {
+        "Acre": "AC", "Alagoas": "AL", "Amapá": "AP", "Amazonas": "AM", "Bahia": "BA",
+        "Ceará": "CE", "Distrito Federal": "DF", "Espírito Santo": "ES", "Goiás": "GO",
+        "Maranhão": "MA", "Mato Grosso": "MT", "Mato Grosso do Sul": "MS", "Minas Gerais": "MG",
+        "Pará": "PA", "Paraíba": "PB", "Paraná": "PR", "Pernambuco": "PE", "Piauí": "PI",
+        "Rio de Janeiro": "RJ", "Rio Grande do Norte": "RN", "Rio Grande do Sul": "RS",
+        "Rondônia": "RO", "Roraima": "RR", "Santa Catarina": "SC", "São Paulo": "SP",
+        "Sergipe": "SE", "Tocantins": "TO"
+    };
 
     function loadHistory() {
         const saved = localStorage.getItem("search_history");
@@ -111,7 +123,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     };
 
-    // --- FUNÇÃO DE SUPORTE ---
     const get3hBlocks = (points) => {
         const step = 3;
         const blocks = [];
@@ -126,31 +137,26 @@ document.addEventListener("DOMContentLoaded", () => {
         return blocks;
     };
 
-    // --- DESCRIÇÃO DE NUVENS ---
     function getCloudDescription(points) {
         const blocks = get3hBlocks(points);
         const maxCloud = Math.max(...blocks);
         const minCloud = Math.min(...blocks);
         const delta = maxCloud - minCloud;
 
-        // Estabilidade (Céu que não muda muito)
         if (delta < 45) {
             if (maxCloud < 50) return "<span class='emoji'>🌤️</span> Poucas nuvens.";
             if (maxCloud < 80) return "<span class='emoji'>🌥️</span> Muitas nuvens.";
             return "<span class='emoji'>☁️</span> Nublado.";
         }
 
-        // Transições (O "drama" do dia)
         const mid = Math.floor(blocks.length / 2);
         const avg1 = blocks.slice(0, mid).reduce((a, b) => a + b, 0) / mid;
         const avg2 = blocks.slice(mid).reduce((a, b) => a + b, 0) / (blocks.length - mid);
 
-        // O dia abrindo
         if (avg1 - avg2 > 35) {
             return avg2 < 30 ? "<span class='emoji'>🌥️</span> Aberturas à tarde." : "<span class='emoji'>🌥️</span> Céu abre ao longo do dia.";
         }
 
-        // O dia fechando
         if (avg2 - avg1 > 35) {
             return avg1 < 30 ? "<span class='emoji'>🌥️</span> Nuvens aumentam ao longo do dia." : "<span class='emoji'>🌥️</span> Céu fecha ao longo do dia.";
         }
@@ -158,7 +164,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return "<span class='emoji'>🌥️</span> Nebulosidade variável.";
     }
 
-    // --- DESCRIÇÃO DE CHUVA ---
     function getVolumeDescription(totalVolume) {
         if (totalVolume === 0) return '💧 Sem previsão de chuva.';
         if (totalVolume <= 0.9) return '💧 Sem chuva relevante.';
@@ -168,7 +173,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (totalVolume < 80) return '⚠️ Chuva forte.';
         return '⚠️ Chuva muito forte.';
     }
-    
 
     const renderDays = dayMap => {
         cardsEl.innerHTML = '';
@@ -178,7 +182,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const s = summarizeDay(points);
             const volumeLabel = getVolumeDescription(s.precipSum);
             const cloudLabel = getCloudDescription(points);
-
 
             const card = document.createElement('div');
             card.className = 'day';
@@ -206,12 +209,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
 
                     <div class="weather-text">
-                        ${volumeLabel ? `<span>${volumeLabel}</span>` : ''}
-                        
-                        
-                        ${cloudLabel
-                                        ? `<span>${(volumeLabel || (intensityLabel && intensityLabel !== "Tempo firme")) ? ' ' : ''}${cloudLabel}</span>`
-                                        : ''}
+                        <span>${volumeLabel}</span>
+                        <span> ${cloudLabel}</span>
                     </div>
                 </div>
             `;
@@ -270,10 +269,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const rev = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`);
             const revData = await rev.json();
-            const resolvedName = getAddressText(revData.address || {});
+            const address = revData.address || {};
+            const resolvedName = getAddressText(address);
 
             locationName.textContent = "🗺️ " + resolvedName;
             addToHistory(resolvedName, lat, lon);
+
+            const cidade =
+                address.city ||
+                address.town ||
+                address.village ||
+                address.municipality ||
+                address.county ||
+                '';
+
+            const estadoNome =
+                address.state ||
+                address.region ||
+                address.county ||
+                address.state_district ||
+                '';
+
+            const estado = estadosParaSigla[estadoNome] || estadoNome;
+
+            if (cidade && estado) {
+                verificarAlertasInmet(cidade, estado);
+            }
 
         } catch (e) {
             console.error(e);
