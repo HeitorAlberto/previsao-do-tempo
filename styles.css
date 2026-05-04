@@ -86,20 +86,21 @@ button {
 }
 
 #forecastSection {
-    background-color: #f4f4f4;
+    padding: 0px 12px;
 }
 
 /* ===== LISTA ===== */
 #cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2px;
+    gap: 30px;
 }
 
 /* ===== DIA ===== */
 .day {
     padding: 30px 0;
-    background-color: white;
+    box-shadow: 1px 1px 10px lightgray;
+    border-radius: 20px;
 }
 
 .day-row {
@@ -198,7 +199,7 @@ button {
     #cards {
         display: grid;
         grid-template-columns: 1fr;
-        row-gap: 2px;
+        row-gap: 45px;
         column-gap: 0px;
      }
 
