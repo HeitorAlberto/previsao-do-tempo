@@ -99,7 +99,7 @@ button {
 /* ===== DIA ===== */
 .day {
     padding: 30px 0;
-    box-shadow: 1px 1px 10px lightgray;
+    border: 2px solid #eaeaea;
     border-radius: 20px;
 }
 
