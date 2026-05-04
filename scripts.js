@@ -147,15 +147,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // O dia abrindo
         if (avg1 - avg2 > 35) {
-            return avg2 < 30 ? "<span class='emoji'>🌥️</span> Nublado pela manhã, abrindo à tarde." : "<span class='emoji'>🌥️</span> Céu limpando ao longo do dia.";
+            return avg2 < 30 ? "<span class='emoji'>🌥️</span> Aberturas à tarde." : "<span class='emoji'>🌥️</span> Céu abre ao longo do dia.";
         }
 
         // O dia fechando
         if (avg2 - avg1 > 35) {
-            return avg1 < 30 ? "<span class='emoji'>🌥️</span> Aumento de nuvens ao longo do dia." : "<span class='emoji'>🌥️</span> Céu fechando ao longo do dia.";
+            return avg1 < 30 ? "<span class='emoji'>🌥️</span> Nuvens aumentam ao longo do dia." : "<span class='emoji'>🌥️</span> Céu fecha ao longo do dia.";
         }
 
-        return "<span class='emoji'>🌥️</span> Nuvens variando muito.";
+        return "<span class='emoji'>🌥️</span> Nebulosidade variável.";
     }
 
     // --- DESCRIÇÃO DE CHUVA ---
