@@ -144,7 +144,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const delta = maxCloud - minCloud;
 
         if (delta < 45) {
-            if (maxCloud < 50) return "<span class='emoji'>🌤️</span> Poucas nuvens.";
+            if (maxCloud < 40) return "<span class='emoji'>🌤️</span> Poucas nuvens.";
+            if (maxCloud < 60) return "<span class='emoji'>⛅</span> Parcialmente nublado.";
             if (maxCloud < 80) return "<span class='emoji'>🌥️</span> Muitas nuvens.";
             return "<span class='emoji'>☁️</span> Nublado.";
         }
@@ -161,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return avg1 < 30 ? "<span class='emoji'>🌥️</span> Nuvens aumentam ao longo do dia." : "<span class='emoji'>🌥️</span> Céu fecha ao longo do dia.";
         }
 
-        return "<span class='emoji'>🌥️</span> Nebulosidade variável.";
+        return "<span class='emoji'>⛅</span> Nebulosidade variável.";
     }
 
     function getVolumeDescription(totalVolume) {
@@ -191,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div class="day-row">
                     <div class="date-line ${isWeekend ? 'weekend' : ''}">
-                        ${labels.date} • ${labels.weekday}
+                        ${labels.date} - ${labels.weekday}
                     </div>
 
                     <div class="main-info">
