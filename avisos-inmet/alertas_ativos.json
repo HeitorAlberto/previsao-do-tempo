@@ -1,16 +1,62 @@
 [
     {
-        "evento": "Tempestade",
+        "evento": "Acumulado de Chuva",
         "severidade": "Baixo",
         "areas": [
-            "Sudoeste Rio-grandense",
-            "Sudeste Rio-grandense",
+            "Serrana",
+            "Oeste Catarinense",
+            "Vale do Itajaí",
+            "Noroeste Rio-grandense",
+            "Grande Florianópolis",
+            "Centro Ocidental Paranaense",
             "Metropolitana de Porto Alegre",
-            "Centro Oriental Rio-grandense"
+            "Noroeste Paranaense",
+            "Sudoeste de Mato Grosso do Sul",
+            "Sudoeste Paranaense",
+            "Oeste Paranaense",
+            "Nordeste Rio-grandense",
+            "Sul Catarinense",
+            "Norte Catarinense",
+            "Sudeste Paranaense",
+            "Centro-Sul Paranaense"
         ],
-        "inicio": "2026-05-05 10:00:00.0",
-        "fim": "2026-05-05 23:59:00.0",
-        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54247"
+        "inicio": "2026-05-07 09:00:00.0",
+        "fim": "2026-05-07 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54259"
+    },
+    {
+        "evento": "Tempestade",
+        "severidade": "Médio",
+        "areas": [
+            "Sudoeste Rio-grandense",
+            "Centro Ocidental Rio-grandense",
+            "Noroeste Rio-grandense",
+            "Metropolitana de Porto Alegre",
+            "Sudeste Rio-grandense",
+            "Nordeste Rio-grandense",
+            "Centro Oriental Rio-grandense",
+            "Oeste Catarinense"
+        ],
+        "inicio": "2026-05-07 00:00:00.0",
+        "fim": "2026-05-07 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54258"
+    },
+    {
+        "evento": "Tempestade",
+        "severidade": "Médio",
+        "areas": [
+            "Sudoeste Rio-grandense",
+            "Centro Ocidental Rio-grandense",
+            "Noroeste Rio-grandense",
+            "Metropolitana de Porto Alegre",
+            "Sudeste Rio-grandense",
+            "Nordeste Rio-grandense",
+            "Centro Oriental Rio-grandense",
+            "Oeste Catarinense"
+        ],
+        "inicio": "2026-05-07 00:00:00.0",
+        "fim": "2026-05-07 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54257"
     },
     {
         "evento": "Tempestade",
@@ -23,28 +69,23 @@
             "Centro Ocidental Rio-grandense"
         ],
         "inicio": "2026-05-05 10:00:00.0",
-        "fim": "2026-05-06 10:00:00.0",
-        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54246"
+        "fim": "2026-05-06 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54253"
     },
     {
-        "evento": "Tempestade",
-        "severidade": "Baixo",
+        "evento": "Chuvas Intensas",
+        "severidade": "Médio",
         "areas": [
-            "Serrana",
-            "Oeste Catarinense",
-            "Sudoeste Rio-grandense",
-            "Noroeste Rio-grandense",
-            "Centro Ocidental Rio-grandense",
-            "Metropolitana de Porto Alegre",
-            "Sudeste Rio-grandense",
-            "Nordeste Rio-grandense",
-            "Sul Catarinense",
-            "Centro Oriental Rio-grandense",
-            "Sudoeste Paranaense"
+            "Baixo Amazonas",
+            "Centro Amazonense",
+            "Norte Amazonense",
+            "Sul Amazonense",
+            "Sul de Roraima",
+            "Sudoeste Amazonense"
         ],
-        "inicio": "2026-05-06 00:00:00.0",
-        "fim": "2026-05-06 23:59:00.0",
-        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54245"
+        "inicio": "2026-05-06 09:00:00.0",
+        "fim": "2026-05-07 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54252"
     },
     {
         "evento": "Chuvas Intensas",
@@ -89,8 +130,21 @@
             "Jaguaribe"
         ],
         "inicio": "2026-05-06 00:00:00.0",
-        "fim": "2026-05-06 23:59:00.0",
-        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54244"
+        "fim": "2026-05-07 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54250"
+    },
+    {
+        "evento": "Acumulado de Chuva",
+        "severidade": "Baixo",
+        "areas": [
+            "Sul Baiano",
+            "Metropolitana de Salvador",
+            "Nordeste Baiano",
+            "Litoral Norte Espírito-santense"
+        ],
+        "inicio": "2026-05-06 09:00:00.0",
+        "fim": "2026-05-07 09:00:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54249"
     },
     {
         "evento": "Chuvas Intensas",
@@ -105,7 +159,40 @@
         ],
         "inicio": "2026-05-06 00:00:00.0",
         "fim": "2026-05-06 23:59:00.0",
-        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54243"
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54248"
+    },
+    {
+        "evento": "Tempestade",
+        "severidade": "Baixo",
+        "areas": [
+            "Sudoeste Rio-grandense",
+            "Sudeste Rio-grandense",
+            "Metropolitana de Porto Alegre",
+            "Centro Oriental Rio-grandense"
+        ],
+        "inicio": "2026-05-05 10:00:00.0",
+        "fim": "2026-05-05 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54247"
+    },
+    {
+        "evento": "Tempestade",
+        "severidade": "Baixo",
+        "areas": [
+            "Serrana",
+            "Oeste Catarinense",
+            "Sudoeste Rio-grandense",
+            "Noroeste Rio-grandense",
+            "Centro Ocidental Rio-grandense",
+            "Metropolitana de Porto Alegre",
+            "Sudeste Rio-grandense",
+            "Nordeste Rio-grandense",
+            "Sul Catarinense",
+            "Centro Oriental Rio-grandense",
+            "Sudoeste Paranaense"
+        ],
+        "inicio": "2026-05-06 00:00:00.0",
+        "fim": "2026-05-06 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54245"
     },
     {
         "evento": "Acumulado de Chuva",
