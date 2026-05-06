@@ -1,5 +1,87 @@
 [
     {
+        "evento": "Tempestade",
+        "severidade": "Baixo",
+        "areas": [
+            "Sudoeste Rio-grandense",
+            "Sudeste Rio-grandense",
+            "Centro Ocidental Rio-grandense"
+        ],
+        "inicio": "2026-05-06 09:50:00.0",
+        "fim": "2026-05-06 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54263"
+    },
+    {
+        "evento": "Chuvas Intensas",
+        "severidade": "Médio",
+        "areas": [
+            "Baixo Amazonas",
+            "Centro Amazonense",
+            "Norte Amazonense",
+            "Sul Amazonense",
+            "Sul de Roraima",
+            "Sudoeste Amazonense"
+        ],
+        "inicio": "2026-05-06 09:00:00.0",
+        "fim": "2026-05-06 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54262"
+    },
+    {
+        "evento": "Acumulado de Chuva",
+        "severidade": "Baixo",
+        "areas": [
+            "Norte Pioneiro Paranaense",
+            "Metropolitana de Curitiba",
+            "Centro Ocidental Paranaense",
+            "Noroeste Paranaense",
+            "Norte Central Paranaense",
+            "Sudoeste de Mato Grosso do Sul",
+            "Pantanais Sul Mato-grossense",
+            "Leste de Mato Grosso do Sul",
+            "Presidente Prudente",
+            "Sudeste Paranaense",
+            "Itapetininga",
+            "Vale do Itajaí",
+            "Centro Oriental Paranaense",
+            "Norte Catarinense",
+            "Litoral Sul Paulista",
+            "Grande Florianópolis",
+            "Centro-Sul Paranaense",
+            "Centro Norte de Mato Grosso do Sul",
+            "Assis",
+            "Oeste Paranaense",
+            "Bauru"
+        ],
+        "inicio": "2026-05-07 09:00:00.0",
+        "fim": "2026-05-07 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54261"
+    },
+    {
+        "evento": "Tempestade",
+        "severidade": "Baixo",
+        "areas": [
+            "Serrana",
+            "Oeste Catarinense",
+            "Vale do Itajaí",
+            "Noroeste Rio-grandense",
+            "Grande Florianópolis",
+            "Centro Ocidental Paranaense",
+            "Metropolitana de Porto Alegre",
+            "Noroeste Paranaense",
+            "Sudoeste Paranaense",
+            "Oeste Paranaense",
+            "Nordeste Rio-grandense",
+            "Sul Catarinense",
+            "Norte Catarinense",
+            "Sudeste Paranaense",
+            "Centro-Sul Paranaense",
+            "Sudoeste de Mato Grosso do Sul"
+        ],
+        "inicio": "2026-05-07 09:00:00.0",
+        "fim": "2026-05-07 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54260"
+    },
+    {
         "evento": "Acumulado de Chuva",
         "severidade": "Baixo",
         "areas": [
@@ -71,21 +153,6 @@
         "inicio": "2026-05-05 10:00:00.0",
         "fim": "2026-05-06 23:59:00.0",
         "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54253"
-    },
-    {
-        "evento": "Chuvas Intensas",
-        "severidade": "Médio",
-        "areas": [
-            "Baixo Amazonas",
-            "Centro Amazonense",
-            "Norte Amazonense",
-            "Sul Amazonense",
-            "Sul de Roraima",
-            "Sudoeste Amazonense"
-        ],
-        "inicio": "2026-05-06 09:00:00.0",
-        "fim": "2026-05-07 23:59:00.0",
-        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54252"
     },
     {
         "evento": "Chuvas Intensas",
