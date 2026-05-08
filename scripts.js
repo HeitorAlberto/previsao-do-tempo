@@ -166,13 +166,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function getVolumeDescription(totalVolume) {
-        if (totalVolume === 0) return '💧 Sem previsão de chuva.';
-        if (totalVolume <= 0.9) return '💧 Sem chuva relevante.';
-        if (totalVolume < 4) return '💧 Chuva leve e isolada.';
-        if (totalVolume < 10) return '💧 Chuva leve.';
-        if (totalVolume < 25) return '⚠️ Chuva moderada.';
-        if (totalVolume < 80) return '⚠️ Chuva forte.';
-        return '⚠️ Chuva extrema (perigo).';
+        if (totalVolume === 0) return '<span class="emoji">💧</span> Sem previsão de chuva.';
+        if (totalVolume <= 0.9) return '<span class="emoji">💧</span> Sem chuva relevante.';
+        if (totalVolume < 4) return '<span class="emoji">💧</span> Chuva leve e isolada.';
+        if (totalVolume < 10) return '<span class="emoji">💧</span> Chuva leve.';
+        if (totalVolume < 25) return '<span class="emoji">⚠️</span> Chuva moderada.';
+        if (totalVolume < 80) return '<span class="emoji">⚠️</span> Chuva forte.';
+        return '<span class="emoji">⚠️</span> Chuva extrema (perigo).';
     }
 
     const renderDays = dayMap => {

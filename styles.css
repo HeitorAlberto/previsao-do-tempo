@@ -163,9 +163,8 @@ button {
 
 .weather-text .emoji {
     vertical-align: middle;
-    border: none;
-    text-shadow: 2px 2px 8px #8c8c8c;
     box-shadow: none;
+    text-shadow: 1px 1px 1px black;
 }
 
 .emoji-acumulado {
