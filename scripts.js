@@ -155,11 +155,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const avg2 = blocks.slice(mid).reduce((a, b) => a + b, 0) / (blocks.length - mid);
 
         if (avg1 - avg2 > 35) {
-            return avg2 < 30 ? "<span class='emoji'>🌥️</span> Aberturas à tarde." : "<span class='emoji'>🌥️</span> Céu abre ao longo do dia.";
+            return avg2 < 30 ? "<span class='emoji'>🌥️</span> Aberturas à tarde." : "<span class='emoji'>⛅</span> Nebulosidade diminui à tarde.";
         }
 
         if (avg2 - avg1 > 35) {
-            return avg1 < 30 ? "<span class='emoji'>🌥️</span> Nuvens aumentam ao longo do dia." : "<span class='emoji'>🌥️</span> Céu fecha ao longo do dia.";
+            return avg1 < 30 ? "<span class='emoji'>⛅</span> Mais nuvens à tarde." : "<span class='emoji'>🌥️</span> Nublado à tarde.";
         }
 
         return "<span class='emoji'>⛅</span> Nebulosidade variável.";
