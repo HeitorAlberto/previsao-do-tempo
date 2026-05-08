@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <div class="day-row">
                     <div class="date-line ${isWeekend ? 'weekend' : ''}">
-                        ${labels.date} - ${labels.weekday}
+                        ${labels.date} • ${labels.weekday}
                     </div>
 
                     <div class="main-info">
