@@ -47,7 +47,7 @@ def salvar_otimizado(caminho_base):
     plt.savefig(temp_path, format='webp', dpi=250, bbox_inches="tight", pad_inches=0.03)
 
     img = Image.open(temp_path)
-    img.save(temp_path, "WEBP", quality=80, method=6)
+    img.save(temp_path, "WEBP", quality=100, method=6)
     plt.close()
 
 def gerar_mapas():
@@ -124,7 +124,7 @@ def gerar_mapas():
             f"({i+1:02d}) {item['start']:%d-%m-%Y} ({dia})",
             transform=ax.transAxes,
             ha="left", va="top",
-            fontsize=12, fontweight="bold",
+            fontsize=9, fontweight="bold",
             bbox=box
         )
 
@@ -133,7 +133,7 @@ def gerar_mapas():
             f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
             transform=ax.transAxes,
             ha="right", va="top",
-            fontsize=12, fontweight="bold",
+            fontsize=9, fontweight="bold",
             bbox=box
         )
 
@@ -170,7 +170,7 @@ def gerar_mapas():
         f"Precipitação acumulada (15 dias)\nPeríodo: {daily[0]['start']:%d-%m} até {daily[-1]['end']:%d-%m}",
         transform=ax.transAxes,
         ha="left", va="top",
-        fontsize=12, fontweight="bold",
+        fontsize=9, fontweight="bold",
         bbox=box
     )
 
@@ -179,7 +179,7 @@ def gerar_mapas():
         f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
         transform=ax.transAxes,
         ha="right", va="top",
-        fontsize=12, fontweight="bold",
+        fontsize=9, fontweight="bold",
         bbox=box
     )
 
