@@ -120,7 +120,7 @@ def gerar_mapas():
         box = dict(facecolor="white", edgecolor="black", linewidth=0.8, alpha=0.85)
 
         ax.text(
-            0.01, 0.99,
+            0.03, 0.5,
             f"({i+1:02d}) {item['start']:%d-%m-%Y} ({dia})",
             transform=ax.transAxes,
             ha="left", va="top",
@@ -129,7 +129,7 @@ def gerar_mapas():
         )
 
         ax.text(
-            0.99, 0.99,
+            0.97, 0.5,
             f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
             transform=ax.transAxes,
             ha="right", va="top",
@@ -166,7 +166,7 @@ def gerar_mapas():
     box = dict(facecolor="white", edgecolor="black", linewidth=0.8, alpha=0.85)
 
     ax.text(
-        0.03, 0.95,
+        0.03, 0.5,
         f"Precipitação acumulada (15 dias)\nPeríodo: {daily[0]['start']:%d-%m} até {daily[-1]['end']:%d-%m}",
         transform=ax.transAxes,
         ha="left", va="top",
@@ -175,7 +175,7 @@ def gerar_mapas():
     )
 
     ax.text(
-        0.97, 0.95,
+        0.97, 0.5,
         f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
         transform=ax.transAxes,
         ha="right", va="top",
