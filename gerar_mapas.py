@@ -117,7 +117,7 @@ def gerar_mapas():
         )
 
         dia = dias_semana_pt[item["start"].strftime("%A")]
-        box = dict(facecolor="white", linewidth=0.8, alpha=0.85)
+        box = dict(facecolor="white", edgecolor="none", linewidth=0.8, alpha=0.85)
 
         ax.text(
             0.01, 0.99,
