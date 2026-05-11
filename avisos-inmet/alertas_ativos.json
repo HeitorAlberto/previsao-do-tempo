@@ -3,18 +3,78 @@
         "evento": "Chuvas Intensas",
         "severidade": "Médio",
         "areas": [
-            "Metropolitana de Recife",
-            "Mata Pernambucana",
-            "Mata Paraibana",
-            "Agreste Paraibano",
-            "Leste Potiguar",
-            "Leste Alagoano",
-            "Agreste Potiguar",
-            "Agreste Pernambucano"
+            "Nordeste Paraense",
+            "Marajó",
+            "Baixo Amazonas",
+            "Sudoeste Paraense",
+            "Norte de Roraima",
+            "Centro Amazonense",
+            "Norte do Amapá",
+            "Metropolitana de Belém",
+            "Norte Amazonense",
+            "Sul Amazonense",
+            "Sudeste Paraense",
+            "Sul de Roraima",
+            "Oeste Maranhense",
+            "Sul do Amapá",
+            "Sudoeste Amazonense"
         ],
-        "inicio": "2026-05-11 18:00:00.0",
+        "inicio": "2026-05-12 00:00:00.0",
         "fim": "2026-05-12 23:59:00.0",
-        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54344"
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54349"
+    },
+    {
+        "evento": "Chuvas Intensas",
+        "severidade": "Médio",
+        "areas": [
+            "Baixo Amazonas",
+            "Norte de Roraima",
+            "Centro Amazonense",
+            "Sudoeste Paraense",
+            "Norte Amazonense",
+            "Sul Amazonense",
+            "Sul de Roraima",
+            "Sudoeste Amazonense"
+        ],
+        "inicio": "2026-05-11 09:23:00.0",
+        "fim": "2026-05-11 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54348"
+    },
+    {
+        "evento": "Geada",
+        "severidade": "Baixo",
+        "areas": [
+            "Serrana",
+            "Vale do Itajaí",
+            "Oeste Catarinense",
+            "Noroeste Rio-grandense",
+            "Nordeste Rio-grandense",
+            "Sudeste Paranaense",
+            "Norte Catarinense",
+            "Centro-Sul Paranaense",
+            "Sul Catarinense",
+            "Centro Oriental Rio-grandense",
+            "Metropolitana de Porto Alegre"
+        ],
+        "inicio": "2026-05-12 04:00:00.0",
+        "fim": "2026-05-12 09:00:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54347"
+    },
+    {
+        "evento": "Ventos Costeiros",
+        "severidade": "Baixo",
+        "areas": [
+            "Sul Baiano",
+            "Central Espírito-santense",
+            "Litoral Norte Espírito-santense",
+            "Baixadas",
+            "Sul Espírito-santense",
+            "Metropolitana do Rio de Janeiro",
+            "Norte Fluminense"
+        ],
+        "inicio": "2026-05-11 09:20:00.0",
+        "fim": "2026-05-12 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54346"
     },
     {
         "evento": "Acumulado de Chuva",
@@ -31,7 +91,24 @@
         ],
         "inicio": "2026-05-11 09:04:00.0",
         "fim": "2026-05-11 23:59:00.0",
-        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54343"
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54345"
+    },
+    {
+        "evento": "Chuvas Intensas",
+        "severidade": "Médio",
+        "areas": [
+            "Metropolitana de Recife",
+            "Mata Pernambucana",
+            "Mata Paraibana",
+            "Agreste Paraibano",
+            "Leste Potiguar",
+            "Leste Alagoano",
+            "Agreste Potiguar",
+            "Agreste Pernambucano"
+        ],
+        "inicio": "2026-05-11 18:00:00.0",
+        "fim": "2026-05-12 23:59:00.0",
+        "link": "https://apiprevmet3.inmet.gov.br/avisos/rss/54344"
     },
     {
         "evento": "Chuvas Intensas",
