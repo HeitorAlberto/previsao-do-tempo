@@ -163,7 +163,7 @@ def gerar_mapas():
         transform=ccrs.PlateCarree()
     )
 
-    box = dict(facecolor="white", edgecolor="black", linewidth=0.8, alpha=0.85)
+    box = dict(facecolor="white", edgecolor="none", linewidth=0.8, alpha=0.85)
 
     ax.text(
         0.01, 0.99,
