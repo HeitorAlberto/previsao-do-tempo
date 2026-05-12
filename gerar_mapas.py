@@ -31,7 +31,7 @@ cores = [
 
 color_map = ListedColormap(cores)
 norma = BoundaryNorm(nivels, color_map.N)
-extent = [-85, -20, -30, 6]
+extent = [-85, -20, -35, 6]
 out_dir = "mapas"
 os.makedirs(out_dir, exist_ok=True)
 
