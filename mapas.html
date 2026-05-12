@@ -60,18 +60,6 @@
                                 right: 10px;
                         }
 
-                        /* ===== LUPA ===== */
-                        #lens {
-                                position: fixed;
-                                width: 250px;
-                                height: 250px;
-                                border: 2px solid #000;
-                                display: none;
-                                pointer-events: none;
-                                z-index: 999;
-                                background-repeat: no-repeat;
-                                background-color: #fff;
-                        }
                 }
 
                 /* ===== MOBILE ===== */
@@ -103,24 +91,23 @@
                 <button id="prev">Anterior</button>
                 <button id="next">Próximo</button>
 
-                <a href="mapas/01.webp" target="_blank"><img src="mapas/01.webp" class="active" loading="lazy"></a>
-                <a href="mapas/02.webp" target="_blank"><img src="mapas/02.webp" loading="lazy"></a>
-                <a href="mapas/03.webp" target="_blank"><img src="mapas/03.webp" loading="lazy"></a>
-                <a href="mapas/04.webp" target="_blank"><img src="mapas/04.webp" loading="lazy"></a>
-                <a href="mapas/05.webp" target="_blank"><img src="mapas/05.webp" loading="lazy"></a>
-                <a href="mapas/06.webp" target="_blank"><img src="mapas/06.webp" loading="lazy"></a>
-                <a href="mapas/07.webp" target="_blank"><img src="mapas/07.webp" loading="lazy"></a>
-                <a href="mapas/08.webp" target="_blank"><img src="mapas/08.webp" loading="lazy"></a>
-                <a href="mapas/09.webp" target="_blank"><img src="mapas/09.webp" loading="lazy"></a>
-                <a href="mapas/10.webp" target="_blank"><img src="mapas/10.webp" loading="lazy"></a>
-                <a href="mapas/11.webp" target="_blank"><img src="mapas/11.webp" loading="lazy"></a>
-                <a href="mapas/12.webp" target="_blank"><img src="mapas/12.webp" loading="lazy"></a>
-                <a href="mapas/13.webp" target="_blank"><img src="mapas/13.webp" loading="lazy"></a>
-                <a href="mapas/14.webp" target="_blank"><img src="mapas/14.webp" loading="lazy"></a>
-                <a href="mapas/15.webp" target="_blank"><img src="mapas/15.webp" loading="lazy"></a>
-                <a href="mapas/acumulado-15-dias.webp" target="_blank"><img src="mapas/acumulado-15-dias.webp" loading="lazy"></a>
+                <a href="mapas/01.webp" target="_blank"><img src="mapas/01.webp" class="active"></a>
+                <a href="mapas/02.webp" target="_blank"><img src="mapas/02.webp"></a>
+                <a href="mapas/03.webp" target="_blank"><img src="mapas/03.webp"></a>
+                <a href="mapas/04.webp" target="_blank"><img src="mapas/04.webp"></a>
+                <a href="mapas/05.webp" target="_blank"><img src="mapas/05.webp"></a>
+                <a href="mapas/06.webp" target="_blank"><img src="mapas/06.webp"></a>
+                <a href="mapas/07.webp" target="_blank"><img src="mapas/07.webp"></a>
+                <a href="mapas/08.webp" target="_blank"><img src="mapas/08.webp"></a>
+                <a href="mapas/09.webp" target="_blank"><img src="mapas/09.webp"></a>
+                <a href="mapas/10.webp" target="_blank"><img src="mapas/10.webp"></a>
+                <a href="mapas/11.webp" target="_blank"><img src="mapas/11.webp"></a>
+                <a href="mapas/12.webp" target="_blank"><img src="mapas/12.webp"></a>
+                <a href="mapas/13.webp" target="_blank"><img src="mapas/13.webp"></a>
+                <a href="mapas/14.webp" target="_blank"><img src="mapas/14.webp"></a>
+                <a href="mapas/15.webp" target="_blank"><img src="mapas/15.webp"></a>
+                <a href="mapas/acumulado-15-dias.webp" target="_blank"><img src="mapas/acumulado-15-dias.webp"></a>
 
-                <div id="lens"></div>
         </div>
 
         <script>
@@ -145,40 +132,6 @@
                                 if (e.key === 'ArrowRight') showImage(index + 1);
                         });
 
-                        const zoom = 0.8;
-
-                        images.forEach(img => {
-
-                                img.addEventListener('mouseenter', () => {
-                                        lens.style.display = 'block';
-                                        lens.style.backgroundImage = `url(${img.src})`;
-                                });
-
-                                img.addEventListener('mouseleave', () => {
-                                        lens.style.display = 'none';
-                                });
-
-                                img.addEventListener('mousemove', (e) => {
-                                        const rect = img.getBoundingClientRect();
-
-                                        const x = e.clientX - rect.left;
-                                        const y = e.clientY - rect.top;
-
-                                        const scaleX = img.naturalWidth / rect.width;
-                                        const scaleY = img.naturalHeight / rect.height;
-
-                                        lens.style.left = (e.clientX - lens.offsetWidth / 2) + 'px';
-                                        lens.style.top = (e.clientY - lens.offsetHeight / 2) + 'px';
-
-                                        lens.style.backgroundSize =
-                                                (img.naturalWidth * zoom) + 'px ' +
-                                                (img.naturalHeight * zoom) + 'px';
-
-                                        lens.style.backgroundPosition =
-                                                (-x * scaleX * zoom + lens.offsetWidth / 2) + 'px ' +
-                                                (-y * scaleY * zoom + lens.offsetHeight / 2) + 'px';
-                                });
-                        });
                 }
         </script>
 
