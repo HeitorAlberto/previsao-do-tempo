@@ -96,7 +96,7 @@ def gerar_mapas():
 
     # ===== MAPAS DIÁRIOS =====
     for i, item in enumerate(daily):
-        fig = plt.figure(figsize=(12, 8))
+        fig = plt.figure(figsize=(14, 8))
         ax = plt.axes(projection=ccrs.PlateCarree())
         ax.set_extent(extent)
 
@@ -143,7 +143,7 @@ def gerar_mapas():
     # ===== ACUMULADO 15 DIAS (MANTIDO) =====
     accum = sum(d["data"] for d in daily)
 
-    fig = plt.figure(figsize=(12, 8))
+    fig = plt.figure(figsize=(14, 8))
     ax = plt.axes(projection=ccrs.PlateCarree())
     ax.set_extent(extent)
 
