@@ -1,8 +1,6 @@
 name: Atualizar Avisos INMET
 on:
   schedule:
-    # O padrão '0 */3 * * *' roda no minuto 0 a cada 3 horas (00:00, 03:00, 06:00, etc.)
-    # Sugestão: use '15 */3 * * *' para fugir do congestionamento do minuto zero.
     - cron: '15 */3 * * *' 
   workflow_dispatch:
 
