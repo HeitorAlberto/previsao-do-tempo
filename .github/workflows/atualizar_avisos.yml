@@ -1,8 +1,10 @@
 name: Atualizar Avisos INMET
 on:
   schedule:
-    - cron: '0 * * * *' # Roda a cada hora
-  workflow_dispatch: # Permite rodar manual
+    # O padrão '0 */3 * * *' roda no minuto 0 a cada 3 horas (00:00, 03:00, 06:00, etc.)
+    # Sugestão: use '15 */3 * * *' para fugir do congestionamento do minuto zero.
+    - cron: '15 */3 * * *' 
+  workflow_dispatch:
 
 jobs:
   build:
@@ -19,10 +21,10 @@ jobs:
         run: pip install requests
 
       - name: Rodar Base IBGE (Referência)
-        run: python avisos-inmet/gerar_base.py # Roda o código do IBGE
+        run: python avisos-inmet/gerar_base.py
 
       - name: Rodar Avisos INMET (Alertas)
-        run: python avisos-inmet/processar_avisos.py # Roda o código do INMET
+        run: python avisos-inmet/processar_avisos.py
 
       - name: Commitar e dar Push
         run: |
@@ -31,4 +33,7 @@ jobs:
           git add avisos-inmet/referencia_locais.json
           git add avisos-inmet/alertas_ativos.json
           git commit -m "Automação: Atualizando base IBGE e alertas INMET" || exit 0
-          git push
+          
+          # Rebase evita erros caso o workflow de Mapas tenha feito push no meio tempo
+          git pull --rebase origin main
+          git push origin main
