@@ -1,5 +1,3 @@
-import { verificarAlertasInmet } from './avisos-inmet/alerta-html.js';
-
 document.addEventListener("DOMContentLoaded", () => {
 
     const forecastBase = 'https://api.open-meteo.com/v1/forecast';
@@ -13,15 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let searchHistory = [];
 
-    const estadosParaSigla = {
-        "Acre": "AC", "Alagoas": "AL", "Amapá": "AP", "Amazonas": "AM", "Bahia": "BA",
-        "Ceará": "CE", "Distrito Federal": "DF", "Espírito Santo": "ES", "Goiás": "GO",
-        "Maranhão": "MA", "Mato Grosso": "MT", "Mato Grosso do Sul": "MS", "Minas Gerais": "MG",
-        "Pará": "PA", "Paraíba": "PB", "Paraná": "PR", "Pernambuco": "PE", "Piauí": "PI",
-        "Rio de Janeiro": "RJ", "Rio Grande do Norte": "RN", "Rio Grande do Sul": "RS",
-        "Rondônia": "RO", "Roraima": "RR", "Santa Catarina": "SC", "São Paulo": "SP",
-        "Sergipe": "SE", "Tocantins": "TO"
-    };
 
     function loadHistory() {
         const saved = localStorage.getItem("search_history");
@@ -291,11 +280,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 address.state_district ||
                 '';
 
-            const estado = estadosParaSigla[estadoNome] || estadoNome;
 
-            if (cidade && estado) {
-                verificarAlertasInmet(cidade, estado);
-            }
+    
 
         } catch (e) {
             console.error(e);
