@@ -115,7 +115,6 @@ button {
     font-weight: bolder;
     font-size: 1.5rem;
     align-self: center;
-    background-color: #f1f1f1;
     padding: 0px 12px;
     border-radius: 8px;
 }
@@ -134,7 +133,6 @@ button {
 }
 
 .badge {
-    box-shadow: 1px 1px 10px rgb(237 237 237);
     border-radius: 8px;
     padding: 0px 12px;
 }
