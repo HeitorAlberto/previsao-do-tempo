@@ -99,8 +99,7 @@ button {
 /* ===== DIA ===== */
 .day {
     padding: 60px;
-    border: 2px solid #eaeaea;
-    border-radius: 20px;
+    border-bottom: 2px solid #eaeaea;
 }
 
 .day-row {
@@ -196,8 +195,6 @@ button {
     #cards {
         display: grid;
         grid-template-columns: 1fr;
-        row-gap: 45px;
-        column-gap: 0px;
      }
 
 }
@@ -239,6 +236,8 @@ button {
 
     .day {
         padding: 50px 10px;
+        border-radius: 0px;
+        
     }
 
     .day-row {
