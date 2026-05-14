@@ -92,15 +92,13 @@ button {
 /* ===== LISTA ===== */
 #cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    grid-template-columns: 1fr;
 }
 
 /* ===== DIA ===== */
 .day {
-    padding: 30px 0;
-    border: 2px solid #eaeaea;
-    border-radius: 20px;
+    padding: 60px 0;
+    border-bottom: 2px solid #eaeaea;
 }
 
 .day-row {
