@@ -93,12 +93,14 @@ button {
 #cards {
     display: grid;
     grid-template-columns: 1fr;
+    justify-items: center;
 }
 
 /* ===== DIA ===== */
 .day {
-    padding: 60px 0;
-    border-bottom: 2px solid #eaeaea;
+    padding: 60px;
+    border: 2px solid #eaeaea;
+    border-radius: 20px;
 }
 
 .day-row {
