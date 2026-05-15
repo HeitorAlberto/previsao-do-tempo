@@ -246,58 +246,33 @@ def gerar_mapas():
 
 def exportar_dados(tp_mm, daily, run_time, out_dir):
 
-    lats = tp_mm.latitude.values
-    lons = tp_mm.longitude.values
+    print("EXPORTANDO JSON...")
+
+    lats = tp_mm.latitude.values.tolist()
+    lons = tp_mm.longitude.values.tolist()
 
     export = {
         "run": str(run_time),
-        "lat": lats.tolist(),
-        "lon": lons.tolist(),
+        "lat": lats,
+        "lon": lons,
         "dias": []
     }
 
     for i, data in enumerate(daily):
 
-        arr = data.values
-
-        # interpolador correto por dia
-        interp = RegularGridInterpolator(
-            (lats, lons),
-            arr,
-            bounds_error=False,
-            fill_value=None
-        )
-
-        # pontos (você depois vai expandir isso)
-        pontos = [
-            {
-                "name": "center",
-                "lat": float((lats[0] + lats[-1]) / 2),
-                "lon": float((lons[0] + lons[-1]) / 2)
-            }
-        ]
-
-        pontos_calc = []
-
-        for p in pontos:
-
-            val = interp((p["lat"], p["lon"]))
-
-            pontos_calc.append({
-                "name": p["name"],
-                "lat": p["lat"],
-                "lon": p["lon"],
-                "mm": float(val) if val is not None else None
-            })
+        arr = np.array(data.values)
 
         export["dias"].append({
             "dia": i + 1,
-            "grid": arr.tolist(),
-            "pontos": pontos_calc
+            "grid": arr.tolist()
         })
 
-    with open(os.path.join(out_dir, "dados_precipitacao.json"), "w") as f:
+    path = os.path.join(out_dir, "dados_precipitacao.json")
+
+    with open(path, "w") as f:
         json.dump(export, f)
+
+    print("JSON GERADO EM:", path)
 
 
 #========================
