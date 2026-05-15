@@ -149,20 +149,20 @@ try:
 
     novas_lats = np.arange(
         LAT_MIN,
-        LAT_MAX + 0.01,
-        0.01
+        LAT_MAX + 0.02,
+        0.02
     )
 
     novas_lons = np.arange(
         LON_MIN,
-        LON_MAX + 0.01,
-        0.01
+        LON_MAX + 0.02,
+        0.02
     )
 
     tp_inc_suave = tp_inc.interp(
         latitude=novas_lats,
         longitude=novas_lons,
-        method="cubic"
+        method="linear"
     )
 
     # ======================================================
@@ -257,12 +257,12 @@ try:
         )
 
         # ==================================================
-        # SUAVIZAÇÃO
+        # SUAVIZAÇÃO LEVE
         # ==================================================
 
         dados_imagem = gaussian_filter(
             dados_imagem,
-            sigma=1.2
+            sigma=0.5
         )
 
         # ==================================================
@@ -293,14 +293,15 @@ try:
         ax.axis("off")
 
         # ==================================================
-        # CONTOURF (VISUAL PROFISSIONAL)
+        # IMAGEM
         # ==================================================
 
-        ax.contourf(
+        ax.imshow(
             dados_imagem_mascarados,
-            levels=niveis_chuva,
-            colors=cores_escala,
-            antialiased=True
+            cmap=cmap_custom,
+            norm=norm,
+            interpolation="bicubic",
+            aspect="auto"
         )
 
         nome_imagem = f"chuva_dia_{i}.png"
