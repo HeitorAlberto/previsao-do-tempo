@@ -149,20 +149,20 @@ try:
 
     novas_lats = np.arange(
         LAT_MIN,
-        LAT_MAX + 0.03,
-        0.03
+        LAT_MAX + 0.01,
+        0.01
     )
 
     novas_lons = np.arange(
         LON_MIN,
-        LON_MAX + 0.03,
-        0.03
+        LON_MAX + 0.01,
+        0.01
     )
 
     tp_inc_suave = tp_inc.interp(
         latitude=novas_lats,
         longitude=novas_lons,
-        method="linear"
+        method="cubic"
     )
 
     # ======================================================
@@ -262,7 +262,7 @@ try:
 
         dados_imagem = gaussian_filter(
             dados_imagem,
-            sigma=0.7
+            sigma=1.2
         )
 
         # ==================================================
@@ -279,7 +279,7 @@ try:
         # ==================================================
 
         fig, ax = plt.subplots(
-            figsize=(12, 12),
+            figsize=(14, 14),
             dpi=100
         )
 
@@ -292,12 +292,15 @@ try:
 
         ax.axis("off")
 
-        ax.imshow(
+        # ==================================================
+        # CONTOURF (VISUAL PROFISSIONAL)
+        # ==================================================
+
+        ax.contourf(
             dados_imagem_mascarados,
-            cmap=cmap_custom,
-            norm=norm,
-            interpolation="bilinear",
-            aspect="auto"
+            levels=niveis_chuva,
+            colors=cores_escala,
+            antialiased=True
         )
 
         nome_imagem = f"chuva_dia_{i}.png"
@@ -312,7 +315,7 @@ try:
             transparent=True,
             bbox_inches="tight",
             pad_inches=0,
-            dpi=120
+            dpi=180
         )
 
         plt.close(fig)
