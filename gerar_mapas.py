@@ -44,10 +44,10 @@ def configurar_colorbar(cf, ax, label):
 
 def salvar_otimizado(caminho_base):
     temp_path = caminho_base.replace(".png", ".webp")
-    plt.savefig(temp_path, format='webp', dpi=250, bbox_inches="tight", pad_inches=0.03)
+    plt.savefig(temp_path,format='webp',dpi=250)
 
     img = Image.open(temp_path)
-    img.save(temp_path, "WEBP", quality=100, method=6)
+    img.save(temp_path,"WEBP",lossless=True,method=6)
     plt.close()
 
 def gerar_mapas():
