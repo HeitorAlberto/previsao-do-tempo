@@ -16,7 +16,7 @@ if os.path.exists(json_file):
     print("Já existe arquivo de hoje.")
     exit(0)
 
-client = Client()
+client = Client(source="azure")
 
 client.retrieve(
     type="fc",
