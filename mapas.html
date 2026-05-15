@@ -125,31 +125,31 @@
 
 		// Carregamento do JSON
 		fetch("dados.json")
-			.then(res => {
-				if (!res.ok) throw new Error("Arquivo não encontrado");
-				return res.json();
-			})
-			.then(data => {
-				dataGlobal = data;
-				const container = document.getElementById('dayButtons');
+				.then(res => res.json())
+				.then(data => {
+					dataGlobal = data;
+					const container = document.getElementById('dayButtons');
+					container.innerHTML = '';
 
-				// Cria botões dinamicamente
-				data.frames_24h.forEach((_, i) => {
-					const btn = document.createElement('button');
-					btn.innerText = `Dia ${i + 1}`;
-					btn.onclick = (e) => {
-						document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-						e.target.classList.add('active');
-						carregarDia(i);
-					};
-					container.appendChild(btn);
-					if (i === 0) btn.click(); // Ativa o primeiro por padrão
+					data.frames_24h.forEach((frame, i) => {
+						const btn = document.createElement('button');
+
+						// Usa o texto "Data - Dia" vindo do Python
+						btn.innerText = frame.label;
+
+						// Estilo para caber o texto maior
+						btn.style.width = "100%";
+						btn.style.marginBottom = "5px";
+
+						btn.onclick = (e) => {
+							document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+							e.target.classList.add('active');
+							carregarDia(i);
+						};
+						container.appendChild(btn);
+						if (i === 0) btn.click();
+					});
 				});
-			})
-			.catch(err => {
-				document.getElementById('status').innerText = "Erro: Use um servidor local (Live Server)";
-				console.error(err);
-			});
 	</script>
 </body>
 
