@@ -1,0 +1,36 @@
+{
+  "model": "ECMWF OpenData Azure",
+  "updated": "15/05/2026 21:40 UTC",
+  "bounds": [
+    [
+      -35,
+      -75
+    ],
+    [
+      6,
+      -30
+    ]
+  ],
+  "frames": [
+    {
+      "label": "15/05 - Sexta",
+      "arquivo": "chuva_dia_0.png"
+    },
+    {
+      "label": "16/05 - Sábado",
+      "arquivo": "chuva_dia_1.png"
+    },
+    {
+      "label": "17/05 - Domingo",
+      "arquivo": "chuva_dia_2.png"
+    },
+    {
+      "label": "18/05 - Segunda",
+      "arquivo": "chuva_dia_3.png"
+    },
+    {
+      "label": "19/05 - Terça",
+      "arquivo": "chuva_dia_4.png"
+    }
+  ]
+}
