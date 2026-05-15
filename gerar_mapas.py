@@ -10,6 +10,8 @@ from matplotlib.colors import (
     BoundaryNorm
 )
 
+from scipy.ndimage import gaussian_filter
+
 from datetime import datetime, timedelta
 import traceback
 
@@ -147,19 +149,19 @@ try:
     print("Shape TP_INC:", tp_inc.shape)
 
     # ======================================================
-    # SUAVIZAÇÃO
+    # INTERPOLAÇÃO ESPACIAL
     # ======================================================
 
     novas_lats = np.arange(
         LAT_MIN,
-        LAT_MAX + 0.0625,
-        0.0625
+        LAT_MAX + 0.05,
+        0.05
     )
 
     novas_lons = np.arange(
         LON_MIN,
-        LON_MAX + 0.0625,
-        0.0625
+        LON_MAX + 0.05,
+        0.05
     )
 
     tp_inc_suave = tp_inc.interp(
@@ -263,6 +265,15 @@ try:
             grid_dia.values
         )
 
+        # ==================================================
+        # SUAVIZAÇÃO VISUAL
+        # ==================================================
+
+        dados_imagem = gaussian_filter(
+            dados_imagem,
+            sigma=0.7
+        )
+
         print(
             "Max chuva:",
             np.nanmax(dados_imagem)
@@ -303,7 +314,7 @@ try:
             dados_imagem_mascarados,
             cmap=cmap_custom,
             norm=norm,
-            interpolation="nearest",
+            interpolation="bilinear",
             aspect="auto"
         )
 
@@ -317,7 +328,7 @@ try:
         plt.savefig(
             caminho_imagem,
             transparent=True,
-            dpi=200,
+            dpi=250,
             pad_inches=0
         )
 
