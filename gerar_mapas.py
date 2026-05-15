@@ -4,7 +4,12 @@ import json
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
+
+from matplotlib.colors import (
+    ListedColormap,
+    BoundaryNorm
+)
+
 from datetime import datetime, timedelta
 import traceback
 
@@ -12,16 +17,32 @@ import traceback
 # CONFIGURAÇÕES
 # ==========================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__)) if "__file__" in locals() else os.getcwd()
+BASE_DIR = (
+    os.path.dirname(os.path.abspath(__file__))
+    if "__file__" in locals()
+    else os.getcwd()
+)
+
 os.chdir(BASE_DIR)
 
 hoje_utc = datetime.utcnow()
+
 data_query = hoje_utc.strftime("%Y%m%d")
 
-grib_file = os.path.join(BASE_DIR, f"tp_{data_query}_00.grib2")
-json_meta = os.path.join(BASE_DIR, "metadados.json")
+grib_file = os.path.join(
+    BASE_DIR,
+    f"tp_{data_query}_00.grib2"
+)
 
-# Recorte Brasil
+json_meta = os.path.join(
+    BASE_DIR,
+    "metadados.json"
+)
+
+# ==========================================================
+# RECORTE BRASIL
+# ==========================================================
+
 LAT_MIN = -35
 LAT_MAX = 6
 
@@ -53,10 +74,12 @@ if not os.path.exists(grib_file):
         print("✅ Download concluído.")
 
     except Exception:
+
         traceback.print_exc()
         raise SystemExit(1)
 
 else:
+
     print("✅ GRIB já existe.")
 
 # ==========================================================
@@ -79,7 +102,7 @@ try:
     )
 
     # ======================================================
-    # LONGITUDE ECMWF 0-360 -> -180/+180
+    # LONGITUDE 0-360 -> -180/+180
     # ======================================================
 
     ds = ds.assign_coords(
@@ -127,8 +150,17 @@ try:
     # SUAVIZAÇÃO
     # ======================================================
 
-    novas_lats = np.arange(LAT_MIN, LAT_MAX + 0.0625, 0.0625)
-    novas_lons = np.arange(LON_MIN, LON_MAX + 0.0625, 0.0625)
+    novas_lats = np.arange(
+        LAT_MIN,
+        LAT_MAX + 0.0625,
+        0.0625
+    )
+
+    novas_lons = np.arange(
+        LON_MIN,
+        LON_MAX + 0.0625,
+        0.0625
+    )
 
     tp_inc_suave = tp_inc.interp(
         latitude=novas_lats,
@@ -141,31 +173,51 @@ try:
     # ======================================================
 
     cores_escala = [
-        "#BDBDBD",
-        "#81C784",
-        "#1B5E20",
-        "#4FC3F7",
-        "#0D47A1",
-        "#FFFF8D",
-        "#FDD835",
-        "#FB8C00",
-        "#E65100",
-        "#ff5959",
-        "#a10e0e",
-        "#8D6E63",
-        "#5D4037",
-        "#DDA0DD",
-        "#9370DB"
+        "#BDBDBD",  # 1-3
+        "#81C784",  # 3-6
+        "#1B5E20",  # 6-10
+        "#4FC3F7",  # 10-15
+        "#0D47A1",  # 15-20
+        "#FFFF8D",  # 20-30
+        "#FDD835",  # 30-40
+        "#FB8C00",  # 40-50
+        "#E65100",  # 50-75
+        "#ff5959",  # 75-100
+        "#a10e0e",  # 100-150
+        "#8D6E63",  # 150-200
+        "#5D4037",  # 200-300
+        "#DDA0DD",  # 300-400
+        "#9370DB"   # 400+
     ]
 
     niveis_chuva = [
-        1, 3, 6, 10, 15,
-        20, 30, 40, 50,
-        75, 100, 150,
-        200, 300, 400
+        1,
+        3,
+        6,
+        10,
+        15,
+        20,
+        30,
+        40,
+        50,
+        75,
+        100,
+        150,
+        200,
+        300,
+        400,
+        1000
     ]
 
-    cmap_custom = ListedColormap(cores_escala)
+    cmap_custom = ListedColormap(
+        cores_escala
+    )
+
+    norm = BoundaryNorm(
+        niveis_chuva,
+        cmap_custom.N,
+        clip=True
+    )
 
     # ======================================================
     # METADADOS
@@ -181,7 +233,10 @@ try:
         "Domingo"
     ]
 
-    data_base = datetime.strptime(data_query, "%Y%m%d")
+    data_base = datetime.strptime(
+        data_query,
+        "%Y%m%d"
+    )
 
     frames_meta = []
 
@@ -196,21 +251,35 @@ try:
         start_step = i * 8
         end_step = (i + 1) * 8
 
-        print(f"Dia {i} -> steps {start_step}:{end_step}")
+        print(
+            f"Dia {i} -> steps {start_step}:{end_step}"
+        )
 
         grid_dia = tp_inc_suave.isel(
             step=slice(start_step, end_step)
         ).sum(dim="step")
 
-        dados_imagem = np.flipud(grid_dia.values)
+        dados_imagem = np.flipud(
+            grid_dia.values
+        )
 
-        print("Max chuva:", np.nanmax(dados_imagem))
+        print(
+            "Max chuva:",
+            np.nanmax(dados_imagem)
+        )
 
-        # máscara transparente
+        # ==================================================
+        # TRANSPARÊNCIA < 1mm
+        # ==================================================
+
         dados_imagem_mascarados = np.ma.masked_where(
             dados_imagem < 1.0,
             dados_imagem
         )
+
+        # ==================================================
+        # FIGURA
+        # ==================================================
 
         fig, ax = plt.subplots(
             figsize=(8, 8),
@@ -226,11 +295,14 @@ try:
 
         ax.axis("off")
 
+        # ==================================================
+        # RENDER PNG
+        # ==================================================
+
         ax.imshow(
             dados_imagem_mascarados,
             cmap=cmap_custom,
-            vmin=1,
-            vmax=400,
+            norm=norm,
             interpolation="nearest",
             aspect="auto"
         )
@@ -251,6 +323,12 @@ try:
 
         plt.close(fig)
 
+        print(f"✅ {nome_imagem}")
+
+        # ==================================================
+        # METADADOS FRAME
+        # ==================================================
+
         data_alvo = data_base + timedelta(days=i)
 
         label = (
@@ -263,15 +341,15 @@ try:
             "arquivo": nome_imagem
         })
 
-        print(f"✅ {nome_imagem}")
-
     # ======================================================
     # JSON METADADOS
     # ======================================================
 
     output_meta = {
         "model": "ECMWF OpenData Azure",
-        "updated": datetime.utcnow().strftime("%d/%m/%Y %H:%M UTC"),
+        "updated": datetime.utcnow().strftime(
+            "%d/%m/%Y %H:%M UTC"
+        ),
         "bounds": [
             [LAT_MIN, LON_MIN],
             [LAT_MAX, LON_MAX]
@@ -279,7 +357,12 @@ try:
         "frames": frames_meta
     }
 
-    with open(json_meta, "w", encoding="utf-8") as f:
+    with open(
+        json_meta,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
         json.dump(
             output_meta,
             f,
