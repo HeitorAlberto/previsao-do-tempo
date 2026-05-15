@@ -28,7 +28,7 @@ if os.path.exists(json_file):
 # 3. Download ECMWF (Brasil inteiro)
 # ----------------------------
 
-client = Client()
+client = Client(source="azure")
 
 client.retrieve(
     type="fc",
