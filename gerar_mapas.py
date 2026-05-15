@@ -280,7 +280,7 @@ try:
 
         fig, ax = plt.subplots(
             figsize=(14, 14),
-            dpi=100
+            dpi=150
         )
 
         fig.subplots_adjust(
