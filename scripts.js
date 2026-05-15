@@ -262,6 +262,20 @@ document.addEventListener("DOMContentLoaded", () => {
             const address = revData.address || {};
             const resolvedName = getAddressText(address);
 
+            localStorage.setItem(
+
+                'mapUserData',
+
+                JSON.stringify({
+
+                    lat,
+                    lon,
+                    local: resolvedName
+
+                })
+
+            )
+
             locationName.textContent = "🗺️ " + resolvedName;
             addToHistory(resolvedName, lat, lon);
 
@@ -325,9 +339,20 @@ document.addEventListener("DOMContentLoaded", () => {
         locationName.textContent = 'Obtendo localização...';
 
         navigator.geolocation.getCurrentPosition(
-            pos => loadForecast(pos.coords.latitude, pos.coords.longitude),
+
+            pos => {
+
+                const lat = pos.coords.latitude
+
+                const lon = pos.coords.longitude
+
+                loadForecast(lat, lon)
+
+            },
+
             () => locationName.textContent = 'Erro ao obter localização'
-        );
+
+        )
     });
 
     const today = new Date();
