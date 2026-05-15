@@ -11,14 +11,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Instalar dependências
         run: |
           sudo apt-get update
           sudo apt-get install -y libproj-dev proj-data proj-bin libgeos-dev
           pip install --upgrade pip
-          # Adicionado Pillow aqui
           pip install ecmwf-opendata cartopy xarray matplotlib pandas numpy scipy cfgrib[eccodes] Pillow
 
       - name: Gerar mapas ECMWF
@@ -28,12 +27,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Adiciona os novos arquivos .webp
-          git add mapas/*.webp
-          
-          # Opcional: Remove os .png antigos do git para economizar espaço
-          git rm mapas/*.png --ignore-unmatch
-          
-          git commit -m "Atualização automática mapas (WebP Otimizado)" || echo "Sem mudanças"
+
+          git add mapas/ || true
+          git rm mapas/*.png --ignore-unmatch || true
+
+          git commit -m "Atualização automática mapas (WebP Otimizado)" || exit 0
           git push origin main
