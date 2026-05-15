@@ -11,6 +11,7 @@ from matplotlib.colors import (
 )
 
 from scipy.ndimage import gaussian_filter
+from PIL import Image
 
 from datetime import datetime, timedelta
 import traceback
@@ -123,15 +124,11 @@ try:
         longitude=slice(LON_MIN, LON_MAX)
     )
 
-    print(ds)
-
     # ======================================================
     # VARIÁVEL TP
     # ======================================================
 
     tp = ds["tp"].load()
-
-    print("Shape TP:", tp.shape)
 
     # ======================================================
     # CHUVA INCREMENTAL
@@ -146,22 +143,20 @@ try:
     # metros -> mm
     tp_inc = tp_inc * 1000
 
-    print("Shape TP_INC:", tp_inc.shape)
-
     # ======================================================
     # INTERPOLAÇÃO ESPACIAL
     # ======================================================
 
     novas_lats = np.arange(
         LAT_MIN,
-        LAT_MAX + 0.05,
-        0.05
+        LAT_MAX + 0.03,
+        0.03
     )
 
     novas_lons = np.arange(
         LON_MIN,
-        LON_MAX + 0.05,
-        0.05
+        LON_MAX + 0.03,
+        0.03
     )
 
     tp_inc_suave = tp_inc.interp(
@@ -175,21 +170,21 @@ try:
     # ======================================================
 
     cores_escala = [
-        "#BDBDBD",  # 1-3
-        "#81C784",  # 3-6
-        "#1B5E20",  # 6-10
-        "#4FC3F7",  # 10-15
-        "#0D47A1",  # 15-20
-        "#FFFF8D",  # 20-30
-        "#FDD835",  # 30-40
-        "#FB8C00",  # 40-50
-        "#E65100",  # 50-75
-        "#ff5959",  # 75-100
-        "#a10e0e",  # 100-150
-        "#8D6E63",  # 150-200
-        "#5D4037",  # 200-300
-        "#DDA0DD",  # 300-400
-        "#9370DB"   # 400+
+        "#BDBDBD",
+        "#81C784",
+        "#1B5E20",
+        "#4FC3F7",
+        "#0D47A1",
+        "#FFFF8D",
+        "#FDD835",
+        "#FB8C00",
+        "#E65100",
+        "#ff5959",
+        "#a10e0e",
+        "#8D6E63",
+        "#5D4037",
+        "#DDA0DD",
+        "#9370DB"
     ]
 
     niveis_chuva = [
@@ -253,10 +248,6 @@ try:
         start_step = i * 8
         end_step = (i + 1) * 8
 
-        print(
-            f"Dia {i} -> steps {start_step}:{end_step}"
-        )
-
         grid_dia = tp_inc_suave.isel(
             step=slice(start_step, end_step)
         ).sum(dim="step")
@@ -266,17 +257,12 @@ try:
         )
 
         # ==================================================
-        # SUAVIZAÇÃO VISUAL
+        # SUAVIZAÇÃO
         # ==================================================
 
         dados_imagem = gaussian_filter(
             dados_imagem,
             sigma=0.7
-        )
-
-        print(
-            "Max chuva:",
-            np.nanmax(dados_imagem)
         )
 
         # ==================================================
@@ -293,7 +279,7 @@ try:
         # ==================================================
 
         fig, ax = plt.subplots(
-            figsize=(8, 8),
+            figsize=(12, 12),
             dpi=100
         )
 
@@ -305,10 +291,6 @@ try:
         )
 
         ax.axis("off")
-
-        # ==================================================
-        # RENDER PNG
-        # ==================================================
 
         ax.imshow(
             dados_imagem_mascarados,
@@ -328,11 +310,24 @@ try:
         plt.savefig(
             caminho_imagem,
             transparent=True,
-            dpi=250,
-            pad_inches=0
+            bbox_inches="tight",
+            pad_inches=0,
+            dpi=120
         )
 
         plt.close(fig)
+
+        # ==================================================
+        # COMPRESSÃO PNG
+        # ==================================================
+
+        img = Image.open(caminho_imagem)
+
+        img.save(
+            caminho_imagem,
+            optimize=True,
+            compress_level=9
+        )
 
         print(f"✅ {nome_imagem}")
 
