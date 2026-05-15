@@ -12,7 +12,7 @@ grib_file = os.path.join(BASE_DIR, f"tp_{today}.grib2")
 json_file = os.path.join(BASE_DIR, "dados.json")
 
 if os.path.exists(json_file):
-    print("Já existe arquivo de hoje.")
+    print("Já existe JSON de hoje.")
     exit(0)
 
 client = Client(source="azure")
@@ -25,7 +25,6 @@ client.retrieve(
 )
 
 ds = xr.open_dataset(grib_file, engine="cfgrib")
-
 ds = ds.sortby("latitude")
 
 ds = ds.sel(
@@ -35,22 +34,29 @@ ds = ds.sel(
 
 tp = ds["tp"].load()
 
+# incremental
 tp_inc = tp.diff("step")
 tp_inc = tp_inc.where(tp_inc >= 0, 0).fillna(0) * 1000
 
-steps = tp_inc.step.values
+# ----------------------------
+# ACUMULADO 24H (8 passos de 3h)
+# ----------------------------
+
+window = 8
+
+tp_24h = tp_inc.rolling(step=window).sum().dropna("step")
+
 lats = ds.latitude.values
 lons = ds.longitude.values
+steps = tp_24h.step.values
 
-frames = []
+frames_24h = []
 
 for i in range(len(steps)):
-    frames.append({
+    frames_24h.append({
         "step": int(steps[i]),
-        "precip": tp_inc.isel(step=i).values.tolist()
+        "precip": tp_24h.isel(step=i).values.tolist()
     })
-
-total_5d = float(tp_inc.sum("step").mean().values)
 
 output = {
     "model": "ECMWF Open Data",
@@ -60,8 +66,7 @@ output = {
         "lat": lats.tolist(),
         "lon": lons.tolist()
     },
-    "total_5d_mean_mm": total_5d,
-    "frames": frames,
+    "frames_24h": frames_24h,
     "attribution": "ECMWF Open Data (CC BY 4.0)"
 }
 
