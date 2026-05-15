@@ -1,91 +1,109 @@
 from ecmwf.opendata import Client
 import xarray as xr
 import json
-import numpy as np
 import os
+from datetime import datetime
 
 # ----------------------------
-# 1. Download do ECMWF
+# 1. Configuração
+# ----------------------------
+
+DATA_DIR = "data"
+os.makedirs(DATA_DIR, exist_ok=True)
+
+today = datetime.utcnow().strftime("%Y%m%d")
+
+grib_file = f"{DATA_DIR}/tp_{today}.grib2"
+json_file = f"{DATA_DIR}/precip_{today}.json"
+
+# ----------------------------
+# 2. Cache (não baixa de novo)
+# ----------------------------
+
+if os.path.exists(json_file):
+    print("Arquivo já existe para hoje. Pulando download.")
+    exit(0)
+
+# ----------------------------
+# 3. Download ECMWF (Brasil inteiro)
 # ----------------------------
 
 client = Client()
 
 client.retrieve(
     type="fc",
-    param="tp",                 # total precipitation
-    step=list(range(0, 121, 3)),  # 0 a 120h (5 dias, cada 3h)
-    target="tp.grib2",
+    param="tp",
+    step=list(range(0, 121, 3)),  # 5 dias, 3h
+    target=grib_file,
 )
 
 # ----------------------------
-# 2. Abrir GRIB
+# 4. Abrir GRIB
 # ----------------------------
 
-ds = xr.open_dataset("tp.grib2", engine="cfgrib")
+ds = xr.open_dataset(grib_file, engine="cfgrib")
 
 tp = ds["tp"]
 
 # ----------------------------
-# 3. Converter acumulado → incremental
+# 5. Converter acumulado → incremental
 # ----------------------------
 
 tp_inc = tp.diff("step")
-tp_inc = tp_inc.where(tp_inc >= 0, 0)
+tp_inc = tp_inc.where(tp_inc >= 0, 0).fillna(0)
 
-# primeira posição não tem diff válido
-tp_inc = tp_inc.fillna(0)
+# converter para mm (mais útil para mapa)
+tp_inc = tp_inc * 1000
 
 # ----------------------------
-# 4. Acumulado 24h
-# (passo de 3h → 8 passos por dia)
+# 6. Acumulado 24h
 # ----------------------------
 
-steps_por_dia = 8
+steps_por_dia = 8  # 3h steps
 
 tp_24h = tp_inc.rolling(step=steps_por_dia).sum()
 
 # ----------------------------
-# 5. Preparar dados para JSON
-# (reduzido: média espacial por step)
+# 7. Redução para JSON (grade Brasil)
 # ----------------------------
+# atenção: isso gera matriz completa (Leaflet pode usar direto)
 
 steps = ds.step.values
+lats = ds.latitude.values
+lons = ds.longitude.values
 
-hourly = []
+frames = []
 
 for i, step in enumerate(steps):
-    hourly.append({
+    field = tp_inc.isel(step=i).values
+
+    frames.append({
         "step": int(step),
-        "precip_mean": float(tp_inc.isel(step=i).mean().values),
-        "precip_max": float(tp_inc.isel(step=i).max().values),
+        "data": field.tolist()   # grid 2D (lat x lon)
     })
 
 # ----------------------------
-# 6. Acumulado total 5 dias
+# 8. Acumulado total 5 dias
 # ----------------------------
 
 total_5d = float(tp_inc.sum("step").mean().values)
 
 # ----------------------------
-# 7. Montar JSON final
+# 9. JSON final
 # ----------------------------
 
 output = {
     "model": "ECMWF Open Data",
-    "variable": "tp",
-    "unit": "m (water equivalent)",
-    "total_5d_mean": total_5d,
+    "area": "Brazil",
+    "unit": "mm",
     "resolution_step_hours": 3,
-    "time_series": hourly
+    "total_5d_mean_mm": total_5d,
+    "lat": lats.tolist(),
+    "lon": lons.tolist(),
+    "frames": frames
 }
 
-# ----------------------------
-# 8. Salvar arquivo
-# ----------------------------
+with open(json_file, "w") as f:
+    json.dump(output, f)
 
-os.makedirs("mapas", exist_ok=True)
-
-with open("mapas/precip.json", "w") as f:
-    json.dump(output, f, indent=2)
-
-print("OK: JSON gerado")
+print("OK:", json_file)
