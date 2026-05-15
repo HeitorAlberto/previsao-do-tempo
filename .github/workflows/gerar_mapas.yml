@@ -1,13 +1,73 @@
-      - name: Gerar tiles WEBP
+name: Atualizar Mapas ECMWF
+
+on:
+  schedule:
+    - cron: "0 9 * * *"
+
+  workflow_dispatch:
+
+jobs:
+  gerar:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar dependências
 
         run: |
 
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            gdal-bin \
+            libproj-dev \
+            proj-data \
+            proj-bin \
+            libgeos-dev
+
+          pip install --upgrade pip
+
+          pip install \
+            ecmwf-opendata \
+            cartopy \
+            xarray \
+            matplotlib \
+            pandas \
+            numpy \
+            scipy \
+            Pillow \
+            cfgrib[eccodes]
+
+      - name: Gerar mapas ECMWF
+
+        run: |
+
+          python gerar_mapas.py
+
+      - name: Limpar tiles antigos
+
+        run: |
+
+          rm -rf tiles
+
           mkdir -p tiles
+
+      - name: Gerar tiles XYZ
+
+        run: |
 
           for file in chuva_dia_*.png
           do
 
             nome=$(basename "$file" .png)
+
+            echo "======================================"
+            echo "PROCESSANDO $nome"
+            echo "======================================"
 
             echo "Criando GeoTIFF..."
 
@@ -26,7 +86,7 @@
               "${nome}.tif" \
               "${nome}_3857.tif"
 
-            echo "Gerando tiles..."
+            echo "Gerando XYZ tiles..."
 
             gdal2tiles.py \
               --xyz \
@@ -37,3 +97,18 @@
               "tiles/${nome}"
 
           done
+
+      - name: Commit e Push
+
+        run: |
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          git status
+
+          git commit -m "Atualização automática ECMWF" || echo "Sem mudanças"
+
+          git push origin main
