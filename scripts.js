@@ -133,10 +133,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const delta = maxCloud - minCloud;
 
         if (delta < 45) {
-            if (maxCloud < 40) return "<span class='emoji'>🌤️</span> Poucas nuvens.";
-            if (maxCloud < 60) return "<span class='emoji'>⛅</span> Parcialmente nublado.";
-            if (maxCloud < 80) return "<span class='emoji'>🌥️</span> Muitas nuvens.";
-            return "<span class='emoji'>☁️</span> Nublado.";
+            if (maxCloud < 40) return "- Poucas nuvens.";
+            if (maxCloud < 60) return "- Parcialmente nublado.";
+            if (maxCloud < 80) return "- Muitas nuvens.";
+            return "- Nublado.";
         }
 
         const mid = Math.floor(blocks.length / 2);
@@ -144,24 +144,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const avg2 = blocks.slice(mid).reduce((a, b) => a + b, 0) / (blocks.length - mid);
 
         if (avg1 - avg2 > 35) {
-            return avg2 < 30 ? "<span class='emoji'>🌥️</span> Aberturas à tarde." : "<span class='emoji'>⛅</span> Nebulosidade diminui à tarde.";
+            return avg2 < 30 ? "- Aberturas à tarde." : "- Nebulosidade diminui à tarde.";
         }
 
         if (avg2 - avg1 > 35) {
-            return avg1 < 30 ? "<span class='emoji'>⛅</span> Mais nuvens à tarde." : "<span class='emoji'>🌥️</span> Nublado à tarde.";
+            return avg1 < 30 ? "- Mais nuvens à tarde." : "- Nublado à tarde.";
         }
 
-        return "<span class='emoji'>⛅</span> Nebulosidade variável.";
+        return "- Nebulosidade variável.";
     }
 
     function getVolumeDescription(totalVolume) {
-        if (totalVolume === 0) return '<span class="emoji">💧</span> Sem previsão de chuva.';
-        if (totalVolume <= 0.9) return '<span class="emoji">💧</span> Sem chuva relevante.';
-        if (totalVolume < 4) return '<span class="emoji">💧</span> Chuva leve e isolada.';
-        if (totalVolume < 10) return '<span class="emoji">💧</span> Chuva leve.';
-        if (totalVolume < 25) return '<span class="emoji">⚠️</span> Chuva moderada.';
-        if (totalVolume < 80) return '<span class="emoji">⚠️</span> Chuva forte.';
-        return '<span class="emoji">⚠️</span> Chuva extrema (perigo).';
+        if (totalVolume === 0) return '- Sem previsão de chuva.';
+        if (totalVolume <= 0.9) return '- Sem chuva relevante.';
+        if (totalVolume < 4) return '- Chuva leve e isolada.';
+        if (totalVolume < 10) return '- Chuva leve.';
+        if (totalVolume < 25) return '- Chuva moderada.';
+        if (totalVolume < 80) return '- Chuva forte.';
+        return '- Chuva extrema (perigo).';
     }
 
     const renderDays = dayMap => {
@@ -196,11 +196,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         <div class="badge badge-wind">
                             🍃 ${s.gustMax.toFixed(0)} km/h
                         </div>
-                    </div>
-
-                    <div class="weather-text">
-                        <span>${volumeLabel}</span>
-                        <span> ${cloudLabel}</span>
                     </div>
                 </div>
             `;

@@ -137,36 +137,6 @@ button {
 }
 
 
-/* Texto clima */
-.weather-text {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    color: #666666;
-    text-align: center;
-}
-
-.weather-text span {
-    border-radius: 6px;
-    vertical-align: middle;
-}
-
-
-.weather-text img {
-    height: 15px;
-    vertical-align: middle;
-    margin-left: 5px;
-}
-
-.weather-text .emoji {
-    vertical-align: middle;
-    box-shadow: none;
-    text-shadow: 1px 1px 1px black;
-}
-
-.emoji-acumulado {
-    font-size: 0.8rem;
-}
 
 
 /* ===== HISTÓRICO ===== */
