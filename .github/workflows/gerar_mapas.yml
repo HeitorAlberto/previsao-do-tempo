@@ -1,114 +1,117 @@
-name: Atualizar Mapas ECMWF
+- name: Gerar Mapas
+  run: |
 
-on:
-  schedule:
-    - cron: "0 9 * * *"
+    rm -rf mapas_hd
+    mkdir -p mapas_hd
 
-  workflow_dispatch:
+    python << 'EOF'
 
-jobs:
-  gerar:
+    import matplotlib
+    matplotlib.use("Agg")
 
-    runs-on: ubuntu-latest
+    import xarray as xr
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from scipy.ndimage import gaussian_filter
+    from matplotlib.colors import ListedColormap, BoundaryNorm
 
-    steps:
+    ds = xr.open_dataset("ecmwf.grib", engine="cfgrib")
 
-      - name: Checkout
-        uses: actions/checkout@v4
+    chuva = ds["tp"] * 1000
 
-      - name: Instalar dependências
+    lat = ds.latitude.values
+    lon = ds.longitude.values
 
-        run: |
+    lon = np.where(lon > 180, lon - 360, lon)
 
-          sudo apt-get update
+    ordem = np.argsort(lon)
+    lon = lon[ordem]
 
-          sudo apt-get install -y \
-            gdal-bin \
-            libproj-dev \
-            proj-data \
-            proj-bin \
-            libgeos-dev
+    chuva = chuva.values[:, :, ordem]
 
-          pip install --upgrade pip
+    cores = [
+        "#BDBDBD",
+        "#81C784",
+        "#1B5E20",
+        "#4FC3F7",
+        "#0D47A1",
+        "#FFFF8D",
+        "#FDD835",
+        "#FB8C00",
+        "#E65100",
+        "#ff5959",
+        "#a10e0e",
+        "#8D6E63",
+        "#5D4037",
+        "#DDA0DD",
+        "#9370DB"
+    ]
 
-          pip install \
-            ecmwf-opendata \
-            cartopy \
-            xarray \
-            matplotlib \
-            pandas \
-            numpy \
-            scipy \
-            Pillow \
-            cfgrib[eccodes]
+    niveis = [
+        1, 3, 6, 10, 15,
+        20, 30, 40, 50,
+        75, 100, 150,
+        200, 300, 400, 1000
+    ]
 
-      - name: Gerar mapas ECMWF
+    cmap = ListedColormap(cores)
+    norm = BoundaryNorm(niveis, cmap.N)
 
-        run: |
+    acumulado = np.zeros_like(chuva[0])
 
-          python gerar_mapas.py
+    for i in range(min(5, chuva.shape[0])):
 
-      - name: Limpar tiles antigos
+        acumulado += chuva[i]
 
-        run: |
+        dados = gaussian_filter(acumulado, sigma=1.2)
 
-          rm -rf tiles
+        fig = plt.figure(figsize=(18, 18), dpi=260)
 
-          mkdir -p tiles
+        ax = plt.axes()
 
-      - name: Gerar tiles XYZ
+        ax.set_axis_off()
 
-        run: |
+        plt.subplots_adjust(
+            left=0,
+            right=1,
+            top=1,
+            bottom=0
+        )
 
-          for file in chuva_dia_*.png
-          do
+        ax.contourf(
+            lon,
+            lat,
+            dados,
+            levels=niveis,
+            cmap=cmap,
+            norm=norm,
+            antialiased=True,
+            extend="max"
+        )
 
-            nome=$(basename "$file" .png)
+        arquivo = f"mapas_hd/chuva_dia_{i}.png"
 
-            echo "======================================"
-            echo "PROCESSANDO $nome"
-            echo "======================================"
+        plt.savefig(
+            arquivo,
+            transparent=True,
+            bbox_inches="tight",
+            pad_inches=0
+        )
 
-            echo "Criando GeoTIFF..."
+        plt.close()
 
-            gdal_translate \
-              -of GTiff \
-              -a_srs EPSG:4326 \
-              -a_ullr -75 6 -30 -35 \
-              "$file" \
-              "${nome}.tif"
+        print(f"Gerado: {arquivo}")
 
-            echo "Reprojetando para WebMercator..."
+    EOF
+  
+  run: 
 
-            gdalwarp \
-              -t_srs EPSG:3857 \
-              -r bilinear \
-              "${nome}.tif" \
-              "${nome}_3857.tif"
+    mkdir -p docs
 
-            echo "Gerando XYZ tiles..."
+    cp mapas.html docs/index.html
 
-            gdal2tiles.py \
-              --xyz \
-              --zoom=0-5 \
-              --processes=2 \
-              --webviewer=none \
-              "${nome}_3857.tif" \
-              "tiles/${nome}"
+    cp metadados.json docs/metadados.json
 
-          done
+    cp -r mapas_hd docs/mapas_hd
 
-      - name: Commit e Push
-
-        run: |
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add .
-
-          git status
-
-          git commit -m "Atualização automática ECMWF" || echo "Sem mudanças"
-
-          git push origin main
+    echo "Arquivos copiados"
