@@ -3,22 +3,17 @@ import xarray as xr
 import json
 import os
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 
+# Configurações de diretório
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-today = datetime.utcnow().strftime("%Y%m%d")
+today_str = datetime.utcnow().strftime("%Y%m%d")
 
-grib_file = os.path.join(BASE_DIR, f"tp_{today}.grib2")
+grib_file = os.path.join(BASE_DIR, f"tp_{today_str}.grib2")
 json_file = os.path.join(BASE_DIR, "dados.json")
 
-# Se quiser forçar a atualização, comente o exit(0)
-if os.path.exists(json_file):
-    print("Já existe JSON de hoje.")
-    # exit(0) 
-
+# 1. Download dos dados (0 a 120h = 5 dias)
 client = Client(source="azure")
-
-# Busca de 0 a 120h em passos de 3h
 client.retrieve(
     type="fc",
     param="tp",
@@ -26,57 +21,64 @@ client.retrieve(
     target=grib_file,
 )
 
+# 2. Carregamento e Processamento com Xarray
 ds = xr.open_dataset(grib_file, engine="cfgrib")
 ds = ds.sortby("latitude")
 
-# Recorte para a área do Brasil
+# Recorte para a área de interesse (Brasil aproximado)
 ds = ds.sel(
     latitude=slice(-34, 5),
     longitude=slice(-75, -34)
 )
 
-# Carrega a variável de precipitação total (m)
 tp = ds["tp"].load()
 
-# Calcula a precipitação incremental entre os passos (em mm)
+# Calcula a chuva incremental (a cada 3h) e converte para mm (*1000)
 tp_inc = tp.diff("step")
 tp_inc = tp_inc.where(tp_inc >= 0, 0).fillna(0) * 1000
 
-# Acumulado móvel de 24h (8 passos de 3h)
-window = 8
-tp_24h = tp_inc.rolling(step=window).sum().dropna("step")
-
+# 3. Agrupamento em Blocos de 24h (5 Dias)
 lats = ds.latitude.values
 lons = ds.longitude.values
-# Converter steps para horas inteiras
-steps = [int(s / np.timedelta64(1, 'h')) for s in tp_24h.step.values]
+dias_semana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
 
-frames_24h = []
+frames_5dias = []
+data_base = datetime.strptime(today_str, "%Y%m%d")
 
-for i in range(len(steps)):
-    # .round(1) é essencial para diminuir o tamanho do arquivo final
-    # .replace(np.nan, 0) evita que o JSON fique inválido
-    data_array = tp_24h.isel(step=i).values
-    data_array = np.nan_to_num(data_array, nan=0.0)
+# Cada dia tem 8 passos de 3 horas (8 * 3 = 24h)
+for i in range(1, 6):
+    end_step = i * 8
+    start_step = end_step - 8
     
-    frames_24h.append({
-        "step": steps[i],
+    # Soma o bloco de 24 horas
+    grid_dia = tp_inc.isel(step=slice(start_step, end_step)).sum(dim="step")
+    
+    # Calcula data e nome do dia
+    data_alvo = data_base + timedelta(days=i)
+    label = f"{data_alvo.strftime('%d/%m')} - {dias_semana[data_alvo.weekday()]}"
+    
+    # Limpeza de dados: remove NaNs e arredonda para diminuir o JSON
+    data_array = np.nan_to_num(grid_dia.values, nan=0.0)
+    
+    frames_5dias.append({
+        "label": label,
         "precip": data_array.round(1).tolist()
     })
 
+# 4. Estrutura Final do JSON
 output = {
     "model": "ECMWF Open Data",
-    "area": "Brazil",
-    "unit": "mm",
+    "updated": datetime.now().strftime("%d/%m/%Y %H:%M"),
     "grid": {
         "lat": lats.tolist(),
         "lon": lons.tolist()
     },
-    "frames_24h": frames_24h,
-    "attribution": "ECMWF Open Data (CC BY 4.0)"
+    "frames_24h": frames_5dias
 }
 
+# Salva o arquivo
 with open(json_file, "w") as f:
     json.dump(output, f)
 
-print(f"Sucesso! JSON gerado com {len(frames_24h)} dias/frames.")
+print(f"OK! JSON gerado com sucesso: {json_file}")
+print(f"Total de quadros: {len(frames_5dias)} dias.")
