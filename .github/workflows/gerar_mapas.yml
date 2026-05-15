@@ -3,10 +3,12 @@ name: Atualizar Mapas ECMWF
 on:
   schedule:
     - cron: "0 9 * * *"
+
   workflow_dispatch:
 
 jobs:
   gerar:
+
     runs-on: ubuntu-latest
 
     steps:
@@ -16,14 +18,15 @@ jobs:
 
       - name: Instalar dependências
         run: |
+
           sudo apt-get update
 
           sudo apt-get install -y \
+            gdal-bin \
             libproj-dev \
             proj-data \
             proj-bin \
-            libgeos-dev \
-            libeccodes-dev
+            libgeos-dev
 
           pip install --upgrade pip
 
@@ -35,22 +38,53 @@ jobs:
             pandas \
             numpy \
             scipy \
-            cfgrib[eccodes] \
-            Pillow
+            Pillow \
+            cfgrib[eccodes]
 
       - name: Gerar mapas ECMWF
         run: python gerar_mapas.py
 
+      - name: Gerar tiles WEBP
+
+        run: |
+
+          mkdir -p tiles
+
+          for file in chuva_dia_*.png
+          do
+
+            nome=$(basename "$file" .png)
+
+            echo "Convertendo $file -> WEBP"
+
+            gdal_translate \
+              -of WEBP \
+              -co QUALITY=82 \
+              "$file" \
+              "${nome}.webp"
+
+            echo "Gerando tiles..."
+
+            gdal2tiles.py \
+              --zoom=0-5 \
+              --processes=2 \
+              --webviewer=none \
+              "${nome}.webp" \
+              "tiles/${nome}"
+
+          done
+
       - name: Commit e Push
+
         run: |
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add *.png *.json *.grib2 || true
+          git add .
 
           git status
 
-          git commit -m "Atualização automática dados ECMWF" || echo "Sem mudanças"
+          git commit -m "Atualização automática ECMWF" || echo "Sem mudanças"
 
           git push origin main

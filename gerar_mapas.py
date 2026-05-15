@@ -347,6 +347,7 @@ try:
         )
 
         frames_meta.append({
+            "id": f"chuva_dia_{i}",
             "label": label,
             "arquivo": nome_imagem
         })
