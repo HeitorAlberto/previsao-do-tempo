@@ -4,13 +4,12 @@ import json
 import os
 from datetime import datetime
 
-DATA_DIR = "data"
-os.makedirs(DATA_DIR, exist_ok=True)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 today = datetime.utcnow().strftime("%Y%m%d")
 
-grib_file = f"{DATA_DIR}/tp_{today}.grib2"
-json_file = f"{DATA_DIR}/precip_{today}.json"
+grib_file = os.path.join(BASE_DIR, f"tp_{today}.grib2")
+json_file = os.path.join(BASE_DIR, "dados.json")
 
 if os.path.exists(json_file):
     print("Já existe arquivo de hoje.")
@@ -34,11 +33,10 @@ ds = ds.sel(
     longitude=slice(-75, -34)
 )
 
-tp = ds["tp"]
+tp = ds["tp"].load()
 
 tp_inc = tp.diff("step")
-tp_inc = tp_inc.where(tp_inc >= 0, 0).fillna(0)
-tp_inc = tp_inc * 1000
+tp_inc = tp_inc.where(tp_inc >= 0, 0).fillna(0) * 1000
 
 steps = tp_inc.step.values
 lats = ds.latitude.values
