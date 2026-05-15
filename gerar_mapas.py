@@ -17,94 +17,228 @@ plt.rcParams["path.simplify_threshold"] = 0.1
 plt.rcParams["agg.path.chunksize"] = 10000
 
 dias_semana_pt = {
-    "Monday": "segunda-feira", "Tuesday": "terça-feira", "Wednesday": "quarta-feira",
-    "Thursday": "quinta-feira", "Friday": "sexta-feira", "Saturday": "sábado", "Sunday": "domingo",
+    "Monday": "segunda-feira",
+    "Tuesday": "terça-feira",
+    "Wednesday": "quarta-feira",
+    "Thursday": "quinta-feira",
+    "Friday": "sexta-feira",
+    "Saturday": "sábado",
+    "Sunday": "domingo",
 }
 
 nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
 
 cores = [
-    "#FFFFFF", "#A8B0BA", "#90EFA0", "#2A9A50", "#8FC9FF", "#3A9AF9",
-    "#FFF175", "#D2B300", "#FFA45A", "#C66000", "#FF7A7A", "#9B0015",
-    "#D2A679", "#8B5E3C", "#C39AF0", "#A65DFA"
+    "#FFFFFF",
+    "#A8B0BA",
+    "#90EFA0",
+    "#2A9A50",
+    "#8FC9FF",
+    "#3A9AF9",
+    "#FFF175",
+    "#D2B300",
+    "#FFA45A",
+    "#C66000",
+    "#FF7A7A",
+    "#9B0015",
+    "#D2A679",
+    "#8B5E3C",
+    "#C39AF0",
+    "#A65DFA"
 ]
 
 color_map = ListedColormap(cores)
 norma = BoundaryNorm(nivels, color_map.N)
+
 extent = [-85, -20, -35, 6]
+
 out_dir = "mapas"
+
 os.makedirs(out_dir, exist_ok=True)
 
 def configurar_colorbar(cf, ax, label):
-    cbar = plt.colorbar(cf, ax=ax, pad=0.03)
+
+    cbar = plt.colorbar(
+        cf,
+        ax=ax,
+        fraction=0.035,
+        pad=0.02
+    )
+
     cbar.set_ticks(nivels)
+
     cbar.set_ticklabels([str(n) for n in nivels])
+
     cbar.set_label(label)
+
     return cbar
 
 def salvar_otimizado(caminho_base):
+
     temp_path = caminho_base.replace(".png", ".webp")
-    plt.savefig(temp_path,format='webp',dpi=250)
+
+    plt.savefig(
+        temp_path,
+        format='webp',
+        dpi=250,
+        bbox_inches=None,
+        pad_inches=0
+    )
 
     img = Image.open(temp_path)
-    img.save(temp_path,"WEBP",lossless=True,method=6)
+
+    img.save(
+        temp_path,
+        "WEBP",
+        lossless=True,
+        method=6
+    )
+
     plt.close()
 
 def gerar_mapas():
+
     client = Client(source="azure")
+
     now_br = datetime.utcnow() - timedelta(hours=3)
+
     run_date_str = now_br.strftime("%Y%m%d")
-    target_file = os.path.join(out_dir, f"dados_ecmwf_{run_date_str}.grib2")
 
-    for f in os.listdir(out_dir):
-        if (f.endswith(".grib2") or f.endswith(".idx") or f.endswith(".webp")) and f != os.path.basename(target_file):
-            try: os.remove(os.path.join(out_dir, f))
-            except: pass
-
-    steps_all = list(range(0, 145, 3)) + list(range(150, 361, 6))
-
-    client.retrieve(
-        date=run_date_str, time=0, step=steps_all,
-        param="tp", type="fc", levtype="sfc", stream="oper", target=target_file
+    target_file = os.path.join(
+        out_dir,
+        f"dados_ecmwf_{run_date_str}.grib2"
     )
 
-    ds = xr.open_dataset(target_file, engine="cfgrib", filter_by_keys={"typeOfLevel": "surface"})
+    for f in os.listdir(out_dir):
+
+        if (
+            (f.endswith(".grib2")
+            or f.endswith(".idx")
+            or f.endswith(".webp"))
+            and f != os.path.basename(target_file)
+        ):
+
+            try:
+                os.remove(os.path.join(out_dir, f))
+            except:
+                pass
+
+    steps_all = (
+        list(range(0, 145, 3))
+        +
+        list(range(150, 361, 6))
+    )
+
+    client.retrieve(
+        date=run_date_str,
+        time=0,
+        step=steps_all,
+        param="tp",
+        type="fc",
+        levtype="sfc",
+        stream="oper",
+        target=target_file
+    )
+
+    ds = xr.open_dataset(
+        target_file,
+        engine="cfgrib",
+        filter_by_keys={"typeOfLevel": "surface"}
+    )
+
     tp_mm = ds["tp"] * 1000.0
 
-    run_time = pd.to_datetime(tp_mm.time.item()).to_pydatetime()
-    step_times = run_time + pd.to_timedelta(tp_mm.step.values, unit="h")
+    run_time = pd.to_datetime(
+        tp_mm.time.item()
+    ).to_pydatetime()
+
+    step_times = (
+        run_time
+        +
+        pd.to_timedelta(tp_mm.step.values, unit="h")
+    )
 
     daily = []
+
     base_shift = timedelta(hours=3)
 
     for d in range(15):
+
         start = run_time + base_shift + timedelta(days=d)
+
         end = start + timedelta(hours=24)
+
         i1 = np.argmin(np.abs(step_times - end))
 
         if d == 0:
+
             data = tp_mm.isel(step=i1)
+
         else:
+
             i0 = np.argmin(np.abs(step_times - start))
-            data = tp_mm.isel(step=i1) - tp_mm.isel(step=i0)
+
+            data = (
+                tp_mm.isel(step=i1)
+                -
+                tp_mm.isel(step=i0)
+            )
 
         daily.append({
+
             "data": data,
+
             "start": start - base_shift,
+
             "end": end - base_shift
+
         })
 
     # ===== MAPAS DIÁRIOS =====
+
     for i, item in enumerate(daily):
+
         fig = plt.figure(figsize=(14, 8))
-        ax = plt.axes(projection=ccrs.PlateCarree())
+
+        ax = plt.axes(
+            projection=ccrs.PlateCarree()
+        )
+
+        ax.set_position([
+            0.03,
+            0.08,
+            0.82,
+            0.84
+        ])
+
         ax.set_extent(extent)
 
-        ax.coastlines("10m", linewidth=0.4)
-        ax.add_feature(NaturalEarthFeature("cultural", "admin_0_countries", "50m",
-                                           edgecolor="black", facecolor="none", linewidth=0.4))
-        ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines", "50m",
-                                           edgecolor="black", facecolor="none", linewidth=0.4))
+        ax.coastlines(
+            "10m",
+            linewidth=0.4
+        )
+
+        ax.add_feature(
+            NaturalEarthFeature(
+                "cultural",
+                "admin_0_countries",
+                "50m",
+                edgecolor="black",
+                facecolor="none",
+                linewidth=0.4
+            )
+        )
+
+        ax.add_feature(
+            NaturalEarthFeature(
+                "cultural",
+                "admin_1_states_provinces_lines",
+                "50m",
+                edgecolor="black",
+                facecolor="none",
+                linewidth=0.4
+            )
+        )
 
         cf = ax.contourf(
             item["data"].longitude,
@@ -116,42 +250,99 @@ def gerar_mapas():
             transform=ccrs.PlateCarree()
         )
 
-        dia = dias_semana_pt[item["start"].strftime("%A")]
-        box = dict(facecolor="white", edgecolor="none", linewidth=0.8, alpha=0.85)
+        dia = dias_semana_pt[
+            item["start"].strftime("%A")
+        ]
+
+        box = dict(
+            facecolor="white",
+            edgecolor="none",
+            linewidth=0.8,
+            alpha=0.85
+        )
 
         ax.text(
-            0.01, 0.99,
+            0.01,
+            0.99,
             f"({i+1:02d}) {item['start']:%d-%m-%Y} ({dia})",
             transform=ax.transAxes,
-            ha="left", va="top",
-            fontsize=9, fontweight="bold",
+            ha="left",
+            va="top",
+            fontsize=9,
+            fontweight="bold",
             bbox=box
         )
 
         ax.text(
-            0.99, 0.99,
+            0.99,
+            0.99,
             f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
             transform=ax.transAxes,
-            ha="right", va="top",
-            fontsize=9, fontweight="bold",
+            ha="right",
+            va="top",
+            fontsize=9,
+            fontweight="bold",
             bbox=box
         )
 
-        configurar_colorbar(cf, ax, "Precipitação (mm/24h)")
-        salvar_otimizado(os.path.join(out_dir, f"{i+1:02d}.png"))
+        configurar_colorbar(
+            cf,
+            ax,
+            "Precipitação (mm/24h)"
+        )
 
-    # ===== ACUMULADO 15 DIAS (MANTIDO) =====
+        salvar_otimizado(
+            os.path.join(
+                out_dir,
+                f"{i+1:02d}.png"
+            )
+        )
+
+    # ===== ACUMULADO 15 DIAS =====
+
     accum = sum(d["data"] for d in daily)
 
     fig = plt.figure(figsize=(14, 8))
-    ax = plt.axes(projection=ccrs.PlateCarree())
+
+    ax = plt.axes(
+        projection=ccrs.PlateCarree()
+    )
+
+    ax.set_position([
+        0.03,
+        0.08,
+        0.82,
+        0.84
+    ])
+
     ax.set_extent(extent)
 
-    ax.coastlines("10m", linewidth=0.4)
-    ax.add_feature(NaturalEarthFeature("cultural", "admin_0_countries", "50m",
-                                       edgecolor="black", facecolor="none", linewidth=0.4))
-    ax.add_feature(NaturalEarthFeature("cultural", "admin_1_states_provinces_lines", "50m",
-                                       edgecolor="black", facecolor="none", linewidth=0.4))
+    ax.coastlines(
+        "10m",
+        linewidth=0.4
+    )
+
+    ax.add_feature(
+        NaturalEarthFeature(
+            "cultural",
+            "admin_0_countries",
+            "50m",
+            edgecolor="black",
+            facecolor="none",
+            linewidth=0.4
+        )
+    )
+
+    ax.add_feature(
+        NaturalEarthFeature(
+            "cultural",
+            "admin_1_states_provinces_lines",
+            "50m",
+            edgecolor="black",
+            facecolor="none",
+            linewidth=0.4
+        )
+    )
 
     cf = ax.contourf(
         accum.longitude,
@@ -163,28 +354,53 @@ def gerar_mapas():
         transform=ccrs.PlateCarree()
     )
 
-    box = dict(facecolor="white", edgecolor="none", linewidth=0.8, alpha=0.85)
+    box = dict(
+        facecolor="white",
+        edgecolor="none",
+        linewidth=0.8,
+        alpha=0.85
+    )
 
     ax.text(
-        0.01, 0.99,
-        f"Precipitação acumulada (15 dias)\nPeríodo: {daily[0]['start']:%d-%m} até {daily[-1]['end']:%d-%m}",
+        0.01,
+        0.99,
+        (
+            f"Precipitação acumulada (15 dias)\n"
+            f"Período: {daily[0]['start']:%d-%m}"
+            f" até {daily[-1]['end']:%d-%m}"
+        ),
         transform=ax.transAxes,
-        ha="left", va="top",
-        fontsize=9, fontweight="bold",
+        ha="left",
+        va="top",
+        fontsize=9,
+        fontweight="bold",
         bbox=box
     )
 
     ax.text(
-        0.99, 0.99,
+        0.99,
+        0.99,
         f"Rodada ECMWF: {run_time:%d-%m-%Y %HZ}",
         transform=ax.transAxes,
-        ha="right", va="top",
-        fontsize=9, fontweight="bold",
+        ha="right",
+        va="top",
+        fontsize=9,
+        fontweight="bold",
         bbox=box
     )
 
-    configurar_colorbar(cf, ax, "Precipitação (mm/15 dias)")
-    salvar_otimizado(os.path.join(out_dir, "acumulado-15-dias.png"))
+    configurar_colorbar(
+        cf,
+        ax,
+        "Precipitação (mm/15 dias)"
+    )
+
+    salvar_otimizado(
+        os.path.join(
+            out_dir,
+            "acumulado-15-dias.png"
+        )
+    )
 
 if __name__ == "__main__":
     gerar_mapas()
