@@ -68,7 +68,6 @@
 	<div class="controls">
 		<strong>Previsão ECMWF 00h</strong>
 		<div id="dayButtons" class="btn-grid"></div>
-		<div id="status">Carregando mapa...</div>
 	</div>
 
 	<div id="map"></div>
@@ -131,7 +130,7 @@
 					}
 				}
 			}
-			document.getElementById('status').innerText = `Exibindo: ${dataGlobal.frames_24h[index].label}`;
+
 		}
 
 		// 4. Carrega os Dados Meteorológicos
