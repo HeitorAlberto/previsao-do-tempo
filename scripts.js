@@ -280,6 +280,24 @@ document.addEventListener("DOMContentLoaded", () => {
                 address.state_district ||
                 '';
 
+            localStorage.setItem(
+                'mapUserData',
+                JSON.stringify({
+
+                    lat,
+                    lon,
+
+                    cidade,
+                    estado: estadoNome,
+
+                    local:
+                        cidade && estadoNome
+                            ? `${cidade} - ${estadoNome}`
+                            : resolvedName
+
+                })
+            )
+
 
     
 

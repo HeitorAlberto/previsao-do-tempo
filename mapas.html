@@ -4,76 +4,137 @@
 <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width,initial-scale=1">
+
         <title>Previsão 15 dias - Mapas diários</title>
+
         <link rel="icon" href="icone.ico" type="image/x-icon">
 
         <style>
-
                 body {
                         margin: 0;
+                        background: #000;
+                        overflow: hidden;
+                        font-family: Arial, Helvetica, sans-serif;
                 }
 
-                /* ===== DESKTOP ===== */
-                @media (min-width: 801px) {
+                #viewer {
+                        position: relative;
+                        width: 100%;
+                        height: 100vh;
+                        overflow: hidden;
+                }
+
+                #viewer a {
+                        display: contents;
+                }
+
+                #viewer img {
+                        display: none;
+                        height: 100vh;
+                        width: auto;
+                        margin: 0 auto;
+                        object-fit: contain;
+                }
+
+                #viewer img.active {
+                        display: block;
+                }
+
+                button {
+                        position: fixed;
+                        top: 50%;
+                        transform: translateY(-50%);
+                        background: rgba(0, 0, 0, .6);
+                        color: #fff;
+                        border: none;
+                        padding: 14px 18px;
+                        cursor: pointer;
+                        z-index: 1000;
+                        border-radius: 8px;
+                        font-size: 14px;
+                }
+
+                #prev {
+                        left: 10px;
+                }
+
+                #next {
+                        right: 10px;
+                }
+
+                #locate {
+                        top: auto;
+                        bottom: 20px;
+                        right: 20px;
+                        transform: none;
+
+                        background: #1976d2;
+                }
+
+                #marker {
+                        position: fixed;
+
+                        width: 14px;
+                        height: 14px;
+
+                        border-radius: 50%;
+
+                        background: #ff0000;
+
+                        border: 2px solid #fff;
+
+                        transform: translate(-50%, -50%);
+
+                        z-index: 1500;
+
+                        display: none;
+                }
+
+                #map-info {
+                        position: fixed;
+
+                        left: 50%;
+                        bottom: 20px;
+
+                        transform: translateX(-50%);
+
+                        background: rgba(0, 0, 0, .75);
+
+                        color: #fff;
+
+                        padding: 10px 16px;
+
+                        border-radius: 10px;
+
+                        font-size: 14px;
+                        font-weight: bold;
+
+                        z-index: 2000;
+
+                        display: none;
+                }
+
+                #readCanvas {
+                        display: none;
+                }
+
+                @media (max-width:800px) {
+
+                        body {
+                                overflow: auto;
+                        }
 
                         #viewer {
-                                position: relative;
-                                width: 100%;
-                                height: 100vh;
-                                padding: 0;
+                                height: auto;
                         }
 
                         #viewer a {
-                                display: contents;
-                        }
-
-                        #viewer img {
-                                display: none;
-                                height: 100vh;
-                                width: auto;
-                                margin: 0 auto;
-                                object-fit: contain;
-                        }
-
-                        #viewer img.active {
-                                display: block;
-                        }
-
-                        button {
-                                position: fixed;
-                                top: 50%;
-                                transform: translateY(-50%);
-                                background: rgba(0, 0, 0, 0.6);
-                                color: #fff;
-                                border: none;
-                                padding: 14px 18px;
-                                cursor: pointer;
-                                z-index: 1000;
-                                border-radius: 8px;
-                        }
-
-                        #prev {
-                                left: 10px;
-                        }
-
-                        #next {
-                                right: 10px;
-                        }
-
-                }
-
-                /* ===== MOBILE ===== */
-                @media (max-width: 800px) {
-                        #viewer {
-                                padding: 20px 0;
-                        }
-
-                        #viewer a {
                                 display: block;
                         }
 
                         #viewer img {
                                 width: 100%;
+                                height: auto;
                                 display: block;
                                 margin-bottom: 40px;
                         }
@@ -81,6 +142,12 @@
                         button {
                                 display: none;
                         }
+
+                        #marker,
+                        #map-info {
+                                display: none !important;
+                        }
+
                 }
         </style>
 </head>
@@ -88,51 +155,446 @@
 <body>
 
         <div id="viewer">
-                <button id="prev">Anterior</button>
-                <button id="next">Próximo</button>
 
-                <a href="mapas/01.webp" target="_blank"><img src="mapas/01.webp" class="active"></a>
-                <a href="mapas/02.webp" target="_blank"><img src="mapas/02.webp"></a>
-                <a href="mapas/03.webp" target="_blank"><img src="mapas/03.webp"></a>
-                <a href="mapas/04.webp" target="_blank"><img src="mapas/04.webp"></a>
-                <a href="mapas/05.webp" target="_blank"><img src="mapas/05.webp"></a>
-                <a href="mapas/06.webp" target="_blank"><img src="mapas/06.webp"></a>
-                <a href="mapas/07.webp" target="_blank"><img src="mapas/07.webp"></a>
-                <a href="mapas/08.webp" target="_blank"><img src="mapas/08.webp"></a>
-                <a href="mapas/09.webp" target="_blank"><img src="mapas/09.webp"></a>
-                <a href="mapas/10.webp" target="_blank"><img src="mapas/10.webp"></a>
-                <a href="mapas/11.webp" target="_blank"><img src="mapas/11.webp"></a>
-                <a href="mapas/12.webp" target="_blank"><img src="mapas/12.webp"></a>
-                <a href="mapas/13.webp" target="_blank"><img src="mapas/13.webp"></a>
-                <a href="mapas/14.webp" target="_blank"><img src="mapas/14.webp"></a>
-                <a href="mapas/15.webp" target="_blank"><img src="mapas/15.webp"></a>
-                <a href="mapas/acumulado-15-dias.webp" target="_blank"><img src="mapas/acumulado-15-dias.webp"></a>
+                <button id="prev">Anterior</button>
+                
+                <button id="next">Próximo</button>
+                
+                <button id="locate">Localizar</button>
+
+                <a href="mapas/01.webp" target="_blank">
+                        <img src="mapas/01.webp" class="active">
+                </a>
+
+                <a href="mapas/02.webp" target="_blank">
+                        <img src="mapas/02.webp">
+                </a>
+
+                <a href="mapas/03.webp" target="_blank">
+                        <img src="mapas/03.webp">
+                </a>
+
+                <a href="mapas/04.webp" target="_blank">
+                        <img src="mapas/04.webp">
+                </a>
+
+                <a href="mapas/05.webp" target="_blank">
+                        <img src="mapas/05.webp">
+                </a>
+
+                <a href="mapas/06.webp" target="_blank">
+                        <img src="mapas/06.webp">
+                </a>
+
+                <a href="mapas/07.webp" target="_blank">
+                        <img src="mapas/07.webp">
+                </a>
+
+                <a href="mapas/08.webp" target="_blank">
+                        <img src="mapas/08.webp">
+                </a>
+
+                <a href="mapas/09.webp" target="_blank">
+                        <img src="mapas/09.webp">
+                </a>
+
+                <a href="mapas/10.webp" target="_blank">
+                        <img src="mapas/10.webp">
+                </a>
+
+                <a href="mapas/11.webp" target="_blank">
+                        <img src="mapas/11.webp">
+                </a>
+
+                <a href="mapas/12.webp" target="_blank">
+                        <img src="mapas/12.webp">
+                </a>
+
+                <a href="mapas/13.webp" target="_blank">
+                        <img src="mapas/13.webp">
+                </a>
+
+                <a href="mapas/14.webp" target="_blank">
+                        <img src="mapas/14.webp">
+                </a>
+
+                <a href="mapas/15.webp" target="_blank">
+                        <img src="mapas/15.webp">
+                </a>
+
+                <a href="mapas/acumulado-15-dias.webp" target="_blank">
+                        <img src="mapas/acumulado-15-dias.webp">
+                </a>
 
         </div>
 
+        <div id="marker"></div>
+
+        <div id="map-info"></div>
+
+        <canvas id="readCanvas"></canvas>
+
         <script>
+
                 if (window.matchMedia('(min-width: 801px)').matches) {
 
-                        const images = document.querySelectorAll('#viewer img');
-                        let index = 0;
+                                const images = document.querySelectorAll('#viewer img')
 
-                        const lens = document.getElementById('lens');
+                                let index = 0
 
-                        function showImage(i) {
-                                images[index].classList.remove('active');
-                                index = Math.max(0, Math.min(i, images.length - 1));
-                                images[index].classList.add('active');
+                                const marker = document.getElementById('marker')
+
+                                const mapInfo = document.getElementById('map-info')
+
+                                const canvas = document.getElementById('readCanvas')
+
+                                const ctx = canvas.getContext('2d')
+
+                                const userData = JSON.parse(
+                                        localStorage.getItem('mapUserData')
+                                )
+
+                                /*
+                                    LIMITES GEOGRÁFICOS
+                                */
+
+                                const bounds = {
+
+                                        lonMin: -85,
+                                        lonMax: -20,
+
+                                        latMin: -35,
+                                        latMax: 6
+
+                                }
+
+                                /*
+                                    ÁREA ÚTIL DO MAPA
+                                */
+
+                                const geoBox = {
+
+                                        left: 10,
+                                        top: 23,
+
+                                        width: 2158,
+                                        height: 1537
+
+                                }
+
+                                /*
+                                    LEGENDA RGB → MM
+                                    AJUSTE SE NECESSÁRIO
+                                */
+
+                                const legenda = [
+
+                                        { r: 255, g: 255, b: 255, mm: 0 },
+
+                                        { r: 168, g: 176, b: 186, mm: 1 },
+
+                                        { r: 144, g: 239, b: 160, mm: 3 },
+
+                                        { r: 42, g: 154, b: 80, mm: 6 },
+
+                                        { r: 143, g: 201, b: 255, mm: 10 },
+
+                                        { r: 58, g: 154, b: 249, mm: 15 },
+
+                                        { r: 255, g: 241, b: 117, mm: 20 },
+
+                                        { r: 210, g: 179, b: 0, mm: 30 },
+
+                                        { r: 255, g: 164, b: 90, mm: 40 },
+
+                                        { r: 198, g: 96, b: 0, mm: 50 },
+
+                                        { r: 255, g: 122, b: 122, mm: 75 },
+
+                                        { r: 155, g: 0, b: 21, mm: 100 },
+
+                                        { r: 210, g: 166, b: 121, mm: 150 },
+
+                                        { r: 139, g: 94, b: 60, mm: 200 },
+
+                                        { r: 195, g: 154, b: 240, mm: 300 },
+
+                                        { r: 166, g: 93, b: 250, mm: 400 }
+
+                                ]
+
+                                function showImage(i) {
+
+                                        images[index].classList.remove('active')
+
+                                        index = Math.max(
+                                                0,
+                                                Math.min(i, images.length - 1)
+                                        )
+
+                                        images[index].classList.add('active')
+
+                                        atualizarOverlay()
+
+                                }
+
+                                document.getElementById('prev').onclick =
+                                        () => showImage(index - 1)
+
+                                document.getElementById('next').onclick =
+                                        () => showImage(index + 1)
+
+                                document.addEventListener('keydown', e => {
+
+                                        if (e.key === 'ArrowLeft')
+                                                showImage(index - 1)
+
+                                        if (e.key === 'ArrowRight')
+                                                showImage(index + 1)
+
+                                })
+
+                                function latLonToPixel(lat, lon) {
+
+                                        const x =
+
+                                                geoBox.left +
+
+                                                (
+                                                        (lon - bounds.lonMin) /
+
+                                                        (bounds.lonMax - bounds.lonMin)
+                                                )
+
+                                                * geoBox.width
+
+                                        const y =
+
+                                                geoBox.top +
+
+                                                (
+                                                        (bounds.latMax - lat) /
+
+                                                        (bounds.latMax - bounds.latMin)
+                                                )
+
+                                                * geoBox.height
+
+                                        return {
+
+                                                x: Math.round(x),
+
+                                                y: Math.round(y)
+
+                                        }
+
+                                }
+
+                                function distanciaCor(c1, c2) {
+
+                                        return Math.sqrt(
+
+                                                (c1.r - c2.r) ** 2 +
+
+                                                (c1.g - c2.g) ** 2 +
+
+                                                (c1.b - c2.b) ** 2
+
+                                        )
+
+                                }
+
+                                function corParaMM(r, g, b) {
+
+                                        let menor = Infinity
+
+                                        let valor = 0
+
+                                        legenda.forEach(cor => {
+
+                                                const d = distanciaCor(
+                                                        { r, g, b },
+                                                        cor
+                                                )
+
+                                                if (d < menor) {
+
+                                                        menor = d
+
+                                                        valor = cor.mm
+
+                                                }
+
+                                        })
+
+                                        return valor
+
+                                }
+
+                                function atualizarOverlay() {
+
+                                        if (!userData) return
+
+                                        const img = images[index]
+
+                                        canvas.width = img.naturalWidth
+
+                                        canvas.height = img.naturalHeight
+
+                                        ctx.clearRect(
+                                                0,
+                                                0,
+                                                canvas.width,
+                                                canvas.height
+                                        )
+
+                                        ctx.drawImage(img, 0, 0)
+
+                                        const pixel = latLonToPixel(
+
+                                                userData.lat,
+
+                                                userData.lon
+
+                                        )
+
+                                        const rgba = ctx.getImageData(
+
+                                                pixel.x,
+
+                                                pixel.y,
+
+                                                1,
+
+                                                1
+
+                                        ).data
+
+                                        const chuva = corParaMM(
+
+                                                rgba[0],
+
+                                                rgba[1],
+
+                                                rgba[2]
+
+                                        )
+
+                                        const rect = img.getBoundingClientRect()
+
+                                        const scaleX =
+                                                rect.width / img.naturalWidth
+
+                                        const scaleY =
+                                                rect.height / img.naturalHeight
+
+                                        marker.style.left =
+                                                (rect.left + pixel.x * scaleX) + 'px'
+
+                                        marker.style.top =
+                                                (rect.top + pixel.y * scaleY) + 'px'
+
+                                        marker.style.display = 'block'
+
+                                        mapInfo.innerHTML =
+
+                                                `${userData.local} • ${chuva} mm`
+
+                                        mapInfo.style.display = 'block'
+
+                                }
+
+                                window.addEventListener(
+                                        'resize',
+                                        atualizarOverlay
+                                )
+
+                                atualizarOverlay()
+
                         }
 
-                        document.getElementById('prev').onclick = () => showImage(index - 1);
-                        document.getElementById('next').onclick = () => showImage(index + 1);
+                        document.getElementById('locate').onclick = () => {
 
-                        document.addEventListener('keydown', e => {
-                                if (e.key === 'ArrowLeft') showImage(index - 1);
-                                if (e.key === 'ArrowRight') showImage(index + 1);
-                        });
+                                        if (!navigator.geolocation) {
 
-                }
+                                                alert('Geolocalização não suportada.')
+
+                                                return
+
+                                        }
+
+                                        navigator.geolocation.getCurrentPosition(
+
+                                                async pos => {
+
+                                                        const lat = pos.coords.latitude
+
+                                                        const lon = pos.coords.longitude
+
+                                                        try {
+
+                                                                const rev = await fetch(
+
+                                                                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+
+                                                                )
+
+                                                                const data = await rev.json()
+
+                                                                const addr = data.address || {}
+
+                                                                const cidade =
+
+                                                                        addr.city ||
+
+                                                                        addr.town ||
+
+                                                                        addr.village ||
+
+                                                                        addr.municipality ||
+
+                                                                        ''
+
+                                                                const estado = addr.state || ''
+
+                                                                const local = `${cidade} - ${estado}`
+
+                                                                localStorage.setItem(
+
+                                                                        'mapUserData',
+
+                                                                        JSON.stringify({
+
+                                                                                lat,
+                                                                                lon,
+                                                                                local
+
+                                                                        })
+
+                                                                )
+
+                                                                atualizarOverlay()
+
+                                                        }
+
+                                                        catch (e) {
+
+                                                                console.error(e)
+
+                                                        }
+
+                                                },
+
+                                                () => {
+
+                                                        alert('Não foi possível obter localização.')
+
+                                                }
+
+                                        )
+
+                                }
+
         </script>
 
 </body>
