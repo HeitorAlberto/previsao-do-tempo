@@ -44,7 +44,7 @@ jobs:
       - name: Gerar mapas ECMWF
         run: python gerar_mapas.py
 
-      - name: Gerar tiles WEBP
+            - name: Gerar tiles WEBP
 
         run: |
 
@@ -55,12 +55,21 @@ jobs:
 
             nome=$(basename "$file" .png)
 
-            echo "Convertendo $file -> WEBP"
+            echo "Convertendo $file -> GeoTIFF"
+
+            gdal_translate \
+              -of GTiff \
+              -a_srs EPSG:4326 \
+              -a_ullr -75 6 -30 -35 \
+              "$file" \
+              "${nome}.tif"
+
+            echo "Convertendo TIFF -> WEBP"
 
             gdal_translate \
               -of WEBP \
               -co QUALITY=82 \
-              "$file" \
+              "${nome}.tif" \
               "${nome}.webp"
 
             echo "Gerando tiles..."
@@ -69,7 +78,8 @@ jobs:
               --zoom=0-5 \
               --processes=2 \
               --webviewer=none \
-              "${nome}.webp" \
+              --s_srs EPSG:4326 \
+              "${nome}.tif" \
               "tiles/${nome}"
 
           done
