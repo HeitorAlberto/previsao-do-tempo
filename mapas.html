@@ -6,6 +6,7 @@
 	<title>ECMWF - Visualizador de Chuva</title>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+	<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
 	<style>
 		html,
 		body {
@@ -74,21 +75,22 @@
 
 	<script>
 		// 1. Inicializa o mapa com Renderer Canvas
-		const map = L.map('map', {
-			renderer: L.canvas(),
-			preferCanvas: true
-		}).setView([-15, -55], 4);
+			const map = L.map('map', {
+				renderer: L.canvas(),
+				preferCanvas: true
+			}).setView([-15, -55], 4);
 
-		// Mapa base (OpenStreetMap)
-		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-			attribution: '&copy; OpenStreetMap'
-		}).addTo(map);
+			// [MUDANÇA] CAMADA BASE: Fundo cinza/branco muito limpo e SEM nomes de cidades
+			L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+				attribution: '&copy; CartoDB'
+			}).addTo(map);
 
-		let dataGlobal = null;
-		const layerChuva = L.layerGroup().addTo(map);
+			// 2. Camada de Chuva (Fica no meio do sanduíche)
+			let dataGlobal = null;
+			const layerChuva = L.layerGroup().addTo(map);
 
-		// 2. Sua Escala de Cores Personalizada
-		function getColor(p) {
+			// 3. Sua Escala de Cores Personalizada (Mantida conforme o seu ajuste)
+			function getColor(p) {
 				return p >= 400 ? '#9370DB' : // Lilás Escuro
 					p >= 300 ? '#DDA0DD' : // Lilás Claro
 						p >= 200 ? '#5D4037' : // Marrom Escuro
@@ -107,91 +109,96 @@
 																			'transparent';
 			}
 
-		// 3. Renderização da Chuva
-		function carregarDia(index) {
-			if (!dataGlobal) return;
-			layerChuva.clearLayers();
+			// 4. Renderização da Chuva
+			function carregarDia(index) {
+				if (!dataGlobal) return;
+				layerChuva.clearLayers();
 
-			const { lat, lon } = dataGlobal.grid;
-			const grid = dataGlobal.frames_24h[index].precip;
+				const { lat, lon } = dataGlobal.grid;
+				const grid = dataGlobal.frames_24h[index].precip;
 
-			for (let y = 0; y < lat.length - 1; y++) {
-				for (let x = 0; x < lon.length - 1; x++) {
-					const val = grid[y][x];
+				for (let y = 0; y < lat.length - 1; y++) {
+					for (let x = 0; x < lon.length - 1; x++) {
+						const val = grid[y][x];
 
-					// Ignora o que for menor que 1mm (fica transparente conforme sua escala)
-					if (val >= 1) {
-						L.rectangle([[lat[y], lon[x]], [lat[y + 1], lon[x + 1]]], {
-							fillColor: getColor(val),
-							weight: 0,
-							fillOpacity: 0.5,
-							interactive: false
-						}).addTo(layerChuva);
+						// Ignora o que for menor que 1mm
+						if (val >= 1) {
+							L.rectangle([[lat[y], lon[x]], [lat[y + 1], lon[x + 1]]], {
+								fillColor: getColor(val),
+								weight: 0,
+								fillOpacity: 0.7, // [MUDANÇA] Opacidade maior para destacar as cores no fundo limpo
+								interactive: false
+							}).addTo(layerChuva);
+						}
 					}
 				}
 			}
 
-		}
+			// 5. Carrega os Dados Meteorológicos
+			fetch("dados.json")
+				.then(res => res.json())
+				.then(data => {
+					dataGlobal = data;
+					const container = document.getElementById('dayButtons');
 
-		// 4. Carrega os Dados Meteorológicos
-		fetch("dados.json")
-			.then(res => res.json())
-			.then(data => {
-				dataGlobal = data;
-				const container = document.getElementById('dayButtons');
-
-				data.frames_24h.forEach((frame, i) => {
-					const btn = document.createElement('button');
-					btn.innerText = frame.label;
-					btn.onclick = (e) => {
-						document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-						e.target.classList.add('active');
-						carregarDia(i);
-					};
-					container.appendChild(btn);
-					if (i === 0) btn.click();
+					data.frames_24h.forEach((frame, i) => {
+						const btn = document.createElement('button');
+						btn.innerText = frame.label;
+						btn.onclick = (e) => {
+							document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+							e.target.classList.add('active');
+							carregarDia(i);
+						};
+						container.appendChild(btn);
+						if (i === 0) btn.click();
+					});
+				})
+				.catch(err => {
+					document.getElementById('status').innerText = "Erro ao carregar dados.json";
+					console.error(err);
 				});
-			})
-			.catch(err => {
-				document.getElementById('status').innerText = "Erro ao carregar dados.json";
-				console.error(err);
-			});
 
-		// 5. ADICIONA AS BORDAS DOS ESTADOS (Mais grossas e pretas)
-		// Usando um GeoJSON público e confiável dos estados do Brasil
-		fetch("https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson")
-			.then(res => res.json())
-			.then(geojsonData => {
-				L.geoJSON(geojsonData, {
-					style: {
-						color: "#000000",   // Cor da linha: Preta bem marcante
-						weight: 2,          // Espessura da linha: 2 (pode aumentar para 3 se quiser mais grosso)
-						fillColor: "transparent", // Mantém o fundo transparente para ver a chuva e o mapa
-						fillOpacity: 0
-					},
-					interactive: false // Evita que a linha bloqueie cliques no mapa
-				}).addTo(map); // Adiciona direto no mapa para ficar SEMPRE por cima da chuva
-			})
-			.catch(err => console.error("Erro ao carregar bordas dos estados:", err));
+			// 6. ADICIONA AS BORDAS DOS ESTADOS (Desenhadas por cima da chuva)
+			fetch("https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson")
+				.then(res => res.json())
+				.then(geojsonData => {
+					L.geoJSON(geojsonData, {
+						style: {
+							color: "#000000",   // Linhas pretas bem marcantes
+							weight: 2,
+							fillColor: "transparent",
+							fillOpacity: 0
+						},
+						interactive: false,
+						pane: 'overlayPane' // Mantém no plano de vetores padrão, mas carregado após a chuva
+					}).addTo(map);
+				})
+				.catch(err => console.error("Erro ao carregar bordas dos estados:", err));
 
-		// 6. Legenda Dinâmica da sua Escala
-		const legend = L.control({ position: 'bottomright' });
-		legend.onAdd = function (map) {
-			const div = L.DomUtil.create('div', 'info legend');
-			const grades = [1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400];
+			// [MUDANÇA] 7. CAMADA DE CIDADES: Coloca APENAS os nomes das cidades e estradas no TOPO de tudo
+			L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+				zIndex: 1000,        // Garante a prioridade visual máxima
+				pane: 'markerPane',   // Injeta os textos na camada superior do Leaflet
+				opacity: 1
+			}).addTo(map);
 
-			div.innerHTML = '<strong>Chuva (mm)</strong><br>';
-			for (let i = 0; i < grades.length; i++) {
-				div.innerHTML +=
-					'<i style="background:' + getColor(grades[i]) + '; width: 14px; height: 14px; float: left; margin-right: 8px; opacity: 0.7; border: 1px solid #999;"></i> ' +
-					grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-			}
-			div.style.background = 'white'; div.style.padding = '10px'; div.style.lineHeight = '22px';
-			div.style.borderRadius = '5px'; div.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)'; div.style.fontSize = '18px';
-			return div;
-		};
-		legend.addTo(map);
+			// 8. Legenda Dinâmica da sua Escala (Inalterada)
+			const legend = L.control({ position: 'bottomright' });
+			legend.onAdd = function (map) {
+				const div = L.DomUtil.create('div', 'info legend');
+				const grades = [1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400];
 
+				div.innerHTML = '<strong>Chuva (mm)</strong><br>';
+				for (let i = 0; i < grades.length; i++) {
+					div.innerHTML +=
+						'<i style="background:' + getColor(grades[i]) + '; width: 14px; height: 14px; float: left; margin-right: 8px; opacity: 0.7; border: 1px solid #999;"></i> ' +
+						grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+				}
+				div.style.background = 'white'; div.style.padding = '10px'; div.style.lineHeight = '22px';
+				div.style.borderRadius = '5px'; div.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)'; div.style.fontSize = '18px';
+				return div;
+			};
+			legend.addTo(map);
 	</script>
 </body>
 
