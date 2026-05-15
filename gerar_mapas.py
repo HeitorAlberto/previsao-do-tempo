@@ -1,282 +1,91 @@
 from ecmwf.opendata import Client
-from datetime import datetime, timedelta
 import xarray as xr
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-from cartopy.feature import NaturalEarthFeature
-from matplotlib.colors import ListedColormap, BoundaryNorm
-import numpy as np
-import pandas as pd
-import os, warnings
-from PIL import Image
 import json
-from scipy.interpolate import RegularGridInterpolator
-
-warnings.filterwarnings("ignore", category=FutureWarning)
-
-plt.rcParams["path.simplify"] = True
-plt.rcParams["path.simplify_threshold"] = 0.1
-plt.rcParams["agg.path.chunksize"] = 10000
+import numpy as np
+import os
 
-# ======================
-# CONFIG
-# ======================
+# ----------------------------
+# 1. Download do ECMWF
+# ----------------------------
 
-nivels = [0, 1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400, 500]
+client = Client()
 
-cores = [
-    "#FFFFFF", "#A8B0BA", "#90EFA0", "#2A9A50",
-    "#8FC9FF", "#3A9AF9", "#FFF175", "#D2B300",
-    "#FFA45A", "#C66000", "#FF7A7A", "#9B0015",
-    "#D2A679", "#8B5E3C", "#C39AF0", "#A65DFA"
-]
+client.retrieve(
+    type="fc",
+    param="tp",                 # total precipitation
+    step=list(range(0, 121, 3)),  # 0 a 120h (5 dias, cada 3h)
+    target="tp.grib2",
+)
 
-color_map = ListedColormap(cores)
-norma = BoundaryNorm(nivels, color_map.N)
+# ----------------------------
+# 2. Abrir GRIB
+# ----------------------------
 
-# limites geográficos reais do seu recorte
-extent = [-85, -20, -35, 6]
+ds = xr.open_dataset("tp.grib2", engine="cfgrib")
 
-out_dir = "mapas"
-os.makedirs(out_dir, exist_ok=True)
+tp = ds["tp"]
 
-# ======================
-# SAVE LIMPO (LEAFLET READY)
-# ======================
+# ----------------------------
+# 3. Converter acumulado → incremental
+# ----------------------------
 
-def salvar_webp(caminho_base):
+tp_inc = tp.diff("step")
+tp_inc = tp_inc.where(tp_inc >= 0, 0)
 
-    temp_path = caminho_base.replace(".png", ".webp")
+# primeira posição não tem diff válido
+tp_inc = tp_inc.fillna(0)
 
-    plt.savefig(
-        temp_path,
-        format="webp",
-        dpi=250,
-        bbox_inches="tight",
-        pad_inches=0
-    )
+# ----------------------------
+# 4. Acumulado 24h
+# (passo de 3h → 8 passos por dia)
+# ----------------------------
 
-    img = Image.open(temp_path)
+steps_por_dia = 8
 
-    img.save(
-        temp_path,
-        "WEBP",
-        lossless=True,
-        method=6
-    )
+tp_24h = tp_inc.rolling(step=steps_por_dia).sum()
 
-    plt.close()
+# ----------------------------
+# 5. Preparar dados para JSON
+# (reduzido: média espacial por step)
+# ----------------------------
 
-# ======================
-# MAIN
-# ======================
+steps = ds.step.values
 
-def gerar_mapas():
+hourly = []
 
-    client = Client(source="azure")
+for i, step in enumerate(steps):
+    hourly.append({
+        "step": int(step),
+        "precip_mean": float(tp_inc.isel(step=i).mean().values),
+        "precip_max": float(tp_inc.isel(step=i).max().values),
+    })
 
-    now_br = datetime.utcnow() - timedelta(hours=3)
-    run_date_str = now_br.strftime("%Y%m%d")
+# ----------------------------
+# 6. Acumulado total 5 dias
+# ----------------------------
 
-    target_file = os.path.join(
-        out_dir,
-        f"dados_ecmwf_{run_date_str}.grib2"
-    )
-
-    # limpeza
-    for f in os.listdir(out_dir):
-        if (
-            (f.endswith(".grib2") or f.endswith(".idx") or f.endswith(".webp"))
-            and f != os.path.basename(target_file)
-        ):
-            try:
-                os.remove(os.path.join(out_dir, f))
-            except:
-                pass
-
-    steps_all = list(range(0, 145, 3)) + list(range(150, 361, 6))
-
-    client.retrieve(
-        date=run_date_str,
-        time=0,
-        step=steps_all,
-        param="tp",
-        type="fc",
-        levtype="sfc",
-        stream="oper",
-        target=target_file
-    )
+total_5d = float(tp_inc.sum("step").mean().values)
 
-    ds = xr.open_dataset(
-        target_file,
-        engine="cfgrib",
-        filter_by_keys={"typeOfLevel": "surface"}
-    )
+# ----------------------------
+# 7. Montar JSON final
+# ----------------------------
 
-    tp_mm = ds["tp"] * 1000.0
+output = {
+    "model": "ECMWF Open Data",
+    "variable": "tp",
+    "unit": "m (water equivalent)",
+    "total_5d_mean": total_5d,
+    "resolution_step_hours": 3,
+    "time_series": hourly
+}
 
-    run_time = pd.to_datetime(tp_mm.time.item()).to_pydatetime()
+# ----------------------------
+# 8. Salvar arquivo
+# ----------------------------
 
-    step_times = run_time + pd.to_timedelta(tp_mm.step.values, unit="h")
+os.makedirs("mapas", exist_ok=True)
 
-    # ======================
-    # DIÁRIOS
-    # ======================
-
-    daily = []
-    base_shift = timedelta(hours=3)
-
-    for d in range(15):
-
-        start = run_time + base_shift + timedelta(days=d)
-        end = start + timedelta(hours=24)
-
-        i1 = np.argmin(np.abs(step_times - end))
-
-        if d == 0:
-            data = tp_mm.isel(step=i1)
-        else:
-            i0 = np.argmin(np.abs(step_times - start))
-            data = tp_mm.isel(step=i1) - tp_mm.isel(step=i0)
-
-        daily.append(data)
-
-    for i, data in enumerate(daily):
-
-        fig = plt.figure(figsize=(14, 8), frameon=False)
-
-        ax = plt.axes(projection=ccrs.PlateCarree())
-        ax.set_position([0, 0, 1, 1])
-
-        ax.set_extent(extent)
+with open("mapas/precip.json", "w") as f:
+    json.dump(output, f, indent=2)
 
-        ax.contourf(
-            data.longitude,
-            data.latitude,
-            data,
-            levels=nivels,
-            cmap=color_map,
-            norm=norma,
-            transform=ccrs.PlateCarree()
-        )
-
-        ax.coastlines("10m", linewidth=0.4)
-
-        ax.add_feature(
-            NaturalEarthFeature(
-                "cultural",
-                "admin_0_countries",
-                "50m",
-                edgecolor="black",
-                facecolor="none",
-                linewidth=0.4
-            )
-        )
-
-        ax.add_feature(
-            NaturalEarthFeature(
-                "cultural",
-                "admin_1_states_provinces_lines",
-                "50m",
-                edgecolor="black",
-                facecolor="none",
-                linewidth=0.4
-            )
-        )
-
-        salvar_webp(
-            os.path.join(out_dir, f"{i+1:02d}.png")
-        )
-
-    # ======================
-    # ACUMULADO
-    # ======================
-
-    accum = sum(daily)
-
-    fig = plt.figure(figsize=(14, 8), frameon=False)
-
-    ax = plt.axes(projection=ccrs.PlateCarree())
-    ax.set_position([0, 0, 1, 1])
-
-    ax.set_extent(extent)
-
-    ax.contourf(
-        accum.longitude,
-        accum.latitude,
-        accum,
-        levels=nivels,
-        cmap=color_map,
-        norm=norma,
-        transform=ccrs.PlateCarree()
-    )
-
-    ax.coastlines("10m", linewidth=0.4)
-
-    ax.add_feature(
-        NaturalEarthFeature(
-            "cultural",
-            "admin_0_countries",
-            "50m",
-            edgecolor="black",
-            facecolor="none",
-            linewidth=0.4
-        )
-    )
-
-    ax.add_feature(
-        NaturalEarthFeature(
-            "cultural",
-            "admin_1_states_provinces_lines",
-            "50m",
-            edgecolor="black",
-            facecolor="none",
-            linewidth=0.4
-        )
-    )
-
-    salvar_webp(
-        os.path.join(out_dir, "acumulado-15-dias.png")
-    )
-
-
-    exportar_dados(tp_mm, daily, run_time, out_dir)
-
-# ======================
-
-def exportar_dados(tp_mm, daily, run_time, out_dir):
-
-    print("EXPORTANDO JSON...")
-
-    lats = tp_mm.latitude.values.tolist()
-    lons = tp_mm.longitude.values.tolist()
-
-    export = {
-        "run": str(run_time),
-        "lat": lats,
-        "lon": lons,
-        "dias": []
-    }
-
-    for i, data in enumerate(daily):
-
-        arr = np.array(data.values)
-
-        export["dias"].append({
-            "dia": i + 1,
-            "grid": arr.tolist()
-        })
-
-    path = os.path.join(out_dir, "dados_precipitacao.json")
-
-    with open(path, "w") as f:
-        json.dump(export, f)
-
-    print("JSON GERADO EM:", path)
-
-
-#========================
-
-if __name__ == "__main__":
-    gerar_mapas()
-    
+print("OK: JSON gerado")
