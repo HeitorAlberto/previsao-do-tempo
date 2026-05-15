@@ -9,6 +9,8 @@ import numpy as np
 import pandas as pd
 import os, warnings
 from PIL import Image
+import json
+from scipy.interpolate import RegularGridInterpolator
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -237,7 +239,69 @@ def gerar_mapas():
         os.path.join(out_dir, "acumulado-15-dias.png")
     )
 
+
+    exportar_dados(tp_mm, daily, run_time, out_dir)
+
 # ======================
+
+def exportar_dados(tp_mm, daily, run_time, out_dir):
+
+    lats = tp_mm.latitude.values
+    lons = tp_mm.longitude.values
+
+    export = {
+        "run": str(run_time),
+        "lat": lats.tolist(),
+        "lon": lons.tolist(),
+        "dias": []
+    }
+
+    for i, data in enumerate(daily):
+
+        arr = data.values
+
+        # interpolador correto por dia
+        interp = RegularGridInterpolator(
+            (lats, lons),
+            arr,
+            bounds_error=False,
+            fill_value=None
+        )
+
+        # pontos (você depois vai expandir isso)
+        pontos = [
+            {
+                "name": "center",
+                "lat": float((lats[0] + lats[-1]) / 2),
+                "lon": float((lons[0] + lons[-1]) / 2)
+            }
+        ]
+
+        pontos_calc = []
+
+        for p in pontos:
+
+            val = interp((p["lat"], p["lon"]))
+
+            pontos_calc.append({
+                "name": p["name"],
+                "lat": p["lat"],
+                "lon": p["lon"],
+                "mm": float(val) if val is not None else None
+            })
+
+        export["dias"].append({
+            "dia": i + 1,
+            "grid": arr.tolist(),
+            "pontos": pontos_calc
+        })
+
+    with open(os.path.join(out_dir, "dados_precipitacao.json"), "w") as f:
+        json.dump(export, f)
+
+
+#========================
 
 if __name__ == "__main__":
     gerar_mapas()
+    
