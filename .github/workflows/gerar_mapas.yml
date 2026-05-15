@@ -10,27 +10,47 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Instalar dependências
         run: |
           sudo apt-get update
-          sudo apt-get install -y libproj-dev proj-data proj-bin libgeos-dev
+
+          sudo apt-get install -y \
+            libproj-dev \
+            proj-data \
+            proj-bin \
+            libgeos-dev \
+            libeccodes-dev
+
           pip install --upgrade pip
-          pip install ecmwf-opendata cartopy xarray matplotlib pandas numpy scipy cfgrib[eccodes] Pillow
+
+          pip install \
+            ecmwf-opendata \
+            cartopy \
+            xarray \
+            matplotlib \
+            pandas \
+            numpy \
+            scipy \
+            cfgrib[eccodes] \
+            Pillow
 
       - name: Gerar mapas ECMWF
         run: python gerar_mapas.py
 
       - name: Commit e Push
         run: |
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add *.png *.json || true
+          git add *.png *.json *.grib2 || true
 
           git status
 
           git commit -m "Atualização automática dados ECMWF" || echo "Sem mudanças"
+
           git push origin main
