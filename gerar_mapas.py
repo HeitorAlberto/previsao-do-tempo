@@ -81,8 +81,8 @@ def salvar_otimizado(caminho_base):
         temp_path,
         format='webp',
         dpi=250,
-        bbox_inches=None,
-        pad_inches=0
+        bbox_inches="tight",
+        pad_inches=0.03
     )
 
     img = Image.open(temp_path)
