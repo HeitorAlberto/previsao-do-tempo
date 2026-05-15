@@ -3,10 +3,9 @@
 
 <head>
 	<meta charset="utf-8" />
-	<title>ECMWF - Visualizador de Chuva</title>
+	<title>ECMWF - Visualizador Suavizado</title>
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-	<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
 	<style>
 		html,
 		body {
@@ -18,7 +17,7 @@
 		#map {
 			height: 100vh;
 			width: 100%;
-			background: #aad3df;
+			background: #ffffff;
 		}
 
 		.controls {
@@ -69,136 +68,142 @@
 	<div class="controls">
 		<strong>Previsão ECMWF 00h</strong>
 		<div id="dayButtons" class="btn-grid"></div>
+		<div id="status">Carregando mapa...</div>
 	</div>
 
 	<div id="map"></div>
 
 	<script>
-		// 1. Inicializa o mapa com Renderer Canvas
-			const map = L.map('map', {
-				renderer: L.canvas(),
-				preferCanvas: true
-			}).setView([-15, -55], 4);
+		// 1. Inicializa o mapa forçando o uso do Canvas para aguentar o grid denso
+		const meuCanvas = L.canvas({ padding: 0.5 });
+		const map = L.map('map', {
+			preferCanvas: true
+		}).setView([-15, -55], 4);
 
-			// [MUDANÇA] CAMADA BASE: Fundo cinza/branco muito limpo e SEM nomes de cidades
-			L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
-				attribution: '&copy; CartoDB'
-			}).addTo(map);
+		// Sanduíche: Camada Base de Fundo (Sem cidades/nomes)
+		L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png', {
+			attribution: '&copy; CartoDB'
+		}).addTo(map);
 
-			// 2. Camada de Chuva (Fica no meio do sanduíche)
-			let dataGlobal = null;
-			const layerChuva = L.layerGroup().addTo(map);
+		let dataGlobal = null;
+		const layerChuva = L.layerGroup().addTo(map);
 
-			// 3. Sua Escala de Cores Personalizada (Mantida conforme o seu ajuste)
-			function getColor(p) {
-				return p >= 400 ? '#9370DB' : // Lilás Escuro
-					p >= 300 ? '#DDA0DD' : // Lilás Claro
-						p >= 200 ? '#5D4037' : // Marrom Escuro
-							p >= 150 ? '#8D6E63' : // Marrom Claro
-								p >= 100 ? '#a10e0e' : // Vermelho Escuro
-									p >= 75 ? '#ff5959' : // Vermelho Claro
-										p >= 50 ? '#E65100' : // Laranja Escuro (Mais "queimado")
-											p >= 40 ? '#FB8C00' : // Laranja Claro (Bem distinto do amarelo)
-												p >= 30 ? '#FDD835' : // Amarelo Escuro (Mais saturado/ouro)
-													p >= 20 ? '#FFFF8D' : // Amarelo Claro (Quase um creme vibrante)
-														p >= 15 ? '#0D47A1' : // Azul Escuro
-															p >= 10 ? '#4FC3F7' : // Azul Claro
-																p >= 6 ? '#1B5E20' : // Verde Escuro
-																	p >= 3 ? '#81C784' : // Verde Claro
-																		p >= 1 ? '#BDBDBD' : // Cinza
-																			'transparent';
-			}
+		// 2. Sua Escala de Cores Personalizada
+		function getColor(p) {
+			return p >= 400 ? '#9370DB' :
+				p >= 300 ? '#DDA0DD' :
+					p >= 200 ? '#5D4037' :
+						p >= 150 ? '#8D6E63' :
+							p >= 100 ? '#a10e0e' :
+								p >= 75 ? '#ff5959' :
+									p >= 50 ? '#E65100' :
+										p >= 40 ? '#FB8C00' :
+											p >= 30 ? '#FDD835' :
+												p >= 20 ? '#FFFF8D' :
+													p >= 15 ? '#0D47A1' :
+														p >= 10 ? '#4FC3F7' :
+															p >= 6 ? '#1B5E20' :
+																p >= 3 ? '#81C784' :
+																	p >= 1 ? '#BDBDBD' : 'transparent';
+		}
 
-			// 4. Renderização da Chuva
-			function carregarDia(index) {
-				if (!dataGlobal) return;
-				layerChuva.clearLayers();
+		// 3. Renderização Otimizada da Chuva Suavizada
+		function carregarDia(index) {
+			if (!dataGlobal) return;
+			layerChuva.clearLayers();
 
-				const { lat, lon } = dataGlobal.grid;
-				const grid = dataGlobal.frames_24h[index].precip;
+			const { lat, lon } = dataGlobal.grid;
+			const grid = dataGlobal.frames_24h[index].precip;
 
-				for (let y = 0; y < lat.length - 1; y++) {
-					for (let x = 0; x < lon.length - 1; x++) {
-						const val = grid[y][x];
+			// Variáveis temporárias para o tamanho do pixel suavizado (0.0625)
+			const dLat = 0.0625;
+			const dLon = 0.0625;
 
-						// Ignora o que for menor que 1mm
-						if (val >= 1) {
-							L.rectangle([[lat[y], lon[x]], [lat[y + 1], lon[x + 1]]], {
-								fillColor: getColor(val),
-								weight: 0,
-								fillOpacity: 0.7, // [MUDANÇA] Opacidade maior para destacar as cores no fundo limpo
-								interactive: false
-							}).addTo(layerChuva);
-						}
+			for (let y = 0; y < lat.length; y++) {
+				for (let x = 0; x < lon.length; x++) {
+					const val = grid[y][x];
+
+					// Desenha apenas o que for chuva real (>= 1mm)
+					if (val >= 1) {
+						// Cria os pequenos retângulos colados, gerando o efeito degradê
+						L.rectangle([[lat[y], lon[x]], [lat[y] + dLat, lon[x] + dLon]], {
+							renderer: meuCanvas, // Força renderizar no Canvas único
+							fillColor: getColor(val),
+							weight: 0,           // Sem bordas para não quebrar a suavização
+							fillOpacity: 0.7,    // Opacidade perfeita para o fundo limpo
+							interactive: false
+						}).addTo(layerChuva);
 					}
 				}
 			}
+			document.getElementById('status').innerText = `Exibindo: ${dataGlobal.frames_24h[index].label}`;
+		}
 
-			// 5. Carrega os Dados Meteorológicos
-			fetch("dados.json")
-				.then(res => res.json())
-				.then(data => {
-					dataGlobal = data;
-					const container = document.getElementById('dayButtons');
+		// 4. Carrega os Dados Meteorológicos
+		fetch("dados.json")
+			.then(res => res.json())
+			.then(data => {
+				dataGlobal = data;
+				const container = document.getElementById('dayButtons');
 
-					data.frames_24h.forEach((frame, i) => {
-						const btn = document.createElement('button');
-						btn.innerText = frame.label;
-						btn.onclick = (e) => {
-							document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-							e.target.classList.add('active');
-							carregarDia(i);
-						};
-						container.appendChild(btn);
-						if (i === 0) btn.click();
-					});
-				})
-				.catch(err => {
-					document.getElementById('status').innerText = "Erro ao carregar dados.json";
-					console.error(err);
+				data.frames_24h.forEach((frame, i) => {
+					const btn = document.createElement('button');
+					btn.innerText = frame.label;
+					btn.onclick = (e) => {
+						document.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+						e.target.classList.add('active');
+						carregarDia(i);
+					};
+					container.appendChild(btn);
+					if (i === 0) btn.click();
 				});
+			})
+			.catch(err => {
+				document.getElementById('status').innerText = "Erro ao carregar dados.json";
+				console.error(err);
+			});
 
-			// 6. ADICIONA AS BORDAS DOS ESTADOS (Desenhadas por cima da chuva)
-			fetch("https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson")
-				.then(res => res.json())
-				.then(geojsonData => {
-					L.geoJSON(geojsonData, {
-						style: {
-							color: "#000000",   // Linhas pretas bem marcantes
-							weight: 2,
-							fillColor: "transparent",
-							fillOpacity: 0
-						},
-						interactive: false,
-						pane: 'overlayPane' // Mantém no plano de vetores padrão, mas carregado após a chuva
-					}).addTo(map);
-				})
-				.catch(err => console.error("Erro ao carregar bordas dos estados:", err));
+		// 5. Sanduíche: Fronteiras dos Estados (Por cima da chuva)
+		fetch("https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/brazil-states.geojson")
+			.then(res => res.json())
+			.then(geojsonData => {
+				L.geoJSON(geojsonData, {
+					style: {
+						color: "#000000",
+						weight: 2,
+						fillColor: "transparent",
+						fillOpacity: 0
+					},
+					interactive: false
+				}).addTo(map);
+			})
+			.catch(err => console.error("Erro ao carregar bordas dos estados:", err));
 
-			// [MUDANÇA] 7. CAMADA DE CIDADES: Coloca APENAS os nomes das cidades e estradas no TOPO de tudo
-			L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
-				zIndex: 1000,        // Garante a prioridade visual máxima
-				pane: 'markerPane',   // Injeta os textos na camada superior do Leaflet
-				opacity: 1
-			}).addTo(map);
+		// 6. Sanduíche: Nomes das Cidades no TOPO absoluto
+		L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+			zIndex: 1000,
+			pane: 'markerPane',
+			opacity: 0.9
+		}).addTo(map);
 
-			// 8. Legenda Dinâmica da sua Escala (Inalterada)
-			const legend = L.control({ position: 'bottomright' });
-			legend.onAdd = function (map) {
-				const div = L.DomUtil.create('div', 'info legend');
-				const grades = [1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400];
+		// 7. Legenda Dinâmica da sua Escala
+		const legend = L.control({ position: 'bottomright' });
+		legend.onAdd = function (map) {
+			const div = L.DomUtil.create('div', 'info legend');
+			const grades = [1, 3, 6, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400];
 
-				div.innerHTML = '<strong>Chuva (mm)</strong><br>';
-				for (let i = 0; i < grades.length; i++) {
-					div.innerHTML +=
-						'<i style="background:' + getColor(grades[i]) + '; width: 14px; height: 14px; float: left; margin-right: 8px; opacity: 0.7; border: 1px solid #999;"></i> ' +
-						grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-				}
-				div.style.background = 'white'; div.style.padding = '10px'; div.style.lineHeight = '22px';
-				div.style.borderRadius = '5px'; div.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)'; div.style.fontSize = '18px';
-				return div;
-			};
-			legend.addTo(map);
+			div.innerHTML = '<strong>Chuva (mm)</strong><br>';
+			for (let i = 0; i < grades.length; i++) {
+				div.innerHTML +=
+					'<i style="background:' + getColor(grades[i]) + '; width: 14px; height: 14px; float: left; margin-right: 8px; opacity: 0.7; border: 1px solid #999;"></i> ' +
+					grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+			}
+			div.style.background = 'white'; div.style.padding = '10px'; div.style.lineHeight = '22px';
+			div.style.borderRadius = '5px'; div.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)'; div.style.fontSize = '18px';
+			return div;
+		};
+		legend.addTo(map);
+
 	</script>
 </body>
 
