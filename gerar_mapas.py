@@ -5,32 +5,42 @@ import os
 import numpy as np
 from datetime import datetime, timedelta
 
-# Configurações
+# Configurações de diretório
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# Pegamos a data atual UTC para a requisição
 hoje_utc = datetime.utcnow()
 data_query = hoje_utc.strftime("%Y%m%d")
 
 grib_file = os.path.join(BASE_DIR, f"tp_{data_query}_00.grib2")
 json_file = os.path.join(BASE_DIR, "dados.json")
 
-client = Client(source="azure")
+# 1. VERIFICAÇÃO DO GRIB2: Só baixa se o arquivo não existir localmente
+if not os.path.exists(grib_file):
+    print(f"Arquivo GRIB de hoje ({data_query}) não encontrado. Iniciando download da rodada 00h...")
+    client = Client(source="azure")
+    try:
+        client.retrieve(
+            date=data_query,
+            time=0,
+            type="fc",
+            param="tp",
+            step=list(range(0, 121, 3)),
+            target=grib_file,
+        )
+        print("Download do GRIB concluído com sucesso.")
+    except Exception as e:
+        print(f"Erro: A rodada de 00h do dia {data_query} pode não estar disponível ainda. Detalhes: {e}")
+        exit(1)
+else:
+    print(f"O arquivo GRIB já existe localmente: {grib_file}. Pulando download.")
 
-# Forçamos a rodada (time) de 00:00 UTC
-try:
-    client.retrieve(
-        date=data_query,
-        time=0,           # <--- Força a rodada de 00h
-        type="fc",
-        param="tp",
-        step=list(range(0, 121, 3)),
-        target=grib_file,
-    )
-except Exception as e:
-    print(f"Rodada de 00h de hoje ainda não disponível. Erro: {e}")
-    exit(1)
+# 2. VERIFICAÇÃO DO JSON: Só processa se o JSON não existir
+if os.path.exists(json_file):
+    print("O arquivo dados.json de hoje já existe. Processamento cancelado para poupar recursos.")
+    exit(0)
 
-# Processamento
+print("Iniciando o processamento do Xarray para gerar o JSON...")
+
+# 3. Processamento com Xarray
 ds = xr.open_dataset(grib_file, engine="cfgrib")
 ds = ds.sortby("latitude")
 ds = ds.sel(latitude=slice(-34, 5), longitude=slice(-75, -34))
@@ -44,8 +54,6 @@ lons = ds.longitude.values
 dias_semana = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"]
 
 frames_5dias = []
-
-# Usamos a data da rodada para os botões
 data_base = datetime.strptime(data_query, "%Y%m%d")
 
 for i in range(5):
@@ -54,7 +62,6 @@ for i in range(5):
     
     grid_dia = tp_inc.isel(step=slice(start_step, end_step)).sum(dim="step")
     
-    # Data do botão baseada na rodada de 00h
     data_alvo = data_base + timedelta(days=i)
     label = f"{data_alvo.strftime('%d/%m')} - {dias_semana[data_alvo.weekday()]}"
     
@@ -75,4 +82,4 @@ output = {
 with open(json_file, "w") as f:
     json.dump(output, f)
 
-print(f"OK! Dados da rodada 00 UTC processados para os próximos 5 dias.")
+print(f"Sucesso! JSON gerado e pronto para o Leaflet.")
