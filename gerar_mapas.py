@@ -5,7 +5,7 @@ import os
 from datetime import datetime
 
 # ----------------------------
-# 1. Configuração
+# CONFIG
 # ----------------------------
 
 DATA_DIR = "data"
@@ -17,15 +17,15 @@ grib_file = f"{DATA_DIR}/tp_{today}.grib2"
 json_file = f"{DATA_DIR}/precip_{today}.json"
 
 # ----------------------------
-# 2. Cache (não baixa de novo)
+# CACHE (não baixa de novo)
 # ----------------------------
 
 if os.path.exists(json_file):
-    print("Arquivo já existe para hoje. Pulando download.")
+    print("Já existe arquivo de hoje. Abortando download.")
     exit(0)
 
 # ----------------------------
-# 3. Download ECMWF (Brasil inteiro)
+# DOWNLOAD ECMWF (GLOBAL)
 # ----------------------------
 
 client = Client(source="azure")
@@ -33,40 +33,50 @@ client = Client(source="azure")
 client.retrieve(
     type="fc",
     param="tp",
-    step=list(range(0, 121, 3)),  # 5 dias, 3h
+    step=list(range(0, 121, 3)),  # 5 dias / 3h
     target=grib_file,
 )
 
 # ----------------------------
-# 4. Abrir GRIB
+# ABRIR GRIB
 # ----------------------------
 
 ds = xr.open_dataset(grib_file, engine="cfgrib")
 
+# ----------------------------
+# RECORTE BRASIL
+# ----------------------------
+
+ds = ds.sortby("latitude")
+
+ds = ds.sel(
+    latitude=slice(-34, 5),
+    longitude=slice(-75, -34)
+)
+
 tp = ds["tp"]
 
 # ----------------------------
-# 5. Converter acumulado → incremental
+# CONVERTER ACUMULADO → INCREMENTAL
 # ----------------------------
 
 tp_inc = tp.diff("step")
 tp_inc = tp_inc.where(tp_inc >= 0, 0).fillna(0)
 
-# converter para mm (mais útil para mapa)
+# metros → mm
 tp_inc = tp_inc * 1000
 
 # ----------------------------
-# 6. Acumulado 24h
+# ACUMULADO 24h
 # ----------------------------
 
-steps_por_dia = 8  # 3h steps
+steps_por_dia = 8  # 3h
 
 tp_24h = tp_inc.rolling(step=steps_por_dia).sum()
 
 # ----------------------------
-# 7. Redução para JSON (grade Brasil)
+# PREPARAR DADOS PARA LEAFLET
 # ----------------------------
-# atenção: isso gera matriz completa (Leaflet pode usar direto)
 
 steps = ds.step.values
 lats = ds.latitude.values
@@ -75,31 +85,30 @@ lons = ds.longitude.values
 frames = []
 
 for i, step in enumerate(steps):
-    field = tp_inc.isel(step=i).values
-
     frames.append({
         "step": int(step),
-        "data": field.tolist()   # grid 2D (lat x lon)
+        "precip": tp_inc.isel(step=i).values.tolist()
     })
 
 # ----------------------------
-# 8. Acumulado total 5 dias
+# TOTAL 5 DIAS
 # ----------------------------
 
 total_5d = float(tp_inc.sum("step").mean().values)
 
 # ----------------------------
-# 9. JSON final
+# JSON FINAL
 # ----------------------------
 
 output = {
     "model": "ECMWF Open Data",
     "area": "Brazil",
     "unit": "mm",
-    "resolution_step_hours": 3,
+    "grid": {
+        "lat": lats.tolist(),
+        "lon": lons.tolist()
+    },
     "total_5d_mean_mm": total_5d,
-    "lat": lats.tolist(),
-    "lon": lons.tolist(),
     "frames": frames
 }
 
