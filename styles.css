@@ -182,7 +182,7 @@ button {
     background: #fff;
 
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
     gap: 12px;
 
@@ -198,44 +198,57 @@ button {
     background-repeat: no-repeat;
 }
 
-/* NÍVEIS DE NUVEM (CORRETO) */
-.period-card.a .period-icon {
-    background-image: url("./icons/a.svg");
-}
-
-.period-card.b .period-icon {
-    background-image: url("./icons/b.svg");
-}
-
-.period-card.c .period-icon {
-    background-image: url("./icons/c.svg");
-}
-
-.period-card.d .period-icon {
-    background-image: url("./icons/d.svg");
-}
-
 /* LAYOUT INTERNO */
-.period-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.period-title-wrapper {
+    text-align: center;
+    width: 100%;
+    margin-bottom: 8px;
 }
 
 .period-title {
     font-weight: 700;
-    min-width: 120px;
+    font-size: 1.2rem;
+}
+
+.period-left {
+    text-align: center;
+    width: 100%;
+}
+
+.period-cloud-level {
+    color: #666;
+    font-size: 1.2rem;
+}
+
+.period-middle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 4px 0;
+}
+
+.period-icon-img {
+    width: 40px;
+    height: 40px;
+    display: block;
+    object-fit: contain;
 }
 
 .period-data {
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
-    justify-content: flex-end;
+    justify-content: center;
+    width: 100%;
 }
 
 .period-item {
     color: #444;
+    font-size: 1.2rem;
+}
+
+img {
+    width: 50px;
 }
 
 /* ===== HISTÓRICO ===== */
@@ -320,12 +333,12 @@ button {
     /* PERÍODOS MOBILE */
     .period-card {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
     }
 
     .period-data {
         width: 100%;
-        justify-content: space-between;
+        justify-content: center;
     }
 
     .period-icon {
