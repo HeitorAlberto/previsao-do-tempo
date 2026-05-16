@@ -1,361 +1,272 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-    const forecastBase = 'https://api.open-meteo.com/v1/forecast';
-    const model = 'ecmwf_ifs';
-    const cityInput = document.getElementById('cityInput');
-    const searchForm = document.getElementById('searchForm');
-    const locationName = document.getElementById('locationName');
-    const cardsEl = document.getElementById('cards');
-    const todayDate = document.getElementById('todayDate');
-    const historyContainer = document.getElementById("historyContainer");
+    const API = 'https://api.open-meteo.com/v1/forecast';
+    const MODEL = 'ecmwf_ifs';
 
-    let searchHistory = [];
+    const ICON_BASE = 'https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/';
 
+    // ÍCONES CORRIGIDOS (compatíveis com Meteocons)
+    const selectIcon = (rain, cloudLow, cloudMid) => {
+        if (rain > 5) return 'rain';
+        if (rain >= 0.1) return 'drizzle';
 
-    function loadHistory() {
-        const saved = localStorage.getItem("search_history");
-        if (!saved) return [];
-        try { return JSON.parse(saved); } catch { return []; }
-    }
+        const cover = cloudLow * 0.7 + cloudMid * 0.3;
 
-    function saveHistory() {
-        localStorage.setItem("search_history", JSON.stringify(searchHistory));
-    }
-
-    function addToHistory(name, lat, lon) {
-        const existingIndex = searchHistory.findIndex(
-            item => item.name.toLowerCase() === name.toLowerCase()
-        );
-        if (existingIndex !== -1) searchHistory.splice(existingIndex, 1);
-
-        searchHistory.unshift({ name, lat, lon });
-        if (searchHistory.length > 3) searchHistory.pop();
-
-        renderHistory();
-        saveHistory();
-    }
-
-    function renderHistory() {
-        historyContainer.innerHTML = "Histórico de buscas:";
-        historyContainer.style.fontWeight = "bolder";
-
-        searchHistory.forEach(item => {
-            const div = document.createElement("div");
-            div.className = "history-item";
-            div.textContent = item.name;
-            div.onclick = () => loadForecast(item.lat, item.lon);
-            historyContainer.appendChild(div);
-        });
-    }
-
-    function formatDateLabel(dateStr) {
-        const d = new Date(dateStr);
-        const day = String(d.getDate()).padStart(2, '0');
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const year = d.getFullYear();
-        const weekday = d.toLocaleDateString('pt-BR', { weekday: 'long' });
-
-        return { date: `${day}/${month}/${year}`, weekday };
-    }
-
-    const getAddressText = address => {
-        const city = address.city || address.town || address.village || address.municipality || '';
-        const state = address.state || '';
-        const country = address.country || '';
-        return `${city}${state ? ', ' + state : ''}${country ? ', ' + country : ''}`;
+        if (cover > 75) return 'overcast';
+        if (cover > 35) return 'cloudy';
+        return 'clear';
     };
 
-    const prepareHourlyArrays = hourly => ({
-        temperature_2m: hourly.temperature_2m || [],
-        relative_humidity_2m: hourly.relative_humidity_2m || [],
-        precipitation: hourly.precipitation || [],
-        wind_gusts_10m: hourly.wind_gusts_10m || [],
-        cloud_cover_low: hourly.cloud_cover_low || [],
-        cloud_cover_mid: hourly.cloud_cover_mid || [],
-        time: hourly.time || []
-    });
+    const el = {
+        city: document.getElementById('cityInput'),
+        form: document.getElementById('searchForm'),
+        name: document.getElementById('locationName'),
+        cards: document.getElementById('cards'),
+        date: document.getElementById('todayDate'),
+        geo: document.getElementById('geoButton')
+    };
 
-    const groupHourlyByDate = (times, arrays) => {
+    const fmtDate = d => {
+        const dt = new Date(d + 'T00:00:00');
+        return {
+            date: dt.toLocaleDateString('pt-BR'),
+            weekday: dt.toLocaleDateString('pt-BR', { weekday: 'long' })
+        };
+    };
+
+    const addrText = a =>
+        `${a.city || a.town || a.village || a.municipality || ''}`
+        + (a.state ? `, ${a.state}` : '')
+        + (a.country ? `, ${a.country}` : '');
+
+    const fetchJSON = async url => (await fetch(url)).json();
+
+    const forecast = (lat, lon) => {
+        const url = new URL(API);
+        url.searchParams.set('latitude', lat);
+        url.searchParams.set('longitude', lon);
+        url.searchParams.set('models', MODEL);
+        url.searchParams.set('timezone', 'America/Fortaleza');
+        url.searchParams.set('forecast_days', '15');
+        url.searchParams.set(
+            'hourly',
+            'temperature_2m,precipitation,wind_gusts_10m,cloud_cover_low,cloud_cover_mid'
+        );
+
+        return fetchJSON(url);
+    };
+
+    const search = q =>
+        fetchJSON(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(q)}&limit=1`)
+            .then(d => {
+                if (!d[0]) throw new Error();
+                return {
+                    lat: +d[0].lat,
+                    lon: +d[0].lon,
+                    name: addrText(d[0].address || {})
+                };
+            });
+
+    const PERIODS = [
+        { label: 'Madrugada', start: 0, end: 6 },
+        { label: 'Manhã', start: 6, end: 12 },
+        { label: 'Tarde', start: 12, end: 18 },
+        { label: 'Noite', start: 18, end: 24 },
+    ];
+
+    const groupByDay = (times, data) => {
         const map = new Map();
 
-        for (let i = 0; i < times.length; i++) {
-            const d = new Date(times[i]);
-            const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        times.forEach((t, i) => {
+            const key = t.slice(0, 10);
+            const hour = parseInt(t.slice(11, 13), 10);
 
-            if (!map.has(day)) map.set(day, []);
+            if (!map.has(key)) map.set(key, { all: [], byPeriod: [[], [], [], []] });
 
-            map.get(day).push({
-                temperature_2m: arrays.temperature_2m[i],
-                relative_humidity_2m: arrays.relative_humidity_2m[i],
-                precipitation: arrays.precipitation[i],
-                wind_gusts_10m: arrays.wind_gusts_10m[i],
-                cloud_cover_low: arrays.cloud_cover_low[i],
-                cloud_cover_mid: arrays.cloud_cover_mid[i]
-            });
-        }
+            const entry = {
+                t: data.temperature_2m[i],
+                p: data.precipitation[i],
+                w: data.wind_gusts_10m[i],
+                cl: data.cloud_cover_low[i],
+                cm: data.cloud_cover_mid[i]
+            };
+
+            map.get(key).all.push(entry);
+
+            const periodIndex = PERIODS.findIndex(p => hour >= p.start && hour < p.end);
+            if (periodIndex !== -1) {
+                map.get(key).byPeriod[periodIndex].push(entry);
+            }
+        });
 
         return map;
     };
 
-    const summarizeDay = points => {
-        return points.reduce((acc, p) => {
-            acc.tMin = Math.min(acc.tMin, p.temperature_2m);
-            acc.tMax = Math.max(acc.tMax, p.temperature_2m);
-            acc.precipSum += p.precipitation;
-            acc.gustMax = Math.max(acc.gustMax, p.wind_gusts_10m);
-            return acc;
-        }, {
-            tMin: Infinity,
-            tMax: -Infinity,
-            precipSum: 0,
-            gustMax: 0
+    const summary = arr =>
+        arr.reduce((a, v) => ({
+            min: Math.min(a.min, v.t),
+            max: Math.max(a.max, v.t),
+            rain: a.rain + v.p,
+            wind: Math.max(a.wind, v.w),
+            cloudLow: a.cloudLow + v.cl,
+            cloudMid: a.cloudMid + v.cm,
+            count: a.count + 1
+        }), {
+            min: Infinity,
+            max: -Infinity,
+            rain: 0,
+            wind: 0,
+            cloudLow: 0,
+            cloudMid: 0,
+            count: 0
         });
-    };
 
-    const get3hBlocks = (points) => {
-        const step = 3;
-        const blocks = [];
-        for (let i = 0; i < points.length; i += step) {
-            const slice = points.slice(i, i + step);
-            if (slice.length === 0) continue;
-            const avg = slice.reduce((acc, p) =>
-                acc + ((p.cloud_cover_low * 0.8) + (p.cloud_cover_mid * 0.2)), 0
-            ) / slice.length;
-            blocks.push(avg);
-        }
-        return blocks;
-    };
+    const periodRows = byPeriod =>
+        PERIODS.map((p, i) => {
+            const pts = byPeriod[i];
+            if (!pts || pts.length === 0) return '';
 
-    function getCloudDescription(points) {
-        const blocks = get3hBlocks(points);
-        const maxCloud = Math.max(...blocks);
-        const minCloud = Math.min(...blocks);
-        const delta = maxCloud - minCloud;
+            const s = summary(pts);
+            const avgCloudLow = s.cloudLow / s.count;
+            const avgCloudMid = s.cloudMid / s.count;
 
-        if (delta < 45) {
-            if (maxCloud < 40) return "- Poucas nuvens.";
-            if (maxCloud < 60) return "- Parcialmente nublado.";
-            if (maxCloud < 80) return "- Muitas nuvens.";
-            return "- Nublado.";
-        }
+            const iconName = selectIcon(s.rain, avgCloudLow, avgCloudMid);
+            const iconUrl = `${ICON_BASE}${iconName}.svg`;
 
-        const mid = Math.floor(blocks.length / 2);
-        const avg1 = blocks.slice(0, mid).reduce((a, b) => a + b, 0) / mid;
-        const avg2 = blocks.slice(mid).reduce((a, b) => a + b, 0) / (blocks.length - mid);
+            return `
+                <tr>
+                    <td>
+                        <strong>${p.label}</strong>
+                    </td>
+                    <td class="td-icon">
+                        <img class="weather-icon" src="${iconUrl}" alt="${iconName}" />
+                    </td>
+                    <td>${s.rain.toFixed(1)} mm</td>
+                    <td>${s.wind.toFixed(0)} km/h</td>
+                </tr>
+            `;
+        }).join('');
 
-        if (avg1 - avg2 > 35) {
-            return avg2 < 30 ? "- Aberturas à tarde." : "- Nebulosidade diminui à tarde.";
-        }
+    const render = map => {
+        el.cards.innerHTML = '';
 
-        if (avg2 - avg1 > 35) {
-            return avg1 < 30 ? "- Mais nuvens à tarde." : "- Nublado à tarde.";
-        }
+        [...map.entries()].slice(0, 15).forEach(([d, { all, byPeriod }]) => {
+            const s = summary(all);
+            const { date, weekday } = fmtDate(d);
+            const isWeekend = ['sábado', 'domingo'].includes(weekday);
 
-        return "- Nebulosidade variável.";
-    }
+            const div = document.createElement('div');
+            div.className = 'day';
 
-    function getVolumeDescription(totalVolume) {
-        if (totalVolume === 0) return '- Sem previsão de chuva.';
-        if (totalVolume <= 0.9) return '- Sem chuva relevante.';
-        if (totalVolume < 4) return '- Chuva leve e isolada.';
-        if (totalVolume < 10) return '- Chuva leve.';
-        if (totalVolume < 25) return '- Chuva moderada.';
-        if (totalVolume < 80) return '- Chuva forte.';
-        return '- Chuva extrema (perigo).';
-    }
-
-    const renderDays = dayMap => {
-        cardsEl.innerHTML = '';
-
-        Array.from(dayMap.entries()).slice(0, 15).forEach(([day, points]) => {
-            const labels = formatDateLabel(day + 'T00:00:00');
-            const s = summarizeDay(points);
-            const volumeLabel = getVolumeDescription(s.precipSum);
-            const cloudLabel = getCloudDescription(points);
-
-            const card = document.createElement('div');
-            card.className = 'day';
-
-            const isWeekend = ['sábado', 'domingo'].includes(labels.weekday.toLowerCase());
-
-            card.innerHTML = `
+            div.innerHTML = `
                 <div class="day-row">
                     <div class="date-line ${isWeekend ? 'weekend' : ''}">
-                        ${labels.date} • ${labels.weekday}
+                        ${date} • ${weekday}
                     </div>
 
                     <div class="main-info">
-                        <div class="badge badge-temp">
-                            🌡️ ${s.tMin.toFixed(0)}° a ${s.tMax.toFixed(0)}°
-                        </div>
+                        <div class="badge badge-temp">🌡️ ${s.min.toFixed(0)}° a ${s.max.toFixed(0)}°</div>
+                        <div class="badge badge-precip">☔ ${s.rain.toFixed(1)} mm</div>
+                        <div class="badge badge-wind">🍃 ${s.wind.toFixed(0)} km/h</div>
+                    </div>
 
-                        <div class="badge badge-precip">
-                            ☔ ${s.precipSum.toFixed(1)} mm
-                        </div>
+                    <div class="expand-wrapper">
+                        <button class="btn-expand" aria-expanded="false">
+                            ▾ Detalhes por período
+                        </button>
 
-                        <div class="badge badge-wind">
-                            🍃 ${s.gustMax.toFixed(0)} km/h
+                        <div class="period-detail" hidden>
+                            <table class="period-table">
+                                <thead>
+                                    <tr>
+                                        <th>Período</th>
+                                        <th></th>
+                                        <th>Chuva</th>
+                                        <th>Vento</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${periodRows(byPeriod)}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             `;
 
-            cardsEl.appendChild(card);
+            const btn = div.querySelector('.btn-expand');
+            const detail = div.querySelector('.period-detail');
+
+            btn.addEventListener('click', () => {
+                const open = !detail.hidden;
+                detail.hidden = open;
+                btn.setAttribute('aria-expanded', String(!open));
+                btn.textContent = open
+                    ? '▾ Detalhes por período'
+                    : '▴ Fechar detalhes';
+            });
+
+            el.cards.appendChild(div);
         });
 
-        cityInput.value = '';
+        el.city.value = '';
     };
 
-    async function fetchForecast(lat, lon, timezone = 'auto') {
-        const url = new URL(forecastBase);
-        url.searchParams.set('latitude', lat);
-        url.searchParams.set('longitude', lon);
-        url.searchParams.set(
-            'hourly',
-            'temperature_2m,precipitation,wind_gusts_10m,cloud_cover_low,cloud_cover_mid'
-        );
-        url.searchParams.set('models', model);
-        url.searchParams.set('timezone', timezone);
-        url.searchParams.set('forecast_days', '15');
-
-        const res = await fetch(url);
-        if (!res.ok) throw new Error();
-
-        return res.json();
-    }
-
-    async function searchLocation(query) {
-        const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`;
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (!data[0]) throw new Error();
-
-        const place = data[0];
-        return {
-            name: getAddressText(place.address || {}),
-            lat: parseFloat(place.lat),
-            lon: parseFloat(place.lon)
-        };
-    }
-
-    async function loadForecast(lat, lon) {
-        locationName.textContent = "Carregando...";
+    async function load(lat, lon) {
+        el.name.textContent = 'Carregando...';
 
         try {
-            const forecast = await fetchForecast(lat, lon);
+            const f = await forecast(lat, lon);
 
-            const dayMap = groupHourlyByDate(
-                forecast.hourly.time,
-                prepareHourlyArrays(forecast.hourly)
+            const map = groupByDay(
+                f.hourly.time,
+                {
+                    temperature_2m: f.hourly.temperature_2m,
+                    precipitation: f.hourly.precipitation,
+                    wind_gusts_10m: f.hourly.wind_gusts_10m,
+                    cloud_cover_low: f.hourly.cloud_cover_low,
+                    cloud_cover_mid: f.hourly.cloud_cover_mid
+                }
             );
 
-            renderDays(dayMap);
+            render(map);
 
-            const rev = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`);
-            const revData = await rev.json();
-            const address = revData.address || {};
-            const resolvedName = getAddressText(address);
+            const rev = await fetchJSON(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`
+            );
 
-            localStorage.setItem(
+            el.name.textContent = '🗺️ ' + addrText(rev.address || {});
 
-                'mapUserData',
-
-                JSON.stringify({
-
-                    lat,
-                    lon,
-                    local: resolvedName
-
-                })
-
-            )
-
-            locationName.textContent = "🗺️ " + resolvedName;
-            addToHistory(resolvedName, lat, lon);
-
-            const cidade =
-                address.city ||
-                address.town ||
-                address.village ||
-                address.municipality ||
-                address.county ||
-                '';
-
-            const estadoNome =
-                address.state ||
-                address.region ||
-                address.county ||
-                address.state_district ||
-                '';
-
-            localStorage.setItem(
-                'mapUserData',
-                JSON.stringify({
-
-                    lat,
-                    lon,
-
-                    cidade,
-                    estado: estadoNome,
-
-                    local:
-                        cidade && estadoNome
-                            ? `${cidade} - ${estadoNome}`
-                            : resolvedName
-
-                })
-            )
-
-
-    
-
-        } catch (e) {
-            console.error(e);
-            locationName.textContent = "Erro ao carregar previsão";
+        } catch {
+            el.name.textContent = 'Erro ao carregar previsão';
         }
     }
 
-    searchForm.addEventListener('submit', async e => {
+    el.form.addEventListener('submit', async e => {
         e.preventDefault();
-        const q = cityInput.value.trim();
-        if (!q) return;
+        if (!el.city.value.trim()) return;
 
         try {
-            const result = await searchLocation(q);
-            await loadForecast(result.lat, result.lon);
+            const r = await search(el.city.value.trim());
+            load(r.lat, r.lon);
         } catch {
-            locationName.textContent = 'Erro ao carregar';
+            el.name.textContent = 'Erro ao carregar';
         }
     });
 
-    document.getElementById('geoButton').addEventListener('click', () => {
-        if (!navigator.geolocation) return alert('Geolocalização não suportada.');
-        locationName.textContent = 'Obtendo localização...';
+    el.geo.addEventListener('click', () => {
+        if (!navigator.geolocation)
+            return alert('Geolocalização não suportada.');
+
+        el.name.textContent = 'Obtendo localização...';
 
         navigator.geolocation.getCurrentPosition(
-
-            pos => {
-
-                const lat = pos.coords.latitude
-
-                const lon = pos.coords.longitude
-
-                loadForecast(lat, lon)
-
-            },
-
-            () => locationName.textContent = 'Erro ao obter localização'
-
-        )
+            p => load(p.coords.latitude, p.coords.longitude),
+            () => el.name.textContent = 'Erro ao obter localização'
+        );
     });
 
-    const today = new Date();
-    todayDate.textContent =
-        `${new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(today)} - 
-         ${new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(today)}`;
-
-    searchHistory = loadHistory();
-    renderHistory();
-
+    const now = new Date();
+    el.date.textContent =
+        `${now.toLocaleDateString('pt-BR')} - ${now.toLocaleDateString('pt-BR', { weekday: 'long' })}`;
 });
