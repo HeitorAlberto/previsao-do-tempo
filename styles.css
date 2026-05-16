@@ -163,62 +163,81 @@ button {
     color: #444;
 }
 
-/* ===== TABELA DE PERÍODOS ===== */
+/* ===== PERÍODOS ===== */
 .period-detail {
     width: 100%;
-    overflow-x: auto;
 }
 
-.period-table {
+.period-container {
+    display: grid;
+    gap: 12px;
     width: 100%;
-    border-collapse: collapse;
-    font-size: 1.2rem;
-    color: #555;
 }
 
-.period-table thead tr {
-    border-bottom: 2px solid #eaeaea;
+/* CARD */
+.period-card {
+    border: 1px solid #e6e6e6;
+    border-radius: 10px;
+    padding: 12px;
+    background: #fff;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+
+    position: relative;
 }
 
-.period-table th {
+/* ÍCONE */
+.period-icon {
+    width: 34px;
+    height: 34px;
+    display: inline-block;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+/* NÍVEIS DE NUVEM (CORRETO) */
+.period-card.a .period-icon {
+    background-image: url("./icons/a.svg");
+}
+
+.period-card.b .period-icon {
+    background-image: url("./icons/b.svg");
+}
+
+.period-card.c .period-icon {
+    background-image: url("./icons/c.svg");
+}
+
+.period-card.d .period-icon {
+    background-image: url("./icons/d.svg");
+}
+
+/* LAYOUT INTERNO */
+.period-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.period-title {
     font-weight: 700;
-    color: #333;
-    padding: 8px 16px;
-    text-align: left;
+    font-size: 1.05rem;
+    min-width: 120px;
 }
 
-.period-table td {
-    padding: 10px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    vertical-align: middle;
+.period-data {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
-.period-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.period-table tbody tr:hover {
-    background-color: #fafafa;
-}
-
-.period-hours {
-    font-size: 0.85rem;
-    color: #aaa;
-    margin-left: 8px;
-}
-
-/* ===== ÍCONE DE CLIMA ===== */
-.td-icon {
-    width: 56px;
-    text-align: center;
-    padding: 6px 8px;
-}
-
-.weather-icon {
-    width: 44px;
-    height: 44px;
-    display: block;
-    margin: 0 auto;
+.period-item {
+    font-size: 1rem;
+    color: #444;
 }
 
 /* ===== HISTÓRICO ===== */
@@ -243,15 +262,14 @@ button {
     font-weight: 100;
 }
 
-@media (max-width:1000px) {
+/* ===== MOBILE ===== */
+@media (max-width: 1000px) {
     #cards {
-        display: grid;
         grid-template-columns: 1fr;
     }
 }
 
-/* ===== MOBILE ===== */
-@media(max-width:600px) {
+@media (max-width: 600px) {
 
     body {
         font-size: 1.1rem;
@@ -301,30 +319,18 @@ button {
         gap: 25px;
     }
 
-    .weather-text {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 15px;
-        font-size: 22px;
-        margin-left: 15px;
+    /* PERÍODOS MOBILE */
+    .period-card {
+        flex-direction: column;
+        align-items: flex-start;
     }
 
-    .weather-text span {
-        text-align: left;
+    .period-data {
+        width: 100%;
+        justify-content: space-between;
     }
 
-    .period-table th,
-    .period-table td {
-        padding: 8px 10px;
-        font-size: 1rem;
-    }
-
-    .period-hours {
-        display: none;
-    }
-
-    .weather-icon {
-        width: 36px;
-        height: 36px;
+    .period-icon {
+        margin-bottom: 8px;
     }
 }

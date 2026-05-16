@@ -60,6 +60,16 @@ document.addEventListener("DOMContentLoaded", () => {
         { label: 'Noite', start: 18, end: 24 },
     ];
 
+    /* =========================
+       NÍVEL DE NUVENS (SIMPLIFICADO)
+    ========================== */
+    const getCloudLevel = (cloud) => {
+        if (cloud <= 20) return 'a';
+        if (cloud <= 50) return 'b';
+        if (cloud <= 80) return 'c';
+        return 'd';
+    };
+
     const groupByDay = (times, data) => {
         const map = new Map();
 
@@ -67,7 +77,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const key = t.slice(0, 10);
             const hour = parseInt(t.slice(11, 13), 10);
 
-            if (!map.has(key)) map.set(key, { all: [], byPeriod: [[], [], [], []] });
+            if (!map.has(key)) {
+                map.set(key, {
+                    all: [],
+                    byPeriod: [[], [], [], []]
+                });
+            }
 
             const entry = {
                 t: data.temperature_2m[i],
@@ -77,11 +92,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 cm: data.cloud_cover_mid[i]
             };
 
-            map.get(key).all.push(entry);
+            const day = map.get(key);
+            day.all.push(entry);
 
             const periodIndex = PERIODS.findIndex(p => hour >= p.start && hour < p.end);
             if (periodIndex !== -1) {
-                map.get(key).byPeriod[periodIndex].push(entry);
+                day.byPeriod[periodIndex].push(entry);
             }
         });
 
@@ -107,19 +123,30 @@ document.addEventListener("DOMContentLoaded", () => {
             count: 0
         });
 
-    const periodRows = byPeriod =>
+    const periodBlocks = byPeriod =>
         PERIODS.map((p, i) => {
             const pts = byPeriod[i];
             if (!pts || pts.length === 0) return '';
 
             const s = summary(pts);
 
+            const cloud = (s.cloudLow + s.cloudMid) / (2 * s.count);
+            const level = getCloudLevel(cloud);
+
             return `
-                <tr>
-                    <td><strong>${p.label}</strong></td>
-                    <td>${s.rain.toFixed(1)} mm</td>
-                    <td>${s.wind.toFixed(0)} km/h</td>
-                </tr>
+                <div class="period-card ${level}">
+
+                    <div class="period-left">
+                        <div class="period-title">${p.label}</div>
+                    </div>
+
+                    <div class="period-data">
+                        <span class="period-icon"></span>
+                        <div class="period-item rain">${s.rain.toFixed(1)} mm</div>
+                        <div class="period-item wind">${s.wind.toFixed(0)} km/h</div>
+                    </div>
+
+                </div>
             `;
         }).join('');
 
@@ -127,6 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
         el.cards.innerHTML = '';
 
         [...map.entries()].slice(0, 15).forEach(([d, { all, byPeriod }]) => {
+
             const s = summary(all);
             const { date, weekday } = fmtDate(d);
             const isWeekend = ['sábado', 'domingo'].includes(weekday);
@@ -136,6 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             div.innerHTML = `
                 <div class="day-row">
+
                     <div class="date-line ${isWeekend ? 'weekend' : ''}">
                         ${date} • ${weekday}
                     </div>
@@ -152,20 +181,12 @@ document.addEventListener("DOMContentLoaded", () => {
                         </button>
 
                         <div class="period-detail" hidden>
-                            <table class="period-table">
-                                <thead>
-                                    <tr>
-                                        <th>Período</th>
-                                        <th>Chuva</th>
-                                        <th>Vento</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${periodRows(byPeriod)}
-                                </tbody>
-                            </table>
+                            <div class="period-container">
+                                ${periodBlocks(byPeriod)}
+                            </div>
                         </div>
                     </div>
+
                 </div>
             `;
 
