@@ -224,7 +224,6 @@ button {
 
 .period-title {
     font-weight: 700;
-    font-size: 1.05rem;
     min-width: 120px;
 }
 
@@ -236,7 +235,6 @@ button {
 }
 
 .period-item {
-    font-size: 1rem;
     color: #444;
 }
 
