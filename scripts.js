@@ -3,20 +3,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const API = 'https://api.open-meteo.com/v1/forecast';
     const MODEL = 'ecmwf_ifs';
 
-    const ICON_BASE = 'https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/';
-
-    // ÍCONES CORRIGIDOS (compatíveis com Meteocons)
-    const selectIcon = (rain, cloudLow, cloudMid) => {
-        if (rain > 5) return 'rain';
-        if (rain >= 0.1) return 'drizzle';
-
-        const cover = cloudLow * 0.7 + cloudMid * 0.3;
-
-        if (cover > 75) return 'overcast';
-        if (cover > 35) return 'cloudy';
-        return 'clear';
-    };
-
     const el = {
         city: document.getElementById('cityInput'),
         form: document.getElementById('searchForm'),
@@ -127,20 +113,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!pts || pts.length === 0) return '';
 
             const s = summary(pts);
-            const avgCloudLow = s.cloudLow / s.count;
-            const avgCloudMid = s.cloudMid / s.count;
-
-            const iconName = selectIcon(s.rain, avgCloudLow, avgCloudMid);
-            const iconUrl = `${ICON_BASE}${iconName}.svg`;
 
             return `
                 <tr>
-                    <td>
-                        <strong>${p.label}</strong>
-                    </td>
-                    <td class="td-icon">
-                        <img class="weather-icon" src="${iconUrl}" alt="${iconName}" />
-                    </td>
+                    <td><strong>${p.label}</strong></td>
                     <td>${s.rain.toFixed(1)} mm</td>
                     <td>${s.wind.toFixed(0)} km/h</td>
                 </tr>
@@ -180,7 +156,6 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <thead>
                                     <tr>
                                         <th>Período</th>
-                                        <th></th>
                                         <th>Chuva</th>
                                         <th>Vento</th>
                                     </tr>
