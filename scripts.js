@@ -87,34 +87,34 @@ document.addEventListener("DOMContentLoaded", () => {
             if (cloudCover <= 15) {
                 return {
                     level: 'clear',
-                    label: '<img src="icons/sol.png">'
+                    label: '<img src="icons/sol.png"><span>Ensolarado</span>'
                 };
             }
 
             if (cloudCover <= 35) {
                 return {
                     level: 'few',
-                    label: '<img src="icons/poucas-nuvens-dia.png">'
+                    label: '<img src="icons/poucas-nuvens-dia.png"><span>Poucas nuvens</span>'
                 };
             }
 
             if (cloudCover <= 60) {
                 return {
                     level: 'many',
-                    label: '<img src="icons/algumas-nuvens-dia.png">'
+                    label: '<img src="icons/algumas-nuvens-dia.png"><span>Algumas nuvens</span>'
                 };
             }
 
             if (cloudCover <= 85) {
                 return {
                     level: 'more-clouds',
-                    label: '<img src="icons/muitas-nuvens-dia.png">'
+                    label: '<img src="icons/muitas-nuvens-dia.png"><span>Muitas nuvens</span>'
                 };
             }
 
             return {
                 level: 'overcast',
-                label: '<img src="icons/nublado.png">'
+                label: '<img src="icons/nublado.png"><span>Nublado</span>'
             };
 
         } else {
@@ -122,34 +122,34 @@ document.addEventListener("DOMContentLoaded", () => {
             if (cloudCover <= 15) {
                 return {
                     level: 'clear',
-                    label: '<img src="icons/lua.png">'
+                    label: '<img src="icons/lua.png"><span>Aberto</span>'
                 };
             }
 
             if (cloudCover <= 35) {
                 return {
                     level: 'few',
-                    label: '<img src="icons/poucas-nuvens-noite.png">'
+                    label: '<img src="icons/poucas-nuvens-noite.png"><span>Poucas nuvens</span>'
                 };
             }
 
             if (cloudCover <= 60) {
                 return {
                     level: 'many',
-                    label: '<img src="icons/algumas-nuvens-noite.png">'
+                    label: '<img src="icons/algumas-nuvens-noite.png"><span>Algumas nuvens</span>'
                 };
             }
 
             if (cloudCover <= 85) {
                 return {
                     level: 'more-clouds',
-                    label: '<img src="icons/muitas-nuvens-noite.png">'
+                    label: '<img src="icons/muitas-nuvens-noite.png"><span>Muitas nuvens</span>'
                 };
             }
 
             return {
                 level: 'overcast',
-                label: '<img src="icons/nublado.png">'
+                label: '<img src="icons/nublado.png"><span>Nublado</span>'
             };
         }
     };
