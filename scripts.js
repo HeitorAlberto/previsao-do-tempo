@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const fmtDate = d => {
+
         const dt = new Date(d + 'T00:00:00');
 
         return {
@@ -79,29 +80,25 @@ document.addEventListener("DOMContentLoaded", () => {
         { label: 'Noite', start: 18, end: 24 },
     ];
 
-    /* =========================
-       ÍCONES DIA / NOITE
-    ========================== */
-
     const getCloudCoverage = (cloudCover, isDay = true) => {
 
         if (isDay) {
 
-            if (cloudCover <= 20) {
+            if (cloudCover <= 15) {
                 return {
                     level: 'clear',
                     label: '<img src="icons/sol.png">'
                 };
             }
 
-            if (cloudCover <= 40) {
+            if (cloudCover <= 35) {
                 return {
                     level: 'few',
                     label: '<img src="icons/poucas-nuvens-dia.png">'
                 };
             }
 
-            if (cloudCover <= 65) {
+            if (cloudCover <= 60) {
                 return {
                     level: 'many',
                     label: '<img src="icons/algumas-nuvens-dia.png">'
@@ -117,26 +114,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
             return {
                 level: 'overcast',
-                label: '<img src="icons/nublado-dia.png">'
+                label: '<img src="icons/nublado.png">'
             };
 
         } else {
 
-            if (cloudCover <= 20) {
+            if (cloudCover <= 15) {
                 return {
                     level: 'clear',
                     label: '<img src="icons/lua.png">'
                 };
             }
 
-            if (cloudCover <= 40) {
+            if (cloudCover <= 35) {
                 return {
                     level: 'few',
                     label: '<img src="icons/poucas-nuvens-noite.png">'
                 };
             }
 
-            if (cloudCover <= 65) {
+            if (cloudCover <= 60) {
                 return {
                     level: 'many',
                     label: '<img src="icons/algumas-nuvens-noite.png">'
@@ -152,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             return {
                 level: 'overcast',
-                label: '<img src="icons/nublado-noite.png">'
+                label: '<img src="icons/nublado.png">'
             };
         }
     };
@@ -171,18 +168,27 @@ document.addEventListener("DOMContentLoaded", () => {
             const hour =
                 parseInt(t.slice(11, 13), 10);
 
-            // BLOCO 3H SOMENTE PARA NUVENS
             const cloudBlock =
                 Math.floor(hour / 3);
 
             const cloudKey =
                 `${date}-cloud-${cloudBlock}`;
 
+            const low =
+                data.cloud_cover_low[i];
+
+            const mid =
+                data.cloud_cover_mid[i];
+
+            // COMPOSIÇÃO PROBABILÍSTICA
             const cloudCover =
-                (
-                    data.cloud_cover_low[i] +
-                    data.cloud_cover_mid[i]
-                ) / 2;
+                100 * (
+                    1 -
+                    (
+                        (1 - low / 100) *
+                        (1 - mid / 100)
+                    )
+                );
 
             if (!cloud3h.has(cloudKey)) {
 
@@ -199,7 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 .isDayValues.push(data.is_day[i]);
         });
 
-        // MÉDIAS 3H DE NUVENS
+        // MÉDIAS 3H
         const cloudAverages = new Map();
 
         cloud3h.forEach((v, k) => {
@@ -218,7 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
 
-        // AGRUPAMENTO REAL POR PERÍODO 6H
+        // DADOS REAIS
         times.forEach((t, i) => {
 
             const date = t.slice(0, 10);
@@ -322,7 +328,6 @@ document.addEventListener("DOMContentLoaded", () => {
             max: -Infinity,
 
             rain: 0,
-
             wind: 0,
 
             cloudCovers: [],
@@ -353,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             rain: result.rain,
 
-            // MÁXIMO REAL
+            // MÁXIMA REAL
             wind: result.wind,
 
             cloudCover,
@@ -375,12 +380,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const s = summary(pts);
 
-            // CORRIGIDO
-            const avgCloudCover = s.cloudCover;
-
             const cloudInfo =
                 getCloudCoverage(
-                    avgCloudCover,
+                    s.cloudCover,
                     s.isDay
                 );
 
@@ -433,13 +435,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     ['sábado', 'domingo']
                         .includes(weekday);
 
-                // CORRIGIDO
-                const avgCloudCover =
-                    s.cloudCover;
-
                 const cloudInfo =
                     getCloudCoverage(
-                        avgCloudCover,
+                        s.cloudCover,
                         s.isDay
                     );
 
@@ -468,7 +466,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             <div class="badge badge-wind">
                                 🍃 ${s.wind.toFixed(0)} km/h
                             </div>
-
 
                         </div>
 
