@@ -102,9 +102,9 @@ button {
 }
 
 .day-row {
-    display: flex;
-    flex-direction: column;
-    gap: 45px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
     align-items: center;
 }
 
@@ -112,9 +112,23 @@ button {
 .date-line {
     font-weight: bolder;
     font-size: 1.5rem;
-    align-self: center;
-    padding: 0px 12px;
-    border-radius: 8px;
+    text-align: center;
+}
+
+.row-data {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+    text-align: center;
+}
+
+.row-data > div {
+    font-size: 1.5rem;
+    width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 70px;
 }
 
 /* Fim de semana */
@@ -130,167 +144,15 @@ button {
     color: #666666;
 }
 
-.badge {
-    border-radius: 8px;
-    padding: 0px 12px;
-}
-
-/* ===== BOTÃO EXPANDIR ===== */
-.expand-wrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-
-.btn-expand {
-    background: none;
-    border: 1px solid #ddd;
-    color: #888;
-    font-family: inherit;
-    font-size: 1rem;
-    font-weight: 600;
-    width: auto;
-    padding: 4px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-}
-
-.btn-expand:hover {
-    border-color: #aaa;
-    color: #444;
-}
-
-/* ===== PERÍODOS ===== */
-.period-detail {
-    width: 100%;
-}
-
-.period-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    width: 100%;
-}
-
-/* CARD */
-.period-card {
-    border: 1px solid #e6e6e6;
-    border-radius: 10px;
-    padding: 12px;
-    background: #fff;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 30px;
-
-    position: relative;
-}
-
-/* ÍCONE */
-.period-icon {
-    width: 34px;
-    height: 34px;
-    display: inline-block;
-    background-size: contain;
-    background-repeat: no-repeat;
-}
-
-/* LAYOUT INTERNO */
-.period-title-wrapper {
-    text-align: center;
-    width: 100%;
-    margin-bottom: 8px;
-}
-
-.period-title {
-    font-weight: 700;
-    font-size: 1.2rem;
-}
-
-.period-left {
-    text-align: center;
-    width: 100%;
-}
-
-.period-cloud-level {
-    color: #666;
-    font-size: 1.2rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-}
-
-.period-middle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 4px 0;
-}
-
-.period-icon-img {
-    width: 40px;
-    height: 40px;
-    display: block;
-    object-fit: contain;
-}
-
-.period-data {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-    width: 100%;
-}
-
-.period-item {
-    color: #444;
-    font-size: 1.2rem;
-}
-
-img {
-    width: 50px;
-}
-
-/* ===== HISTÓRICO ===== */
-#historyContainer {
-    display: grid;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 10px;
-    padding: 20px 15px;
-    overflow-x: auto;
-    white-space: nowrap;
-}
-
-.history-item {
-    padding: 2px 12px;
-    border: 1px solid #333333;
-    border-radius: 6px;
-    background: #333333;
-    cursor: pointer;
-    color: white;
-    font-weight: 100;
-}
 
 /* ===== MOBILE ===== */
 @media (max-width: 1000px) {
-    #cards {
-        grid-template-columns: 1fr;
+    .row-data {
+        grid-template-columns: 1fr 1fr;
     }
 }
 
 @media (max-width: 600px) {
-
-    body {
-        font-size: 1.1rem;
-    }
 
     header {
         flex-direction: column;
@@ -309,45 +171,18 @@ img {
         font-size: 1.1rem;
     }
 
-    #historyContainer {
-        display: grid;
+    .date-line {
+        font-weight: bolder;
+        font-size: 1.5rem;
         text-align: center;
     }
 
-    #alerta-inmet-container {
-        max-width: 90%;
+    .row-data {
+        grid-template-columns: 1fr;
     }
 
-    .day {
-        padding: 50px 10px;
-        border-radius: 0px;
+    .row-data>div {
+        font-size: 1.5rem;
     }
 
-    .day-row {
-        align-items: normal;
-    }
-
-    .main-info {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        gap: 25px;
-    }
-
-    /* PERÍODOS MOBILE */
-    .period-card {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .period-data {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .period-icon {
-        margin-bottom: 8px;
-    }
 }
