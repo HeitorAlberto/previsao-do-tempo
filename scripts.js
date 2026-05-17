@@ -161,98 +161,113 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const map = new Map();
 
-        const blocks3h = new Map();
+        // SUAVIZAÇÃO DE NUVENS EM 3H
+        const cloud3h = new Map();
 
         times.forEach((t, i) => {
 
-            const key = t.slice(0, 10);
-            const hour = parseInt(t.slice(11, 13), 10);
+            const date = t.slice(0, 10);
 
-            const block3hIndex = Math.floor(hour / 3);
+            const hour =
+                parseInt(t.slice(11, 13), 10);
 
-            const blockKey =
-                `${key}-block${block3hIndex}`;
+            // BLOCO 3H SOMENTE PARA NUVENS
+            const cloudBlock =
+                Math.floor(hour / 3);
 
-            if (!blocks3h.has(blockKey)) {
+            const cloudKey =
+                `${date}-cloud-${cloudBlock}`;
 
-                blocks3h.set(blockKey, {
-                    date: key,
-                    blockIndex: block3hIndex,
-                    temps: [],
-                    precips: [],
-                    winds: [],
-                    cloudCovers: [],
-                    isDayValues: []
-                });
-            }
-
-            // MÉDIA ENTRE LOW E MID
             const cloudCover =
                 (
                     data.cloud_cover_low[i] +
                     data.cloud_cover_mid[i]
                 ) / 2;
 
-            const block = blocks3h.get(blockKey);
+            if (!cloud3h.has(cloudKey)) {
 
-            block.temps.push(data.temperature_2m[i]);
-            block.precips.push(data.precipitation[i]);
-            block.winds.push(data.wind_gusts_10m[i]);
-            block.cloudCovers.push(cloudCover);
-            block.isDayValues.push(data.is_day[i]);
+                cloud3h.set(cloudKey, {
+                    values: [],
+                    isDayValues: []
+                });
+            }
+
+            cloud3h.get(cloudKey)
+                .values.push(cloudCover);
+
+            cloud3h.get(cloudKey)
+                .isDayValues.push(data.is_day[i]);
         });
 
-        blocks3h.forEach((block) => {
+        // MÉDIAS 3H DE NUVENS
+        const cloudAverages = new Map();
 
-            const key = block.date;
+        cloud3h.forEach((v, k) => {
 
-            if (!map.has(key)) {
+            const avg =
+                v.values.reduce((a, b) => a + b, 0)
+                / v.values.length;
 
-                map.set(key, {
+            const isDay =
+                v.isDayValues.reduce((a, b) => a + b, 0)
+                >= (v.isDayValues.length / 2);
+
+            cloudAverages.set(k, {
+                cloudCover: avg,
+                isDay
+            });
+        });
+
+        // AGRUPAMENTO REAL POR PERÍODO 6H
+        times.forEach((t, i) => {
+
+            const date = t.slice(0, 10);
+
+            const hour =
+                parseInt(t.slice(11, 13), 10);
+
+            if (!map.has(date)) {
+
+                map.set(date, {
                     all: [],
                     byPeriod: [[], [], [], []]
                 });
             }
 
-            const avgCloudCover =
-                block.cloudCovers.reduce((a, b) => a + b, 0)
-                / block.cloudCovers.length;
-
-            const avgTemp =
-                block.temps.reduce((a, b) => a + b, 0)
-                / block.temps.length;
-
-            const avgPrecip =
-                block.precips.reduce((a, b) => a + b, 0)
-                / block.precips.length;
-
-            const avgWind =
-                block.winds.reduce((a, b) => a + b, 0)
-                / block.winds.length;
-
-            const isDay =
-                block.isDayValues.reduce((a, b) => a + b, 0)
-                >= (block.isDayValues.length / 2);
-
-            const entry = {
-                t: avgTemp,
-                p: avgPrecip,
-                w: avgWind,
-                cc: avgCloudCover,
-                blockIndex: block.blockIndex,
-                isDay
-            };
-
-            const day = map.get(key);
-
-            day.all.push(entry);
-
-            const hour = block.blockIndex * 3;
-
             const periodIndex =
                 PERIODS.findIndex(
                     p => hour >= p.start && hour < p.end
                 );
+
+            const cloudBlock =
+                Math.floor(hour / 3);
+
+            const cloudKey =
+                `${date}-cloud-${cloudBlock}`;
+
+            const cloudData =
+                cloudAverages.get(cloudKey);
+
+            const entry = {
+
+                // TEMPERATURA ORIGINAL
+                t: data.temperature_2m[i],
+
+                // CHUVA HORÁRIA
+                p: data.precipitation[i],
+
+                // RAJADA HORÁRIA
+                w: data.wind_gusts_10m[i],
+
+                // NUVEM SUAVIZADA
+                cc: cloudData.cloudCover,
+
+                isDay: cloudData.isDay
+            };
+
+            const day = map.get(date);
+
+            day.all.push(entry);
 
             if (periodIndex !== -1) {
                 day.byPeriod[periodIndex].push(entry);
@@ -279,11 +294,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const result = arr.reduce((a, v) => ({
 
+            // TEMPERATURA
             min: Math.min(a.min, v.t),
             max: Math.max(a.max, v.t),
 
+            // CHUVA TOTAL
             rain: a.rain + v.p,
-            wind: a.wind + v.w,
+
+            // RAJADA MÁXIMA
+            wind: Math.max(a.wind, v.w),
 
             cloudCovers: [
                 ...a.cloudCovers,
@@ -303,6 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
             max: -Infinity,
 
             rain: 0,
+
             wind: 0,
 
             cloudCovers: [],
@@ -311,12 +331,9 @@ document.addEventListener("DOMContentLoaded", () => {
             count: 0
         });
 
-        // MÉDIA FINAL REAL
         const cloudCover =
-            result.cloudCovers.length > 0
-                ? result.cloudCovers.reduce((a, b) => a + b, 0)
-                / result.cloudCovers.length
-                : 0;
+            result.cloudCovers.reduce((a, b) => a + b, 0)
+            / result.cloudCovers.length;
 
         const isDay =
             result.dayValues.reduce((a, b) => a + b, 0)
@@ -335,6 +352,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     : result.max,
 
             rain: result.rain,
+
+            // MÁXIMO REAL
             wind: result.wind,
 
             cloudCover,
@@ -387,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
 
                         <div class="period-item wind">
-                            🍃 ${(s.wind / s.count).toFixed(0)} km/h
+                            🍃 ${s.wind.toFixed(0)} km/h
                         </div>
 
                     </div>
@@ -447,7 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             </div>
 
                             <div class="badge badge-wind">
-                                🍃 ${(s.wind / s.count).toFixed(0)} km/h
+                                🍃 ${s.wind.toFixed(0)} km/h
                             </div>
 
 
