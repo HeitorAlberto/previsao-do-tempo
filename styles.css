@@ -176,6 +176,21 @@ button:hover {
     min-height: 70px;
 }
 
+.daily-alert img {
+    width: 20px;
+}
+
+.weather-alert{
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.weather-alert img {
+    width: 20px;
+}
+
 /* ===== Acordeão ===== */
 
 .details-btn {
