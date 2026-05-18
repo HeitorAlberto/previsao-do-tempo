@@ -10,7 +10,6 @@
 
 body {
     font-family: "Baloo 2", sans-serif;
-    font-size: 1.3rem;
     background: #fff;
     color: #111;
 }
@@ -52,7 +51,6 @@ button {
 input[type=text] {
     width: 350px;
     text-align: center;
-    font-size: 1.3rem;
 }
 
 input[type=text]:focus {
@@ -65,7 +63,6 @@ button {
     background: #4e4e4e;
     color: #fff;
     font-weight: 600;
-    font-size: 1.1rem;
     transition: 0.2s;
 }
 
@@ -82,6 +79,7 @@ button:hover {
     justify-content: center;
     margin: 10px 0 30px;
     padding: 0 12px;
+    font-size: 1.4rem;
 }
 
 .history-btn {
@@ -98,11 +96,14 @@ button:hover {
 
 /* ===== Local ===== */
 
+#todayDate {
+    display: none;
+}
+
 #locationName {
     text-align: center;
     font-weight: bolder;
     margin-top: 20px;
-    font-size: 1.8rem;
 }
 
 
@@ -123,6 +124,11 @@ button:hover {
 
 #forecastSection {
     padding: 0px 12px;
+    justify-items: center;
+}
+
+main {
+    font-size: 1.4rem;
 }
 
 /* ===== LISTA ===== */
@@ -131,6 +137,9 @@ button:hover {
     display: grid;
     grid-template-columns: 1fr;
     justify-items: center;
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
 }
 
 /* ===== DIA ===== */
@@ -139,13 +148,12 @@ button:hover {
     padding: 50px 20px;
     border-bottom: 2px solid #eaeaea;
     width: 100%;
-    max-width: 1100px;
 }
 
 .day-row {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 20px;
     align-items: center;
 }
 
@@ -153,7 +161,6 @@ button:hover {
 
 .date-line {
     font-weight: bolder;
-    font-size: 1.5rem;
     text-align: center;
 }
 
@@ -165,18 +172,21 @@ button:hover {
 
 .row-data {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 15px;
-    text-align: center;
-    justify-items: center;
+}
+
+.label-data {
+    text-align: left;
+}
+
+.data-values {
+    text-align: right;
 }
 
 .row-data>div {
-    font-size: 1.5rem;
-    width: 200px;
     display: flex;
     align-items: center;
-    justify-content: center;
     min-height: 70px;
 }
 
@@ -204,7 +214,7 @@ button:hover {
 
     width: 100%;
 
-    margin-top: 18px;
+    margin-top: 35px;
 
     cursor: pointer;
 }
@@ -229,7 +239,7 @@ button:hover {
 
 .div2.open {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
 }
 
@@ -246,7 +256,6 @@ button:hover {
 }
 
 .period-title {
-    font-size: 1.2rem;
     font-weight: bold;
     margin-bottom: 12px;
 }
@@ -290,29 +299,32 @@ button:hover {
         flex-direction: column;
     }
 
-    #locationName {
-        font-size: 1.5rem;
+    main {
+        font-size: 1rem;
     }
 
     #cityInput {
         width: 100%;
     }
 
-    input[type=text] {
-        font-size: 1.1rem;
-    }
 
-    .date-line {
-        font-size: 1.4rem;
+    .day {
+        padding: 20px 0px;
     }
 
     .row-data {
-        grid-template-columns: 1fr;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
     }
 
     .row-data>div {
         width: 100%;
-        font-size: 1.4rem;
+    }
+
+    .details-btn {
+        margin-top: 35px;
     }
 
     .div2.open {
