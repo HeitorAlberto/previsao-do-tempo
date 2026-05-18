@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return `
                 <span class="cloud-status">
                     <img src="icons/partly-cloudy.svg" class="cloud-icon">
-                    Parcialmente nublado
+                    Algumas nuvens
                 </span>
             `;
         }
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return `
             <span class="cloud-status">
                 <img src="icons/overcast.svg" class="cloud-icon">
-                Muito nublado
+                Encoberto
             </span>
         `;
     };
@@ -166,10 +166,6 @@ document.addEventListener("DOMContentLoaded", () => {
             'wind_gusts_10m',
             'precipitation',
             'weather_code',
-            'cape',
-            'lifted_index',
-            'convective_inhibition',
-            'total_column_integrated_water_vapour'
         ].join(','));
 
         return fetchJSON(url);

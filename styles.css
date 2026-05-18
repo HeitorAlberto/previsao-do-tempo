@@ -221,7 +221,6 @@ button:hover {
     display: none;
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid #e5e5e5;
 }
 
 .div2.open {
@@ -236,6 +235,10 @@ button:hover {
     border-radius: 12px;
     background: #fafafa;
     border: 1px solid #ececec;
+}
+
+.period div {
+    margin-bottom: 10px;
 }
 
 .period-title {
