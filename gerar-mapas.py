@@ -47,7 +47,7 @@ os.makedirs(DATA_DIR, exist_ok=True)
 # ============================================================
 
 RUN_HOUR = 0
-DPI = 200
+DPI = 400
 SIGMA_SMOOTH = 0.35
 UPSCALE_FACTOR = 4
 
