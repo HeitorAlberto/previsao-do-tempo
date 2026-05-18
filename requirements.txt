@@ -1,8 +1,10 @@
 ecmwf-opendata
-cartopy
 cfgrib
-eccodes
+cartopy
 xarray
+scipy
+geopandas
+pillow
 matplotlib
 numpy
 pandas
