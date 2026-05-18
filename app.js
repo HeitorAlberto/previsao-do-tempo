@@ -96,9 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         <div>${info.clouds}</div>
 
-                        <div>${info.accumulation.toFixed(1)} mm (${info.rain}%)</div>
+                        <div>Chuvas - ${info.accumulation.toFixed(1)} mm (${info.rain}%)</div>
 
-                        <div>${info.gust.toFixed(0)} km/h</div>
+                        <div>Rajadas de ${info.gust.toFixed(0)} km/h</div>
 
                         ${info.alerts.map(a => `
                             <div class="weather-alert">
