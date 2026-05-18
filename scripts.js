@@ -381,7 +381,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     async function load(lat, lon, placeName = '') {
 
-        el.name.textContent = '⏳ Carregando...';
+        el.name.innerHTML = `
+                <span class="location">
+                    <img src="icons/location.svg" width="40">
+                    <span>Carregando localização...</span>
+                </span>
+                `;
 
         try {
 
@@ -398,13 +403,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 finalName = addrText(rev.address || {});
             }
 
-            el.name.textContent = '🗺️ ' + finalName;
+            el.name.innerHTML = `
+                <span class="location">
+                    <img src="icons/location.svg" width="40">
+                    <span>${finalName}</span>
+                </span>
+                `;
 
             saveHistory({ lat, lon, name: finalName });
 
         } catch (e) {
             console.error(e);
-            el.name.textContent = '❌ Erro ao carregar previsão';
+            el.name.el.name.innerHTML = `
+                <span class="location">
+                    <img src="icons/location.svg" width="40">
+                    <span>Erro ao carregar...</span>
+                </span>
+                `;
         }
     }
 
@@ -426,11 +441,23 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!navigator.geolocation)
             return alert('Geolocalização não suportada.');
 
-        el.name.textContent = '📍 Obtendo localização...';
+        el.name.innerHTML = `
+        <span class="location">
+            <img src="icons/location.svg" width="40">
+            <span>Obtendo localização...</span>
+        </span>
+    `;
 
         navigator.geolocation.getCurrentPosition(
             p => load(p.coords.latitude, p.coords.longitude),
-            () => el.name.textContent = '❌ Erro ao obter localização'
+            () => {
+                el.name.innerHTML = `
+                <span class="location">
+                    <img src="icons/location.svg" width="40">
+                    <span>Erro ao obter localização</span>
+                </span>
+            `;
+            }
         );
     });
 
