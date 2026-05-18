@@ -184,21 +184,20 @@ button:hover {
     align-items: center;
 
     width: 100%;
+
     margin-top: 18px;
 
-    font-size: 1.8rem;
     cursor: pointer;
-
-    user-select: none;
-
-    color: #666;
-
-    transition: 0.2s;
 }
 
-.details-btn:hover {
-    color: #000;
-    transform: scale(1.05);
+.accordion-icon {
+    width: 22px;
+    height: 22px;
+    transition: transform 0.25s ease;
+}
+
+.details-btn.active .accordion-icon {
+    transform: rotate(180deg);
 }
 
 /* ===== Detalhes ===== */

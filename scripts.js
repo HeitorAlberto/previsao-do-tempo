@@ -241,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="day-row">
 
                     <div class="date-line ${weekend ? 'weekend' : ''}">
-                        ${weekday} • ${date}
+                        ${weekday}, ${date}
                     </div>
 
                     <div class="row-data">
@@ -299,16 +299,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
             btn.className = 'details-btn';
 
-            btn.innerHTML = '▾';
+            btn.innerHTML =
+                '<img src="icons/arrow.svg" class="accordion-icon">';
 
             btn.addEventListener('click', () => {
 
                 details.classList.toggle('open');
 
-                btn.innerHTML =
-                    details.classList.contains('open')
-                        ? '▴'
-                        : '▾';
+                btn.classList.toggle('active');
             });
 
             div.appendChild(btn);
@@ -408,7 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const now = new Date();
 
     el.date.textContent =
-        `${now.toLocaleDateString('pt-BR')} - ${now.toLocaleDateString('pt-BR', { weekday: 'short' })}`;
+        `${now.toLocaleDateString('pt-BR')} - ${now.toLocaleDateString('pt-BR', { weekday: 'long' })}`;
 
     renderHistory();
 });
