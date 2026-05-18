@@ -19,7 +19,7 @@ from PIL import Image
 
 
 # ============================================================
-# PATHS (REPOSITÓRIO: previsao-do-tempo)
+# PATHS
 # ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +48,9 @@ UPSCALE_FACTOR = 4
 run_date = pd.Timestamp.utcnow().floor("D")
 run_date_str = run_date.strftime("%Y%m%d")
 
+run_date_label = run_date.strftime("%d/%m/%Y")
+run_weekday = run_date.day_name()
+
 prev_date_str = (run_date - pd.Timedelta(days=1)).strftime("%Y%m%d")
 
 
@@ -67,7 +70,7 @@ old_grib_file = os.path.join(
 
 
 # ============================================================
-# LIMPEZA (remove somente dia anterior)
+# LIMPEZA
 # ============================================================
 
 if os.path.exists(old_grib_file):
@@ -78,7 +81,7 @@ if os.path.exists(old_grib_file):
 
 
 # ============================================================
-# DOWNLOAD (AZURE ECMWF - CACHE DIÁRIO)
+# DOWNLOAD (AZURE ECMWF)
 # ============================================================
 
 if not os.path.exists(grib_file):
@@ -96,7 +99,7 @@ if not os.path.exists(grib_file):
         time=0,
         stream="oper",
         type="fc",
-        step=list(range(24, 241, 24)),  # 10 dias
+        step=list(range(24, 241, 24)),
         param=["tp"],
         target=grib_file
     )
@@ -175,7 +178,7 @@ norm = mcolors.BoundaryNorm(levels, cmap.N)
 
 
 # ============================================================
-# PROCESSAMENTO
+# FUNÇÕES
 # ============================================================
 
 def smooth_data(data):
@@ -207,7 +210,7 @@ def smooth_data(data):
 # MAPA
 # ============================================================
 
-def plot_map(data, filename, title):
+def plot_map(data, filename, title, subtitle, day_number=None):
 
     lat_new, lon_new, chuva = smooth_data(data)
 
@@ -238,6 +241,10 @@ def plot_map(data, filename, title):
         extend="max"
     )
 
+    # ========================================================
+    # TEXTOS CAPITAIS
+    # ========================================================
+
     for cidade, (x, y) in capitais.items():
         try:
             v = data.sel(longitude=x, latitude=y, method="nearest").values
@@ -252,10 +259,35 @@ def plot_map(data, filename, title):
         except:
             pass
 
-    plt.title(title, fontsize=12, weight="bold")
+    # ========================================================
+    # TEXTO TOPO ESQUERDO
+    # ========================================================
+
+    header = f"{subtitle}\nRodada: 00Z {run_date_label}"
+
+    if day_number is not None:
+        header = f"{run_weekday} {day_number:02d} | {subtitle}\nRodada: 00Z {run_date_label}"
+
+    ax.text(
+        0.02, 0.98,
+        header,
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=9,
+        bbox=dict(facecolor="white", alpha=0.7, edgecolor="none")
+    )
+
+    # ========================================================
+    # COLORBAR
+    # ========================================================
 
     cbar = plt.colorbar(im, ax=ax, shrink=0.8, pad=0.02, ticks=levels)
     cbar.set_label("Chuva acumulada (mm)", fontsize=9)
+
+    # ========================================================
+    # SAVE
+    # ========================================================
 
     tmp = os.path.join(OUTPUT_DIR, "tmp.png")
     plt.savefig(tmp, dpi=DPI, bbox_inches="tight")
@@ -284,7 +316,9 @@ for i in range(10):
     plot_map(
         chuva_24h,
         f"{i+1:02d}.webp",
-        f"Chuva 24h - Dia {i+1}"
+        "Precipitação 24h",
+        "Acumulado diário",
+        day_number=i+1
     )
 
 
@@ -297,5 +331,6 @@ total = tp.isel(step=9)
 plot_map(
     total,
     "11.webp",
-    "Chuva acumulada 10 dias"
+    "Precipitação",
+    "Acumulado 10 dias"
 )
