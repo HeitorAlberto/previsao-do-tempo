@@ -31,7 +31,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run script
-        run: python seu_script.py
+        run: python gerar-mapas.py
 
       - name: Commit outputs
         run: |
