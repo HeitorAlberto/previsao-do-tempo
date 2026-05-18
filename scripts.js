@@ -383,8 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         el.name.innerHTML = `
                 <span class="location">
-                    <img src="icons/location.svg" width="40">
-                    <span>Carregando localização...</span>
+                    <span>📍 Carregando localização...</span>
                 </span>
                 `;
 
@@ -405,8 +404,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             el.name.innerHTML = `
                 <span class="location">
-                    <img src="icons/location.svg" width="40">
-                    <span>${finalName}</span>
+                    <span>📍 ${finalName}</span>
                 </span>
                 `;
 
@@ -416,8 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error(e);
             el.name.el.name.innerHTML = `
                 <span class="location">
-                    <img src="icons/location.svg" width="40">
-                    <span>Erro ao carregar...</span>
+                    <span>📍 Erro ao carregar...</span>
                 </span>
                 `;
         }
@@ -443,8 +440,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         el.name.innerHTML = `
         <span class="location">
-            <img src="icons/location.svg" width="40">
-            <span>Obtendo localização...</span>
+            <span>📍 Obtendo localização...</span>
         </span>
     `;
 
@@ -453,8 +449,7 @@ document.addEventListener("DOMContentLoaded", () => {
             () => {
                 el.name.innerHTML = `
                 <span class="location">
-                    <img src="icons/location.svg" width="40">
-                    <span>Erro ao obter localização</span>
+                    <span>📍 Erro ao obter localização</span>
                 </span>
             `;
             }

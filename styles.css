@@ -105,11 +105,9 @@ button:hover {
     font-size: 1.8rem;
 }
 
-.location {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
+
+
+
 
 .open-meteo-ref,
 .btn-mapas {
