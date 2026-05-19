@@ -1,10 +1,12 @@
 import os
+import locale
 import numpy as np
 import pandas as pd
 import xarray as xr
 
 import matplotlib
 matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
@@ -19,18 +21,13 @@ from PIL import Image
 
 
 # ============================================================
-# TRADUÇÃO MANUAL PARA PORTUGUÊS (BR)
+# LOCALE PT-BR
 # ============================================================
 
-DIAS_SEMANA = {
-    "Monday": "Segunda-feira",
-    "Tuesday": "Terça-feira",
-    "Wednesday": "Quarta-feira",
-    "Thursday": "Quinta-feira",
-    "Friday": "Sexta-feira",
-    "Saturday": "Sábado",
-    "Sunday": "Domingo"
-}
+try:
+    locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
+except:
+    pass
 
 
 # ============================================================
@@ -51,33 +48,37 @@ os.makedirs(DATA_DIR, exist_ok=True)
 # ============================================================
 
 RUN_HOUR = 0
-DPI = 400
-SIGMA_SMOOTH = 0.35
-UPSCALE_FACTOR = 4
+
+DPI = 450
+
+SIGMA_SMOOTH = 0.55
+UPSCALE_FACTOR = 5
+
+FIGSIZE = (10, 10)
+
+QUALITY_WEBP = 100
 
 
 # ============================================================
-# CONTROLADOR DE DATA (PREVINE ERRO DE FUSO DO RUNNER UTC)
+# DATA DA RODADA
 # ============================================================
 
-# Pega o horário atual em Brasília
-now_br = pd.Timestamp.now(tz="America/Sao_Paulo").tz_localize(None)
+now_br = (
+    pd.Timestamp.now(tz="America/Sao_Paulo")
+    .tz_localize(None)
+)
 
-# Se o script rodar à noite (ex: após as 21h BRT), a rodada 00Z do dia seguinte 
-# ainda não existe na Azure. Portanto, forçamos o dia correto (18/05).
-if now_br.hour >= 21:
-    run_date = now_br.floor("D")
-else:
-    run_date = now_br.floor("D")
+run_date = now_br.floor("D")
 
-# Validação estrita: se a Azure der 404, o bloco de download vai tentar o dia anterior.
 run_date_str = run_date.strftime("%Y%m%d")
 run_date_label = run_date.strftime("%d/%m/%Y")
-prev_date_str = (run_date - pd.Timedelta(days=1)).strftime("%Y%m%d")
+
+prev_date = run_date - pd.Timedelta(days=1)
+prev_date_str = prev_date.strftime("%Y%m%d")
 
 
 # ============================================================
-# GRIB PADRÃO
+# GRIB
 # ============================================================
 
 grib_file = os.path.join(
@@ -103,31 +104,21 @@ if os.path.exists(old_grib_file):
 
 
 # ============================================================
-# DOWNLOAD (AZURE ECMWF) com Fallback automático
+# DOWNLOAD ECMWF
 # ============================================================
 
 if not os.path.exists(grib_file):
-    print(f"Tentando baixar ECMWF 00Z do dia {run_date_label}...")
-    client = Client(source="azure", model="ifs", resol="0p25")
-    
+
+    print(f"Tentando baixar ECMWF 00Z ({run_date_label})...")
+
+    client = Client(
+        source="azure",
+        model="ifs",
+        resol="0p25"
+    )
+
     try:
-        client.retrieve(
-            date=run_date.strftime("%Y-%m-%d"),
-            time=0,
-            stream="oper",
-            type="fc",
-            step=list(range(24, 241, 24)),
-            param=["tp"],
-            target=grib_file
-        )
-    except Exception as e:
-        print("A rodada atualizada ainda não está disponível na Azure. Baixando rodada anterior como contingência...")
-        # Recalcula para o dia anterior caso o servidor do GitHub esteja adiantado
-        run_date = run_date - pd.Timedelta(days=1)
-        run_date_str = run_date.strftime("%Y%m%d")
-        run_date_label = run_date.strftime("%d/%m/%Y")
-        grib_file = os.path.join(DATA_DIR, f"ecmwf_{run_date_str}_00z.grib2")
-        
+
         client.retrieve(
             date=run_date.strftime("%Y-%m-%d"),
             time=0,
@@ -138,17 +129,53 @@ if not os.path.exists(grib_file):
             target=grib_file
         )
 
-    print(f"Download concluído com sucesso: {grib_file}")
+    except Exception:
+
+        print("Rodada atual indisponível.")
+        print("Usando rodada anterior...")
+
+        run_date = run_date - pd.Timedelta(days=1)
+
+        run_date_str = run_date.strftime("%Y%m%d")
+        run_date_label = run_date.strftime("%d/%m/%Y")
+
+        grib_file = os.path.join(
+            DATA_DIR,
+            f"ecmwf_{run_date_str}_00z.grib2"
+        )
+
+        client.retrieve(
+            date=run_date.strftime("%Y-%m-%d"),
+            time=0,
+            stream="oper",
+            type="fc",
+            step=list(range(24, 241, 24)),
+            param=["tp"],
+            target=grib_file
+        )
+
+    print("Download concluído.")
+
 else:
+
     print(f"Usando cache: {grib_file}")
 
 
 # ============================================================
-# DADOS
+# LEITURA
 # ============================================================
 
-ds = xr.open_dataset(grib_file, engine="cfgrib")
+ds = xr.open_dataset(
+    grib_file,
+    engine="cfgrib"
+)
+
 tp = ds["tp"] * 1000.0
+
+
+# ============================================================
+# AJUSTE LONGITUDE
+# ============================================================
 
 lon = np.where(
     tp.longitude.values > 180,
@@ -156,7 +183,14 @@ lon = np.where(
     tp.longitude.values
 )
 
-tp = tp.assign_coords(longitude=lon).sortby("longitude")
+tp = tp.assign_coords(
+    longitude=lon
+).sortby("longitude")
+
+
+# ============================================================
+# RECORTE AMÉRICA DO SUL
+# ============================================================
 
 tp = tp.sel(
     latitude=slice(10, -35),
@@ -165,52 +199,62 @@ tp = tp.sel(
 
 
 # ============================================================
-# CORES (ESCALA GRADIENTE SOLICITADA)
+# ESCALA DE CORES
+# Tons mais suaves e modernos
 # ============================================================
 
 levels = [
-    0, 1, 3, 6, 10, 15, 20, 25, 30, 40, 50,
-    60, 70, 80, 90, 100, 125, 150, 200, 250, 300, 350, 400
+    0, 1, 3, 5, 10, 15, 20, 30, 40, 50,
+    60, 75, 100, 125, 150, 200, 250, 300, 400
 ]
 
 colors = [
-    # 0 a 1: Branco
+
+    # Branco / cinza
     "#ffffff",
-    
-    # 1 a 3: Cinza claro ao escuro
-    "#e0e0e0", "#8e8e8e",
-    
-    # 3 a 6 e 6 a 10: Verde claro ao escuro
-    "#d8f3dc", "#2d6a4f",
-    
-    # 10 a 15 e 15 a 20: Azul claro ao escuro
-    "#90e0ef", "#0077b6",
-    
-    # 20 a 25 e 25 a 30: Amarelo claro ao escuro
-    "#fff3b0", "#ffcc00",
-    
-    # 30 a 40 e 40 a 50: Laranja claro ao escuro
-    "#ffb703", "#fb8500",
-    
-    # 50 a 60, 60 a 70, 70 a 80, 80 a 90: Vermelho claro ao escuro
-    "#ffb3b3", "#ff4d4d", "#ff0000", "#b30000",
-    
-    # 90 a 100, 100 a 125, 125 a 150: Marrom claro ao escuro
-    "#ddb892", "#b08968", "#7f5539",
-    
-    # 150 a 200, 200 a 250, 250 a 300: Lilás claro ao escuro
-    "#f3e8ff", "#c084fc", "#9333ea",
-    
-    # 300 a 350 e 350 a 400: Rosa claro ao escuro
-    "#ffc2d1", "#ff0054"
+    "#ececec",
+    "#cfcfcf",
+
+    # Verde
+    "#d8f3dc",
+    "#95d5b2",
+    "#52b788",
+
+    # Azul
+    "#a9def9",
+    "#48cae4",
+    "#0077b6",
+
+    # Amarelo
+    "#ffe066",
+    "#ffba08",
+
+    # Laranja
+    "#f48c06",
+    "#dc2f02",
+
+    # Vermelho
+    "#d00000",
+    "#9d0208",
+
+    # Roxo
+    "#9d4edd",
+    "#7b2cbf",
+
+    # Rosa extremo
+    "#ff4d8d"
 ]
 
 cmap = mcolors.ListedColormap(colors)
-norm = mcolors.BoundaryNorm(levels, cmap.N)
+
+norm = mcolors.BoundaryNorm(
+    levels,
+    cmap.N
+)
 
 
 # ============================================================
-# FUNÇÕES
+# SUAVIZAÇÃO
 # ============================================================
 
 def smooth_data(data):
@@ -252,43 +296,78 @@ def smooth_data(data):
         lon2d.ravel()
     ]).T
 
-    chuva_i = interp(pts).reshape(
+    chuva_interp = interp(pts).reshape(
         len(lat_new),
         len(lon_new)
     )
 
-    return lat_new, lon_new, chuva_i
+    return lat_new, lon_new, chuva_interp
+
+
+# ============================================================
+# TEXTO PT-BR
+# ============================================================
+
+def formatar_data_ptbr(data):
+
+    dias = {
+        "Monday": "Segunda",
+        "Tuesday": "Terça",
+        "Wednesday": "Quarta",
+        "Thursday": "Quinta",
+        "Friday": "Sexta",
+        "Saturday": "Sábado",
+        "Sunday": "Domingo"
+    }
+
+    dia_semana_en = data.strftime("%A")
+
+    dia_semana = dias.get(
+        dia_semana_en,
+        dia_semana_en
+    )
+
+    return f"{dia_semana}, {data.strftime('%d/%m/%Y')}"
 
 
 # ============================================================
 # MAPA
 # ============================================================
 
-def plot_map(data, filename, subtitle, target_date):
+def plot_map(data, filename, target_date):
 
     lat_new, lon_new, chuva = smooth_data(data)
 
-    fig = plt.figure(figsize=(10, 10))
+    fig = plt.figure(figsize=FIGSIZE)
 
     ax = plt.axes(
         projection=ccrs.PlateCarree()
     )
 
     ax.set_extent([
-        -75, -30,
-        -35, 8
+        -75,
+        -30,
+        -35,
+        8
     ])
 
+    # Fundo
+    ax.set_facecolor("#f8f8f8")
+
+    # Fronteiras
     ax.add_feature(
         cfeature.BORDERS,
-        linewidth=0.5
+        linewidth=0.5,
+        edgecolor="black"
     )
 
+    # Costa
     ax.add_feature(
         cfeature.COASTLINE,
         linewidth=0.6
     )
 
+    # Estados
     estados = cfeature.NaturalEarthFeature(
         category="cultural",
         name="admin_1_states_provinces_lines",
@@ -299,9 +378,11 @@ def plot_map(data, filename, subtitle, target_date):
     ax.add_feature(
         estados,
         edgecolor="black",
-        linewidth=0.3
+        linewidth=0.25,
+        alpha=0.6
     )
 
+    # Chuva
     im = ax.contourf(
         lon_new,
         lat_new,
@@ -310,34 +391,34 @@ def plot_map(data, filename, subtitle, target_date):
         cmap=cmap,
         norm=norm,
         transform=ccrs.PlateCarree(),
-        extend="max"
+        extend="max",
+        antialiased=True
     )
 
     # ========================================================
-    # HEADER (TRADUÇÃO FORÇADA POR DICIONÁRIO)
+    # HEADER
     # ========================================================
 
-    en_weekday = target_date.strftime("%A")
-    weekday = DIAS_SEMANA.get(en_weekday, en_weekday)
-    date_label = target_date.strftime("%d/%m")
-
     header = (
-        f"{weekday}, {date_label}\n\n"
+        f"{formatar_data_ptbr(target_date)}\n"
         f"Rodada: 00Z {run_date_label}"
     )
 
     ax.text(
-        0.02,
-        0.98,
+        0.015,
+        0.985,
         header,
         transform=ax.transAxes,
         ha="left",
         va="top",
-        fontsize=9,
+        fontsize=10,
+        fontweight="bold",
+        color="black",
         bbox=dict(
             facecolor="white",
-            alpha=0.7,
-            edgecolor="none"
+            edgecolor="none",
+            alpha=0.82,
+            boxstyle="round,pad=0.35"
         )
     )
 
@@ -348,52 +429,56 @@ def plot_map(data, filename, subtitle, target_date):
     cbar = plt.colorbar(
         im,
         ax=ax,
-        shrink=0.8,
+        shrink=0.82,
         pad=0.02,
         ticks=levels
     )
 
     cbar.set_label(
         "Chuva acumulada (mm)",
-        fontsize=9
+        fontsize=10
+    )
+
+    cbar.ax.tick_params(
+        labelsize=8
     )
 
     # ========================================================
     # SAVE
     # ========================================================
 
-    tmp = os.path.join(
+    temp_png = os.path.join(
         OUTPUT_DIR,
         "tmp.png"
     )
 
     plt.savefig(
-        tmp,
+        temp_png,
         dpi=DPI,
         bbox_inches="tight"
     )
 
     plt.close()
 
-    out = os.path.join(
+    output_file = os.path.join(
         OUTPUT_DIR,
         filename
     )
 
-    Image.open(tmp).save(
-        out,
+    Image.open(temp_png).save(
+        output_file,
         "WEBP",
-        quality=100,
+        quality=QUALITY_WEBP,
         method=6
     )
 
-    os.remove(tmp)
+    os.remove(temp_png)
 
     print(f"Gerado: {filename}")
 
 
 # ============================================================
-# 01–10 DIÁRIOS
+# MAPAS DIÁRIOS
 # ============================================================
 
 prev = xr.zeros_like(
@@ -408,19 +493,17 @@ for i in range(10):
 
     prev = atual
 
-    # Mapeia os dias subsequentes de forma correta e sem pular datas
     target_date = run_date + pd.Timedelta(days=i + 1)
 
     plot_map(
         chuva_24h,
         f"{i+1:02d}.webp",
-        "Acumulado diário",
         target_date
     )
 
 
 # ============================================================
-# 11 ACUMULADO
+# ACUMULADO 10 DIAS
 # ============================================================
 
 total = tp.isel(step=9)
@@ -430,6 +513,8 @@ target_date = run_date + pd.Timedelta(days=10)
 plot_map(
     total,
     "11.webp",
-    "Acumulado 10 dias",
     target_date
 )
+
+
+print("Finalizado.")
