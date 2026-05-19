@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="day-row">
 
                     <div class="date-line ${weekend ? 'weekend' : ''}">
-                        ${weekday} &nbsp; ${date}
+                        ${weekday}, ${date}
                     </div>
 
                     <div class="row-data">
