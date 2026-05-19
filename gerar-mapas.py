@@ -504,7 +504,7 @@ for i in range(10):
 
     prev = atual
 
-    target_date = run_date + pd.Timedelta(days=i + 1)
+    target_date = run_date + pd.Timedelta(days=i)
 
     plot_map(
         chuva_24h,
