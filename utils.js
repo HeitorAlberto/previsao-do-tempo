@@ -8,7 +8,7 @@ export const fmtDate = (d) => {
 
   return {
     date: dt.toLocaleDateString('pt-BR'),
-    weekday: dt.toLocaleDateString('pt-BR', { weekday: 'short' }),
+    weekday: dt.toLocaleDateString('pt-BR', { weekday: 'long' }),
     day: dt.getDay()
   };
 };
@@ -18,10 +18,33 @@ export const fmtDate = (d) => {
 // TEXTO DE LOCALIZAÇÃO (se ainda usado fora do app.js)
 // -----------------------------
 
-export const addrText = (a) =>
-  `${a.city || a.town || a.village || a.municipality || ''}`
-  + (a.state ? `, ${a.state}` : '')
-  + (a.country ? `, ${a.country}` : '');
+export const addrText = (a) => {
+
+  const possibleCity = [
+    a.city,
+    a.town,
+    a.village,
+    a.municipality,
+    a.city_district,
+    a.suburb
+  ];
+
+  const city = possibleCity.find(v =>
+    v &&
+    !v.includes('Região Geográfica') &&
+    !v.includes('Intermediate Region') &&
+    !v.includes('Immediate Region')
+  ) || '';
+
+  return [
+    city,
+    a.state,
+    a.country
+  ]
+    .filter(Boolean)
+    .filter((v, i, arr) => arr.indexOf(v) === i)
+    .join(', ');
+};
 
 
 // -----------------------------

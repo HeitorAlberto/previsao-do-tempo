@@ -161,13 +161,13 @@ main {
 .date-line {
     font-weight: bolder;
     text-align: center;
-    background-color: #dddddd;
+    background-color: #f6f6f6;
     border-radius: 6px;
     padding: 10px 0;
 }
 
 .date-line.weekend {
-    color: #d4af37;
+    color: #ff8800;
 }
 
 /* ===== Dados principais ===== */
@@ -184,6 +184,7 @@ main {
 
 .data-values {
     text-align: right;
+    font-weight: 600;
 }
 
 .row-data>div {

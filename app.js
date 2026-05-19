@@ -1,5 +1,6 @@
 import { search, forecast } from './api.js';
-import { fmtDate, periodData } from './utils.js';
+import { fmtDate, periodData, addrText } from './utils.js';
+
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -179,42 +180,50 @@ document.addEventListener("DOMContentLoaded", () => {
   async function load(lat, lon, placeName = '') {
 
     el.name.innerHTML = `
-            <span class="location">
-                <span>📍 Carregando localização...</span>
-            </span>
-        `;
+        <span class="location">
+            <span>📍 Carregando localização...</span>
+        </span>
+    `;
 
     try {
+
       const f = await forecast(lat, lon);
 
       render(f);
 
-      let finalName = placeName;
+      // força reverse geocoding
+      const rev = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`
+      ).then(r => r.json());
 
+      let finalName = addrText(rev.address);
+
+      // fallback
       if (!finalName) {
-        const rev = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`
-        ).then(r => r.json());
-
-        finalName = rev.display_name || 'Local desconhecido';
+        finalName = placeName || 'Local desconhecido';
       }
 
       el.name.innerHTML = `
-                <span class="location">
-                    <span>📍 ${finalName}</span>
-                </span>
-            `;
+            <span class="location">
+                <span>📍 ${finalName}</span>
+            </span>
+        `;
 
-      saveHistory({ lat, lon, name: finalName });
+      saveHistory({
+        lat,
+        lon,
+        name: finalName
+      });
 
     } catch (e) {
+
       console.error(e);
 
       el.name.innerHTML = `
-                <span class="location">
-                    <span>📍 Erro ao carregar...</span>
-                </span>
-            `;
+            <span class="location">
+                <span>📍 Erro ao carregar...</span>
+            </span>
+        `;
     }
   }
 
