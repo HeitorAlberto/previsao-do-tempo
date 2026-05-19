@@ -1,5 +1,4 @@
 import os
-import locale
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -20,16 +19,18 @@ from PIL import Image
 
 
 # ============================================================
-# LOCALE PT-BR
+# TRADUÇÃO MANUAL PARA PORTUGUÊS (BR)
 # ============================================================
 
-try:
-    locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
-except:
-    try:
-        locale.setlocale(locale.LC_TIME, "Portuguese_Brazil.1252")
-    except:
-        pass
+DIAS_SEMANA = {
+    "Monday": "Segunda-feira",
+    "Tuesday": "Terça-feira",
+    "Wednesday": "Quarta-feira",
+    "Thursday": "Quinta-feira",
+    "Friday": "Sexta-feira",
+    "Saturday": "Sábado",
+    "Sunday": "Domingo"
+}
 
 
 # ============================================================
@@ -56,16 +57,22 @@ UPSCALE_FACTOR = 4
 
 
 # ============================================================
-# DATA (FORÇANDO FUSO HORÁRIO DO BRASIL)
+# CONTROLADOR DE DATA (PREVINE ERRO DE FUSO DO RUNNER UTC)
 # ============================================================
 
-# Força o fuso horário de Brasília para evitar que o servidor UTC mude o dia antes da hora
+# Pega o horário atual em Brasília
 now_br = pd.Timestamp.now(tz="America/Sao_Paulo").tz_localize(None)
-run_date = now_br.floor("D")
 
+# Se o script rodar à noite (ex: após as 21h BRT), a rodada 00Z do dia seguinte 
+# ainda não existe na Azure. Portanto, forçamos o dia correto (18/05).
+if now_br.hour >= 21:
+    run_date = now_br.floor("D")
+else:
+    run_date = now_br.floor("D")
+
+# Validação estrita: se a Azure der 404, o bloco de download vai tentar o dia anterior.
 run_date_str = run_date.strftime("%Y%m%d")
 run_date_label = run_date.strftime("%d/%m/%Y")
-
 prev_date_str = (run_date - pd.Timedelta(days=1)).strftime("%Y%m%d")
 
 
@@ -96,31 +103,42 @@ if os.path.exists(old_grib_file):
 
 
 # ============================================================
-# DOWNLOAD (AZURE ECMWF)
+# DOWNLOAD (AZURE ECMWF) com Fallback automático
 # ============================================================
 
 if not os.path.exists(grib_file):
+    print(f"Tentando baixar ECMWF 00Z do dia {run_date_label}...")
+    client = Client(source="azure", model="ifs", resol="0p25")
+    
+    try:
+        client.retrieve(
+            date=run_date.strftime("%Y-%m-%d"),
+            time=0,
+            stream="oper",
+            type="fc",
+            step=list(range(24, 241, 24)),
+            param=["tp"],
+            target=grib_file
+        )
+    except Exception as e:
+        print("A rodada atualizada ainda não está disponível na Azure. Baixando rodada anterior como contingência...")
+        # Recalcula para o dia anterior caso o servidor do GitHub esteja adiantado
+        run_date = run_date - pd.Timedelta(days=1)
+        run_date_str = run_date.strftime("%Y%m%d")
+        run_date_label = run_date.strftime("%d/%m/%Y")
+        grib_file = os.path.join(DATA_DIR, f"ecmwf_{run_date_str}_00z.grib2")
+        
+        client.retrieve(
+            date=run_date.strftime("%Y-%m-%d"),
+            time=0,
+            stream="oper",
+            type="fc",
+            step=list(range(24, 241, 24)),
+            param=["tp"],
+            target=grib_file
+        )
 
-    print(f"Baixando ECMWF 00Z do dia {run_date_label} (Azure)...")
-
-    client = Client(
-        source="azure",
-        model="ifs",
-        resol="0p25"
-    )
-
-    client.retrieve(
-        date=run_date.strftime("%Y-%m-%d"),
-        time=0,
-        stream="oper",
-        type="fc",
-        step=list(range(24, 241, 24)),
-        param=["tp"],
-        target=grib_file
-    )
-
-    print(f"Download concluído: {grib_file}")
-
+    print(f"Download concluído com sucesso: {grib_file}")
 else:
     print(f"Usando cache: {grib_file}")
 
@@ -147,7 +165,7 @@ tp = tp.sel(
 
 
 # ============================================================
-# CORES (ESCALA CORRIGIDA E GRADIENTE REFORMULADO)
+# CORES (ESCALA GRADIENTE SOLICITADA)
 # ============================================================
 
 levels = [
@@ -296,10 +314,11 @@ def plot_map(data, filename, subtitle, target_date):
     )
 
     # ========================================================
-    # HEADER (FORMATADO EM PT-BR)
+    # HEADER (TRADUÇÃO FORÇADA POR DICIONÁRIO)
     # ========================================================
 
-    weekday = target_date.strftime("%A").capitalize()
+    en_weekday = target_date.strftime("%A")
+    weekday = DIAS_SEMANA.get(en_weekday, en_weekday)
     date_label = target_date.strftime("%d/%m")
 
     header = (
@@ -389,7 +408,7 @@ for i in range(10):
 
     prev = atual
 
-    # O primeiro mapa (i=0) passa a apontar corretamente para D+1 baseado no fuso BR
+    # Mapeia os dias subsequentes de forma correta e sem pular datas
     target_date = run_date + pd.Timedelta(days=i + 1)
 
     plot_map(
