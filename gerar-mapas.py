@@ -56,10 +56,10 @@ UPSCALE_FACTOR = 4
 
 
 # ============================================================
-# DATA (RODADA 00Z FIXA COM BASE NA DATA LOCAL)
+# DATA (RODADA 00Z DO DIA DE HOJE)
 # ============================================================
 
-# Garante que a data de referência respeite o dia civil local (ex: 18/05)
+# Trava estritamente no dia atual (Hoje: 18/05) para buscar a rodada 00Z que já aconteceu
 run_date = pd.Timestamp.now().floor("D")
 run_date_str = run_date.strftime("%Y%m%d")
 run_date_label = run_date.strftime("%d/%m/%Y")
@@ -145,7 +145,7 @@ tp = tp.sel(
 
 
 # ============================================================
-# CORES (ESCALA REFORMULADA)
+# CORES (ESCALA CORRIGIDA E GRADIENTE REFORMULADO)
 # ============================================================
 
 levels = [
@@ -172,8 +172,8 @@ colors = [
     # 30 a 40 e 40 a 50: Laranja claro ao escuro
     "#ffb703", "#fb8500",
     
-    # 50 a 60, 60 a 70, 70 a 80, 80 a 90: Vermelho claro ao escuro
-    ffb3b3, "#ff4d4d", "#ff0000", "#b30000",
+    # 50 a 60, 60 a 70, 70 a 80, 80 a 90: Vermelho claro ao escuro (Corrigido aspas)
+    "#ffb3b3", "#ff4d4d", "#ff0000", "#b30000",
     
     # 90 a 100, 100 a 125, 125 a 150: Marrom claro ao escuro
     "#ddb892", "#b08968", "#7f5539",
@@ -297,7 +297,6 @@ def plot_map(data, filename, subtitle, target_date):
     # HEADER (FORMATADO EM PT-BR)
     # ========================================================
 
-    # Força a tradução dos dias da semana baseada no locale configurado
     weekday = target_date.strftime("%A").capitalize()
     date_label = target_date.strftime("%d/%m")
 
@@ -388,7 +387,7 @@ for i in range(10):
 
     prev = atual
 
-    # Garante que o passo 1 (i=0) seja D+1 (Amanhã) correto baseado na data base real
+    # Se hoje é 18, o passo 1 (i=0) será correspondente ao dia 19 (Amanhã)
     target_date = run_date + pd.Timedelta(days=i + 1)
 
     plot_map(
