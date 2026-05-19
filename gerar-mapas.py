@@ -56,11 +56,13 @@ UPSCALE_FACTOR = 4
 
 
 # ============================================================
-# DATA (RODADA 00Z DO DIA DE HOJE)
+# DATA (FORÇANDO FUSO HORÁRIO DO BRASIL)
 # ============================================================
 
-# Trava estritamente no dia atual (Hoje: 18/05) para buscar a rodada 00Z que já aconteceu
-run_date = pd.Timestamp.now().floor("D")
+# Força o fuso horário de Brasília para evitar que o servidor UTC mude o dia antes da hora
+now_br = pd.Timestamp.now(tz="America/Sao_Paulo").tz_localize(None)
+run_date = now_br.floor("D")
+
 run_date_str = run_date.strftime("%Y%m%d")
 run_date_label = run_date.strftime("%d/%m/%Y")
 
@@ -172,7 +174,7 @@ colors = [
     # 30 a 40 e 40 a 50: Laranja claro ao escuro
     "#ffb703", "#fb8500",
     
-    # 50 a 60, 60 a 70, 70 a 80, 80 a 90: Vermelho claro ao escuro (Corrigido aspas)
+    # 50 a 60, 60 a 70, 70 a 80, 80 a 90: Vermelho claro ao escuro
     "#ffb3b3", "#ff4d4d", "#ff0000", "#b30000",
     
     # 90 a 100, 100 a 125, 125 a 150: Marrom claro ao escuro
@@ -387,7 +389,7 @@ for i in range(10):
 
     prev = atual
 
-    # Se hoje é 18, o passo 1 (i=0) será correspondente ao dia 19 (Amanhã)
+    # O primeiro mapa (i=0) passa a apontar corretamente para D+1 baseado no fuso BR
     target_date = run_date + pd.Timedelta(days=i + 1)
 
     plot_map(
