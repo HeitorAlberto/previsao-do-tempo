@@ -233,8 +233,8 @@ colors = [
     "#0077b6",
 
     # Amarelo
-    "#f7de7c",
-    "#ffba08",
+    "#faeaac",
+    "#f6d864",
 
     # Laranja
     "#f48c06",
@@ -410,10 +410,19 @@ def plot_map(data, filename, target_date):
     # HEADER
     # ========================================================
 
-    header = (
-        f"{formatar_data_ptbr(target_date)}\n"
-        f"Rodada: 00Z {run_date_label}"
-    )
+    if target_date is not None:
+
+        header = (
+            f"{formatar_data_ptbr(target_date)}\n"
+            f"Rodada: 00Z {run_date_label}"
+        )
+
+    else:
+
+        header = (
+            f"Acumulado de 10 dias\n"
+            f"Rodada: 00Z {run_date_label}"
+        )
 
     ax.text(
         0.015,
@@ -519,12 +528,13 @@ for i in range(10):
 
 total = tp.isel(step=9)
 
-target_date = run_date + pd.Timedelta(days=10)
+periodo_inicio = run_date
+periodo_fim = run_date + pd.Timedelta(days=9)
 
 plot_map(
     total,
     "11.webp",
-    target_date
+    None
 )
 
 print("Finalizado.")
