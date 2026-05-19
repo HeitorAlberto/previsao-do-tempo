@@ -26,7 +26,10 @@ from PIL import Image
 try:
     locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
 except:
-    pass
+    try:
+        locale.setlocale(locale.LC_TIME, "Portuguese_Brazil.1252")
+    except:
+        pass
 
 
 # ============================================================
@@ -53,12 +56,12 @@ UPSCALE_FACTOR = 4
 
 
 # ============================================================
-# DATA (RODADA 00Z FIXA)
+# DATA (RODADA 00Z FIXA COM BASE NA DATA LOCAL)
 # ============================================================
 
-run_date = pd.Timestamp.utcnow().floor("D")
+# Garante que a data de referência respeite o dia civil local (ex: 18/05)
+run_date = pd.Timestamp.now().floor("D")
 run_date_str = run_date.strftime("%Y%m%d")
-
 run_date_label = run_date.strftime("%d/%m/%Y")
 
 prev_date_str = (run_date - pd.Timedelta(days=1)).strftime("%Y%m%d")
@@ -96,7 +99,7 @@ if os.path.exists(old_grib_file):
 
 if not os.path.exists(grib_file):
 
-    print("Baixando ECMWF 00Z (Azure)...")
+    print(f"Baixando ECMWF 00Z do dia {run_date_label} (Azure)...")
 
     client = Client(
         source="azure",
@@ -142,49 +145,44 @@ tp = tp.sel(
 
 
 # ============================================================
-# CORES
+# CORES (ESCALA REFORMULADA)
 # ============================================================
 
 levels = [
-    0,1,2,5,10,15,20,25,30,40,50,
-    60,70,80,90,100,125,150,200,250,300,350,400
+    0, 1, 3, 6, 10, 15, 20, 25, 30, 40, 50,
+    60, 70, 80, 90, 100, 125, 150, 200, 250, 300, 350, 400
 ]
 
 colors = [
-
-    # cinza
+    # 0 a 1: Branco
     "#ffffff",
-    "#d9d9d9",
-    "#9e9e9e",
-
-    # verde
-    "#d8f3dc",
-    "#95d5b2",
-    "#2d6a4f",
-
-    # azul (até 50 mm)
-    "#caf0f8",
-    "#90e0ef",
-    "#48cae4",
-    "#0077b6",
-    "#023e8a",
-
-    # roxo
-    "#f3e8ff",
-    "#d8b4fe",
-    "#c084fc",
-    "#9333ea",
-
-    # marrom invertido
-    "#7f5539",
-    "#b08968",
-    "#ddb892",
-
-    # rosa/vermelho
-    "#ffc2d1",
-    "#ff8fab",
-    "#ff4d6d",
-    "#ff0054"
+    
+    # 1 a 3: Cinza claro ao escuro
+    "#e0e0e0", "#8e8e8e",
+    
+    # 3 a 6 e 6 a 10: Verde claro ao escuro
+    "#d8f3dc", "#2d6a4f",
+    
+    # 10 a 15 e 15 a 20: Azul claro ao escuro
+    "#90e0ef", "#0077b6",
+    
+    # 20 a 25 e 25 a 30: Amarelo claro ao escuro
+    "#fff3b0", "#ffcc00",
+    
+    # 30 a 40 e 40 a 50: Laranja claro ao escuro
+    "#ffb703", "#fb8500",
+    
+    # 50 a 60, 60 a 70, 70 a 80, 80 a 90: Vermelho claro ao escuro
+    ffb3b3, "#ff4d4d", "#ff0000", "#b30000",
+    
+    # 90 a 100, 100 a 125, 125 a 150: Marrom claro ao escuro
+    "#ddb892", "#b08968", "#7f5539",
+    
+    # 150 a 200, 200 a 250, 250 a 300: Lilás claro ao escuro
+    "#f3e8ff", "#c084fc", "#9333ea",
+    
+    # 300 a 350 e 350 a 400: Rosa claro ao escuro
+    "#ffc2d1", "#ff0054"
 ]
 
 cmap = mcolors.ListedColormap(colors)
@@ -296,9 +294,10 @@ def plot_map(data, filename, subtitle, target_date):
     )
 
     # ========================================================
-    # HEADER
+    # HEADER (FORMATADO EM PT-BR)
     # ========================================================
 
+    # Força a tradução dos dias da semana baseada no locale configurado
     weekday = target_date.strftime("%A").capitalize()
     date_label = target_date.strftime("%d/%m")
 
@@ -389,6 +388,7 @@ for i in range(10):
 
     prev = atual
 
+    # Garante que o passo 1 (i=0) seja D+1 (Amanhã) correto baseado na data base real
     target_date = run_date + pd.Timedelta(days=i + 1)
 
     plot_map(
