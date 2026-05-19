@@ -220,7 +220,7 @@ colors = [
     # Branco / cinza
     "#ffffff",
     "#b8b8b8",
-    "##6b6b6b",
+    "#6b6b6b",
 
     # Verde
     "#d8f3dc",
