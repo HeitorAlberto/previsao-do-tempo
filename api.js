@@ -45,7 +45,9 @@ export const forecast = (lat, lon) => {
   ].join(','));
 
   url.searchParams.set('hourly', [
-    'cloud_cover',
+    'cloud_cover_low', 
+    'cloud_cover_mid',  
+    'cloud_cover_high',  
     'precipitation_probability',
     'wind_gusts_10m',
     'precipitation',

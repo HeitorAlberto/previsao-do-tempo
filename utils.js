@@ -160,14 +160,27 @@ export const periodData = (data, dayIndex, startHour, endHour) => {
     // filtra período do dia
     if (hour < startHour || hour > endHour) continue;
 
-    clouds.push(data.hourly.cloud_cover[i]);
+    // --- NOVA LÓGICA DE PESOS PARA PERCEPÇÃO HUMANA ---
+    const low = data.hourly.cloud_cover_low[i] || 0;
+    const mid = data.hourly.cloud_cover_mid[i] || 0;
+    const high = data.hourly.cloud_cover_high[i] || 0;
+
+    // Média ponderada da hora atual
+    const weightedCloud = (low * 1.0) + (mid * 0.6) + (high * 0.1);
+
+    // Garante que o valor não passe de 100% caso a sobreposição da API seja muito alta
+    const finalCloudValue = Math.min(weightedCloud, 100);
+
+    clouds.push(finalCloudValue);
+    // -------------------------------------------------
+
     rainProb.push(data.hourly.precipitation_probability[i]);
     gusts.push(data.hourly.wind_gusts_10m[i]);
     rainAmount.push(data.hourly.precipitation[i]);
     codes.push(Number(data.hourly.weather_code[i]));
   }
 
-  // média de nuvens
+  // média de nuvens (agora baseada nos pesos visuais)
   const avgCloud =
     clouds.reduce((a, b) => a + b, 0) / (clouds.length || 1);
 
@@ -181,7 +194,7 @@ export const periodData = (data, dayIndex, startHour, endHour) => {
   );
 
   return {
-    clouds: cloudText(avgCloud),
+    clouds: cloudText(avgCloud), // Continua funcionando igual, mas com o dado refinado!
     rain: Math.max(...rainProb, 0),
     gust: Math.max(...gusts, 0),
     accumulation: totalRain,
