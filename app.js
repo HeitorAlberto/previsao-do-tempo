@@ -5,10 +5,10 @@ import { fmtDate, periodData, addrText } from './utils.js';
 document.addEventListener("DOMContentLoaded", () => {
 
   const periods = [
-    { name: '0h - 6h', start: 0, end: 5 },
-    { name: '6h - 12h', start: 6, end: 11 },
-    { name: '12h - 18h', start: 12, end: 17 },
-    { name: '18h - 24h', start: 18, end: 23 }
+    { name: 'até 6h', start: 0, end: 5 },
+    { name: 'até 12h', start: 6, end: 11 },
+    { name: 'até 18h', start: 12, end: 17 },
+    { name: 'até 24h', start: 18, end: 23 }
   ];
 
   const el = {

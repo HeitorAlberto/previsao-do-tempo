@@ -75,7 +75,7 @@ export const cloudText = v => {
     return `
                 <span class="cloud-status">
                     <img src="icons/partly-cloudy.svg" class="cloud-icon">
-                    Algumas nuvens
+                    Nuvens esparsas
                 </span>
             `;
   }
