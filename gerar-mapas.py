@@ -219,8 +219,8 @@ colors = [
 
     # Branco / cinza
     "#ffffff",
-    "#ececec",
-    "#cfcfcf",
+    "#b8b8b8",
+    "##6b6b6b",
 
     # Verde
     "#d8f3dc",
@@ -233,7 +233,7 @@ colors = [
     "#0077b6",
 
     # Amarelo
-    "#ffe066",
+    "#f7de7c",
     "#ffba08",
 
     # Laranja
@@ -245,7 +245,7 @@ colors = [
     "#8b0000",
 
     # Marrons
-    "#8d6e63",
+    "#c29d8f",
     "#5d4037",
 
     # Roxos
