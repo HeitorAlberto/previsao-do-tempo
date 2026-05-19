@@ -31,6 +31,14 @@ except:
 
 
 # ============================================================
+# OTIMIZAÇÕES
+# ============================================================
+
+plt.rcParams["path.simplify"] = True
+plt.rcParams["path.simplify_threshold"] = 1.0
+
+
+# ============================================================
 # PATHS
 # ============================================================
 
@@ -49,14 +57,13 @@ os.makedirs(DATA_DIR, exist_ok=True)
 
 RUN_HOUR = 0
 
-DPI = 450
+DPI = 300
+QUALITY_WEBP = 86
 
 SIGMA_SMOOTH = 0.55
 UPSCALE_FACTOR = 5
 
-FIGSIZE = (10, 10)
-
-QUALITY_WEBP = 100
+FIGSIZE = (9, 9)
 
 
 # ============================================================
@@ -78,7 +85,7 @@ prev_date_str = prev_date.strftime("%Y%m%d")
 
 
 # ============================================================
-# GRIB
+# ARQUIVOS GRIB
 # ============================================================
 
 grib_file = os.path.join(
@@ -97,6 +104,7 @@ old_grib_file = os.path.join(
 # ============================================================
 
 if os.path.exists(old_grib_file):
+
     try:
         os.remove(old_grib_file)
     except:
@@ -174,7 +182,7 @@ tp = ds["tp"] * 1000.0
 
 
 # ============================================================
-# AJUSTE LONGITUDE
+# LONGITUDE
 # ============================================================
 
 lon = np.where(
@@ -189,7 +197,7 @@ tp = tp.assign_coords(
 
 
 # ============================================================
-# RECORTE AMÉRICA DO SUL
+# RECORTE
 # ============================================================
 
 tp = tp.sel(
@@ -200,7 +208,6 @@ tp = tp.sel(
 
 # ============================================================
 # ESCALA DE CORES
-# Tons mais suaves e modernos
 # ============================================================
 
 levels = [
@@ -231,13 +238,17 @@ colors = [
 
     # Laranja
     "#f48c06",
-    "#dc2f02",
 
-    # Vermelho
-    "#d00000",
-    "#9d0208",
+    # Vermelhos
+    "#ff4d4d",
+    "#e00000",
+    "#8b0000",
 
-    # Roxo
+    # Marrons
+    "#8d6e63",
+    "#5d4037",
+
+    # Roxos
     "#9d4edd",
     "#7b2cbf",
 
@@ -251,6 +262,32 @@ norm = mcolors.BoundaryNorm(
     levels,
     cmap.N
 )
+
+
+# ============================================================
+# TEXTO PT-BR
+# ============================================================
+
+def formatar_data_ptbr(data):
+
+    dias = {
+        "Monday": "Segunda",
+        "Tuesday": "Terça",
+        "Wednesday": "Quarta",
+        "Thursday": "Quinta",
+        "Friday": "Sexta",
+        "Saturday": "Sábado",
+        "Sunday": "Domingo"
+    }
+
+    dia_semana_en = data.strftime("%A")
+
+    dia_semana = dias.get(
+        dia_semana_en,
+        dia_semana_en
+    )
+
+    return f"{dia_semana}, {data.strftime('%d/%m/%Y')}"
 
 
 # ============================================================
@@ -305,32 +342,6 @@ def smooth_data(data):
 
 
 # ============================================================
-# TEXTO PT-BR
-# ============================================================
-
-def formatar_data_ptbr(data):
-
-    dias = {
-        "Monday": "Segunda",
-        "Tuesday": "Terça",
-        "Wednesday": "Quarta",
-        "Thursday": "Quinta",
-        "Friday": "Sexta",
-        "Saturday": "Sábado",
-        "Sunday": "Domingo"
-    }
-
-    dia_semana_en = data.strftime("%A")
-
-    dia_semana = dias.get(
-        dia_semana_en,
-        dia_semana_en
-    )
-
-    return f"{dia_semana}, {data.strftime('%d/%m/%Y')}"
-
-
-# ============================================================
 # MAPA
 # ============================================================
 
@@ -354,7 +365,7 @@ def plot_map(data, filename, target_date):
     # Fundo
     ax.set_facecolor("#f8f8f8")
 
-    # Fronteiras
+    # Países
     ax.add_feature(
         cfeature.BORDERS,
         linewidth=0.5,
@@ -392,7 +403,7 @@ def plot_map(data, filename, target_date):
         norm=norm,
         transform=ccrs.PlateCarree(),
         extend="max",
-        antialiased=True
+        antialiased=False
     )
 
     # ========================================================
@@ -503,7 +514,7 @@ for i in range(10):
 
 
 # ============================================================
-# ACUMULADO 10 DIAS
+# ACUMULADO TOTAL (10 DIAS)
 # ============================================================
 
 total = tp.isel(step=9)
@@ -515,6 +526,5 @@ plot_map(
     "11.webp",
     target_date
 )
-
 
 print("Finalizado.")
