@@ -34,6 +34,7 @@ export const forecast = (lat, lon) => {
   url.searchParams.set('latitude', lat);
   url.searchParams.set('longitude', lon);
   url.searchParams.set('timezone', 'America/Fortaleza');
+  url.searchParams.set('forecast_days','10');
 
   url.searchParams.set('daily', [
     'weather_code',
