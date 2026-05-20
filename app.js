@@ -220,6 +220,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
           <div class="row-data">
 
+            <span
+              class="data-values"
+              style="text-align: left;"
+            >
+              ${skyText}
+            </span>
+
+          </div>
+
+          <div class="row-data">
+
+            <span
+              class="data-values"
+              style="text-align: left;"
+            >
+              ${weatherText}
+            </span>
+
+          </div>
+
+          <div class="row-data">
+
             <span class="label-data">
               Temperatura
             </span>
@@ -257,27 +279,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           </div>
 
-          <div class="row-data">
-
-            <span
-              class="data-values"
-              style="text-align: left;"
-            >
-              ${skyText}
-            </span>
-
-          </div>
-
-          <div class="row-data">
-
-            <span
-              class="data-values"
-              style="text-align: left;"
-            >
-              ${weatherText}
-            </span>
-
-          </div>
 
         </div>
       `;

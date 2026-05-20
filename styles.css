@@ -142,13 +142,16 @@ main {
     width: 100%;
     max-width: 700px;
     margin: 0 auto;
+    gap: 30px;
 }
 
 /* ===== DIA ===== */
 
 .day {
-    padding: 50px 20px;
+    padding: 20px 20px;
     width: 100%;
+    border: 2px solid lightgrey;
+    border-radius: 20px;
 }
 
 .day-row {
@@ -252,7 +255,7 @@ main {
     padding: 14px;
     text-align: center;
     border-radius: 12px;
-    border: 1px solid #ececec;
+    background-color: #fafafa;
 }
 
 .period div {
@@ -326,6 +329,7 @@ main {
 
     .day {
         padding: 20px 0px;
+        border: none;
     }
 
     .row-data {
