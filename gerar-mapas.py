@@ -211,49 +211,54 @@ tp = tp.sel(
 # ============================================================
 
 levels = [
-    0, 1, 3, 5, 10, 15, 20, 30, 40, 50,
-    60, 75, 100, 125, 150, 200, 250, 300, 400
+    0, 0.2, 1, 2,
+    4, 8, 12, 15,
+    20, 25, 30, 40, 50,
+    60, 70, 80, 90, 100, 125, 150,
+    200, 250, 300,
+    350, 450
 ]
 
 colors = [
-
-    # Branco / cinza
+    # 0 - 0.2 (branco)
     "#ffffff",
-    "#b8b8b8",
-    "#6b6b6b",
 
-    # Verde
-    "#ccffdd",
-    "#00ff55",
-    "#009933",
+    # 0.2 - 1 (cinza claro)
+    "#d9d9d9",
 
-    # Azul
-    "#ccd9ff",
-    "#99b3ff",
-    "#3366ff",
+    # 1 - 2 (cinza escuro)
+    "#666666",
 
-    # Amarelo
-    "#faeaac",
-    "#f6d864",
+    # Verde (2 - 15)
+    "#bff5cc",  
+    "#66e28a",  
+    "#2ecc71",  
+    "#0f8f3a",  
 
-    # Laranja
-    "#f48c06",
+    # Azul (15 - 50)
+    "#0b2e6b",  
+    "#1f5eff",  
+    "#4d8cff",  
+    "#80b3ff",  
+    "#cfe0ff",  
 
-    # Vermelhos
-    "#ff4d4d",
-    "#e00000",
-    "#8b0000",
+    # Lilás (50 - 150)
+    "#f2e6ff",
+    "#e0b3ff",
+    "#bf00ff",
+    "#a300e6",
+    "#7a00b3",
+    "#5a008a",
+    "#3b005c",
 
-    # Marrons
-    "#dfbf9f",
-    "#5d4037",
+    # Marrom (150 - 300)
+    "#d7b48a",  
+    "#b8895a",  
+    "#7a4a2a",  
 
-    # Roxos
-    "#e699ff",
-    "#7b2cbf",
-
-    # Rosa extremo
-    "#ff4d8d"
+    # Rosa (300 - 450)
+    "#ffb3c7",  
+    "#c2185b",  
 ]
 
 cmap = mcolors.ListedColormap(colors)
