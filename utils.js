@@ -1,21 +1,26 @@
-
 // -----------------------------
 // FORMATAÇÃO DE DATA
 // -----------------------------
 
 export const fmtDate = (d) => {
+
   const dt = new Date(d + 'T00:00:00');
 
   return {
     date: dt.toLocaleDateString('pt-BR'),
-    weekday: dt.toLocaleDateString('pt-BR', { weekday: 'long' }),
+
+    weekday: dt.toLocaleDateString(
+      'pt-BR',
+      { weekday: 'long' }
+    ),
+
     day: dt.getDay()
   };
 };
 
 
 // -----------------------------
-// TEXTO DE LOCALIZAÇÃO (se ainda usado fora do app.js)
+// TEXTO DE LOCALIZAÇÃO
 // -----------------------------
 
 export const addrText = (a) => {
@@ -30,10 +35,13 @@ export const addrText = (a) => {
   ];
 
   const city = possibleCity.find(v =>
+
     v &&
+
     !v.includes('Região Geográfica') &&
     !v.includes('Intermediate Region') &&
     !v.includes('Immediate Region')
+
   ) || '';
 
   return [
@@ -42,59 +50,224 @@ export const addrText = (a) => {
     a.country
   ]
     .filter(Boolean)
-    .filter((v, i, arr) => arr.indexOf(v) === i)
+
+    .filter((v, i, arr) =>
+      arr.indexOf(v) === i
+    )
+
     .join(', ');
 };
 
 
 // -----------------------------
-// CONDIÇÃO DE NUVENS (UI)
+// CLOUD TYPE (SEMÂNTICO)
+// -----------------------------
+
+export const cloudType = v => {
+
+  if (v <= 10)
+    return 'clear';
+
+  if (v <= 35)
+    return 'few-clouds';
+
+  if (v <= 60)
+    return 'partly-cloudy';
+
+  if (v <= 92)
+    return 'cloudy';
+
+  return 'overcast';
+};
+
+
+// -----------------------------
+// LABELS DO CÉU
+// -----------------------------
+
+export const cloudLabels = {
+
+  clear:
+    '☀️ Céu aberto em maior parte',
+
+  'few-clouds':
+    '🌤️ Poucas nuvens no geral',
+
+  'partly-cloudy':
+    '⛅ Parcialmente nublado',
+
+  cloudy:
+    '🌥️ Muitas nuvens no geral',
+
+  overcast:
+    '☁️ Céu encoberto'
+};
+
+
+// -----------------------------
+// UI DAS NUVENS
 // -----------------------------
 
 export const cloudText = v => {
 
-  if (v <= 10) {
-    return `
-                <span class="cloud-status">
-                    <img src="icons/clear.svg" class="cloud-icon">
-                    Limpo
-                </span>
-            `;
-  }
+  const type = cloudType(v);
 
-  if (v <= 35) {
-    return `
-                <span class="cloud-status">
-                    <img src="icons/few-clouds.svg" class="cloud-icon">
-                    Poucas nuvens
-                </span>
-            `;
-  }
+  const map = {
 
-  if (v <= 60) {
-    return `
-                <span class="cloud-status">
-                    <img src="icons/partly-cloudy.svg" class="cloud-icon">
-                    Nuvens esparsas
-                </span>
-            `;
-  }
+    clear: {
+      icon: '',
+      label: 'Limpo'
+    },
 
-  if (v <= 85) {
-    return `
-                <span class="cloud-status">
-                    <img src="icons/cloudy.svg" class="cloud-icon">
-                    Nublado
-                </span>
-            `;
-  }
+    'few-clouds': {
+      icon: '',
+      label: 'Poucas nuvens'
+    },
+
+    'partly-cloudy': {
+      icon: '',
+      label: 'Nuvens esparsas'
+    },
+
+    cloudy: {
+      icon: '',
+      label: 'Nublado'
+    },
+
+    overcast: {
+      icon: '',
+      label: 'Encoberto'
+    }
+  };
+
+  const item = map[type];
 
   return `
-            <span class="cloud-status">
-                <img src="icons/overcast.svg" class="cloud-icon">
-                Encoberto
-            </span>
-        `;
+    <span class="cloud-status">
+
+      ${item.label}
+
+    </span>
+  `;
+};
+
+
+// -----------------------------
+// WEATHER CODE
+// -----------------------------
+
+export const weatherCodeMap = {
+
+  0: '☀️ Céu limpo',
+  1: '🌤️ Predomínio de sol',
+  2: '⛅ Parcialmente nublado',
+  3: '☁️ Encoberto',
+
+  45: '🌫️ Neblina',
+  48: '🌫️ Neblina com geada',
+
+  51: '💧 Chuviscos leves',
+  53: '💧 Chuviscos',
+  55: '💧 Chuviscos intensos',
+
+  61: '💧 Chuva fraca',
+  63: '💧 Chuva',
+  65: '💧 Chuva forte',
+
+  66: '💧 Chuva congelante',
+  67: '💧 Chuva congelante forte',
+
+  71: '🌨️ Neve fraca',
+  73: '🌨️ Neve',
+  75: '🌨️ Neve intensa',
+
+  77: '🌨️ Grãos de neve',
+
+  80: '💧 Pancadas leves',
+  81: '💧 Pancadas de chuva',
+  82: '💧 Pancadas fortes',
+
+  85: '🌨️ Neve isolada',
+  86: '🌨️ Neve intensa',
+
+  95: '🌩️ Trovoadas',
+  96: '🌩️ Trovoadas com granizo',
+  99: '⚪ Granizo forte'
+};
+
+
+// -----------------------------
+// RESUMO INTELIGENTE DO DIA
+// -----------------------------
+
+export const buildDailyWeatherText = ({
+  weatherCode,
+  rain,
+  probability,
+  alerts
+}) => {
+
+  const hasStorm =
+    alerts.some(a => a.type === 'storm');
+
+  const hasHail =
+    alerts.some(a => a.type === 'hail');
+
+  const hasFog =
+    alerts.some(a => a.type === 'fog');
+
+  const hasSnow =
+    alerts.some(a => a.type === 'snow');
+
+  // -----------------------------
+  // EVENTOS PRIORITÁRIOS
+  // -----------------------------
+
+  if (hasHail)
+    return '⚪ Risco de granizo';
+
+  if (hasStorm)
+    return '🌩️ Trovoadas';
+
+  if (hasSnow)
+    return '🌨️ Possibilidade de neve';
+
+  if (hasFog)
+    return '🌫️ Neblina';
+
+  // -----------------------------
+  // CHUVA
+  // -----------------------------
+
+  if (rain >= 25)
+    return '💧 Chuva volumosa';
+
+  if (rain >= 8)
+    return '💧 Pancadas de chuva';
+
+  if (rain >= 1)
+    return '💧 Chuva fraca';
+
+  if (probability >= 70)
+    return '💧 Chance de chuva';
+
+  // -----------------------------
+  // IGNORA WEATHER CODES DE CÉU
+  // -----------------------------
+
+  const ignoredSkyCodes = [0, 1, 2, 3];
+
+  if (ignoredSkyCodes.includes(weatherCode))
+    return '';
+
+  // -----------------------------
+  // FALLBACK
+  // -----------------------------
+
+  return (
+    weatherCodeMap[weatherCode] ||
+    ''
+  );
 };
 
 
@@ -103,31 +276,31 @@ export const cloudText = v => {
 // -----------------------------
 
 export const alertsMap = [
+
   {
     type: 'storm',
-    label: 'Trovoadas',
-    icon: 'icons/storm.svg',
+    label: '🌩️ Trovoadas',
     priority: 3,
     codes: [95]
   },
+
   {
     type: 'hail',
-    label: 'Granizo',
-    icon: 'icons/hail.svg',
+    label: '⚪ Granizo',
     priority: 5,
     codes: [96, 99]
   },
+
   {
     type: 'snow',
-    label: 'Neve',
-    icon: 'icons/snow.svg',
+    label: '🌨️ Neve',
     priority: 4,
     codes: [71, 73, 75, 77, 85, 86]
   },
+
   {
     type: 'fog',
-    label: 'Neblina',
-    icon: 'icons/fog.svg',
+    label: '🌫️ Neblina',
     priority: 2,
     codes: [45, 48]
   }
@@ -138,7 +311,12 @@ export const alertsMap = [
 // PROCESSAMENTO POR PERÍODO
 // -----------------------------
 
-export const periodData = (data, dayIndex, startHour, endHour) => {
+export const periodData = (
+  data,
+  dayIndex,
+  startHour,
+  endHour
+) => {
 
   const clouds = [];
   const rainProb = [];
@@ -146,58 +324,106 @@ export const periodData = (data, dayIndex, startHour, endHour) => {
   const rainAmount = [];
   const codes = [];
 
-  const targetDate = data.daily.time[dayIndex];
+  const targetDate =
+    data.daily.time[dayIndex];
 
   for (let i = 0; i < data.hourly.time.length; i++) {
 
-    const time = data.hourly.time[i];
+    const time =
+      data.hourly.time[i];
 
-    // filtra apenas o dia correto
-    if (!time.startsWith(targetDate)) continue;
+    if (!time.startsWith(targetDate))
+      continue;
 
-    const hour = new Date(time).getHours();
+    const hour =
+      new Date(time).getHours();
 
-    // filtra período do dia
-    if (hour < startHour || hour > endHour) continue;
+    if (hour < startHour || hour > endHour)
+      continue;
 
-    // --- NOVA LÓGICA DE PESOS PARA PERCEPÇÃO HUMANA ---
-    const low = data.hourly.cloud_cover_low[i] || 0;
-    const mid = data.hourly.cloud_cover_mid[i] || 0;
-    const high = data.hourly.cloud_cover_high[i] || 0;
+    const low =
+      data.hourly.cloud_cover_low[i] || 0;
 
-    // Média ponderada da hora atual
-    const weightedCloud = (low * 1.0) + (mid * 0.6) + (high * 0.1);
+    const mid =
+      data.hourly.cloud_cover_mid[i] || 0;
 
-    // Garante que o valor não passe de 100% caso a sobreposição da API seja muito alta
-    const finalCloudValue = Math.min(weightedCloud, 100);
+    const high =
+      data.hourly.cloud_cover_high[i] || 0;
 
-    clouds.push(finalCloudValue);
-    // -------------------------------------------------
+    // normalização ponderada
 
-    rainProb.push(data.hourly.precipitation_probability[i]);
-    gusts.push(data.hourly.wind_gusts_10m[i]);
-    rainAmount.push(data.hourly.precipitation[i]);
-    codes.push(Number(data.hourly.weather_code[i]));
+    const weightedCloud = (
+
+      (low * 1.0) +
+      (mid * 0.6) +
+      (high * 0.1)
+
+    ) / 1.7;
+
+    clouds.push(weightedCloud);
+
+    rainProb.push(
+      data.hourly
+        .precipitation_probability[i]
+    );
+
+    gusts.push(
+      data.hourly
+        .wind_gusts_10m[i]
+    );
+
+    rainAmount.push(
+      data.hourly
+        .precipitation[i]
+    );
+
+    codes.push(
+      Number(
+        data.hourly.weather_code[i]
+      )
+    );
   }
 
-  // média de nuvens (agora baseada nos pesos visuais)
   const avgCloud =
-    clouds.reduce((a, b) => a + b, 0) / (clouds.length || 1);
 
-  // chuva total no período
+    clouds.reduce(
+      (a, b) => a + b,
+      0
+    ) /
+
+    (clouds.length || 1);
+
   const totalRain =
-    rainAmount.reduce((a, b) => a + b, 0);
 
-  // alertas ativos no período
+    rainAmount.reduce(
+      (a, b) => a + b,
+      0
+    );
+
   const alerts = alertsMap.filter(a =>
-    codes.some(c => a.codes.includes(c))
+
+    codes.some(c =>
+      a.codes.includes(c)
+    )
   );
 
   return {
-    clouds: cloudText(avgCloud), // Continua funcionando igual, mas com o dado refinado!
-    rain: Math.max(...rainProb, 0),
-    gust: Math.max(...gusts, 0),
-    accumulation: totalRain,
+
+    clouds:
+      cloudText(avgCloud),
+
+    cloudType:
+      cloudType(avgCloud),
+
+    rain:
+      Math.max(...rainProb, 0),
+
+    gust:
+      Math.max(...gusts, 0),
+
+    accumulation:
+      totalRain,
+
     alerts
   };
 };

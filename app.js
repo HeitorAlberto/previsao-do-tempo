@@ -1,5 +1,12 @@
 import { search, forecast } from './api.js';
-import { fmtDate, periodData, addrText } from './utils.js';
+
+import {
+  fmtDate,
+  periodData,
+  addrText,
+  cloudLabels,
+  buildDailyWeatherText
+} from './utils.js';
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -26,26 +33,45 @@ document.addEventListener("DOMContentLoaded", () => {
   // -----------------------------
 
   const saveHistory = (place) => {
-    let history = JSON.parse(localStorage.getItem('weatherHistory') || '[]');
 
-    history = history.filter(h => h.name !== place.name);
+    let history =
+      JSON.parse(
+        localStorage.getItem('weatherHistory') || '[]'
+      );
+
+    history =
+      history.filter(h => h.name !== place.name);
+
     history.unshift(place);
+
     history = history.slice(0, 3);
 
-    localStorage.setItem('weatherHistory', JSON.stringify(history));
+    localStorage.setItem(
+      'weatherHistory',
+      JSON.stringify(history)
+    );
+
     renderHistory();
   };
 
   const renderHistory = () => {
-    if (!el.history) return;
 
-    const history = JSON.parse(localStorage.getItem('weatherHistory') || '[]');
+    if (!el.history)
+      return;
+
+    const history =
+      JSON.parse(
+        localStorage.getItem('weatherHistory') || '[]'
+      );
 
     el.history.innerHTML = '';
 
     history.forEach(item => {
+
       const btn = document.createElement('button');
+
       btn.className = 'history-btn';
+
       btn.textContent = item.name;
 
       btn.addEventListener('click', () => {
@@ -68,103 +94,219 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const { date, weekday, day } = fmtDate(d);
 
-      const min = data.daily.temperature_2m_min[i];
-      const max = data.daily.temperature_2m_max[i];
-      const rain = data.daily.precipitation_sum[i];
-      const prob = data.daily.precipitation_probability_max[i];
-      const wind = data.daily.wind_gusts_10m_max[i];
+      const min =
+        data.daily.temperature_2m_min[i];
 
-      const weekend = day === 0 || day === 6;
+      const max =
+        data.daily.temperature_2m_max[i];
+
+      const rain =
+        data.daily.precipitation_sum[i];
+
+      const prob =
+        data.daily.precipitation_probability_max[i];
+
+      const wind =
+        data.daily.wind_gusts_10m_max[i];
+
+      const weekend =
+        day === 0 || day === 6;
 
       const div = document.createElement('div');
+
       div.className = 'day';
 
       const details = document.createElement('div');
+
       details.className = 'div2';
 
       const dailyAlerts = [];
 
+      const skyCounter = {};
+
       periods.forEach(p => {
 
-        const info = periodData(data, i, p.start, p.end);
+        const info =
+          periodData(
+            data,
+            i,
+            p.start,
+            p.end
+          );
 
-        info.alerts.forEach(a => dailyAlerts.push(a));
+        info.alerts.forEach(a =>
+          dailyAlerts.push(a)
+        );
+
+        skyCounter[info.cloudType] =
+          (skyCounter[info.cloudType] || 0) + 1;
 
         details.innerHTML += `
-                    <div class="period">
+          <div class="period">
 
-                        <div class="period-title">${p.name}</div>
+            <div class="period-title">
+              ${p.name}
+            </div>
 
-                        <div>${info.clouds}</div>
+            <div>
+              ${info.clouds}
+            </div>
 
-                        <div>Chuvas: ${info.accumulation.toFixed(1)} mm (${info.rain}%)</div>
+            <div>
+              Chuvas:
+              ${info.accumulation.toFixed(1)} mm
+              (${info.rain}%)
+            </div>
 
-                        <div>Rajadas de ${info.gust.toFixed(0)} km/h</div>
+            <div>
+              Rajadas de
+              ${info.gust.toFixed(0)} km/h
+            </div>
 
-                        ${info.alerts.map(a => `
-                            <div class="weather-alert">
-                                <img src="${a.icon}">
-                                ${a.label}
-                            </div>
-                        `).join('')}
+            ${info.alerts.map(a => `
+                <img src="${a.icon}">
+                ${a.label}
+              </div>
+            `).join('')}
 
-                    </div>
-                `;
+          </div>
+        `;
       });
 
       let dailyAlert = null;
 
       if (dailyAlerts.length) {
-        dailyAlert = dailyAlerts.sort((a, b) => b.priority - a.priority)[0];
+
+        dailyAlert =
+          dailyAlerts
+            .sort((a, b) =>
+              b.priority - a.priority
+            )[0];
       }
 
+      const dominantSky =
+        Object.entries(skyCounter)
+          .sort((a, b) =>
+            b[1] - a[1]
+          )[0]?.[0];
+
+      const skyText =
+        cloudLabels[dominantSky] || '';
+
+      // -----------------------------
+      // RESUMO METEOROLÓGICO
+      // -----------------------------
+
+      const weatherText =
+        buildDailyWeatherText({
+
+          weatherCode:
+            data.daily.weather_code[i],
+
+          rain,
+
+          probability: prob,
+
+          alerts: dailyAlerts
+        });
+
       div.innerHTML = `
-                <div class="day-row">
+        <div class="day-row">
 
-                    <div class="date-line ${weekend ? 'weekend' : ''}">
-                        ${weekday}, ${date}
-                    </div>
+          <div class="date-line ${weekend ? 'weekend' : ''}">
+            ${weekday}, ${date}
+          </div>
 
-                    <div class="row-data">
+          <div class="row-data">
 
-                        <span class="label-data">Temperatura</span>
-                        <span class="data-values">${min.toFixed(0)}° a ${max.toFixed(0)}°</span>
+            <span class="label-data">
+              Temperatura
+            </span>
 
-                    </div>
+            <span class="data-values">
+              ${min.toFixed(0)}°
+              a
+              ${max.toFixed(0)}°
+            </span>
 
-                    <div class="row-data">
-                        <span class="label-data">Chuva acumulada</span>
-                        <span class="data-values">${rain.toFixed(1)} mm (${prob}%)</span>
+          </div>
 
-                    </div>
+          <div class="row-data">
 
-                    <div class="row-data">
-                        <span class="label-data">Rajadas de vento máx</span>
-                        <span class="data-values">${wind.toFixed(0)} km/h</span>
-                    </div>
+            <span class="label-data">
+              Chuva acumulada
+            </span>
 
-                        ${dailyAlert ? `
-                            <div class="daily-alert">
-                                <img src="${dailyAlert.icon}">
-                                ${dailyAlert.label}
-                            </div>
-                        ` : ''}
+            <span class="data-values">
+              ${rain.toFixed(1)} mm
+              (${prob}%)
+            </span>
 
-                    </div>
+          </div>
 
-                </div>
-            `;
+          <div class="row-data">
+
+            <span class="label-data">
+              Rajadas de vento máx
+            </span>
+
+            <span class="data-values">
+              ${wind.toFixed(0)} km/h
+            </span>
+
+          </div>
+
+          <div class="row-data">
+
+            <span
+              class="data-values"
+              style="text-align: left;"
+            >
+              ${weatherText}
+            </span>
+
+          </div>
+
+          <div class="row-data">
+
+            <span
+              class="data-values"
+              style="text-align: left;"
+            >
+              ${skyText}
+            </span>
+
+          </div>
+
+          ${dailyAlert ? `
+            <div class="daily-alert">
+              ${dailyAlert.label}
+            </div>
+          ` : ''}
+
+        </div>
+      `;
 
       const btn = document.createElement('div');
+
       btn.className = 'details-btn';
-      btn.innerHTML = `<img src="icons/arrow.svg" class="accordion-icon">`;
+
+      btn.innerHTML = `
+        <img
+          src="icons/arrow.svg"
+          class="accordion-icon"
+        >
+      `;
 
       btn.addEventListener('click', () => {
+
         details.classList.toggle('open');
+
         btn.classList.toggle('active');
       });
 
       div.appendChild(btn);
+
       div.appendChild(details);
 
       el.cards.appendChild(div);
@@ -180,9 +322,11 @@ document.addEventListener("DOMContentLoaded", () => {
   async function load(lat, lon, placeName = '') {
 
     el.name.innerHTML = `
-        <span class="location">
-            <span>📍 Carregando localização...</span>
+      <span class="location">
+        <span>
+          📍 Carregando localização...
         </span>
+      </span>
     `;
 
     try {
@@ -191,23 +335,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
       render(f);
 
-      // força reverse geocoding
       const rev = await fetch(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`
       ).then(r => r.json());
 
-      let finalName = addrText(rev.address);
+      let finalName =
+        addrText(rev.address);
 
-      // fallback
       if (!finalName) {
-        finalName = placeName || 'Local desconhecido';
+
+        finalName =
+          placeName ||
+          'Local desconhecido';
       }
 
       el.name.innerHTML = `
-            <span class="location">
-                <span>📍 ${finalName}</span>
-            </span>
-        `;
+        <span class="location">
+          <span>
+            📍 ${finalName}
+          </span>
+        </span>
+      `;
 
       saveHistory({
         lat,
@@ -220,10 +368,12 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error(e);
 
       el.name.innerHTML = `
-            <span class="location">
-                <span>📍 Erro ao carregar...</span>
-            </span>
-        `;
+        <span class="location">
+          <span>
+            📍 Erro ao carregar...
+          </span>
+        </span>
+      `;
     }
   }
 
@@ -231,34 +381,58 @@ document.addEventListener("DOMContentLoaded", () => {
   // EVENTS
   // -----------------------------
 
-  el.form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  el.form.addEventListener(
+    'submit',
+    async (e) => {
 
-    if (!el.city.value.trim()) return;
+      e.preventDefault();
 
-    const r = await search(el.city.value.trim());
-    load(r.lat, r.lon, r.name);
-  });
+      if (!el.city.value.trim())
+        return;
+
+      const r =
+        await search(
+          el.city.value.trim()
+        );
+
+      load(r.lat, r.lon, r.name);
+    }
+  );
 
   el.geo.addEventListener('click', () => {
 
     if (!navigator.geolocation)
-      return alert('Geolocalização não suportada.');
+      return alert(
+        'Geolocalização não suportada.'
+      );
 
     el.name.innerHTML = `
-            <span class="location">
-                <span>📍 Obtendo localização...</span>
-            </span>
-        `;
+      <span class="location">
+        <span>
+          📍 Obtendo localização...
+        </span>
+      </span>
+    `;
 
     navigator.geolocation.getCurrentPosition(
-      p => load(p.coords.latitude, p.coords.longitude),
+
+      p => {
+
+        load(
+          p.coords.latitude,
+          p.coords.longitude
+        );
+      },
+
       () => {
+
         el.name.innerHTML = `
-                    <span class="location">
-                        <span>📍 Erro ao obter localização</span>
-                    </span>
-                `;
+          <span class="location">
+            <span>
+              📍 Erro ao obter localização
+            </span>
+          </span>
+        `;
       }
     );
   });
@@ -270,7 +444,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const now = new Date();
 
   el.date.textContent =
-    `${now.toLocaleDateString('pt-BR')} - ${now.toLocaleDateString('pt-BR', { weekday: 'short' })}`;
+    `${now.toLocaleDateString('pt-BR')} - ${now.toLocaleDateString(
+      'pt-BR',
+      { weekday: 'short' }
+    )}`;
 
   renderHistory();
 });
