@@ -223,14 +223,14 @@ colors = [
     "#6b6b6b",
 
     # Verde
-    "#d8f3dc",
-    "#95d5b2",
-    "#52b788",
+    "#ccffdd",
+    "#00ff55",
+    "#009933",
 
     # Azul
-    "#a9def9",
-    "#48cae4",
-    "#0077b6",
+    "#ccd9ff",
+    "#99b3ff",
+    "#3366ff",
 
     # Amarelo
     "#faeaac",
@@ -245,11 +245,11 @@ colors = [
     "#8b0000",
 
     # Marrons
-    "#c29d8f",
+    "#dfbf9f",
     "#5d4037",
 
     # Roxos
-    "#9d4edd",
+    "#e699ff",
     "#7b2cbf",
 
     # Rosa extremo
