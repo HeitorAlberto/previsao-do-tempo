@@ -279,28 +279,28 @@ export const alertsMap = [
 
   {
     type: 'storm',
-    label: '🌩️ Trovoadas',
+    label: 'Trovoadas',
     priority: 3,
     codes: [95]
   },
 
   {
     type: 'hail',
-    label: '⚪ Granizo',
+    label: 'Granizo',
     priority: 5,
     codes: [96, 99]
   },
 
   {
     type: 'snow',
-    label: '🌨️ Neve',
+    label: 'Neve',
     priority: 4,
     codes: [71, 73, 75, 77, 85, 86]
   },
 
   {
     type: 'fog',
-    label: '🌫️ Neblina',
+    label: 'Neblina',
     priority: 2,
     codes: [45, 48]
   }
