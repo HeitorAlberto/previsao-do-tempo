@@ -4,17 +4,26 @@
 
 export const fmtDate = (d) => {
 
-  const dt = new Date(d + 'T00:00:00');
+  const dt =
+    new Date(d + 'T00:00:00');
 
   return {
-    date: dt.toLocaleDateString('pt-BR'),
 
-    weekday: dt.toLocaleDateString(
-      'pt-BR',
-      { weekday: 'long' }
-    ),
+    date:
+      dt.toLocaleDateString(
+        'pt-BR'
+      ),
 
-    day: dt.getDay()
+    weekday:
+      dt.toLocaleDateString(
+        'pt-BR',
+        {
+          weekday: 'long'
+        }
+      ),
+
+    day:
+      dt.getDay()
   };
 };
 
@@ -26,6 +35,7 @@ export const fmtDate = (d) => {
 export const addrText = (a) => {
 
   const possibleCity = [
+
     a.city,
     a.town,
     a.village,
@@ -34,25 +44,38 @@ export const addrText = (a) => {
     a.suburb
   ];
 
-  const city = possibleCity.find(v =>
+  const city =
+    possibleCity.find(v =>
 
-    v &&
+      v &&
 
-    !v.includes('Região Geográfica') &&
-    !v.includes('Intermediate Region') &&
-    !v.includes('Immediate Region')
+      !v.includes(
+        'Região Geográfica'
+      ) &&
 
-  ) || '';
+      !v.includes(
+        'Intermediate Region'
+      ) &&
+
+      !v.includes(
+        'Immediate Region'
+      )
+
+    ) || '';
 
   return [
+
     city,
     a.state,
     a.country
+
   ]
+
     .filter(Boolean)
 
-    .filter((v, i, arr) =>
-      arr.indexOf(v) === i
+    .filter(
+      (v, i, arr) =>
+        arr.indexOf(v) === i
     )
 
     .join(', ');
@@ -60,7 +83,7 @@ export const addrText = (a) => {
 
 
 // -----------------------------
-// CLOUD TYPE (SEMÂNTICO)
+// CLOUD TYPE
 // -----------------------------
 
 export const cloudType = v => {
@@ -110,31 +133,37 @@ export const cloudLabels = {
 
 export const cloudText = v => {
 
-  const type = cloudType(v);
+  const type =
+    cloudType(v);
 
   const map = {
 
     clear: {
+
       icon: '',
       label: 'Limpo'
     },
 
     'few-clouds': {
+
       icon: '',
       label: 'Poucas nuvens'
     },
 
     'partly-cloudy': {
+
       icon: '',
       label: 'Nuvens esparsas'
     },
 
     cloudy: {
+
       icon: '',
       label: 'Nublado'
     },
 
     overcast: {
+
       icon: '',
       label: 'Encoberto'
     }
@@ -197,31 +226,39 @@ export const weatherCodeMap = {
 
 
 // -----------------------------
-// RESUMO INTELIGENTE DO DIA
+// RESUMO INTELIGENTE
 // -----------------------------
 
 export const buildDailyWeatherText = ({
+
   weatherCode,
   rain,
   probability,
   alerts
+
 }) => {
 
   const hasStorm =
-    alerts.some(a => a.type === 'storm');
+    alerts.some(
+      a => a.type === 'storm'
+    );
 
   const hasHail =
-    alerts.some(a => a.type === 'hail');
+    alerts.some(
+      a => a.type === 'hail'
+    );
 
   const hasFog =
-    alerts.some(a => a.type === 'fog');
+    alerts.some(
+      a => a.type === 'fog'
+    );
 
   const hasSnow =
-    alerts.some(a => a.type === 'snow');
+    alerts.some(
+      a => a.type === 'snow'
+    );
 
-  // -----------------------------
   // EVENTOS PRIORITÁRIOS
-  // -----------------------------
 
   if (hasHail)
     return '⚪ Risco de granizo';
@@ -229,15 +266,10 @@ export const buildDailyWeatherText = ({
   if (hasStorm)
     return '🌩️ Trovoadas';
 
-  if (hasSnow)
-    return '🌨️ Possibilidade de neve';
-
   if (hasFog)
     return '🌫️ Neblina';
 
-  // -----------------------------
   // CHUVA
-  // -----------------------------
 
   if (rain >= 25)
     return '💧 Chuva volumosa';
@@ -251,106 +283,171 @@ export const buildDailyWeatherText = ({
   if (probability >= 70)
     return '💧 Chance de chuva';
 
-  // -----------------------------
-  // IGNORA WEATHER CODES DE CÉU
-  // -----------------------------
+  // IGNORA CÓDIGOS DE CÉU
 
-  const ignoredSkyCodes = [0, 1, 2, 3];
+  const ignoredSkyCodes = [
+    0, 1, 2, 3
+  ];
 
-  if (ignoredSkyCodes.includes(weatherCode))
+  if (
+    ignoredSkyCodes.includes(
+      weatherCode
+    )
+  ) {
+
     return '';
+  }
 
-  // -----------------------------
   // FALLBACK
-  // -----------------------------
 
   return (
-    weatherCodeMap[weatherCode] ||
-    ''
+
+    weatherCodeMap[
+    weatherCode
+    ] || ''
+
   );
 };
 
 
 // -----------------------------
-// ALERTAS CLIMÁTICOS
+// ALERTAS
 // -----------------------------
 
 export const alertsMap = [
 
   {
     type: 'storm',
-    label: 'Trovoadas',
+
+    label:
+      '🌩️ Trovoadas',
+
+    periodLabel:
+      'Trovoadas',
+
     priority: 3,
+
     codes: [95]
   },
 
   {
     type: 'hail',
-    label: 'Granizo',
+
+    label:
+      '⚪ Granizo',
+
+    periodLabel:
+      'Granizo',
+
     priority: 5,
+
     codes: [96, 99]
   },
 
   {
     type: 'snow',
-    label: 'Neve',
+
+    label:
+      '🌨️ Neve',
+
+    periodLabel:
+      'Neve',
+
     priority: 4,
-    codes: [71, 73, 75, 77, 85, 86]
+
+    codes: [
+      71,
+      73,
+      75,
+      77,
+      85,
+      86
+    ]
   },
 
   {
     type: 'fog',
-    label: 'Neblina',
+
+    label:
+      '🌫️ Neblina',
+
+    periodLabel:
+      'Neblina',
+
     priority: 2,
+
     codes: [45, 48]
   }
 ];
-
 
 // -----------------------------
 // PROCESSAMENTO POR PERÍODO
 // -----------------------------
 
 export const periodData = (
+
   data,
   dayIndex,
+
   startHour,
   endHour
+
 ) => {
 
   const clouds = [];
+
   const rainProb = [];
+
   const gusts = [];
-  const rainAmount = [];
+
+  const rainValues = [];
+
+  const showersValues = [];
+
+  const snowValues = [];
+
   const codes = [];
 
   const targetDate =
     data.daily.time[dayIndex];
 
-  for (let i = 0; i < data.hourly.time.length; i++) {
+  for (
+    let i = 0;
+    i < data.hourly.time.length;
+    i++
+  ) {
 
     const time =
       data.hourly.time[i];
 
-    if (!time.startsWith(targetDate))
-      continue;
+    if (
+      !time.startsWith(
+        targetDate
+      )
+    ) continue;
 
     const hour =
-      new Date(time).getHours();
+      new Date(time)
+        .getHours();
 
-    if (hour < startHour || hour > endHour)
-      continue;
+    if (
+      hour < startHour ||
+      hour > endHour
+    ) continue;
 
     const low =
-      data.hourly.cloud_cover_low[i] || 0;
+      data.hourly
+        .cloud_cover_low[i] || 0;
 
     const mid =
-      data.hourly.cloud_cover_mid[i] || 0;
+      data.hourly
+        .cloud_cover_mid[i] || 0;
 
     const high =
-      data.hourly.cloud_cover_high[i] || 0;
+      data.hourly
+        .cloud_cover_high[i] || 0;
 
-    // normalização ponderada
+    // CLOUD NORMALIZATION
 
     const weightedCloud = (
 
@@ -360,29 +457,55 @@ export const periodData = (
 
     ) / 1.7;
 
-    clouds.push(weightedCloud);
+    clouds.push(
+      weightedCloud
+    );
 
     rainProb.push(
+
       data.hourly
         .precipitation_probability[i]
+
     );
 
     gusts.push(
+
       data.hourly
         .wind_gusts_10m[i]
+
     );
 
-    rainAmount.push(
+    rainValues.push(
+
       data.hourly
-        .precipitation[i]
+        .rain[i] || 0
+
+    );
+
+    showersValues.push(
+
+      data.hourly
+        .showers[i] || 0
+
+    );
+
+    snowValues.push(
+
+      data.hourly
+        .snowfall[i] || 0
+
     );
 
     codes.push(
+
       Number(
-        data.hourly.weather_code[i]
+        data.hourly
+          .weather_code[i]
       )
     );
   }
+
+  // CLOUDS
 
   const avgCloud =
 
@@ -393,19 +516,42 @@ export const periodData = (
 
     (clouds.length || 1);
 
-  const totalRain =
+  // RAIN
 
-    rainAmount.reduce(
+  const rain =
+
+    rainValues.reduce(
       (a, b) => a + b,
       0
     );
 
-  const alerts = alertsMap.filter(a =>
+  // SHOWERS
 
-    codes.some(c =>
-      a.codes.includes(c)
-    )
-  );
+  const showers =
+
+    showersValues.reduce(
+      (a, b) => a + b,
+      0
+    );
+
+  // SNOW
+
+  const snow =
+
+    snowValues.reduce(
+      (a, b) => a + b,
+      0
+    );
+
+  // ALERTAS
+
+  const alerts =
+    alertsMap.filter(a =>
+
+      codes.some(c =>
+        a.codes.includes(c)
+      )
+    );
 
   return {
 
@@ -416,13 +562,25 @@ export const periodData = (
       cloudType(avgCloud),
 
     rain:
-      Math.max(...rainProb, 0),
+      rain,
+
+    showers:
+      showers,
+
+    snow:
+      snow,
+
+    rainProb:
+      Math.max(
+        ...rainProb,
+        0
+      ),
 
     gust:
-      Math.max(...gusts, 0),
-
-    accumulation:
-      totalRain,
+      Math.max(
+        ...gusts,
+        0
+      ),
 
     alerts
   };

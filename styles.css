@@ -121,7 +121,6 @@ button:hover {
 }
 
 #forecastSection {
-    padding: 0px 12px;
     justify-items: center;
 }
 
@@ -144,16 +143,15 @@ main {
 /* ===== DIA ===== */
 
 .day {
-    padding: 20px;
+    padding: 20px 0;
     width: 100%;
-    border: 2px solid lightgrey;
     border-radius: 20px;
 }
 
 .day-row {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 22px;
+    gap: 30px;
     align-items: center;
 }
 
@@ -163,7 +161,9 @@ main {
     font-weight: bolder;
     text-align: center;
     border-radius: 6px;
+    background: black;
     padding: 10px 0;
+    color: white;
 }
 
 .date-line.weekend {
@@ -192,14 +192,9 @@ main {
 
 .row-full {
     width: 100%;
-
-    padding: 14px 16px;
-
     border-radius: 12px;
-
-    background-color: #fafafa;
-
     line-height: 1.5;
+    font-weight: 600;
 }
 
 /* ===== Skytext ===== */
@@ -340,6 +335,10 @@ main {
         width: 100%;
     }
 
+    .date-line {
+        border-radius: 0;
+    }
+
     .day {
         padding: 20px 0px;
         border: none;
@@ -350,6 +349,7 @@ main {
         justify-content: space-between;
         align-items: center;
         gap: 10px;
+        padding: 0 20px;
     }
 
     .row-full {
