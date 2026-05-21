@@ -228,11 +228,8 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
-
     width: 100%;
-
     margin-top: 35px;
-
     cursor: pointer;
 }
 
@@ -256,25 +253,62 @@ main {
 
 .div2.open {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
 }
 
+/* ===== PERIOD (NOVO MODELO COMPACTO) ===== */
+
 .period {
-    padding: 14px;
+    padding: 12px;
     text-align: center;
     border-radius: 12px;
     background-color: #fafafa;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.period div {
-    margin-bottom: 20px;
-}
-
+/* título */
 .period-title {
-    font-weight: bold;
-    margin-bottom: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
 }
+
+/* espaçamento interno limpo */
+.period div {
+    margin-bottom: 0;
+}
+
+/* ===== ÍCONES COM BORDA PRETA ===== */
+
+.period img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+/* ícone de nuvem maior */
+.period-cloud-icon img {
+    width: 70px;
+    height: 70px;
+}
+
+/* texto chuva/vento */
+.period-rain,
+.period-wind {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* alerta */
+.period-alert img {
+    width: 32px;
+    height: 32px;
+}
+
+/* ===== Cloud status antigo (mantido compatível) ===== */
 
 .cloud-status {
     display: flex;
@@ -316,9 +350,6 @@ main {
     }
 
     #titulo-site {
-        color: #ff6c02;
-        font-weight: bolder;
-        flex-grow: 1;
         font-size: 1rem;
     }
 
@@ -339,14 +370,9 @@ main {
         padding: 0 12px;
     }
 
-    .date-line {
-        color: black;
-        background-color: white;
-    }
 
     .day {
         padding: 20px 0px;
-        border: 2px solid lightgray;
     }
 
     .day-row {
