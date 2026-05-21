@@ -111,16 +111,16 @@ export const cloudType = v => {
 export const cloudLabels = {
 
   clear:
-    '☀️ Céu aberto em maior parte',
+    '☀️ Ensolarado',
 
   'few-clouds':
-    '🌤️ Poucas nuvens no geral',
+    '🌤️ Poucas nuvens',
 
   'partly-cloudy':
     '⛅ Parcialmente nublado',
 
   cloudy:
-    '🌥️ Muitas nuvens no geral',
+    '🌥️ Muitas nuvens',
 
   overcast:
     '☁️ Céu encoberto'

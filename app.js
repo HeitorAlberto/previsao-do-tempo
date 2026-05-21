@@ -19,13 +19,13 @@ document.addEventListener(
     const periods = [
 
       {
-        name: '0h - 6h',
+        name: '00h - 06h',
         start: 0,
         end: 5
       },
 
       {
-        name: '6h - 12h',
+        name: '06h - 12h',
         start: 6,
         end: 11
       },
@@ -91,7 +91,7 @@ document.addEventListener(
         '☀️ Predomínio de sol',
 
       'clear-few-clouds':
-        '🌤️ Sol com poucas nuvens',
+        '🌤️ Sol e poucas nuvens',
 
       'clear-partly-cloudy':
         '⛅ Sol entre nuvens',
@@ -104,7 +104,7 @@ document.addEventListener(
 
 
       'few-clouds-clear':
-        '🌤️ Poucas nuvens e aberturas de sol',
+        '🌤️ Poucas nuvens',
 
       'few-clouds-few-clouds':
         '🌤️ Poucas nuvens',
@@ -152,7 +152,7 @@ document.addEventListener(
 
 
       'overcast-clear':
-        '🌤️ Aberturas de sol ao longo do dia',
+        '🌤️ Sol aparece à tarde',
 
       'overcast-few-clouds':
         '🌥️ Nebulosidade diminuindo',
