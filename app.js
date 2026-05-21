@@ -4,7 +4,6 @@ import {
   fmtDate,
   periodData,
   addrText,
-  cloudLabels,
   buildDailyWeatherText
 } from './utils.js';
 
@@ -15,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     { name: '0h - 6h', start: 0, end: 5 },
     { name: '6h - 12h', start: 6, end: 11 },
     { name: '12h - 18h', start: 12, end: 17 },
-    { name: '12h - 24h', start: 18, end: 23 }
+    { name: '18h - 24h', start: 18, end: 23 }
   ];
 
   const el = {
@@ -27,6 +26,119 @@ document.addEventListener("DOMContentLoaded", () => {
     geo: document.getElementById('geoButton'),
     history: document.getElementById('history')
   };
+
+  // -----------------------------
+  // REGRAS DE SKYTEXT
+  // manhã + tarde
+  // -----------------------------
+
+  const skyRules = {
+
+    // CLEAR
+
+    'clear-clear':
+      '☀️ Predomínio de sol',
+
+    'clear-few-clouds':
+      '🌤️ Sol com poucas nuvens',
+
+    'clear-partly-cloudy':
+      '⛅ Sol entre nuvens',
+
+    'clear-cloudy':
+      '🌥️ Sol de manhã, nublado à tarde',
+
+    'clear-overcast':
+      '🌥️ Sol de manhã, encoberto à tarde',
+
+
+    // FEW CLOUDS
+
+    'few-clouds-clear':
+      '🌤️ Poucas nuvens',
+
+    'few-clouds-few-clouds':
+      '🌤️ Poucas nuvens',
+
+    'few-clouds-partly-cloudy':
+      '⛅ Sol entre nuvens',
+
+    'few-clouds-cloudy':
+      '🌥️ Nublado à tarde',
+
+    'few-clouds-overcast':
+      '☁️ Encoberto à tarde',
+
+
+    // PARTLY CLOUDY
+
+    'partly-cloudy-clear':
+      '🌤️ Paricialmente nublado, depois limpo',
+
+    'partly-cloudy-few-clouds':
+      '🌤️ Sol e algumas nuvens',
+
+    'partly-cloudy-partly-cloudy':
+      '⛅ Parcialmente nublado',
+
+    'partly-cloudy-cloudy':
+      '⛅ Muitas nuvens',
+
+    'partly-cloudy-overcast':
+      '🌥️ Encoberto à tarde',
+
+
+    // CLOUDY
+
+    'cloudy-clear':
+      '⛅ Manhã nublada, tarde limpa',
+
+    'cloudy-few-clouds':
+      '⛅ Nublado pela manhã',
+
+    'cloudy-partly-cloudy':
+      '🌥️ Nublado pela manhã',
+
+    'cloudy-cloudy':
+      '🌥️ Nublado',
+
+    'cloudy-overcast':
+      '☁️ Céu bastante nublado',
+
+
+    // OVERCAST
+
+    'overcast-clear':
+      '🌥️ Aberturas de sol ao longo do dia',
+
+    'overcast-few-clouds':
+      '🌥️ Nebulosidade diminuindo',
+
+    'overcast-partly-cloudy':
+      '🌥️ Céu variando entre muitas nuvens',
+
+    'overcast-cloudy':
+      '☁️ Céu nublado',
+
+    'overcast-overcast':
+      '☁️ Céu encoberto'
+  };
+
+  function buildSkyText({
+
+    morningSky,
+    afternoonSky
+
+  }) {
+
+    const key =
+      `${morningSky}-${afternoonSky}`;
+
+    return (
+      skyRules[key] ||
+      'Variação de nebulosidade'
+    );
+  }
 
   // -----------------------------
   // HISTÓRICO
@@ -122,9 +234,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const dailyAlerts = [];
 
-      const skyCounter = {};
+      let morningSky = null;
+      let afternoonSky = null;
 
-      periods.forEach(p => {
+      periods.forEach((p, idx) => {
 
         const info =
           periodData(
@@ -138,8 +251,15 @@ document.addEventListener("DOMContentLoaded", () => {
           dailyAlerts.push(a)
         );
 
-        skyCounter[info.cloudType] =
-          (skyCounter[info.cloudType] || 0) + 1;
+        // manhã
+        if (idx === 1) {
+          morningSky = info.cloudType;
+        }
+
+        // tarde
+        if (idx === 2) {
+          afternoonSky = info.cloudType;
+        }
 
         details.innerHTML += `
           <div class="period">
@@ -174,6 +294,10 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       });
 
+      // -----------------------------
+      // ALERTA PRINCIPAL
+      // -----------------------------
+
       let dailyAlert = null;
 
       if (dailyAlerts.length) {
@@ -185,17 +309,19 @@ document.addEventListener("DOMContentLoaded", () => {
             )[0];
       }
 
-      const dominantSky =
-        Object.entries(skyCounter)
-          .sort((a, b) =>
-            b[1] - a[1]
-          )[0]?.[0];
+      // -----------------------------
+      // SKYTEXT
+      // -----------------------------
 
-      const skyText =
-        cloudLabels[dominantSky] || '';
+      const skyTextDay =
+        buildSkyText({
+
+          morningSky,
+          afternoonSky
+        });
 
       // -----------------------------
-      // RESUMO METEOROLÓGICO
+      // TEXTO METEOROLÓGICO
       // -----------------------------
 
       const weatherText =
@@ -257,28 +383,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
           </div>
 
-          <div class="row-data">
+          <div class="row-full">
 
-            <span
-              class="data-values"
-              style="text-align: left;"
-            >
-              ${skyText}
-            </span>
+            <div class="sky-block">
+              ${skyTextDay}
+            </div>
 
           </div>
 
-          <div class="row-data">
-
-            <span
-              class="data-values"
-              style="text-align: left;"
-            >
+          ${weatherText ? `
+            <div class="row-full" style="font-weight: 600">
               ${weatherText}
-            </span>
-
-          </div>
-
+            </div>
+          ` : ''}
 
         </div>
       `;
