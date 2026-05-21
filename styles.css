@@ -335,13 +335,18 @@ main {
         width: 100%;
     }
 
+    #cards {
+        padding: 0 12px;
+    }
+
     .date-line {
-        border-radius: 0;
+        color: black;
+        background-color: white;
     }
 
     .day {
         padding: 20px 0px;
-        border: none;
+        border: 2px solid lightgray;
     }
 
     .row-data {
@@ -362,6 +367,7 @@ main {
 
     .div2.open {
         grid-template-columns: 1fr;
+        padding: 0 12px;
     }
 
     .period {
