@@ -51,44 +51,24 @@ export const cloudIndex = (low, mid, high) => {
 export const alertsMap = [
   {
     type: 'storm',
-    label: 'Trovoadas',
+    label: '🌩️ Trovoadas',
     priority: 3,
     codes: [95],
-    icon: 'trovoadas.webp'
   },
   {
     type: 'hail',
-    label: 'Granizo',
+    label: '⚪ Granizo',
     priority: 5,
     codes: [96, 99],
-    icon: 'granizo.webp'
-  },
-  {
-    type: 'snow',
-    label: 'Neve',
-    priority: 4,
-    codes: [71, 73, 75, 77, 85, 86],
-    icon: 'neve.webp'
   },
   {
     type: 'fog',
-    label: 'Neblina',
+    label: '🌫️ Neblina',
     priority: 2,
     codes: [45, 48],
-    icon: 'neblina.webp'
   }
 ];
 
-export const rainIntensityLabel = (mm) => {
-
-  if (mm < 0.5) return 'Sem chuva';
-  if (mm < 3) return 'Chuva muito leve';
-  if (mm < 8) return 'Chuva leve';
-  if (mm < 20) return 'Chuva moderada';
-  if (mm < 40) return 'Chuva forte';
-
-  return 'Chuva extrema';
-};
 
 // -----------------------------
 // PERÍODO (SÓ TROCA CÁLCULO DE NUVEM)

@@ -155,6 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             ` : ''}
 
+            ${info.alerts.map(a => `
+              <div class="period-alert">
+                <span>${a.label}</span>
+              </div>
+            `).join('')}
+
           </div>
         `;
       });
@@ -162,6 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // -----------------------------
       // CARD DIÁRIO
       // -----------------------------
+
+      const periodAlerts = periods.flatMap(p =>
+        periodData(data, i, p.start, p.end).alerts
+      );
+
+      const topAlert =
+        periodAlerts.sort((a, b) => b.priority - a.priority)[0];
 
       div.innerHTML = `
         <div class="day-row">
@@ -191,6 +204,12 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="label-data">🍃 Rajadas de vento máx</span>
             <span class="data-values">${wind.toFixed(0)} km/h</span>
           </div>
+
+          ${topAlert ? `
+            <div class="day-alert">
+              <span>${topAlert.label}</span>
+            </div>
+          ` : ''}
 
         </div>
       `;
