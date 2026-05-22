@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const load = async (lat, lon, placeName = '') => {
 
-    el.name.innerHTML = '📍 Carregando...';
+    el.name.innerHTML = '🔍 Carregando localização...';
 
     const f = await forecast(lat, lon);
     render(f);
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const name = addrText(rev.address) || placeName;
 
-    el.name.innerHTML = `📍 ${name}`;
+    el.name.innerHTML = `📌 ${name}`;
 
     saveHistory({ lat, lon, name });
   };

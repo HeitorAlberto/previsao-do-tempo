@@ -6,14 +6,14 @@ export const search = (q) =>
   fetchJSON(
     `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(q)}&limit=1`
   ).then(data => {
-    if (!data[0]) throw new Error('Local não encontrado');
+    if (!data[0]) throw new Error('📌 Local não encontrado');
 
     const place = data[0];
 
     return {
       lat: Number(place.lat),
       lon: Number(place.lon),
-      name: place.display_name || 'Local desconhecido'
+      name: place.display_name || '📌 Local desconhecido'
     };
   });
 
