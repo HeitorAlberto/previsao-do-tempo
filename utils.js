@@ -32,6 +32,63 @@ export const cloudType = (v) => {
   return 'overcast';
 };
 
+
+export const cloudDescription = (
+  morningCloud,
+  afternoonCloud
+) => {
+
+  const combo =
+    `${morningCloud}-${afternoonCloud}`;
+
+  const texts = {
+
+    // -----------------------------
+    // LIMPO
+    // -----------------------------
+
+    'clear-clear':
+      '🌤️ Poucas nuvens em geral.',
+
+    'clear-clouds':
+      '⛅ Mais nuvens à tarde.',
+
+    'clear-overcast':
+      '🌥️ Tarde nublada.',
+
+    // -----------------------------
+    // PARCIALMENTE NUBLADO
+    // -----------------------------
+
+    'clouds-clear':
+      '⛅ Poucas nuvens à tarde.',
+
+    'clouds-clouds':
+      '⛅ Parcialmente nublado.',
+
+    'clouds-overcast':
+      '🌥️ Muita nebulosidade.',
+
+    // -----------------------------
+    // ENCOBERTO
+    // -----------------------------
+
+    'overcast-clear':
+      '⛅ Sol aparece à tarde.',
+
+    'overcast-clouds':
+      '🌥️ Encoberto, depois variável.',
+
+    'overcast-overcast':
+      '☁️ Céu encoberto.'
+  };
+
+  return (
+    texts[combo] ||
+    '🌤️ Nebulosidade variável'
+  );
+};
+
 // índice correto por hora (NOVO, sem quebrar nada existente)
 export const cloudIndex = (low, mid, high) => {
   const base = Math.max(low, mid);
