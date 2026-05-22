@@ -1,0 +1,57 @@
+name: Mapas ECMWF
+
+on:
+  schedule:
+    # 07:00 no Brasil (BRT = UTC-3) → 10:00 UTC
+    - cron: "0 10 * * *"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  gerar-mapas:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências do sistema
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libeccodes-dev
+
+      - name: Instalar dependências Python
+        run: |
+          pip install --upgrade pip
+          pip install \
+            ecmwf-opendata \
+            cfgrib \
+            cartopy \
+            xarray \
+            scipy \
+            pillow \
+            matplotlib \
+            pandas \
+            numpy
+
+      - name: Rodar script de previsão
+        run: python mapas.py
+
+      - name: Commit mapas gerados
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add mapas/*.webp
+
+          git commit -m "Atualização automática dos mapas" || echo "Sem mudanças"
+
+          git push
