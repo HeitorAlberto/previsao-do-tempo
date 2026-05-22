@@ -137,7 +137,6 @@ main {
     width: 100%;
     max-width: 700px;
     margin: 0 auto;
-    gap: 30px;
 }
 
 /* ===== DIA ===== */
@@ -248,13 +247,12 @@ main {
 .div2 {
     display: none;
     margin-top: 20px;
-    padding-top: 20px;
 }
 
 .div2.open {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    gap: 2px;
 }
 
 /* ===== PERIOD (NOVO MODELO COMPACTO) ===== */
