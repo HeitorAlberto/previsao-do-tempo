@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             ${info.alerts.map(a => `
               <div class="period-alert">
-                <span>${a.label}</span>
+                <span>${a.icon}</span>
               </div>
             `).join('')}
 

@@ -51,19 +51,22 @@ export const cloudIndex = (low, mid, high) => {
 export const alertsMap = [
   {
     type: 'storm',
-    label: '🌩️ Trovoadas',
+    label: '⚡ Trovoadas',
+    icon: '⚡',
     priority: 3,
     codes: [95],
   },
   {
     type: 'hail',
     label: '⚪ Granizo',
+    icon: '⚪',
     priority: 5,
     codes: [96, 99],
   },
   {
     type: 'fog',
     label: '🌫️ Neblina',
+    icon: '🌫️',
     priority: 2,
     codes: [45, 48],
   }
