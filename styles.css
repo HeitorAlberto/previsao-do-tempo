@@ -263,8 +263,7 @@ main {
     padding: 12px;
     text-align: center;
     border-radius: 12px;
-    background-color: #fafafa;
-
+    background-color: #dadada;
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -297,16 +296,17 @@ main {
 
 /* texto chuva/vento */
 .period-rain,
-.period-wind {
+.period-wind, .period-snow {
     font-size: 0.9rem;
     font-weight: 600;
 }
 
-/* alerta */
-.period-alert img {
-    width: 32px;
-    height: 32px;
+.period-rain img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
 }
+
 
 /* ===== Cloud status antigo (mantido compatível) ===== */
 

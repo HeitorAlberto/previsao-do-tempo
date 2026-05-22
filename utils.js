@@ -21,12 +21,32 @@ export const addrText = (a) => {
     .join(', ');
 };
 
+// -----------------------------
+// CORREÇÃO REAL (SUBSTITUI SÓ A LÓGICA ANTIGA)
+// -----------------------------
+
 export const cloudType = (v) => {
 
-  if (v <= 33) return 'clear';
-  if (v <= 66) return 'clouds';
+  if (v <= 30) return 'clear';
+  if (v <= 80) return 'clouds';
   return 'overcast';
 };
+
+// índice correto por hora (NOVO, sem quebrar nada existente)
+export const cloudIndex = (low, mid, high) => {
+  const base = Math.max(low, mid);
+
+  // nuvem alta só influencia céu aberto
+  if (base < 30) {
+    return Math.max(base, high * 0.4);
+  }
+
+  return base;
+};
+
+// -----------------------------
+// ALERTAS (INALTERADO)
+// -----------------------------
 
 export const alertsMap = [
   {
@@ -70,6 +90,10 @@ export const rainIntensityLabel = (mm) => {
   return 'Chuva extrema';
 };
 
+// -----------------------------
+// PERÍODO (SÓ TROCA CÁLCULO DE NUVEM)
+// -----------------------------
+
 export const periodData = (data, dayIndex, startHour, endHour) => {
 
   const clouds = [];
@@ -93,7 +117,8 @@ export const periodData = (data, dayIndex, startHour, endHour) => {
     const mid = data.hourly.cloud_cover_mid[i] || 0;
     const high = data.hourly.cloud_cover_high[i] || 0;
 
-    const cloud = (low + mid * 0.6 + high * 0.1) / 1.7;
+    // 🔧 CORREÇÃO ÚNICA
+    const cloud = cloudIndex(low, mid, high);
     clouds.push(cloud);
 
     rainProb.push(data.hourly.precipitation_probability[i] || 0);

@@ -96,13 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const weekend = day === 0 || day === 6;
 
       const rainLabelDay =
-      totalRain > 50 ? 'Chuva extrema!':
-        totalRain >= 20 ? 'Chuva forte!' :
-          totalRain >= 10 ? 'Chuva moderada!' :
-          totalRain >=5 ? 'Chuva leve':
-            totalRain >= 0.5 ? 'Chuva leve e isolada' : 'Sem precipitação';
-  
-                
+        totalRain > 50 ? 'Chuva extrema ⚠️' :
+          totalRain >= 20 ? 'Chuva forte ⚠️' :
+            totalRain >= 10 ? 'Chuva moderada!' :
+              totalRain >= 5 ? 'Chuva leve' :
+                totalRain >= 0.5 ? 'Chuva leve e isolada' :
+                  'Sem precipitação';
 
       const div = document.createElement('div');
       div.className = 'day';
@@ -110,12 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const details = document.createElement('div');
       details.className = 'div2';
 
-      // começa fechado respeitando CSS
       details.classList.remove('open');
-
-      // -----------------------------
-      // BOTÃO EXPANDIR
-      // -----------------------------
 
       const btn = document.createElement('div');
       btn.className = 'details-btn';
@@ -128,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       // -----------------------------
-      // PERÍODOS (ORDEM ORIGINAL PRESERVADA)
+      // PERÍODOS
       // -----------------------------
 
       periods.forEach((p) => {
@@ -148,16 +142,16 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <div class="period-rain">
-              ${info.rain.toFixed(1)} mm (${info.rainProb}%)
+              💧 ${info.rain.toFixed(1)} mm (${info.rainProb}%)
             </div>
 
             <div class="period-wind">
-              ${info.gust.toFixed(0)} km/h
+              🍃 ${info.gust.toFixed(0)} km/h
             </div>
 
             ${info.snow > 0 ? `
               <div class="period-snow">
-                ❄ ${info.snow.toFixed(1)} cm
+                ❄️ ${info.snow.toFixed(1)} cm
               </div>
             ` : ''}
 
@@ -177,24 +171,24 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <div class="row-data">
-            <span class="label-data">Temperatura</span>
+            <span class="label-data">🌡️ Temperatura</span>
             <span class="data-values">${min.toFixed(0)}° a ${max.toFixed(0)}°</span>
           </div>
 
           <div class="row-data">
-            <span class="label-data">${rainLabelDay}</span>
+            <span class="label-data">💧 ${rainLabelDay}</span>
             <span class="data-values">${totalRain.toFixed(1)} mm (${prob}%)</span>
           </div>
 
           ${totalSnow > 0 ? `
             <div class="row-data">
-              <span class="label-data">Neve</span>
-              <span class="data-values">❄ ${totalSnow.toFixed(1)} cm</span>
+              <span class="label-data">❄️ Neve</span>
+              <span class="data-values"> ${totalSnow.toFixed(1)} cm</span>
             </div>
           ` : ''}
 
           <div class="row-data">
-            <span class="label-data">Rajadas de vento máx</span>
+            <span class="label-data">🍃 Rajadas de vento máx</span>
             <span class="data-values">${wind.toFixed(0)} km/h</span>
           </div>
 

@@ -1,21 +1,12 @@
-const OPEN_METEO_API =
-  'https://api.open-meteo.com/v1/forecast';
+const OPEN_METEO_API = 'https://api.open-meteo.com/v1/forecast';
 
-const fetchJSON = async (url) =>
-  (await fetch(url)).json();
-
-// -----------------------------
-// BUSCA CIDADE
-// -----------------------------
+const fetchJSON = async (url) => (await fetch(url)).json();
 
 export const search = (q) =>
   fetchJSON(
     `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(q)}&limit=1`
   ).then(data => {
-
-    if (!data[0]) {
-      throw new Error('Local não encontrado');
-    }
+    if (!data[0]) throw new Error('Local não encontrado');
 
     const place = data[0];
 
@@ -26,12 +17,7 @@ export const search = (q) =>
     };
   });
 
-// -----------------------------
-// PREVISÃO
-// -----------------------------
-
 export const forecast = (lat, lon) => {
-
   const url = new URL(OPEN_METEO_API);
 
   url.searchParams.set('latitude', lat);
