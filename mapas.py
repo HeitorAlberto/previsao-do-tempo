@@ -2,6 +2,7 @@
 
 import os
 import glob
+import zipfile
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -16,50 +17,31 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
 from ecmwf.opendata import Client
+
 from PIL import Image
 
+from google.colab import files
+
 
 # ============================================================
-# DIRETÓRIOS
+# CONFIGURAÇÕES
 # ============================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-OUTPUT_DIR = os.path.join(BASE_DIR, "mapas")
-DATA_DIR = os.path.join(BASE_DIR, "dados_ecmwf")
+OUTPUT_DIR = "mapas_chuva_brasil"
+DATA_DIR = "dados_ecmwf"
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(DATA_DIR, exist_ok=True)
 
-
-# ============================================================
-# LIMPEZA TOTAL (SEM HISTÓRICO)
-# ============================================================
-
-def clean_all():
-    for f in glob.glob(os.path.join(OUTPUT_DIR, "*")):
-        os.remove(f)
-
-    for f in glob.glob(os.path.join(DATA_DIR, "*")):
-        os.remove(f)
-
-
-clean_all()
-
-
-# ============================================================
-# CONFIG
-# ============================================================
-
 RUN_HOUR = 0
-DPI = 180
+DPI = 220
 
 SIGMA_SMOOTH = 0.45
 UPSCALE_FACTOR = 2
 
 
 # ============================================================
-# DATA
+# DATA UTC
 # ============================================================
 
 utc_now = pd.Timestamp.utcnow()
@@ -103,16 +85,20 @@ capitais = {
 
 
 # ============================================================
-# CORES
+# ESCALA DE CORES
 # ============================================================
 
-levels = [0, 1, 2, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 400]
+levels = [
+    0, 1, 2, 5, 10, 15, 20, 30, 40, 50,
+    75, 100, 125, 150, 200, 250, 300, 400
+]
 
 colors = [
-    "#ffffff", "#cfefff", "#8fd3ff", "#4fb3ff", "#1f8fff",
-    "#00c46a", "#b6ff00", "#fff200", "#ffb300", "#ff6a00",
-    "#ff2d2d", "#b30000", "#ff66cc", "#a64dff",
-    "#5a189a", "#240046"
+    "#ffffff", "#d9d9d9", "#a1ffcb", "#56c588",
+    "#96daff", "#05a2f6", "#fcffaa", "#fbff0a",
+    "#ffc282", "#f98f1d", "#ff3737", "#971010",
+    "#eecfb1", "#9c795c", "#5c3d28", "#d4aaff",
+    "#9333ea"
 ]
 
 cmap = mcolors.ListedColormap(colors)
@@ -120,44 +106,76 @@ norm = mcolors.BoundaryNorm(levels, cmap.N)
 
 
 # ============================================================
-# DOWNLOAD
+# ARQUIVO GRIB2
 # ============================================================
 
-grib_file = os.path.join(DATA_DIR, f"ecmwf_tp_{run_date_str}.grib2")
-
-client = Client(
-    source="azure",
-    model="ifs",
-    resol="0p25"
-)
-
-client.retrieve(
-    date=run_date.strftime("%Y-%m-%d"),
-    time=RUN_HOUR,
-    stream="oper",
-    type="fc",
-    step=[24, 48, 72, 96, 120],
-    param=["tp"],
-    target=grib_file
+grib_file = os.path.join(
+    DATA_DIR,
+    f"ecmwf_tp_00z_{run_date_str}.grib2"
 )
 
 
 # ============================================================
-# DADOS
+# DOWNLOAD (SEM TXT, SÓ GRIB COMO CONTROLE)
+# ============================================================
+
+download_grib = True
+
+if os.path.exists(grib_file):
+    print("GRIB já existe no disco. Pulando download.")
+    download_grib = False
+
+if download_grib:
+
+    print("Baixando rodada ECMWF 00Z...")
+
+    client = Client(
+        source="azure",
+        model="ifs",
+        resol="0p25"
+    )
+
+    client.retrieve(
+        date=run_date.strftime("%Y-%m-%d"),
+        time=RUN_HOUR,
+        stream="oper",
+        type="fc",
+        step=[24, 48, 72, 96, 120],
+        param=["tp"],
+        target=grib_file
+    )
+
+    print("Download concluído.")
+
+
+# ============================================================
+# ABRIR DADOS
 # ============================================================
 
 ds = xr.open_dataset(grib_file, engine="cfgrib")
 tp = ds["tp"] * 1000.0
 
+
+# ============================================================
+# LONGITUDE
+# ============================================================
+
 lon = tp.longitude.values
 lon = np.where(lon > 180, lon - 360, lon)
 
-tp = tp.assign_coords(longitude=lon).sortby("longitude")
+tp = tp.assign_coords(longitude=lon)
+tp = tp.sortby("longitude")
+
+
+# ============================================================
+# RECORTE BRASIL
+# ============================================================
+
 tp = tp.sel(latitude=slice(10, -35), longitude=slice(-75, -30))
 
 
 # ============================================================
-# SMOOTH
+# INTERPOLAÇÃO SUAVE
 # ============================================================
 
 def smooth_data(data):
@@ -187,7 +205,7 @@ def smooth_data(data):
 
 
 # ============================================================
-# PLOT
+# FUNÇÃO MAPA
 # ============================================================
 
 def plot_map(data, title, filename):
@@ -199,8 +217,8 @@ def plot_map(data, title, filename):
 
     ax.set_extent([-75, -30, -35, 8])
 
-    ax.add_feature(cfeature.COASTLINE, linewidth=0.4)
-    ax.add_feature(cfeature.BORDERS, linewidth=0.3)
+    ax.add_feature(cfeature.BORDERS, linewidth=0.5)
+    ax.add_feature(cfeature.COASTLINE, linewidth=0.6)
 
     im = ax.contourf(
         lon_new,
@@ -220,38 +238,37 @@ def plot_map(data, title, filename):
             ax.text(
                 x, y,
                 f"{valor:.0f}",
-                fontsize=4,
+                fontsize=5,
                 ha="center",
                 va="center",
                 transform=ccrs.PlateCarree(),
-                bbox=dict(facecolor="white", alpha=0.3, pad=0.1, linewidth=0)
+                bbox=dict(facecolor="white", alpha=0.65, pad=0.15, linewidth=0)
             )
         except:
             pass
 
-    plt.title(title, fontsize=12)
+    plt.title(title, fontsize=14, weight="bold")
 
-    cbar = plt.colorbar(im, ax=ax, shrink=0.8)
-    cbar.set_label("Chuva (mm)", fontsize=9)
+    cbar = plt.colorbar(im, ax=ax, shrink=0.82)
+    cbar.set_label("Chuva acumulada (mm)", fontsize=10)
 
-    png_path = os.path.join(OUTPUT_DIR, filename + ".png")
+    temp_png = os.path.join(OUTPUT_DIR, "temp.png")
 
-    plt.savefig(png_path, dpi=DPI, bbox_inches="tight", pad_inches=0.02)
+    plt.savefig(temp_png, dpi=DPI, bbox_inches="tight")
     plt.close()
 
-    img = Image.open(png_path).convert("RGB")
+    webp_path = os.path.join(OUTPUT_DIR, filename)
 
-    webp_path = os.path.join(OUTPUT_DIR, filename + ".webp")
+    img = Image.open(temp_png)
+    img.save(webp_path, "WEBP", quality=82, method=6)
 
-    img.save(webp_path, "WEBP", quality=85, method=6)
-
-    os.remove(png_path)
+    os.remove(temp_png)
 
     print("Salvo:", filename)
 
 
 # ============================================================
-# MAPAS
+# MAPAS 24H
 # ============================================================
 
 prev = xr.zeros_like(tp.isel(step=0))
@@ -262,12 +279,21 @@ for i in range(5):
     chuva_24h = atual - prev
     prev = atual
 
-    plot_map(chuva_24h, f"ECMWF 24h Dia {i+1}", f"chuva_24h_dia_{i+1}")
+    titulo = f"ECMWF 24h Dia {i+1}\n{run_date:%d/%m/%Y}"
 
+    plot_map(chuva_24h, titulo, f"chuva_24h_dia_{i+1}.webp")
+
+
+# ============================================================
+# MAPA TOTAL
+# ============================================================
 
 total_5d = tp.isel(step=-1)
 
-plot_map(total_5d, "ECMWF Total 5 dias", "chuva_total_5dias")
-
+plot_map(
+    total_5d,
+    f"ECMWF Total 5 dias\n{run_date:%d/%m/%Y}",
+    "chuva_total_5dias.webp"
+)
 
 print("OK")
