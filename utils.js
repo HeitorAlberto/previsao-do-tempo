@@ -1,7 +1,3 @@
-// -----------------------------
-// DATA
-// -----------------------------
-
 export const fmtDate = (d) => {
 
   const dt = new Date(d + 'T00:00:00');
@@ -12,10 +8,6 @@ export const fmtDate = (d) => {
     day: dt.getDay()
   };
 };
-
-// -----------------------------
-// ENDEREÇO
-// -----------------------------
 
 export const addrText = (a) => {
 
@@ -29,20 +21,12 @@ export const addrText = (a) => {
     .join(', ');
 };
 
-// -----------------------------
-// CLOUD TYPE
-// -----------------------------
-
 export const cloudType = (v) => {
 
   if (v <= 33) return 'clear';
   if (v <= 66) return 'clouds';
   return 'overcast';
 };
-
-// -----------------------------
-// ALERTAS
-// -----------------------------
 
 export const alertsMap = [
   {
@@ -75,32 +59,23 @@ export const alertsMap = [
   }
 ];
 
-// -----------------------------
-// CHUVA (somente dia)
-// -----------------------------
-
 export const rainIntensityLabel = (mm) => {
 
   if (mm < 0.5) return 'Sem chuva';
-  if (mm < 3) return 'Chuviscos';
-  if (mm < 8) return 'Chuva fraca';
+  if (mm < 3) return 'Chuva muito leve';
+  if (mm < 8) return 'Chuva leve';
   if (mm < 20) return 'Chuva moderada';
   if (mm < 40) return 'Chuva forte';
 
   return 'Chuva extrema';
 };
 
-// -----------------------------
-// PERIOD DATA
-// -----------------------------
-
 export const periodData = (data, dayIndex, startHour, endHour) => {
 
   const clouds = [];
   const rainProb = [];
   const gusts = [];
-  const rainValues = [];
-  const showersValues = [];
+  const precipValues = [];
   const snowValues = [];
   const codes = [];
 
@@ -118,16 +93,15 @@ export const periodData = (data, dayIndex, startHour, endHour) => {
     const mid = data.hourly.cloud_cover_mid[i] || 0;
     const high = data.hourly.cloud_cover_high[i] || 0;
 
-    const cloud =
-      (low + mid * 0.6 + high * 0.1) / 1.7;
-
+    const cloud = (low + mid * 0.6 + high * 0.1) / 1.7;
     clouds.push(cloud);
 
     rainProb.push(data.hourly.precipitation_probability[i] || 0);
     gusts.push(data.hourly.wind_gusts_10m[i] || 0);
-    rainValues.push(data.hourly.rain[i] || 0);
-    showersValues.push(data.hourly.showers[i] || 0);
+
+    precipValues.push(data.hourly.precipitation[i] || 0);
     snowValues.push(data.hourly.snowfall[i] || 0);
+
     codes.push(Number(data.hourly.weather_code[i]));
   }
 
@@ -136,9 +110,13 @@ export const periodData = (data, dayIndex, startHour, endHour) => {
 
   return {
     cloudType: cloudType(avgCloud),
-    rain: rainValues.reduce((a, b) => a + b, 0),
+
+    rain: precipValues.reduce((a, b) => a + b, 0),
+    snow: snowValues.reduce((a, b) => a + b, 0),
+
     rainProb: Math.max(...rainProb, 0),
     gust: Math.max(...gusts, 0),
+
     alerts: alertsMap.filter(a =>
       codes.some(c => a.codes.includes(c))
     )

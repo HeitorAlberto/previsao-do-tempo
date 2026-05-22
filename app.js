@@ -3,8 +3,7 @@ import { search, forecast } from './api.js';
 import {
   fmtDate,
   periodData,
-  addrText,
-  rainIntensityLabel
+  addrText
 } from './utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -21,22 +20,15 @@ document.addEventListener('DOMContentLoaded', () => {
     form: document.getElementById('searchForm'),
     name: document.getElementById('locationName'),
     cards: document.getElementById('cards'),
-    date: document.getElementById('todayDate'),
     geo: document.getElementById('geoButton'),
     history: document.getElementById('history')
   };
 
-  // -----------------------------
-  // ICON MAP (AGORA COMPLETO)
-  // -----------------------------
-
   const iconMap = {
     clear_day: 'sol.webp',
     clear_night: 'lua.webp',
-
     clouds_day: 'sol-nuvens.webp',
     clouds_night: 'lua-nuvens.webp',
-
     overcast_day: 'nublado.webp',
     overcast_night: 'nublado.webp'
   };
@@ -48,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // -----------------------------
 
   const saveHistory = (place) => {
-
     let history = JSON.parse(localStorage.getItem('weatherHistory') || '[]');
 
     history = history.filter(h => h.name !== place.name);
@@ -56,12 +47,10 @@ document.addEventListener('DOMContentLoaded', () => {
     history = history.slice(0, 3);
 
     localStorage.setItem('weatherHistory', JSON.stringify(history));
-
     renderHistory();
   };
 
   const renderHistory = () => {
-
     if (!el.history) return;
 
     const history = JSON.parse(localStorage.getItem('weatherHistory') || '[]');
@@ -69,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
     el.history.innerHTML = '';
 
     history.forEach(item => {
-
       const btn = document.createElement('button');
       btn.className = 'history-btn';
       btn.textContent = item.name;
@@ -90,23 +78,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     el.cards.innerHTML = '';
 
+    const daily = data.daily || {};
+
     data.daily.time.forEach((d, i) => {
 
       const { date, weekday, day } = fmtDate(d);
 
-      const min = data.daily.temperature_2m_min[i];
-      const max = data.daily.temperature_2m_max[i];
+      const min = daily.temperature_2m_min?.[i] ?? 0;
+      const max = daily.temperature_2m_max?.[i] ?? 0;
 
-      const rain = data.daily.rain_sum[i];
-      const showers = data.daily.showers_sum[i];
-      const totalRain = rain + showers;
+      const totalRain = daily.precipitation_sum?.[i] ?? 0;
+      const totalSnow = daily.snowfall_sum?.[i] ?? 0;
 
-      const prob = data.daily.precipitation_probability_max[i];
-      const wind = data.daily.wind_gusts_10m_max[i];
+      const prob = daily.precipitation_probability_max?.[i] ?? 0;
+      const wind = daily.wind_gusts_10m_max?.[i] ?? 0;
 
       const weekend = day === 0 || day === 6;
 
-      const rainLabelDay = rainIntensityLabel(totalRain);
+      const rainLabelDay =
+      totalRain > 50 ? 'Chuva extrema!':
+        totalRain >= 20 ? 'Chuva forte!' :
+          totalRain >= 10 ? 'Chuva moderada!' :
+          totalRain >=5 ? 'Chuva leve':
+            totalRain >= 0.5 ? 'Chuva leve e isolada' : 'Sem precipitação';
+  
+                
 
       const div = document.createElement('div');
       div.className = 'day';
@@ -114,16 +110,32 @@ document.addEventListener('DOMContentLoaded', () => {
       const details = document.createElement('div');
       details.className = 'div2';
 
-      const dailyAlerts = [];
+      // começa fechado respeitando CSS
+      details.classList.remove('open');
+
+      // -----------------------------
+      // BOTÃO EXPANDIR
+      // -----------------------------
+
+      const btn = document.createElement('div');
+      btn.className = 'details-btn';
+
+      btn.innerHTML = `<img src="icons/arrow.svg" class="accordion-icon" />`;
+
+      btn.addEventListener('click', () => {
+        const isOpen = details.classList.toggle('open');
+        btn.classList.toggle('active', isOpen);
+      });
+
+      // -----------------------------
+      // PERÍODOS (ORDEM ORIGINAL PRESERVADA)
+      // -----------------------------
 
       periods.forEach((p) => {
 
         const info = periodData(data, i, p.start, p.end);
 
-        dailyAlerts.push(...info.alerts);
-
         const night = isNight(p.start);
-
         const iconKey = `${info.cloudType}_${night ? 'night' : 'day'}`;
 
         details.innerHTML += `
@@ -143,15 +155,19 @@ document.addEventListener('DOMContentLoaded', () => {
               ${info.gust.toFixed(0)} km/h
             </div>
 
+            ${info.snow > 0 ? `
+              <div class="period-snow">
+                ❄ ${info.snow.toFixed(1)} cm
+              </div>
+            ` : ''}
+
           </div>
         `;
       });
 
-      let mainAlert = null;
-
-      if (dailyAlerts.length) {
-        mainAlert = dailyAlerts.sort((a, b) => b.priority - a.priority)[0];
-      }
+      // -----------------------------
+      // CARD DIÁRIO
+      // -----------------------------
 
       div.innerHTML = `
         <div class="day-row">
@@ -170,25 +186,20 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="data-values">${totalRain.toFixed(1)} mm (${prob}%)</span>
           </div>
 
+          ${totalSnow > 0 ? `
+            <div class="row-data">
+              <span class="label-data">Neve</span>
+              <span class="data-values">❄ ${totalSnow.toFixed(1)} cm</span>
+            </div>
+          ` : ''}
+
           <div class="row-data">
             <span class="label-data">Rajadas de vento máx</span>
             <span class="data-values">${wind.toFixed(0)} km/h</span>
           </div>
 
-          ${mainAlert ? `<div class="row-full">${mainAlert.label}</div>` : ''}
-
         </div>
       `;
-
-      const btn = document.createElement('div');
-      btn.className = 'details-btn';
-
-      btn.innerHTML = `<img src="icons/arrow.svg" class="accordion-icon" />`;
-
-      btn.addEventListener('click', () => {
-        details.classList.toggle('open');
-        btn.classList.toggle('active');
-      });
 
       div.appendChild(btn);
       div.appendChild(details);
@@ -203,37 +214,23 @@ document.addEventListener('DOMContentLoaded', () => {
   // LOAD
   // -----------------------------
 
-  async function load(lat, lon, placeName = '') {
+  const load = async (lat, lon, placeName = '') => {
 
-    el.name.innerHTML = '📍 Carregando localização...';
+    el.name.innerHTML = '📍 Carregando...';
 
-    try {
+    const f = await forecast(lat, lon);
+    render(f);
 
-      const f = await forecast(lat, lon);
+    const rev = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+    ).then(r => r.json());
 
-      render(f);
+    const name = addrText(rev.address) || placeName;
 
-      const rev = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`
-      ).then(r => r.json());
+    el.name.innerHTML = `📍 ${name}`;
 
-      let finalName = addrText(rev.address);
-
-      if (!finalName) finalName = placeName || 'Local desconhecido';
-
-      el.name.innerHTML = `📍 ${finalName}`;
-
-      saveHistory({
-        lat,
-        lon,
-        name: finalName
-      });
-
-    } catch (e) {
-      console.error(e);
-      el.name.innerHTML = '📍 Erro ao carregar...';
-    }
-  }
+    saveHistory({ lat, lon, name });
+  };
 
   // -----------------------------
   // EVENTS
@@ -241,26 +238,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   el.form.addEventListener('submit', async (e) => {
     e.preventDefault();
-
-    if (!el.city.value.trim()) return;
-
     const r = await search(el.city.value.trim());
-
     load(r.lat, r.lon, r.name);
   });
 
   el.geo.addEventListener('click', () => {
-
-    if (!navigator.geolocation) {
-      alert('Geolocalização não suportada.');
-      return;
-    }
-
-    el.name.innerHTML = '📍 Obtendo localização...';
-
-    navigator.geolocation.getCurrentPosition(
-      p => load(p.coords.latitude, p.coords.longitude),
-      () => el.name.innerHTML = '📍 Erro ao obter localização'
+    navigator.geolocation.getCurrentPosition(p =>
+      load(p.coords.latitude, p.coords.longitude)
     );
   });
 

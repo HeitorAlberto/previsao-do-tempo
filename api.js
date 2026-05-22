@@ -1,5 +1,3 @@
-// api.js
-
 const OPEN_METEO_API =
   'https://api.open-meteo.com/v1/forecast';
 
@@ -45,8 +43,7 @@ export const forecast = (lat, lon) => {
     'weather_code',
     'temperature_2m_max',
     'temperature_2m_min',
-    'rain_sum',
-    'showers_sum',
+    'precipitation_sum',
     'snowfall_sum',
     'precipitation_probability_max',
     'wind_gusts_10m_max'
@@ -56,12 +53,11 @@ export const forecast = (lat, lon) => {
     'cloud_cover_low',
     'cloud_cover_mid',
     'cloud_cover_high',
+    'precipitation',
     'precipitation_probability',
     'wind_gusts_10m',
-    'rain',
-    'showers',
-    'snowfall',
-    'weather_code'
+    'weather_code',
+    'snowfall'
   ].join(','));
 
   return fetchJSON(url);
