@@ -96,12 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const weekend = day === 0 || day === 6;
 
       const rainLabelDay =
-        totalRain > 50 ? 'Chuva extrema ⚠️' :
-          totalRain >= 20 ? 'Chuva forte ⚠️' :
-            totalRain >= 10 ? 'Chuva moderada!' :
-              totalRain >= 5 ? 'Chuva leve' :
-                totalRain >= 0.5 ? 'Chuva leve e isolada' :
-                  'Sem precipitação';
+        totalRain > 70 ? '⚠️ Chuva extrema' :
+          totalRain >= 20 ? '⚠️ Chuva forte' :
+            totalRain >= 10 ? '☔ Chuva moderada' :
+              totalRain >= 5 ? '☔ Chuva leve' :
+                totalRain >= 0.5 ? '☔ Chuva leve e isolada' :
+                  '🌂 Sem precipitação';
 
       const div = document.createElement('div');
       div.className = 'day';
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <div class="row-data">
-            <span class="label-data">💧 ${rainLabelDay}</span>
+            <span class="label-data">${rainLabelDay}</span>
             <span class="data-values">${totalRain.toFixed(1)} mm (${prob}%)</span>
           </div>
 
