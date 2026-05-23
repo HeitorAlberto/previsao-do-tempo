@@ -1,6 +1,8 @@
 let dados = [];
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
 
+/* ---------------- CARREGAMENTO 00Z / 12Z ---------------- */
+
 async function carregarDados() {
   const hoje = new Date().toISOString().slice(0, 10);
 
@@ -10,10 +12,12 @@ async function carregarDados() {
   ]);
 
   function valido(json, run) {
-    return json &&
-      json.run_hour === run &&
+    return (
+      json &&
       json.run_date === hoje &&
-      Array.isArray(json.data);
+      json.run_hour === run &&
+      Array.isArray(json.data)
+    );
   }
 
   if (valido(h12, 12)) {
@@ -30,46 +34,10 @@ async function carregarDados() {
   renderizarHistorico();
 }
 
+/* ---------------- HISTÓRICO ---------------- */
+
 function salvarHistorico() {
   localStorage.setItem("historico", JSON.stringify(historico));
-}
-
-function formatarData(dataISO) {
-  const [ano, mes, dia] = dataISO.split("-");
-  return `${dia}/${mes}/${ano}`;
-}
-
-function normalizarTexto(texto) {
-  return texto
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .split("-")[0]
-    .trim();
-}
-
-function gerarResumo(manha, tarde) {
-  const combinacoes = {
-    "céu limpo|céu limpo": "☀️ Céu limpo",
-    "céu limpo|poucas nuvens": "🌤️ Poucas nuvens",
-    "céu limpo|parcialmente nublado": "🌤️Sol com algumas nuvens",
-    "céu limpo|nublado": "☁️ Nublado à tarde",
-    "poucas nuvens|céu limpo": "🌤️ Poucas nuvens com sol",
-    "poucas nuvens|poucas nuvens": "🌤️ Poucas nuvens",
-    "poucas nuvens|parcialmente nublado": "⛅ Parcialmente nublado",
-    "poucas nuvens|nublado": "Dia ficando nublado",
-    "parcialmente nublado|céu limpo": "⛅ Sol entre nuvens",
-    "parcialmente nublado|poucas nuvens": "⛅ Parcialmente nublado",
-    "parcialmente nublado|parcialmente nublado": "⛅ Parcialmente nublado",
-    "parcialmente nublado|nublado": "☁️ Nublado",
-    "nublado|céu limpo": "🌥️ Algumas aberturas",
-    "nublado|poucas nuvens": "🌥️ Algumas aberturas",
-    "nublado|parcialmente nublado": "🌥️ Predomínio de nuvens",
-    "nublado|nublado": "☁️ Nublado"
-  };
-
-  const chave = `${manha}|${tarde}`;
-  return combinacoes[chave] || "Condição variável";
 }
 
 function renderizarHistorico() {
@@ -92,6 +60,49 @@ function renderizarHistorico() {
   });
 }
 
+/* ---------------- UTIL ---------------- */
+
+function formatarData(dataISO) {
+  const [ano, mes, dia] = dataISO.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
+function normalizarTexto(texto) {
+  return (texto || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .split("-")[0]
+    .trim();
+}
+
+/* ---------------- RESUMO CLIMA ---------------- */
+
+function gerarResumo(manha, tarde) {
+  const combinacoes = {
+    "céu limpo|céu limpo": "☀️ Céu limpo",
+    "céu limpo|poucas nuvens": "🌤️ Poucas nuvens",
+    "céu limpo|parcialmente nublado": "🌤️ Sol com algumas nuvens",
+    "céu limpo|nublado": "☁️ Nublado à tarde",
+    "poucas nuvens|céu limpo": "🌤️ Poucas nuvens com sol",
+    "poucas nuvens|poucas nuvens": "🌤️ Poucas nuvens",
+    "poucas nuvens|parcialmente nublado": "⛅ Parcialmente nublado",
+    "poucas nuvens|nublado": "☁️ Dia ficando nublado",
+    "parcialmente nublado|céu limpo": "⛅ Sol entre nuvens",
+    "parcialmente nublado|poucas nuvens": "⛅ Parcialmente nublado",
+    "parcialmente nublado|parcialmente nublado": "⛅ Parcialmente nublado",
+    "parcialmente nublado|nublado": "☁️ Nublado",
+    "nublado|céu limpo": "🌥️ Algumas aberturas",
+    "nublado|poucas nuvens": "🌥️ Algumas aberturas",
+    "nublado|parcialmente nublado": "🌥️ Predomínio de nuvens",
+    "nublado|nublado": "☁️ Nublado"
+  };
+
+  return combinacoes[`${manha}|${tarde}`] || "Condição variável";
+}
+
+/* ---------------- RENDER CIDADE ---------------- */
+
 function renderizarCidade(cidadeObj) {
   const container = document.getElementById("container");
   const titulo = document.getElementById("cidade");
@@ -100,7 +111,7 @@ function renderizarCidade(cidadeObj) {
   titulo.textContent = `📍 ${cidadeObj.cidade}`;
 
   cidadeObj.forecast.forEach(d => {
-    const resumoDoDia = gerarResumo(d.nuvens_manha, d.nuvens_tarde);
+    const resumo = gerarResumo(d.nuvens_manha, d.nuvens_tarde);
 
     const div = document.createElement("div");
     div.className = "card";
@@ -116,12 +127,10 @@ function renderizarCidade(cidadeObj) {
         <div class="data-2">${Math.round(d.rain_mm)} mm</div>
 
         <div class="data-1">🍃 Vento</div>
-        <div class="data-2">${Math.round(d.wind_max_kmh)} km/h</div>    
+        <div class="data-2">${Math.round(d.wind_max_kmh)} km/h</div>
       </div>
 
-      <div class="cloud-desc">
-        <b>${resumoDoDia}</b>
-      </div>
+      <div class="cloud-desc"><b>${resumo}</b></div>
     `;
 
     container.appendChild(div);
@@ -140,21 +149,25 @@ function renderizarCidade(cidadeObj) {
   document.getElementById("suggestions").innerHTML = "";
 }
 
+/* ---------------- BUSCA ---------------- */
+
 function buscarCidade() {
   const input = normalizarTexto(document.getElementById("cidadeInput").value);
 
-  const cidadeEncontrada = dados.find(c =>
+  const cidade = dados.find(c =>
     normalizarTexto(c.cidade).includes(input)
   );
 
-  if (!cidadeEncontrada) {
+  if (!cidade) {
     document.getElementById("cidade").textContent = "Cidade não encontrada";
     document.getElementById("container").innerHTML = "";
     return;
   }
 
-  renderizarCidade(cidadeEncontrada);
+  renderizarCidade(cidade);
 }
+
+/* ---------------- AUTOCOMPLETE ---------------- */
 
 const inputEl = document.getElementById("cidadeInput");
 const suggestions = document.getElementById("suggestions");
@@ -163,35 +176,37 @@ inputEl.addEventListener("input", () => {
   const valor = normalizarTexto(inputEl.value);
 
   suggestions.innerHTML = "";
-
   if (!valor) return;
 
-  const filtrados = dados
+  dados
     .filter(c => normalizarTexto(c.cidade).includes(valor))
-    .slice(0, 6);
+    .slice(0, 6)
+    .forEach(c => {
+      const item = document.createElement("div");
+      item.textContent = c.cidade;
 
-  filtrados.forEach(c => {
-    const item = document.createElement("div");
-    item.textContent = c.cidade;
+      item.addEventListener("click", () => {
+        inputEl.value = c.cidade;
+        suggestions.innerHTML = "";
+        renderizarCidade(c);
+      });
 
-    item.addEventListener("click", () => {
-      inputEl.value = c.cidade;
-      suggestions.innerHTML = "";
-      renderizarCidade(c);
+      suggestions.appendChild(item);
     });
-
-    suggestions.appendChild(item);
-  });
 });
 
 document.addEventListener("click", (e) => {
   if (e.target !== inputEl) suggestions.innerHTML = "";
 });
 
+/* ---------------- EVENTS ---------------- */
+
 document.getElementById("btnBuscar").addEventListener("click", buscarCidade);
 
 inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") buscarCidade();
 });
+
+/* ---------------- INIT ---------------- */
 
 carregarDados();
