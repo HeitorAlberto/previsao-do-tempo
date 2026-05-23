@@ -2,29 +2,43 @@ let dados = [];
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
 
 async function carregarDados() {
-  const res = await fetch('previsao.json');
-  dados = await res.json();
+  try {
+    const res = await fetch('previsao.json?v=' + Date.now());
+    const json = await res.json();
+
+    dados = Array.isArray(json) ? json : json?.data || [];
+  } catch (e) {
+    dados = [];
+  }
 
   renderizarHistorico();
 }
 
+/* ---------------- HISTÓRICO ---------------- */
+
 function salvarHistorico() {
   localStorage.setItem("historico", JSON.stringify(historico));
 }
+
+/* ---------------- DATA ---------------- */
 
 function formatarData(dataISO) {
   const [ano, mes, dia] = dataISO.split("-");
   return `${dia}/${mes}/${ano}`;
 }
 
+/* ---------------- TEXTO ---------------- */
+
 function normalizarTexto(texto) {
-  return texto
+  return (texto || "")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .split("-")[0]
     .trim();
 }
+
+/* ---------------- RESUMO ---------------- */
 
 function gerarResumo(manha, tarde) {
   const combinacoes = {
@@ -45,9 +59,11 @@ function gerarResumo(manha, tarde) {
     "nublado|parcialmente nublado": "🌥️ Predomínio de nuvens",
     "nublado|nublado": "☁️ Nublado"
   };
-  const chave = `${manha}|${tarde}`;
-  return combinacoes[chave] || "Condição variável";
+
+  return combinacoes[`${manha}|${tarde}`] || "Condição variável";
 }
+
+/* ---------------- HISTÓRICO RENDER ---------------- */
 
 function renderizarHistorico() {
   const el = document.getElementById("historico");
@@ -69,6 +85,8 @@ function renderizarHistorico() {
   });
 }
 
+/* ---------------- RENDER ---------------- */
+
 function renderizarCidade(cidadeObj) {
   const container = document.getElementById("container");
   const titulo = document.getElementById("cidade");
@@ -76,10 +94,9 @@ function renderizarCidade(cidadeObj) {
   container.innerHTML = "";
   titulo.textContent = `📍 ${cidadeObj.cidade}`;
 
-  cidadeObj.forecast.forEach(d => {
-    // Calculamos o resumo aqui
-    const resumoDoDia = gerarResumo(d.nuvens_manha, d.nuvens_tarde);
-    
+  (cidadeObj.forecast || []).forEach(d => {
+    const resumo = gerarResumo(d.nuvens_manha, d.nuvens_tarde);
+
     const div = document.createElement("div");
     div.className = "card";
 
@@ -94,20 +111,23 @@ function renderizarCidade(cidadeObj) {
         <div class="data-2">${Math.round(d.rain_mm)} mm</div>
 
         <div class="data-1">🍃 Vento</div>
-        <div class="data-2">${Math.round(d.wind_max_kmh)} km/h</div>    
+        <div class="data-2">${Math.round(d.wind_max_kmh)} km/h</div>
       </div>
+
       <div class="cloud-desc">
-          <b>${resumoDoDia}</b>
+        <b>${resumo}</b>
       </div>
     `;
 
     container.appendChild(div);
   });
 
-  const nomeCidade = cidadeObj.cidade;
-  historico = historico.filter(c => c !== nomeCidade);
-  historico.unshift(nomeCidade);
+  /* ---------------- HISTÓRICO UPDATE ---------------- */
+
+  historico = historico.filter(c => c !== cidadeObj.cidade);
+  historico.unshift(cidadeObj.cidade);
   historico = historico.slice(0, 3);
+
   salvarHistorico();
   renderizarHistorico();
 
@@ -115,8 +135,12 @@ function renderizarCidade(cidadeObj) {
   document.getElementById("suggestions").innerHTML = "";
 }
 
+/* ---------------- BUSCA ---------------- */
+
 function buscarCidade() {
-  const input = normalizarTexto(document.getElementById("cidadeInput").value);
+  const input = normalizarTexto(
+    document.getElementById("cidadeInput").value
+  );
 
   const cidadeEncontrada = dados.find(c =>
     normalizarTexto(c.cidade).includes(input)
@@ -131,39 +155,48 @@ function buscarCidade() {
   renderizarCidade(cidadeEncontrada);
 }
 
+/* ---------------- AUTOCOMPLETE ---------------- */
+
 const inputEl = document.getElementById("cidadeInput");
 const suggestions = document.getElementById("suggestions");
 
 inputEl.addEventListener("input", () => {
   const valor = normalizarTexto(inputEl.value);
-  suggestions.innerHTML = "";
 
+  suggestions.innerHTML = "";
   if (!valor) return;
 
   const filtrados = dados
-    .filter(c => normalizarTexto(c.cidade).includes(valor))
+    .filter(c => normalizarTexto(c.cidade).startsWith(valor))
     .slice(0, 6);
 
   filtrados.forEach(c => {
     const item = document.createElement("div");
     item.textContent = c.cidade;
+
     item.addEventListener("click", () => {
       inputEl.value = c.cidade;
       suggestions.innerHTML = "";
       renderizarCidade(c);
     });
+
     suggestions.appendChild(item);
   });
 });
 
+/* fechar dropdown */
 document.addEventListener("click", (e) => {
   if (e.target !== inputEl) suggestions.innerHTML = "";
 });
+
+/* ---------------- EVENTOS ---------------- */
 
 document.getElementById("btnBuscar").addEventListener("click", buscarCidade);
 
 inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") buscarCidade();
 });
+
+/* ---------------- INIT ---------------- */
 
 carregarDados();
