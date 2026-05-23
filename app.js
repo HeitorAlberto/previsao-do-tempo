@@ -43,29 +43,6 @@ function normalizarTexto(texto) {
     .trim();
 }
 
-function gerarResumo(manha, tarde) {
-  const combinacoes = {
-    "céu limpo|céu limpo": "☀️ Céu limpo",
-    "céu limpo|poucas nuvens": "🌤️ Poucas nuvens",
-    "céu limpo|parcialmente nublado": "🌤️ Sol com algumas nuvens",
-    "céu limpo|nublado": "☁️ Nublado à tarde",
-    "poucas nuvens|céu limpo": "🌤️ Poucas nuvens com sol",
-    "poucas nuvens|poucas nuvens": "🌤️ Poucas nuvens",
-    "poucas nuvens|parcialmente nublado": "⛅ Parcialmente nublado",
-    "poucas nuvens|nublado": "Dia ficando nublado",
-    "parcialmente nublado|céu limpo": "⛅ Sol entre nuvens",
-    "parcialmente nublado|poucas nuvens": "⛅ Parcialmente nublado",
-    "parcialmente nublado|parcialmente nublado": "⛅ Parcialmente nublado",
-    "parcialmente nublado|nublado": "☁️ Nublado",
-    "nublado|céu limpo": "🌥️ Algumas aberturas",
-    "nublado|poucas nuvens": "🌥️ Algumas aberturas",
-    "nublado|parcialmente nublado": "🌥️ Predomínio de nuvens",
-    "nublado|nublado": "☁️ Nublado"
-  };
-
-  return combinacoes[`${manha}|${tarde}`] || "Condição variável";
-}
-
 function renderizarHistorico() {
   const el = document.getElementById("historico");
   if (!el) return;
@@ -109,10 +86,6 @@ function renderizarCidade(cidadeObj) {
 
         <div class="data-1">🍃 Vento</div>
         <div class="data-2">${Math.round(d.wind_max_kmh)} km/h</div>
-      </div>
-
-      <div class="cloud-desc">
-        <b>${gerarResumo(d.nuvens_manha, d.nuvens_tarde)}</b>
       </div>
     `;
 
