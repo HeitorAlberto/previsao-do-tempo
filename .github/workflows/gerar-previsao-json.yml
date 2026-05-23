@@ -2,11 +2,11 @@ name: Gerar Previsão JSON
 
 on:
   schedule:
-    # 00Z (6h Brasil ≈ 9h UTC)
+    #5h da manhã BR
     - cron: '0 9 * * *'
-
-    # 12Z (15h Brasil ≈ 18h UTC)
-    - cron: '0 18 * * *'
+    
+    # 12h da manhã BR
+    - cron: '0 15 * * *'
 
   workflow_dispatch:
 
