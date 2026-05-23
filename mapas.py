@@ -1,7 +1,3 @@
-# ============================================================
-# MAPAS ECMWF - ROBUSTO + CACHE + FALLBACK
-# ============================================================
-
 import os
 import json
 import numpy as np
@@ -41,7 +37,7 @@ SIGMA_SMOOTH = 0.45
 UPSCALE_FACTOR = 2
 
 # ============================================================
-# DATA
+# DATA DO PIPELINE (SEMPRE ATUAL)
 # ============================================================
 
 utc_now = pd.Timestamp.now(tz="UTC")
@@ -105,38 +101,25 @@ norm = mcolors.BoundaryNorm(levels, cmap.N)
 grib_file = os.path.join(DATA_DIR, f"ecmwf_tp_00z_{run_date_str}.grib2")
 
 
-def cache_is_valid():
-    if not os.path.exists(grib_file):
-        return False
-    if not os.path.exists(META_FILE):
-        return False
-
-    try:
-        with open(META_FILE, "r") as f:
-            meta = json.load(f)
-
-        return meta.get("file_exists", False) is True
-    except:
-        return False
+def cache_ok():
+    return os.path.exists(grib_file)
 
 
-def update_cache_meta(source_date):
-    meta = {
-        "run_date": run_date_str,
-        "ecmwf_source_date": source_date,
-        "file_exists": True
-    }
-
+def save_meta(source_date):
     with open(META_FILE, "w") as f:
-        json.dump(meta, f)
+        json.dump({
+            "run_date": run_date_str,
+            "ecmwf_source_date": source_date,
+            "file_exists": True
+        }, f)
 
 # ============================================================
 # DOWNLOAD COM FALLBACK
 # ============================================================
 
-def download_from_date(date_obj, label):
+def fetch_ecmwf(date_obj, label):
 
-    print(f"Tentando ECMWF ({label}) {date_obj.strftime('%Y-%m-%d')}")
+    print(f"ECMWF tentativa: {label} ({date_obj:%Y-%m-%d})")
 
     client = Client(source="azure", model="ifs", resol="0p25")
 
@@ -150,39 +133,37 @@ def download_from_date(date_obj, label):
         target=grib_file
     )
 
-    return True
-
 
 def download_ecmwf():
 
-    if cache_is_valid():
-        print("CACHE OK - usando GRIB existente")
+    if cache_ok():
+        print("CACHE OK")
         return
 
-    # tentativa 1: dia atual
+    # 1 - dia atual
     try:
-        download_from_date(run_date, "dia atual")
-        update_cache_meta(run_date_str)
-        print("Download OK (dia atual)")
+        fetch_ecmwf(run_date, "dia atual")
+        save_meta(run_date_str)
+        print("OK: dia atual")
         return
     except Exception as e:
         print("Falha dia atual:", e)
 
-    # fallback: dia anterior
-    fallback_date = run_date - pd.Timedelta(days=1)
+    # 2 - fallback dia anterior
+    fallback = run_date - pd.Timedelta(days=1)
 
     try:
-        download_from_date(fallback_date, "dia anterior")
-        update_cache_meta(fallback_date.strftime("%Y%m%d"))
-        print("Download OK (dia anterior)")
+        fetch_ecmwf(fallback, "dia anterior")
+        save_meta(fallback.strftime("%Y%m%d"))
+        print("OK: dia anterior")
         return
     except Exception as e:
         print("Falha fallback:", e)
 
-    raise RuntimeError("ECMWF indisponível (atual e anterior)")
+    raise RuntimeError("ECMWF indisponível")
 
 # ============================================================
-# LOAD GRIB
+# LOAD
 # ============================================================
 
 def load_data():
@@ -204,63 +185,51 @@ def load_data():
     return tp
 
 # ============================================================
-# SUAVIZAÇÃO
+# PROCESSAMENTO
 # ============================================================
 
-def smooth_data(data):
+def smooth(data):
 
-    chuva = gaussian_filter(data.values, sigma=SIGMA_SMOOTH)
+    z = gaussian_filter(data.values, sigma=0.45)
 
     lat = data.latitude.values
     lon = data.longitude.values
 
     interp = RegularGridInterpolator(
         (lat, lon),
-        chuva,
+        z,
         bounds_error=False,
         fill_value=np.nan
     )
 
-    lat_new = np.linspace(lat.min(), lat.max(), len(lat)*UPSCALE_FACTOR)
-    lon_new = np.linspace(lon.min(), lon.max(), len(lon)*UPSCALE_FACTOR)
+    lat_n = np.linspace(lat.min(), lat.max(), len(lat)*2)
+    lon_n = np.linspace(lon.min(), lon.max(), len(lon)*2)
 
-    lon2d, lat2d = np.meshgrid(lon_new, lat_new)
+    lon2, lat2 = np.meshgrid(lon_n, lat_n)
 
-    pts = np.array([lat2d.ravel(), lon2d.ravel()]).T
+    pts = np.array([lat2.ravel(), lon2.ravel()]).T
+    out = interp(pts).reshape(len(lat_n), len(lon_n))
 
-    chuva_interp = interp(pts).reshape(len(lat_new), len(lon_new))
-
-    return lat_new, lon_new, chuva_interp
+    return lat_n, lon_n, out
 
 # ============================================================
 # MAPA
 # ============================================================
 
-def plot_map(data, title, filename):
+def plot(data, title, filename):
 
-    lat_new, lon_new, chuva = smooth_data(data)
+    lat, lon, z = smooth(data)
 
     fig = plt.figure(figsize=(8, 8))
     ax = plt.axes(projection=ccrs.PlateCarree())
 
     ax.set_extent([-75, -30, -35, 8])
 
-    try:
-        ax.add_feature(cfeature.BORDERS, linewidth=0.5)
-        ax.add_feature(cfeature.COASTLINE, linewidth=0.6)
-
-        estados = cfeature.NaturalEarthFeature(
-            category="cultural",
-            name="admin_1_states_provinces_lines",
-            scale="10m",
-            facecolor="none"
-        )
-        ax.add_feature(estados, edgecolor="black", linewidth=0.3)
-    except:
-        pass
+    ax.add_feature(cfeature.BORDERS, linewidth=0.5)
+    ax.add_feature(cfeature.COASTLINE, linewidth=0.6)
 
     im = ax.contourf(
-        lon_new, lat_new, chuva,
+        lon, lat, z,
         levels=levels,
         cmap=cmap,
         norm=norm,
@@ -268,37 +237,30 @@ def plot_map(data, title, filename):
         transform=ccrs.PlateCarree()
     )
 
-    for cidade, (x, y) in capitais.items():
+    for nome, (x, y) in capitais.items():
         try:
-            valor = data.sel(longitude=x, latitude=y, method="nearest").values
-
-            ax.text(
-                x, y, f"{valor:.0f}",
-                fontsize=5,
-                ha="center",
-                va="center",
-                transform=ccrs.PlateCarree(),
-                bbox=dict(facecolor="white", alpha=0.65, pad=0.15, linewidth=0)
-            )
+            v = data.sel(longitude=x, latitude=y, method="nearest").values
+            ax.text(x, y, f"{v:.0f}",
+                    fontsize=5,
+                    ha="center",
+                    va="center",
+                    transform=ccrs.PlateCarree(),
+                    bbox=dict(facecolor="white", alpha=0.6, pad=0.1))
         except:
             pass
 
-    plt.title(title, fontsize=13, weight="bold")
+    plt.title(title, fontsize=13)
 
-    cbar = plt.colorbar(im, ax=ax, shrink=0.82, pad=0.02, ticks=levels)
-    cbar.set_label("Chuva acumulada (mm)")
+    plt.colorbar(im, ax=ax, shrink=0.8, ticks=levels)
 
-    temp_png = os.path.join(OUTPUT_DIR, "temp.png")
-
-    plt.savefig(temp_png, dpi=DPI, bbox_inches="tight")
+    tmp = os.path.join(OUTPUT_DIR, "tmp.png")
+    plt.savefig(tmp, dpi=DPI, bbox_inches="tight")
     plt.close()
 
     out = os.path.join(OUTPUT_DIR, filename)
 
-    img = Image.open(temp_png)
-    img.save(out, "WEBP", quality=82, method=6, optimize=True)
-
-    os.remove(temp_png)
+    Image.open(tmp).save(out, "WEBP", quality=82)
+    os.remove(tmp)
 
     print("Salvo:", filename)
 
@@ -309,7 +271,6 @@ def plot_map(data, title, filename):
 def main():
 
     download_ecmwf()
-
     tp = load_data()
 
     prev = xr.zeros_like(tp.isel(step=0))
@@ -317,28 +278,21 @@ def main():
     for i in range(5):
 
         atual = tp.isel(step=i)
-        chuva_24h = atual - prev
+        chuva = atual - prev
         prev = atual
 
-        inicio = run_date + pd.Timedelta(days=i)
+        ini = run_date + pd.Timedelta(days=i)
         fim = run_date + pd.Timedelta(days=i+1)
 
-        title = (
-            f"ECMWF 0.25° - Chuva 24h\n"
-            f"{inicio:%d/%m/%Y} → {fim:%d/%m/%Y}"
-        )
+        title = f"ECMWF 00Z - {ini:%d/%m} → {fim:%d/%m}"
 
-        plot_map(chuva_24h, title, f"chuva_24h_dia_{i+1}.webp")
+        plot(chuva, title, f"chuva_24h_{i+1}.webp")
 
-    total = tp.isel(step=-1)
+    plot(tp.isel(step=-1),
+         f"ECMWF 00Z - total 5 dias",
+         "chuva_total.webp")
 
-    plot_map(
-        total,
-        f"ECMWF 0.25° - Chuva total 5 dias\nRodada {run_date:%d/%m/%Y}",
-        "chuva_total_5dias.webp"
-    )
-
-    print("Processo finalizado")
+    print("OK")
 
 # ============================================================
 
