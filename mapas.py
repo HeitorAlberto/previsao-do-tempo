@@ -1,9 +1,16 @@
-# -*- coding: utf-8 -*-
+# ============================================================
+# IMPORTS E CONFIGURAÇÃO HEADLESS (GITHUB / SERVIDOR)
+# ============================================================
 
 import os
+import glob
+import zipfile
 import numpy as np
 import pandas as pd
 import xarray as xr
+
+import matplotlib
+matplotlib.use("Agg") 
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -17,12 +24,11 @@ import cartopy.feature as cfeature
 from ecmwf.opendata import Client
 from PIL import Image
 
-
 # ============================================================
 # CONFIGURAÇÕES
 # ============================================================
 
-OUTPUT_DIR = "mapas_chuva_brasil"
+OUTPUT_DIR = "mapas"
 DATA_DIR = "dados_ecmwf"
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -34,31 +40,13 @@ DPI = 220
 SIGMA_SMOOTH = 0.45
 UPSCALE_FACTOR = 2
 
-
 # ============================================================
 # DATA UTC
 # ============================================================
 
 utc_now = pd.Timestamp.utcnow()
-
-# tentativa principal: dia atual (UTC)
-base_date = utc_now.floor("D")
-
-
-# ============================================================
-# FUNÇÃO: escolher melhor rodada disponível (00Z)
-# ============================================================
-
-def get_valid_run_date():
-    """
-    Tenta 00Z do dia atual.
-    Se não funcionar (dados ainda não disponíveis), usa dia anterior.
-    """
-    return [
-        base_date,
-        base_date - pd.Timedelta(days=1)
-    ]
-
+run_date = utc_now.floor("D")
+run_date_str = run_date.strftime("%Y%m%d")
 
 # ============================================================
 # CAPITAIS
@@ -94,114 +82,75 @@ capitais = {
     "Palmas": (-48.33, -10.18),
 }
 
-
 # ============================================================
 # CORES
 # ============================================================
 
-levels = [
-    0, 1, 2, 5, 10, 15, 20, 30, 40, 50,
-    75, 100, 125, 150, 200, 250, 300, 400
-]
+levels = [0,1,2,5,10,15,20,30,40,50,75,100,125,150,200,250,300,400]
 
 colors = [
-    "#ffffff", "#d9d9d9", "#a1ffcb", "#56c588",
-    "#96daff", "#05a2f6", "#fcffaa", "#fbff0a",
-    "#ffc282", "#f98f1d", "#ff3737", "#971010",
-    "#eecfb1", "#9c795c", "#5c3d28", "#d4aaff",
-    "#9333ea"
+    "#ffffff","#d9d9d9","#a1ffcb","#56c588","#96daff",
+    "#05a2f6","#fcffaa","#fbff0a","#ffc282","#f98f1d",
+    "#ff3737","#971010","#eecfb1","#9c795c","#5c3d28",
+    "#d4aaff","#9333ea"
 ]
 
 cmap = mcolors.ListedColormap(colors)
 norm = mcolors.BoundaryNorm(levels, cmap.N)
 
+# ============================================================
+# ARQUIVO GRIB
+# ============================================================
+
+grib_file = os.path.join(
+    DATA_DIR,
+    f"ecmwf_tp_00z_{run_date_str}.grib2"
+)
 
 # ============================================================
-# DOWNLOAD GRIB (COM FALLBACK 00Z)
+# DOWNLOAD ECMWF
 # ============================================================
 
-grib_file = None
-run_date_used = None
+if not os.path.exists(grib_file):
 
-for run_date in get_valid_run_date():
+    print("Baixando ECMWF...")
 
-    run_date_str = run_date.strftime("%Y%m%d")
-
-    grib_file_try = os.path.join(
-        DATA_DIR,
-        f"ecmwf_tp_00z_{run_date_str}.grib2"
+    client = Client(
+        source="azure",
+        model="ifs",
+        resol="0p25"
     )
 
-    if os.path.exists(grib_file_try):
-        print(f"GRIB já existe: {grib_file_try}")
-        grib_file = grib_file_try
-        run_date_used = run_date
-        break
+    client.retrieve(
+        date=run_date.strftime("%Y-%m-%d"),
+        time=RUN_HOUR,
+        stream="oper",
+        type="fc",
+        step=[24,48,72,96,120],
+        param=["tp"],
+        target=grib_file
+    )
 
-    try:
-        print(f"Tentando baixar ECMWF 00Z: {run_date_str}")
-
-        client = Client(
-            source="azure",
-            model="ifs",
-            resol="0p25"
-        )
-
-        client.retrieve(
-            date=run_date.strftime("%Y-%m-%d"),
-            time=RUN_HOUR,
-            stream="oper",
-            type="fc",
-            step=[24, 48, 72, 96, 120],
-            param=["tp"],
-            target=grib_file_try
-        )
-
-        if os.path.exists(grib_file_try):
-            print("Download OK:", grib_file_try)
-            grib_file = grib_file_try
-            run_date_used = run_date
-            break
-
-    except Exception as e:
-        print("Falha no download:", run_date_str, e)
-
-
-if grib_file is None:
-    raise RuntimeError("Não foi possível obter GRIB (00Z atual nem anterior).")
-
-
-print("Rodada usada:", run_date_used)
-
+    print("Download concluído.")
+else:
+    print("Arquivo já existe.")
 
 # ============================================================
-# ABRIR DADOS
+# DADOS
 # ============================================================
 
 ds = xr.open_dataset(grib_file, engine="cfgrib")
 tp = ds["tp"] * 1000.0
 
-
-# ============================================================
-# LONGITUDE
-# ============================================================
-
 lon = tp.longitude.values
 lon = np.where(lon > 180, lon - 360, lon)
 
-tp = tp.assign_coords(longitude=lon)
-tp = tp.sortby("longitude")
-
-
-# ============================================================
-# RECORTE BRASIL
-# ============================================================
+tp = tp.assign_coords(longitude=lon).sortby("longitude")
 
 tp = tp.sel(latitude=slice(10, -35), longitude=slice(-75, -30))
 
-
 # ============================================================
-# SMOOTH + INTERPOLAÇÃO
+# SUAVIZAÇÃO
 # ============================================================
 
 def smooth_data(data):
@@ -218,8 +167,8 @@ def smooth_data(data):
         fill_value=np.nan
     )
 
-    lat_new = np.linspace(lat.min(), lat.max(), len(lat) * UPSCALE_FACTOR)
-    lon_new = np.linspace(lon.min(), lon.max(), len(lon) * UPSCALE_FACTOR)
+    lat_new = np.linspace(lat.min(), lat.max(), len(lat)*UPSCALE_FACTOR)
+    lon_new = np.linspace(lon.min(), lon.max(), len(lon)*UPSCALE_FACTOR)
 
     lon2d, lat2d = np.meshgrid(lon_new, lat_new)
 
@@ -228,7 +177,6 @@ def smooth_data(data):
     chuva_interp = interp(pts).reshape(len(lat_new), len(lon_new))
 
     return lat_new, lon_new, chuva_interp
-
 
 # ============================================================
 # MAPA
@@ -246,6 +194,15 @@ def plot_map(data, title, filename):
     ax.add_feature(cfeature.BORDERS, linewidth=0.5)
     ax.add_feature(cfeature.COASTLINE, linewidth=0.6)
 
+    estados = cfeature.NaturalEarthFeature(
+        category='cultural',
+        name='admin_1_states_provinces_lines',
+        scale='10m',
+        facecolor='none'
+    )
+
+    ax.add_feature(estados, edgecolor='black', linewidth=0.3)
+
     im = ax.contourf(
         lon_new,
         lat_new,
@@ -253,45 +210,47 @@ def plot_map(data, title, filename):
         levels=levels,
         cmap=cmap,
         norm=norm,
-        extend="max",
+        extend='max',
         transform=ccrs.PlateCarree()
     )
 
     for cidade, (x, y) in capitais.items():
         try:
-            valor = data.sel(longitude=x, latitude=y, method="nearest").values
+            valor = data.sel(
+                longitude=x,
+                latitude=y,
+                method="nearest"
+            ).values
 
             ax.text(
-                x, y,
-                f"{valor:.0f}",
+                x, y, f"{valor:.0f}",
                 fontsize=5,
-                ha="center",
-                va="center",
+                ha='center',
+                va='center',
                 transform=ccrs.PlateCarree(),
-                bbox=dict(facecolor="white", alpha=0.65, pad=0.15, linewidth=0)
+                bbox=dict(facecolor='white', alpha=0.65, pad=0.15, linewidth=0)
             )
         except:
             pass
 
-    plt.title(title, fontsize=14, weight="bold")
+    plt.title(title, fontsize=14, weight='bold')
 
-    cbar = plt.colorbar(im, ax=ax, shrink=0.82)
-    cbar.set_label("Chuva acumulada (mm)", fontsize=10)
+    cbar = plt.colorbar(im, ax=ax, shrink=0.82, pad=0.02, ticks=levels)
+    cbar.set_label("Chuva acumulada (mm)")
 
     temp_png = os.path.join(OUTPUT_DIR, "temp.png")
 
-    plt.savefig(temp_png, dpi=DPI, bbox_inches="tight")
+    plt.savefig(temp_png, dpi=DPI, bbox_inches='tight')
     plt.close()
 
-    webp_path = os.path.join(OUTPUT_DIR, filename)
+    out = os.path.join(OUTPUT_DIR, filename)
 
     img = Image.open(temp_png)
-    img.save(webp_path, "WEBP", quality=82, method=6)
+    img.save(out, "WEBP", quality=82, method=6, optimize=True)
 
     os.remove(temp_png)
 
     print("Salvo:", filename)
-
 
 # ============================================================
 # 24H
@@ -305,21 +264,28 @@ for i in range(5):
     chuva_24h = atual - prev
     prev = atual
 
-    titulo = f"ECMWF 24h Dia {i+1}\n{run_date_used:%d/%m/%Y}"
+    data_inicio = run_date + pd.Timedelta(days=i)
+    data_fim = run_date + pd.Timedelta(days=i+1)
+
+    titulo = (
+        f"ECMWF 0.25° - Chuva 24h\n"
+        f"Rodada 00Z {run_date:%d/%m/%Y}\n"
+        f"{data_inicio:%d/%m/%Y} → {data_fim:%d/%m/%Y}"
+    )
 
     plot_map(chuva_24h, titulo, f"chuva_24h_dia_{i+1}.webp")
 
-
 # ============================================================
-# TOTAL 5 DIAS
+# TOTAL 5D
 # ============================================================
 
 total_5d = tp.isel(step=-1)
 
-plot_map(
-    total_5d,
-    f"ECMWF Total 5 dias\n{run_date_used:%d/%m/%Y}",
-    "chuva_total_5dias.webp"
+titulo_total = (
+    f"ECMWF 0.25° - Chuva total 5 dias\n"
+    f"Rodada 00Z {run_date:%d/%m/%Y}"
 )
 
-print("OK")
+plot_map(total_5d, titulo_total, "chuva_total_5dias.webp")
+
+print("Processo finalizado.")
