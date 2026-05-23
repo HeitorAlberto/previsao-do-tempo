@@ -8,7 +8,9 @@ async function carregarDados() {
     ? "previsao_12Z.json"
     : "previsao_00Z.json";
 
-  const base = "/previsao-do-tempo/";
+  const base = location.hostname.includes("github.io")
+    ? "/previsao-do-tempo/"
+    : "./";
 
   try {
     const res = await fetch(`${base}${arquivo}?v=${Date.now()}`);
@@ -18,7 +20,7 @@ async function carregarDados() {
 
     renderizarHistorico();
   } catch (e) {
-    console.log("Erro ao carregar JSON");
+    console.log("Erro ao carregar JSON", e);
     dados = [];
   }
 }
