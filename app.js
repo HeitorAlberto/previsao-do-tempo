@@ -8,15 +8,15 @@ async function carregarDados() {
     ? "previsao_12Z.json"
     : "previsao_00Z.json";
 
+  const base = "/previsao-do-tempo/";
+
   try {
-    const res = await fetch(`${arquivo}?v=${Date.now()}`);
+    const res = await fetch(`${base}${arquivo}?v=${Date.now()}`);
     const json = await res.json();
 
-    // aceita JSON direto ou {data: []}
     dados = Array.isArray(json) ? json : (json.data || []);
 
     renderizarHistorico();
-
   } catch (e) {
     console.log("Erro ao carregar JSON");
     dados = [];
