@@ -5,6 +5,7 @@ import datetime as dt
 import xarray as xr
 from ecmwf.opendata import Client
 from tqdm import tqdm
+import sys
 
 # --- CONFIGURAÇÃO ---
 CITIES_PATH = "cidades.json"
@@ -30,15 +31,17 @@ def uf_from_code(city):
     return UF_MAP.get(uf_code, "")
 
 def run_fallback_date(client):
-    now = dt.datetime.now(dt.UTC)
+    # CORRIGIDO: Uso de dt.timezone.utc para compatibilidade em qualquer versão do Python
+    now = dt.datetime.now(dt.timezone.utc)
     for back in range(0, 6):
         run_date = now - dt.timedelta(days=back)
         try:
+            # Testa a disponibilidade da rodada
             client.retrieve(date=run_date.strftime("%Y%m%d"), time=0, stream="oper", type="fc", param="tp", step=0, target="probe.grib")
             if os.path.exists("probe.grib"): os.remove("probe.grib")
             return run_date
         except: continue
-    raise RuntimeError("Sem rodada disponível")
+    raise RuntimeError("Sem rodada disponível no momento")
 
 def download_cached(client, param, name, date_str, steps):
     path = os.path.join(GRIB_DIR, f"{name}_{date_str}.grib")
@@ -68,45 +71,53 @@ def cloud_by_period(tcc_local, day_index):
 
 # --- MAIN ---
 def main():
-    client = Client(source="azure")
-    run_date = run_fallback_date(client)
-    date_str = run_date.strftime("%Y%m%d")
-    steps = list(range(0, 121, 6))
+    try:
+        client = Client(source="azure")
+        run_date = run_fallback_date(client)
+        date_str = run_date.strftime("%Y%m%d")
+        steps = list(range(0, 121, 6))
 
-    tp, t2m = load_var(download_cached(client, "tp", "chuva", date_str, steps), 1000.0), load_var(download_cached(client, "2t", "temp", date_str, steps))
-    u10, v10 = load_var(download_cached(client, "10u", "u", date_str, steps)), load_var(download_cached(client, "10v", "v", date_str, steps))
-    tcc = load_var(download_cached(client, "tcc", "cloud", date_str, steps))
+        tp, t2m = load_var(download_cached(client, "tp", "chuva", date_str, steps), 1000.0), load_var(download_cached(client, "2t", "temp", date_str, steps))
+        u10, v10 = load_var(download_cached(client, "10u", "u", date_str, steps)), load_var(download_cached(client, "10v", "v", date_str, steps))
+        tcc = load_var(download_cached(client, "tcc", "cloud", date_str, steps))
 
-    rain, output = daily_rain(tp), []
-    with open(CITIES_PATH, "r", encoding="utf-8-sig") as f: cities = json.load(f)
+        rain, output = daily_rain(tp), []
+        with open(CITIES_PATH, "r", encoding="utf-8-sig") as f: cities = json.load(f)
 
-    for city in tqdm(cities, desc="Processando", unit="cidade"):
-        lat, lon = city.get("latitude"), city.get("longitude")
-        if lat is None or lon is None: continue
-        
-        try:
-            r_loc = [r.sel(latitude=lat, longitude=lon, method="nearest") for r in rain]
-            t2m_loc, u10_loc, v10_loc, tcc_loc = t2m.sel(latitude=lat, longitude=lon, method="nearest"), u10.sel(latitude=lat, longitude=lon, method="nearest"), v10.sel(latitude=lat, longitude=lon, method="nearest"), tcc.sel(latitude=lat, longitude=lon, method="nearest")
-        except: continue
-
-        forecast = []
-        for d in range(5):
-            temps = [float(t2m_loc.sel(step=np.timedelta64(d*24+h, "h"), method="nearest").item())-273.15 for h in range(0,24,6)]
-            winds = [((float(u10_loc.sel(step=np.timedelta64(d*24+h, "h"), method="nearest").item())**2 + float(v10_loc.sel(step=np.timedelta64(d*24+h, "h"), method="nearest").item())**2)**0.5)*3.6 for h in range(0,24,6)]
-            clouds = cloud_by_period(tcc_loc, d)
-            date_obj = run_date + dt.timedelta(days=d)
+        for city in tqdm(cities, desc="Processando", unit="cidade"):
+            lat, lon = city.get("latitude"), city.get("longitude")
+            if lat is None or lon is None: continue
             
-            forecast.append({
-                "day": d + 1, "date": date_obj.strftime("%Y-%m-%d"), "weekday": WEEKDAYS[date_obj.weekday()],
-                "rain_mm": round(float(r_loc[d].item()), 2), "temp_min_c": round(min(temps), 2), 
-                "temp_max_c": round(max(temps), 2), "wind_max_kmh": round(max(winds), 2),
-                "nuvens_madrugada": clouds["madrugada"], "nuvens_manha": clouds["manha"], 
-                "nuvens_tarde": clouds["tarde"], "nuvens_noite": clouds["noite"]
-            })
-        output.append({"cidade": f"{city.get('nome')} - {uf_from_code(city)}", "forecast": forecast})
+            try:
+                r_loc = [r.sel(latitude=lat, longitude=lon, method="nearest") for r in rain]
+                t2m_loc = t2m.sel(latitude=lat, longitude=lon, method="nearest")
+                u10_loc = u10.sel(latitude=lat, longitude=lon, method="nearest")
+                v10_loc = v10.sel(latitude=lat, longitude=lon, method="nearest")
+                tcc_loc = tcc.sel(latitude=lat, longitude=lon, method="nearest")
+            except: continue
 
-    with open(OUT_PATH, "w", encoding="utf-8") as f: json.dump(output, f, ensure_ascii=False, indent=2)
-    print(f"\n[OK] Arquivo salvo em {OUT_PATH}")
+            forecast = []
+            for d in range(5):
+                temps = [float(t2m_loc.sel(step=np.timedelta64(d*24+h, "h"), method="nearest").item())-273.15 for h in range(0,24,6)]
+                winds = [((float(u10_loc.sel(step=np.timedelta64(d*24+h, "h"), method="nearest").item())**2 + float(v10_loc.sel(step=np.timedelta64(d*24+h, "h"), method="nearest").item())**2)**0.5)*3.6 for h in range(0,24,6)]
+                clouds = cloud_by_period(tcc_loc, d)
+                date_obj = run_date + dt.timedelta(days=d)
+                
+                forecast.append({
+                    "day": d + 1, "date": date_obj.strftime("%Y-%m-%d"), "weekday": WEEKDAYS[date_obj.weekday()],
+                    "rain_mm": round(float(r_loc[d].item()), 2), "temp_min_c": round(min(temps), 2), 
+                    "temp_max_c": round(max(temps), 2), "wind_max_kmh": round(max(winds), 2),
+                    "nuvens_madrugada": clouds["madrugada"], "nuvens_manha": clouds["manha"], 
+                    "nuvens_tarde": clouds["tarde"], "nuvens_noite": clouds["noite"]
+                })
+            output.append({"cidade": f"{city.get('nome')} - {uf_from_code(city)}", "forecast": forecast})
+
+        with open(OUT_PATH, "w", encoding="utf-8") as f: json.dump(output, f, ensure_ascii=False, indent=2)
+        print(f"\n[OK] Arquivo salvo em {OUT_PATH}")
+
+    except Exception as e:
+        print(f"[ERRO] Ocorreu uma falha: {e}")
+        sys.exit(1) # Força o GitHub Actions a marcar como falha
 
 if __name__ == "__main__":
     main()
