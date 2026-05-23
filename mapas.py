@@ -1,5 +1,5 @@
 # ============================================================
-# MAPAS ECMWF - COM CACHE INTELIGENTE
+# MAPAS ECMWF - ROBUSTO + CACHE + FALLBACK
 # ============================================================
 
 import os
@@ -44,7 +44,7 @@ UPSCALE_FACTOR = 2
 # DATA
 # ============================================================
 
-utc_now = pd.Timestamp.utcnow()
+utc_now = pd.Timestamp.now(tz="UTC")
 run_date = utc_now.floor("D")
 run_date_str = run_date.strftime("%Y%m%d")
 
@@ -83,7 +83,7 @@ capitais = {
 }
 
 # ============================================================
-# CORES (inalterado)
+# CORES (INALTERADO)
 # ============================================================
 
 levels = [0,1,2,5,10,15,20,30,40,50,75,100,125,150,200,250,300,400]
@@ -99,16 +99,15 @@ cmap = mcolors.ListedColormap(colors)
 norm = mcolors.BoundaryNorm(levels, cmap.N)
 
 # ============================================================
-# CACHE ECMWF
+# CACHE
 # ============================================================
 
 grib_file = os.path.join(DATA_DIR, f"ecmwf_tp_00z_{run_date_str}.grib2")
 
-def cache_is_valid():
 
+def cache_is_valid():
     if not os.path.exists(grib_file):
         return False
-
     if not os.path.exists(META_FILE):
         return False
 
@@ -116,39 +115,33 @@ def cache_is_valid():
         with open(META_FILE, "r") as f:
             meta = json.load(f)
 
-        return (
-            meta.get("run_date") == run_date_str and
-            meta.get("run_hour") == RUN_HOUR and
-            meta.get("file_exists") is True
-        )
+        return meta.get("file_exists", False) is True
     except:
         return False
 
 
-def update_cache_meta():
-
+def update_cache_meta(source_date):
     meta = {
         "run_date": run_date_str,
-        "run_hour": RUN_HOUR,
+        "ecmwf_source_date": source_date,
         "file_exists": True
     }
 
     with open(META_FILE, "w") as f:
         json.dump(meta, f)
 
+# ============================================================
+# DOWNLOAD COM FALLBACK
+# ============================================================
 
-def download_ecmwf():
+def download_from_date(date_obj, label):
 
-    if cache_is_valid():
-        print("CACHE OK - usando GRIB existente")
-        return
-
-    print("Baixando ECMWF (cache miss)...")
+    print(f"Tentando ECMWF ({label}) {date_obj.strftime('%Y-%m-%d')}")
 
     client = Client(source="azure", model="ifs", resol="0p25")
 
     client.retrieve(
-        date=run_date.strftime("%Y-%m-%d"),
+        date=date_obj.strftime("%Y-%m-%d"),
         time=RUN_HOUR,
         stream="oper",
         type="fc",
@@ -157,11 +150,39 @@ def download_ecmwf():
         target=grib_file
     )
 
-    update_cache_meta()
-    print("Download concluído + cache atualizado")
+    return True
+
+
+def download_ecmwf():
+
+    if cache_is_valid():
+        print("CACHE OK - usando GRIB existente")
+        return
+
+    # tentativa 1: dia atual
+    try:
+        download_from_date(run_date, "dia atual")
+        update_cache_meta(run_date_str)
+        print("Download OK (dia atual)")
+        return
+    except Exception as e:
+        print("Falha dia atual:", e)
+
+    # fallback: dia anterior
+    fallback_date = run_date - pd.Timedelta(days=1)
+
+    try:
+        download_from_date(fallback_date, "dia anterior")
+        update_cache_meta(fallback_date.strftime("%Y%m%d"))
+        print("Download OK (dia anterior)")
+        return
+    except Exception as e:
+        print("Falha fallback:", e)
+
+    raise RuntimeError("ECMWF indisponível (atual e anterior)")
 
 # ============================================================
-# LOAD
+# LOAD GRIB
 # ============================================================
 
 def load_data():
@@ -234,9 +255,7 @@ def plot_map(data, title, filename):
             scale="10m",
             facecolor="none"
         )
-
         ax.add_feature(estados, edgecolor="black", linewidth=0.3)
-
     except:
         pass
 
@@ -320,6 +339,8 @@ def main():
     )
 
     print("Processo finalizado")
+
+# ============================================================
 
 if __name__ == "__main__":
     main()
