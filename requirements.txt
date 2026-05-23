@@ -1,0 +1,12 @@
+numpy
+xarray
+matplotlib
+cfgrib
+eccodes
+cartopy
+geopandas
+geobr
+ecmwf-opendata
+shapely
+pyproj
+fiona
