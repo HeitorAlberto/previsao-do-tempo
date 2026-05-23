@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import glob
-import zipfile
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -17,7 +15,6 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
 from ecmwf.opendata import Client
-
 from PIL import Image
 
 
@@ -43,8 +40,24 @@ UPSCALE_FACTOR = 2
 # ============================================================
 
 utc_now = pd.Timestamp.utcnow()
-run_date = utc_now.floor("D")
-run_date_str = run_date.strftime("%Y%m%d")
+
+# tentativa principal: dia atual (UTC)
+base_date = utc_now.floor("D")
+
+
+# ============================================================
+# FUNÇÃO: escolher melhor rodada disponível (00Z)
+# ============================================================
+
+def get_valid_run_date():
+    """
+    Tenta 00Z do dia atual.
+    Se não funcionar (dados ainda não disponíveis), usa dia anterior.
+    """
+    return [
+        base_date,
+        base_date - pd.Timedelta(days=1)
+    ]
 
 
 # ============================================================
@@ -83,7 +96,7 @@ capitais = {
 
 
 # ============================================================
-# ESCALA DE CORES
+# CORES
 # ============================================================
 
 levels = [
@@ -104,46 +117,61 @@ norm = mcolors.BoundaryNorm(levels, cmap.N)
 
 
 # ============================================================
-# ARQUIVO GRIB2
+# DOWNLOAD GRIB (COM FALLBACK 00Z)
 # ============================================================
 
-grib_file = os.path.join(
-    DATA_DIR,
-    f"ecmwf_tp_00z_{run_date_str}.grib2"
-)
+grib_file = None
+run_date_used = None
 
+for run_date in get_valid_run_date():
 
-# ============================================================
-# DOWNLOAD (SEM TXT, SÓ GRIB COMO CONTROLE)
-# ============================================================
+    run_date_str = run_date.strftime("%Y%m%d")
 
-download_grib = True
-
-if os.path.exists(grib_file):
-    print("GRIB já existe no disco. Pulando download.")
-    download_grib = False
-
-if download_grib:
-
-    print("Baixando rodada ECMWF 00Z...")
-
-    client = Client(
-        source="azure",
-        model="ifs",
-        resol="0p25"
+    grib_file_try = os.path.join(
+        DATA_DIR,
+        f"ecmwf_tp_00z_{run_date_str}.grib2"
     )
 
-    client.retrieve(
-        date=run_date.strftime("%Y-%m-%d"),
-        time=RUN_HOUR,
-        stream="oper",
-        type="fc",
-        step=[24, 48, 72, 96, 120],
-        param=["tp"],
-        target=grib_file
-    )
+    if os.path.exists(grib_file_try):
+        print(f"GRIB já existe: {grib_file_try}")
+        grib_file = grib_file_try
+        run_date_used = run_date
+        break
 
-    print("Download concluído.")
+    try:
+        print(f"Tentando baixar ECMWF 00Z: {run_date_str}")
+
+        client = Client(
+            source="azure",
+            model="ifs",
+            resol="0p25"
+        )
+
+        client.retrieve(
+            date=run_date.strftime("%Y-%m-%d"),
+            time=RUN_HOUR,
+            stream="oper",
+            type="fc",
+            step=[24, 48, 72, 96, 120],
+            param=["tp"],
+            target=grib_file_try
+        )
+
+        if os.path.exists(grib_file_try):
+            print("Download OK:", grib_file_try)
+            grib_file = grib_file_try
+            run_date_used = run_date
+            break
+
+    except Exception as e:
+        print("Falha no download:", run_date_str, e)
+
+
+if grib_file is None:
+    raise RuntimeError("Não foi possível obter GRIB (00Z atual nem anterior).")
+
+
+print("Rodada usada:", run_date_used)
 
 
 # ============================================================
@@ -173,7 +201,7 @@ tp = tp.sel(latitude=slice(10, -35), longitude=slice(-75, -30))
 
 
 # ============================================================
-# INTERPOLAÇÃO SUAVE
+# SMOOTH + INTERPOLAÇÃO
 # ============================================================
 
 def smooth_data(data):
@@ -203,7 +231,7 @@ def smooth_data(data):
 
 
 # ============================================================
-# FUNÇÃO MAPA
+# MAPA
 # ============================================================
 
 def plot_map(data, title, filename):
@@ -266,7 +294,7 @@ def plot_map(data, title, filename):
 
 
 # ============================================================
-# MAPAS 24H
+# 24H
 # ============================================================
 
 prev = xr.zeros_like(tp.isel(step=0))
@@ -277,20 +305,20 @@ for i in range(5):
     chuva_24h = atual - prev
     prev = atual
 
-    titulo = f"ECMWF 24h Dia {i+1}\n{run_date:%d/%m/%Y}"
+    titulo = f"ECMWF 24h Dia {i+1}\n{run_date_used:%d/%m/%Y}"
 
     plot_map(chuva_24h, titulo, f"chuva_24h_dia_{i+1}.webp")
 
 
 # ============================================================
-# MAPA TOTAL
+# TOTAL 5 DIAS
 # ============================================================
 
 total_5d = tp.isel(step=-1)
 
 plot_map(
     total_5d,
-    f"ECMWF Total 5 dias\n{run_date:%d/%m/%Y}",
+    f"ECMWF Total 5 dias\n{run_date_used:%d/%m/%Y}",
     "chuva_total_5dias.webp"
 )
 
