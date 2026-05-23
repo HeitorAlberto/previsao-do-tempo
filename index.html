@@ -1,46 +1,40 @@
-<!doctype html>
-<html lang="pt-BR">
-
+<!DOCTYPE html>
+<html lang="pt-br">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Previsão do tempo - ECMWF</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="icone.ico" type="image/x-icon">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Previsão do Tempo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="icone.ico" type="image/x-icon">
 </head>
-
 <body>
-    <header>
-        <div id="titulo-site">PREVISÃO DO TEMPO</div>
-        <form id="searchForm">
-            <input type="text" id="cityInput" placeholder="Buscar cidade (ex: Recife, Brasil)" autocomplete="address-level2" />
-            <button type="submit">Buscar</button>
-            <button type="button" id="geoButton">Localizar</button>
-        </form>
-    </header>
 
-    <div id="history-box">
-        <div id="history-label">Histórico de buscas</div>
-        <div id="history"></div>
+  <header>
+    <h1>Previsão do Tempo</h1>
+  </header>
+
+  <div id="box-search">
+    <div class="search-wrapper">
+      <input id="cidadeInput" placeholder="Digite a cidade" autocomplete="off">
+      <div id="suggestions" class="suggestions"></div>
     </div>
 
-    <main>
-        <div class="location-row">
-            <div style="display: grid; gap: 20px;margin-bottom: 40px; justify-items: center;padding: 12px;">
-                <div id="locationName"></div>
-                <div><span id="todayDate"></span></div>
-                <div>Modelo ECMWF (HRES 9 km)</div>
-                <div><a href="https://open-meteo.com/en/docs/ecmwf-api" target="_blank" class="open-meteo-ref">Dados via Open Meteo</a></div>
-                <div><a href="mapas.html" class="open-meteo-ref">Mapas de chuva</a></div>
-            </div>
-        </div>
+    <button id="btnBuscar">Buscar</button>
 
-        <section id="forecastSection">
-            <div id="cards"></div>
-        </section>
-    </main>
+    <div id="historico"></div>
 
-        <script type="module" src="./app.js"></script>
+  </div>
+
+  
+
+  <h2 id="cidade"></h2>
+
+  <h3 class="info-modelo">Fonte: ECMWF às 00Z</h3>
+
+  <a href="mapas.html" id="btn-mapas" target="_blank"><h3>Mapas de chuva</h3></a>
+
+  <div id="container"></div>
+
+  <script src="app.js"></script>
 </body>
-
 </html>

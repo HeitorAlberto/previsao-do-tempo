@@ -1,0 +1,38 @@
+name: Gerar Previsão JSON
+
+on:
+  schedule:
+    # 6h no Brasil (UTC-3) = 9h em UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Necessário para o commit e push
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependências
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libeccodes-dev
+          pip install numpy xarray ecmwf-opendata cfgrib tqdm
+
+      - name: Rodar script de previsão
+        run: python nome_do_seu_arquivo.py # Substitua pelo nome real do seu arquivo .py
+
+      - name: Commit e Push do resultado
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add previsao.json
+          # Verifica se houve mudança para evitar commits vazios
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update: previsao.json" && git push)

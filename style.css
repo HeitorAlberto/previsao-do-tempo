@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Montserrat", sans-serif;
+}
+
+header {
+    background-color: black;
+    color: #ff6229;
+    padding: 20px 0;
+}
+
+h1 {
+    text-align: center;
+}
+
+#box-search {
+    display: grid;
+    justify-content: center;
+    padding: 40px 0;
+    
+
+}
+
+#cidadeInput, #btnBuscar {
+    font-size: 16px;
+    width: 300px;
+    padding: 10px 0;
+    text-align: center;
+}
+
+.search-wrapper {
+  position: relative;
+  width: 300px;
+}
+
+.suggestions {
+  border: 1px solid #ccc;
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  background: white;
+  width: 100%;
+}
+
+.suggestions div {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.suggestions div:hover {
+  background: #eee;
+}
+
+#historico {
+  margin: 20px auto;
+  width: 300px;
+}
+
+.historico-item {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+}
+
+.historico-item:hover {
+  background: #f2f2f2;
+}
+
+
+#cidade {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+
+.info-modelo, #btn-mapas {
+    text-align: center;
+    color: #21b45c;
+    margin-bottom: 30px;
+    text-decoration: none;
+}
+
+#container {
+    display: grid;
+    justify-content: center;
+    font-size: 18px;
+    margin-top: 50px;
+}
+
+.card {
+    display: grid;
+    gap: 20px;
+    border-bottom: 2px solid #e3e3e3;
+    padding: 30px 0px 70px 0px;
+}
+
+.card h3 {
+    text-align: center;
+}
+
+.data-2 {
+    text-align: right;
+    font-weight: bolder;
+}
+
+.data-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 120px;
+    row-gap: 20px;
+}
+
+
+@media (max-width: 450px) { 
+
+    .data-row {
+        column-gap: 30px;
+    }
+
+ }
