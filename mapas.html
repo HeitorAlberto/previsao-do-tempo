@@ -4,12 +4,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mapas ECMWF 5 dias</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="icone.ico" type="image/x-icon">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    header {
+      text-align: center;
+    }
+
+    #images-box {
+      display: flex;
+      flex-direction: column;
+      width: 90%;
+    }
+
+    #images-box img {
+      width: 110%;
+      justify-self: center;
+    }
+  </style>
 </head>
 <body>
   <header>
     <div id="titulo-site">PREVISÃO DO TEMPO</div>
   </header>
+
+  <div id="images-box">
+    <img src="mapas/01.png" alt="">
+    <img src="mapas/02.png" alt="">
+    <img src="mapas/03.png" alt="">
+    <img src="mapas/04.png" alt="">
+    <img src="mapas/05.png" alt="">
+    <img src="mapas/06.png" alt="">
+  </div>
   
 </body>
 </html>

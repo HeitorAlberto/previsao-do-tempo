@@ -75,6 +75,12 @@ button:hover {
 
 /* ===== Histórico ===== */
 
+#history-label {
+    text-align: center;
+    font-weight: bolder;
+    color: lightslategray;
+}
+
 #history {
     display: flex;
     gap: 10px;
@@ -91,6 +97,7 @@ button:hover {
     border: 1px solid #d8d8d8;
     width: auto;
     min-height: 42px;
+    font-size: 15px;
 }
 
 .history-btn:hover {
