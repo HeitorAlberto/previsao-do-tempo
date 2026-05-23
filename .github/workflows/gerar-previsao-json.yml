@@ -27,7 +27,7 @@ jobs:
           pip install numpy xarray ecmwf-opendata cfgrib tqdm
 
       - name: Rodar script de previsão
-        run: python nome_do_seu_arquivo.py # Substitua pelo nome real do seu arquivo .py
+        run: python previsao.py
 
       - name: Commit e Push do resultado
         run: |
