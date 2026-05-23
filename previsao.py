@@ -10,9 +10,6 @@ import sys
 CITIES_PATH = "cidades.json"
 GRIB_DIR = "grib"
 
-OUT_MORNING = "previsao_manha.json"
-OUT_AFTERNOON = "previsao_tarde.json"
-
 os.makedirs(GRIB_DIR, exist_ok=True)
 
 WEEKDAYS = {
@@ -20,34 +17,13 @@ WEEKDAYS = {
     3: "quinta-feira", 4: "sexta-feira", 5: "sábado", 6: "domingo"
 }
 
-# ---------------- RUN SELECTION ----------------
-def choose_runs():
-    now = dt.datetime.now(dt.timezone.utc)
-    return [0] if now.hour <= 10 else [12, 0]
+# ---------------- RUN ----------------
+def get_run_hour():
+    now = dt.datetime.utcnow()
+    return 12 if now.hour >= 15 else 0
 
 
-def get_best_run(client):
-    now = dt.datetime.now(dt.timezone.utc)
-    for run_hour in choose_runs():
-        try:
-            client.retrieve(
-                date=now.strftime("%Y%m%d"),
-                time=run_hour,
-                stream="oper",
-                type="fc",
-                param="tp",
-                step=0,
-                target="probe.grib"
-            )
-            if os.path.exists("probe.grib"):
-                os.remove("probe.grib")
-            return run_hour
-        except:
-            continue
-    return 0
-
-
-# ---------------- UTIL ----------------
+# ---------------- UTILS ----------------
 def uf_from_code(city):
     UF_MAP = {
         "12":"AC","27":"AL","13":"AM","16":"AP","29":"BA","23":"CE","53":"DF",
@@ -58,18 +34,7 @@ def uf_from_code(city):
     return UF_MAP.get(str(city.get("codigo_uf", "")).zfill(2), "")
 
 
-def load_var(path, scale=1.0):
-    ds = xr.open_dataset(path, engine="cfgrib", backend_kwargs={"indexpath": ""})
-    var = list(ds.data_vars)[0]
-
-    data = (ds[var] * scale).assign_coords(
-        longitude=(((ds.longitude + 180) % 360) - 180)
-    )
-
-    return data.sel(latitude=slice(10, -40), longitude=slice(-85, -25)).load()
-
-
-def download_cached(client, param, name, date_str, steps, run_hour):
+def download(client, param, name, date_str, steps, run_hour):
     path = os.path.join(GRIB_DIR, f"{name}_{date_str}_{run_hour}.grib")
 
     if os.path.exists(path):
@@ -88,6 +53,17 @@ def download_cached(client, param, name, date_str, steps, run_hour):
     return path
 
 
+def load_var(path, scale=1.0):
+    ds = xr.open_dataset(path, engine="cfgrib", backend_kwargs={"indexpath": ""})
+    var = list(ds.data_vars)[0]
+
+    data = (ds[var] * scale).assign_coords(
+        longitude=(((ds.longitude + 180) % 360) - 180)
+    )
+
+    return data.sel(latitude=slice(10, -40), longitude=slice(-85, -25)).load()
+
+
 def daily_rain(tp):
     return [
         (tp.sel(step=np.timedelta64((d + 1) * 24, "h"), method="nearest") -
@@ -100,21 +76,19 @@ def daily_rain(tp):
 def main():
     try:
         client = Client(source="azure")
-        now = dt.datetime.now(dt.timezone.utc)
 
-        run_hour = get_best_run(client)
+        now = dt.datetime.utcnow()
         date_str = now.strftime("%Y%m%d")
+
+        run_hour = get_run_hour()
         steps = list(range(0, 121, 6))
 
-        tp = load_var(download_cached(client, "tp", "chuva", date_str, steps, run_hour), 1000.0)
-        t2m = load_var(download_cached(client, "2t", "temp", date_str, steps, run_hour))
-        u10 = load_var(download_cached(client, "10u", "u", date_str, steps, run_hour))
-        v10 = load_var(download_cached(client, "10v", "v", date_str, steps, run_hour))
+        tp = load_var(download(client, "tp", "chuva", date_str, steps, run_hour), 1000.0)
+        t2m = load_var(download(client, "2t", "temp", date_str, steps, run_hour))
+        u10 = load_var(download(client, "10u", "u", date_str, steps, run_hour))
+        v10 = load_var(download(client, "10v", "v", date_str, steps, run_hour))
 
         rain = daily_rain(tp)
-
-        hour_now = now.hour
-        OUT_PATH = OUT_MORNING if hour_now <= 10 else OUT_AFTERNOON
 
         output = []
 
@@ -168,17 +142,19 @@ def main():
                 "forecast": forecast
             })
 
-        # ✔ WRAPPER COM METADATA
-        final_json = {
+        final = {
             "generated_at": now.strftime("%Y-%m-%d %H:%M:%S"),
+            "run_date": date_str,
             "run_hour": run_hour,
             "data": output
         }
 
-        with open(OUT_PATH, "w", encoding="utf-8") as f:
-            json.dump(final_json, f, ensure_ascii=False, indent=2)
+        filename = f"previsao_{run_hour:02d}Z.json"
 
-        print(f"[OK] Gerado: {OUT_PATH}")
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(final, f, ensure_ascii=False, indent=2)
+
+        print(f"[OK] Gerado {filename}")
 
     except Exception as e:
         print(f"[ERRO] {e}")

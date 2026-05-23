@@ -2,43 +2,51 @@ let dados = [];
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
 
 async function carregarDados() {
-  try {
-    const res = await fetch('previsao.json?v=' + Date.now());
-    const json = await res.json();
+  const hoje = new Date().toISOString().slice(0, 10);
 
-    dados = Array.isArray(json) ? json : json?.data || [];
-  } catch (e) {
+  const [h12, h00] = await Promise.all([
+    fetch(`previsao_12Z.json?v=${Date.now()}`).then(r => r.json()).catch(() => null),
+    fetch(`previsao_00Z.json?v=${Date.now()}`).then(r => r.json()).catch(() => null)
+  ]);
+
+  function valido(json, run) {
+    return json &&
+      json.run_hour === run &&
+      json.run_date === hoje &&
+      Array.isArray(json.data);
+  }
+
+  if (valido(h12, 12)) {
+    dados = h12.data;
+    console.log("Usando 12Z");
+  } else if (valido(h00, 0)) {
+    dados = h00.data;
+    console.log("Usando 00Z");
+  } else {
     dados = [];
+    console.log("Sem dados válidos");
   }
 
   renderizarHistorico();
 }
 
-/* ---------------- HISTÓRICO ---------------- */
-
 function salvarHistorico() {
   localStorage.setItem("historico", JSON.stringify(historico));
 }
-
-/* ---------------- DATA ---------------- */
 
 function formatarData(dataISO) {
   const [ano, mes, dia] = dataISO.split("-");
   return `${dia}/${mes}/${ano}`;
 }
 
-/* ---------------- TEXTO ---------------- */
-
 function normalizarTexto(texto) {
-  return (texto || "")
+  return texto
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .split("-")[0]
     .trim();
 }
-
-/* ---------------- RESUMO ---------------- */
 
 function gerarResumo(manha, tarde) {
   const combinacoes = {
@@ -60,10 +68,9 @@ function gerarResumo(manha, tarde) {
     "nublado|nublado": "☁️ Nublado"
   };
 
-  return combinacoes[`${manha}|${tarde}`] || "Condição variável";
+  const chave = `${manha}|${tarde}`;
+  return combinacoes[chave] || "Condição variável";
 }
-
-/* ---------------- HISTÓRICO RENDER ---------------- */
 
 function renderizarHistorico() {
   const el = document.getElementById("historico");
@@ -85,8 +92,6 @@ function renderizarHistorico() {
   });
 }
 
-/* ---------------- RENDER ---------------- */
-
 function renderizarCidade(cidadeObj) {
   const container = document.getElementById("container");
   const titulo = document.getElementById("cidade");
@@ -94,8 +99,8 @@ function renderizarCidade(cidadeObj) {
   container.innerHTML = "";
   titulo.textContent = `📍 ${cidadeObj.cidade}`;
 
-  (cidadeObj.forecast || []).forEach(d => {
-    const resumo = gerarResumo(d.nuvens_manha, d.nuvens_tarde);
+  cidadeObj.forecast.forEach(d => {
+    const resumoDoDia = gerarResumo(d.nuvens_manha, d.nuvens_tarde);
 
     const div = document.createElement("div");
     div.className = "card";
@@ -111,21 +116,21 @@ function renderizarCidade(cidadeObj) {
         <div class="data-2">${Math.round(d.rain_mm)} mm</div>
 
         <div class="data-1">🍃 Vento</div>
-        <div class="data-2">${Math.round(d.wind_max_kmh)} km/h</div>
+        <div class="data-2">${Math.round(d.wind_max_kmh)} km/h</div>    
       </div>
 
       <div class="cloud-desc">
-        <b>${resumo}</b>
+        <b>${resumoDoDia}</b>
       </div>
     `;
 
     container.appendChild(div);
   });
 
-  /* ---------------- HISTÓRICO UPDATE ---------------- */
+  const nomeCidade = cidadeObj.cidade;
 
-  historico = historico.filter(c => c !== cidadeObj.cidade);
-  historico.unshift(cidadeObj.cidade);
+  historico = historico.filter(c => c !== nomeCidade);
+  historico.unshift(nomeCidade);
   historico = historico.slice(0, 3);
 
   salvarHistorico();
@@ -135,12 +140,8 @@ function renderizarCidade(cidadeObj) {
   document.getElementById("suggestions").innerHTML = "";
 }
 
-/* ---------------- BUSCA ---------------- */
-
 function buscarCidade() {
-  const input = normalizarTexto(
-    document.getElementById("cidadeInput").value
-  );
+  const input = normalizarTexto(document.getElementById("cidadeInput").value);
 
   const cidadeEncontrada = dados.find(c =>
     normalizarTexto(c.cidade).includes(input)
@@ -155,8 +156,6 @@ function buscarCidade() {
   renderizarCidade(cidadeEncontrada);
 }
 
-/* ---------------- AUTOCOMPLETE ---------------- */
-
 const inputEl = document.getElementById("cidadeInput");
 const suggestions = document.getElementById("suggestions");
 
@@ -164,10 +163,11 @@ inputEl.addEventListener("input", () => {
   const valor = normalizarTexto(inputEl.value);
 
   suggestions.innerHTML = "";
+
   if (!valor) return;
 
   const filtrados = dados
-    .filter(c => normalizarTexto(c.cidade).startsWith(valor))
+    .filter(c => normalizarTexto(c.cidade).includes(valor))
     .slice(0, 6);
 
   filtrados.forEach(c => {
@@ -184,19 +184,14 @@ inputEl.addEventListener("input", () => {
   });
 });
 
-/* fechar dropdown */
 document.addEventListener("click", (e) => {
   if (e.target !== inputEl) suggestions.innerHTML = "";
 });
-
-/* ---------------- EVENTOS ---------------- */
 
 document.getElementById("btnBuscar").addEventListener("click", buscarCidade);
 
 inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") buscarCidade();
 });
-
-/* ---------------- INIT ---------------- */
 
 carregarDados();
