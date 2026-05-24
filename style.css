@@ -100,9 +100,8 @@ h1 {
 .card h3 {
     text-align: center;
     background-color: black;
-    padding: 10px 0;
+    padding: 2px 0;
     color: white;
-    border-radius: 12px;
 }
 
 .data-2 {
