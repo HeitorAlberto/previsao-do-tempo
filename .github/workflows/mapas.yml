@@ -3,7 +3,8 @@ name: Gerar Mapas de Chuva
 on:
   schedule:
     - cron: '0 8 * * *' # Roda todo dia às 08:00 UTC
-  workflow_dispatch:    # Permite rodar manualmente
+
+workflow_dispatch:    # Permite rodar manualmente
 
 jobs:
   gerar-mapas:
