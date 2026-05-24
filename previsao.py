@@ -19,7 +19,6 @@ WEEKDAYS = {
 
 # ---------------- RUN ----------------
 def get_run_hour():
-    # Retorna sempre 0 para forçar o run das 00Z
     return 0
 
 
@@ -62,7 +61,6 @@ def load_var(path, scale=1.0):
 
 
 def daily_rain(tp):
-    # Calcula a chuva acumulada diária baseada no step acumulado do ECMWF
     return [
         (tp.sel(step=np.timedelta64((d + 1) * 24, "h"), method="nearest") -
          tp.sel(step=np.timedelta64(d * 24, "h"), method="nearest")).clip(min=0)
@@ -74,10 +72,19 @@ def daily_rain(tp):
 def main():
     try:
         client = Client(source="azure")
+        
+        # Lógica de data: se for muito cedo, usa o dia anterior para evitar 404
         now = dt.datetime.utcnow()
-        date_str = now.strftime("%Y%m%d")
+        if now.hour < 6:
+            target_date = now - dt.timedelta(days=1)
+        else:
+            target_date = now
+            
+        date_str = target_date.strftime("%Y%m%d")
         run_hour = get_run_hour()
         steps = list(range(0, 121, 6))
+
+        print(f"[INFO] Buscando dados de {date_str} {run_hour:02d}Z")
 
         # Downloads
         tp = load_var(download(client, "tp", "chuva", date_str, steps, run_hour), 1000.0)
@@ -104,7 +111,6 @@ def main():
 
             forecast = []
             for d in range(5):
-                # Extrai dados de 6 em 6 horas
                 temps = [
                     float(t2m_loc.sel(step=np.timedelta64(d*24 + h, "h"), method="nearest").item()) - 273.15
                     for h in range(0, 24, 6)
@@ -115,11 +121,12 @@ def main():
                     for h in range(0, 24, 6)
                 ]
 
-                date_obj = now + dt.timedelta(days=d)
+                # Data do forecast baseada na data de referência do arquivo
+                forecast_date = target_date + dt.timedelta(days=d)
                 forecast.append({
                     "day": d + 1,
-                    "date": date_obj.strftime("%Y-%m-%d"),
-                    "weekday": WEEKDAYS[date_obj.weekday()],
+                    "date": forecast_date.strftime("%Y-%m-%d"),
+                    "weekday": WEEKDAYS[forecast_date.weekday()],
                     "rain_mm": round(float(r_loc[d].item()), 2),
                     "temp_min_c": round(min(temps), 2),
                     "temp_max_c": round(max(temps), 2),
