@@ -94,12 +94,15 @@ h1 {
 .card {
     display: grid;
     gap: 30px;
-    border-bottom: 2px solid #e3e3e3;
     padding: 30px 0px 70px 0px;
 }
 
 .card h3 {
     text-align: center;
+    background-color: black;
+    padding: 10px 0;
+    color: white;
+    border-radius: 12px;
 }
 
 .data-2 {
@@ -121,6 +124,10 @@ h1 {
 
 
 @media (max-width: 450px) { 
+
+    #cidade {
+        font-size: 20px;
+    }
 
     .data-row {
         column-gap: 30px;
