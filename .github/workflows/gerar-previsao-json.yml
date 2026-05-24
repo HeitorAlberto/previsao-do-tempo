@@ -2,8 +2,8 @@ name: Gerar Previsão JSON
 
 on:
   schedule:
-    #00h da manhã BR
-    - cron: '0 3 * * *'
+    #03h da manhã BR
+    - cron: '0 6 * * *'
 
 
   workflow_dispatch:
