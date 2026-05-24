@@ -19,8 +19,8 @@ WEEKDAYS = {
 
 # ---------------- RUN ----------------
 def get_run_hour():
-    now = dt.datetime.utcnow()
-    return 12 if now.hour >= 15 else 0
+    # Retorna sempre 0 para forçar o run das 00Z
+    return 0
 
 
 # ---------------- UTILS ----------------
@@ -35,7 +35,7 @@ def uf_from_code(city):
 
 
 def download(client, param, name, date_str, steps, run_hour):
-    path = os.path.join(GRIB_DIR, f"{name}_{date_str}_{run_hour}.grib")
+    path = os.path.join(GRIB_DIR, f"{name}_{date_str}_{run_hour:02d}.grib")
 
     if os.path.exists(path):
         return path
@@ -49,22 +49,20 @@ def download(client, param, name, date_str, steps, run_hour):
         step=steps,
         target=path
     )
-
     return path
 
 
 def load_var(path, scale=1.0):
     ds = xr.open_dataset(path, engine="cfgrib", backend_kwargs={"indexpath": ""})
     var = list(ds.data_vars)[0]
-
     data = (ds[var] * scale).assign_coords(
         longitude=(((ds.longitude + 180) % 360) - 180)
     )
-
     return data.sel(latitude=slice(10, -40), longitude=slice(-85, -25)).load()
 
 
 def daily_rain(tp):
+    # Calcula a chuva acumulada diária baseada no step acumulado do ECMWF
     return [
         (tp.sel(step=np.timedelta64((d + 1) * 24, "h"), method="nearest") -
          tp.sel(step=np.timedelta64(d * 24, "h"), method="nearest")).clip(min=0)
@@ -76,20 +74,18 @@ def daily_rain(tp):
 def main():
     try:
         client = Client(source="azure")
-
         now = dt.datetime.utcnow()
         date_str = now.strftime("%Y%m%d")
-
         run_hour = get_run_hour()
         steps = list(range(0, 121, 6))
 
+        # Downloads
         tp = load_var(download(client, "tp", "chuva", date_str, steps, run_hour), 1000.0)
         t2m = load_var(download(client, "2t", "temp", date_str, steps, run_hour))
         u10 = load_var(download(client, "10u", "u", date_str, steps, run_hour))
         v10 = load_var(download(client, "10v", "v", date_str, steps, run_hour))
 
         rain = daily_rain(tp)
-
         output = []
 
         with open(CITIES_PATH, "r", encoding="utf-8-sig") as f:
@@ -97,36 +93,29 @@ def main():
 
         for city in tqdm(cities, desc="Processando"):
             lat, lon = city.get("latitude"), city.get("longitude")
-            if lat is None or lon is None:
-                continue
+            if lat is None or lon is None: continue
 
             try:
                 r_loc = [r.sel(latitude=lat, longitude=lon, method="nearest") for r in rain]
                 t2m_loc = t2m.sel(latitude=lat, longitude=lon, method="nearest")
                 u10_loc = u10.sel(latitude=lat, longitude=lon, method="nearest")
                 v10_loc = v10.sel(latitude=lat, longitude=lon, method="nearest")
-            except:
-                continue
+            except: continue
 
             forecast = []
-
             for d in range(5):
+                # Extrai dados de 6 em 6 horas
                 temps = [
                     float(t2m_loc.sel(step=np.timedelta64(d*24 + h, "h"), method="nearest").item()) - 273.15
                     for h in range(0, 24, 6)
                 ]
-
                 winds = [
-                    (
-                        (float(u10_loc.sel(step=np.timedelta64(d*24 + h, "h"), method="nearest").item())**2 +
-                         float(v10_loc.sel(step=np.timedelta64(d*24 + h, "h"), method="nearest").item())**2
-                        )**0.5
-                    ) * 3.6
+                    ((float(u10_loc.sel(step=np.timedelta64(d*24 + h, "h"), method="nearest").item())**2 +
+                      float(v10_loc.sel(step=np.timedelta64(d*24 + h, "h"), method="nearest").item())**2)**0.5) * 3.6
                     for h in range(0, 24, 6)
                 ]
 
                 date_obj = now + dt.timedelta(days=d)
-
                 forecast.append({
                     "day": d + 1,
                     "date": date_obj.strftime("%Y-%m-%d"),
@@ -150,7 +139,6 @@ def main():
         }
 
         filename = f"previsao_{run_hour:02d}Z.json"
-
         with open(filename, "w", encoding="utf-8") as f:
             json.dump(final, f, ensure_ascii=False, indent=2)
 
@@ -159,7 +147,6 @@ def main():
     except Exception as e:
         print(f"[ERRO] {e}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
