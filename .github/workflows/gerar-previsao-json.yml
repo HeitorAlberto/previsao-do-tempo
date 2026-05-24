@@ -4,9 +4,7 @@ on:
   schedule:
     #5h da manhã BR
     - cron: '0 9 * * *'
-    
-    # 12h da manhã BR
-    - cron: '0 15 * * *'
+
 
   workflow_dispatch:
 
