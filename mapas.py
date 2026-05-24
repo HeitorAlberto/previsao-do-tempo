@@ -53,7 +53,7 @@ COLORS = [
     "#a6a6a6",
     "#66ff66",
     "#2dbf2d",
-    "#82b4ff",
+    "#a5c9ff",
     "#1f6feb",
     "#ffff66",
     "#ff751a",
