@@ -2,11 +2,8 @@ let dados = [];
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
 
 async function carregarDados() {
-  const horaUTC = new Date().getUTCHours();
-
-  const arquivo = horaUTC >= 15
-    ? "previsao_12Z.json"
-    : "previsao_00Z.json";
+  // Agora buscamos sempre o arquivo fixo 00Z
+  const arquivo = "previsao_00Z.json";
 
   const base = location.hostname.includes("github.io")
     ? "/previsao-do-tempo/"
@@ -16,7 +13,8 @@ async function carregarDados() {
     const res = await fetch(`${base}${arquivo}?v=${Date.now()}`);
     const json = await res.json();
 
-    dados = Array.isArray(json) ? json : (json.data || []);
+    // Acessa a lista de cidades dentro da chave "data"
+    dados = json.data || [];
 
     renderizarHistorico();
   } catch (e) {
