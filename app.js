@@ -38,8 +38,8 @@ function gerarResumoTempo(periods) {
 
   // 1. Estados Estáveis
   if (m.includes("claro") && t.includes("claro")) return "☀️ Ensolarado";
-  if (m.includes("encoberto") && t.includes("encoberto")) return "☁️ Nublado";
-  if (m.includes("predominio") && t.includes("predominio")) return "🌥️ Predominantemente nublado";
+  if (m.includes("encoberto") && t.includes("encoberto")) return "☁️ Encoberto";
+  if (m.includes("predominio") && t.includes("predominio")) return "🌥️ Nublado";
   if (m.includes("parcial") && t.includes("parcial")) return "⛅ Parcialmente nublado";
   if (m.includes("parcial") && (t.includes("claro"))) return "⛅ Parcialmente nublado";
 
@@ -53,7 +53,7 @@ function gerarResumoTempo(periods) {
   
 
   // 4. Fallback (Caso algo não mapeado)
-  return "🌤️ Sol e nuvens";
+  return "🌤️ Variação de nuvens";
 }
 
 function renderizarHistorico() {
