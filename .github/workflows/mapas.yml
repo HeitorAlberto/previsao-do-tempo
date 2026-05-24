@@ -2,9 +2,11 @@ name: Gerar Mapas de Chuva
 
 on:
   schedule:
-    - cron: '0 8 * * *' # Roda todo dia às 08:00 UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch:
 
-workflow_dispatch:    # Permite rodar manualmente
+permissions:
+  contents: write
 
 jobs:
   gerar-mapas:
@@ -27,17 +29,21 @@ jobs:
       - name: Instalar bibliotecas Python
         run: |
           pip install --upgrade pip
-          # Instala as dependências necessárias para o seu código
           pip install ecmwf-opendata xarray cfgrib matplotlib cartopy geopandas geobr tqdm
 
       - name: Executar script de mapas
         run: python mapas.py
 
-      - name: Deploy dos mapas (exemplo: commit de volta para o repo)
+      - name: Commit e Push dos mapas
         run: |
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
-          git add mapas/
-          git commit -m "Atualiza mapas de chuva [skip ci]" || echo "Nenhuma mudança nos mapas"
-          git push
+          # Verifica se há arquivos alterados na pasta antes de commitar
+          if [ -n "$(git status --porcelain mapas/)" ]; then
+            git add mapas/
+            git commit -m "Atualiza mapas de chuva [skip ci]"
+            git push
+          else
+            echo "Nenhuma mudança nos mapas para commitar."
+          fi
           
