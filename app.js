@@ -9,7 +9,7 @@ const cloudMap = {
 };
 
 async function carregarDados() {
-  const arquivo = "previsao_00Z.csv";
+  const arquivo = "previsao.csv";
   const base = location.hostname.includes("github.io") ? "/previsao-do-tempo/" : "./";
 
   try {
