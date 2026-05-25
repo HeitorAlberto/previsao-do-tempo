@@ -64,7 +64,7 @@ def cloud_code(val):
 
 def main():
     try:
-        client = Client(source="azure")
+        client = Client(source="ecmwf")
 
         now = dt.datetime.now(UTC)
         date_str = now.strftime("%Y%m%d")
