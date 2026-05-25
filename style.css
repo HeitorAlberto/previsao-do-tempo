@@ -99,9 +99,9 @@ h1 {
 
 .card h3 {
     text-align: center;
-    background-color: black;
+    background-color: #f1f1f1;
     padding: 2px 0;
-    color: white;
+    color: #000000;
     border-radius: 6px;
 }
 
