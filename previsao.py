@@ -117,8 +117,9 @@ def main():
                     lcc_vals = lcc_loc.interp(step=t2m_loc.step).values
                     mcc_vals = mcc_loc.interp(step=t2m_loc.step).values
 
-                except:
-                    continue
+                except Exception as e:
+                    print(f"ERRO cidade {city.get('nome')}: {e}")
+                    raise
 
                 cidade_nome = f"{city.get('nome')} - {uf_from_code(city)}"
 
