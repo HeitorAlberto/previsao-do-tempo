@@ -92,7 +92,7 @@ h1 {
 }
 .card {
     display: grid;
-    width: 450px;
+    width: 400px;
     gap: 20px;
     padding-bottom: 50px;
 }
