@@ -1,4 +1,4 @@
-name: Gerar Previsão CSV
+name: Gerar Previsão CSV 00Z
 
 on:
   schedule:
@@ -37,14 +37,14 @@ jobs:
 
       - name: Run forecast
         run: |
-          python -u previsao.py
+          python -u previsao_00Z.py
 
       - name: Commit and push
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
 
-          git add previsao_00Z.csv
+          git add previsao.csv
 
           git diff --cached --quiet || \
           (git commit -m "Auto update forecast (00Z)" && git push)

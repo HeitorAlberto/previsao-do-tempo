@@ -87,7 +87,7 @@ def main():
         with open(CITIES_PATH, "r", encoding="utf-8-sig") as f:
             cities = json.load(f)
 
-        out_path = f"previsao_{run_hour:02d}Z.csv"
+        out_path = "previsao.csv"
 
         with open(out_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
