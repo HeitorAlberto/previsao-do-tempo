@@ -30,7 +30,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy xarray cfgrib eccodes ecmwf-opendata tqdm
+          pip install numpy scipy xarray cfgrib eccodes ecmwf-opendata tqdm
 
       - name: Debug files
         run: ls -lah
