@@ -108,7 +108,7 @@ function gerarResumoTempo(periods) {
   const t = detectarEstado(cloudMap[periods["12h"]?.cloud_desc]);
 
   if (!m || !t) {
-    return "🌤️ Variação de nuvens";
+    return "⛅ Variação de nuvens";
   }
 
   // extremos só se persistirem
@@ -137,7 +137,7 @@ function gerarResumoTempo(periods) {
 
   // melhora leve
   if (m.nivel > t.nivel) {
-    return "🌤️ Parcialmente nublado";
+    return "⛅ Parcialmente nublado";
   }
 
   // piora leve
