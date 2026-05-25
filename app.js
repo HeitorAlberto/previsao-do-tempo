@@ -80,38 +80,72 @@ function normalizarTexto(texto) {
     .trim();
 }
 
+function detectarEstado(desc) {
+  const tipo = normalizarTexto(desc);
+
+  if (!(tipo in LABELS)) return null;
+
+  return {
+    tipo,
+    nivel: {
+      claro: 0,
+      parcial: 1,
+      predominio: 2,
+      encoberto: 3
+    }[tipo]
+  };
+}
+
+const LABELS = {
+  claro: "☀️ Ensolarado",
+  parcial: "⛅ Parcialmente nublado",
+  predominio: "🌥️ Nublado",
+  encoberto: "☁️ Encoberto",
+};
+
 function gerarResumoTempo(periods) {
-  const norm = (str) =>
-    (str || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
+  const m = detectarEstado(cloudMap[periods["06h"]?.cloud_desc]);
+  const t = detectarEstado(cloudMap[periods["12h"]?.cloud_desc]);
 
-  const m = cloudMap[periods["06h"]?.cloud_desc] || "";
-  const t = cloudMap[periods["12h"]?.cloud_desc] || "";
+  if (!m || !t) {
+    return "🌤️ Variação de nuvens";
+  }
 
-  if (m.includes("claro") && t.includes("claro")) return "☀️ Ensolarado";
-  if (m.includes("encoberto") && t.includes("encoberto")) return "☁️ Encoberto";
-  if (m.includes("predominio") && t.includes("predominio")) return "🌥️ Nublado";
-  if (m.includes("parcial") && t.includes("parcial")) return "⛅ Parcialmente nublado";
-  if (m.includes("parcial") && t.includes("claro")) return "⛅ Parcialmente nublado";
+  // extremos só se persistirem
+  if (m.tipo === "claro" && t.tipo === "claro") {
+    return LABELS.claro;
+  }
 
-  if (m.includes("predominio") && (t.includes("parcial") || t.includes("claro")))
-    return "⛅ Parcialmente nublado";
+  if (m.tipo === "encoberto" && t.tipo === "encoberto") {
+    return LABELS.encoberto;
+  }
 
-  if (m.includes("encoberto") && (t.includes("parcial") || t.includes("claro")))
-    return "🌥️ Nublado, depois abre";
+  // intermediários
+  if (m.tipo === t.tipo) {
+    return LABELS[m.tipo];
+  }
 
-  if (
-    (m.includes("claro") || m.includes("parcial") || m.includes("predominio")) &&
-    t.includes("encoberto")
-  )
-    return "🌥️ Nublado à tarde";
+  // melhora forte
+  if (m.nivel >= 2 && t.nivel <= 1) {
+    return "🌥️ Menos nuvens à tarde";
+  }
 
-  if ((m.includes("claro") || m.includes("parcial")) && t.includes("predominio"))
-    return "⛅ Parcialmente nublado";
+  // piora forte
+  if (m.nivel <= 1 && t.nivel >= 2) {
+    return "🌥️ Muitas nuvens à tarde";
+  }
 
-  return "🌤️ Variação de nuvens";
+  // melhora leve
+  if (m.nivel > t.nivel) {
+    return "🌤️ Parcialmente nublado";
+  }
+
+  // piora leve
+  if (m.nivel < t.nivel) {
+    return "🌥️ Aumento de nuvens";
+  }
+
+  return "⛅ Variação de nuvens";
 }
 
 function renderizarHistorico() {

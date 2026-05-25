@@ -14,11 +14,6 @@ CITIES_PATH = "cidades.json"
 GRIB_DIR = "grib"
 os.makedirs(GRIB_DIR, exist_ok=True)
 
-WEEKDAYS = {
-    0: "segunda-feira", 1: "terça-feira", 2: "quarta-feira",
-    3: "quinta-feira", 4: "sexta-feira", 5: "sábado", 6: "domingo"
-}
-
 def get_run_hour():
     return 0
 
@@ -31,10 +26,12 @@ def uf_from_code(city):
     }
     return UF_MAP.get(str(city.get("codigo_uf", "")).zfill(2), "")
 
-def download(client, param, name, date_str, steps, run_hour):
-    path = os.path.join(GRIB_DIR, f"{name}_{date_str}_{run_hour:02d}.grib")
+def download(client, param, name, steps, run_hour, date_str):
+    path = os.path.join(GRIB_DIR, f"{name}_{run_hour:02d}.grib")
+
     if os.path.exists(path):
         return path
+
     client.retrieve(
         date=date_str,
         time=run_hour,
@@ -43,24 +40,18 @@ def download(client, param, name, date_str, steps, run_hour):
         step=steps,
         target=path
     )
+
     return path
 
 def load_var(path, scale=1.0):
     ds = xr.open_dataset(path, engine="cfgrib", backend_kwargs={"indexpath": ""})
     var = list(ds.data_vars)[0]
+
     data = (ds[var] * scale).assign_coords(
         longitude=(((ds.longitude + 180) % 360) - 180)
     )
-    return data.sel(latitude=slice(10, -40), longitude=slice(-85, -25)).load()
 
-def daily_rain(tp):
-    rain_daily = []
-    for d in range(5):
-        val_end = tp.sel(step=np.timedelta64((d + 1) * 24, "h"), method="nearest")
-        val_start = tp.sel(step=np.timedelta64(d * 24, "h"), method="nearest")
-        daily = (val_end - val_start).clip(min=0)
-        rain_daily.append(daily)
-    return rain_daily
+    return data.sel(latitude=slice(10, -40), longitude=slice(-85, -25)).load()
 
 def cloud_code(val):
     if val < 0.2:
@@ -76,19 +67,22 @@ def main():
         client = Client(source="azure")
 
         now = dt.datetime.now(UTC)
-        target_date = now - dt.timedelta(days=1) if now.hour < 6 else now
-        date_str = target_date.strftime("%Y%m%d")
+        date_str = now.strftime("%Y%m%d")
         run_hour = get_run_hour()
-        steps = list(range(0, 121, 6))
+        steps = np.array(list(range(0, 121, 6)), dtype="timedelta64[h]")
 
-        tp = load_var(download(client, "tp", "chuva", date_str, steps, run_hour), 1.0)
-        t2m = load_var(download(client, "2t", "temp", date_str, steps, run_hour))
-        u10 = load_var(download(client, "10u", "u", date_str, steps, run_hour))
-        v10 = load_var(download(client, "10v", "v", date_str, steps, run_hour))
-        lcc = load_var(download(client, "lcc", "lcc", date_str, steps, run_hour))
-        mcc = load_var(download(client, "mcc", "mcc", date_str, steps, run_hour))
+        tp = load_var(download(client, "tp", "chuva", steps, run_hour, date_str), 1.0)
+        t2m = load_var(download(client, "2t", "temp", steps, run_hour, date_str))
+        u10 = load_var(download(client, "10u", "u", steps, run_hour, date_str))
+        v10 = load_var(download(client, "10v", "v", steps, run_hour, date_str))
+        lcc = load_var(download(client, "lcc", "lcc", steps, run_hour, date_str))
+        mcc = load_var(download(client, "mcc", "mcc", steps, run_hour, date_str))
 
-        rain = daily_rain(tp)
+        rain_daily = []
+        for d in range(5):
+            val_end = tp.sel(step=np.timedelta64((d + 1) * 24, "h"), method="nearest")
+            val_start = tp.sel(step=np.timedelta64(d * 24, "h"), method="nearest")
+            rain_daily.append((val_end - val_start).clip(min=0))
 
         with open(CITIES_PATH, "r", encoding="utf-8-sig") as f:
             cities = json.load(f)
@@ -97,10 +91,7 @@ def main():
 
         with open(out_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
-
-            writer.writerow([
-                "cidade","dt","r","tmin","tmax","wmx","c1","c2","c3","c4"
-            ])
+            writer.writerow(["cidade","dt","r","tmin","tmax","wmx","c1","c2","c3","c4"])
 
             for city in tqdm(cities, desc="Processando"):
 
@@ -109,12 +100,23 @@ def main():
                     continue
 
                 try:
-                    r_loc = [r.sel(latitude=lat, longitude=lon, method="nearest") for r in rain]
+                    r_loc = [r.sel(latitude=lat, longitude=lon, method="nearest") for r in rain_daily]
+
                     t2m_loc = t2m.sel(latitude=lat, longitude=lon, method="nearest")
                     u10_loc = u10.sel(latitude=lat, longitude=lon, method="nearest")
                     v10_loc = v10.sel(latitude=lat, longitude=lon, method="nearest")
                     lcc_loc = lcc.sel(latitude=lat, longitude=lon, method="nearest")
                     mcc_loc = mcc.sel(latitude=lat, longitude=lon, method="nearest")
+
+                    # arrays rápidos (sem sel dentro do loop)
+                    t2m_vals = t2m_loc.values
+                    u10_vals = u10_loc.values
+                    v10_vals = v10_loc.values
+
+                    # nuvens interpoladas para mesma grade (evita conflito)
+                    lcc_vals = lcc_loc.interp(step=t2m_loc.step).values
+                    mcc_vals = mcc_loc.interp(step=t2m_loc.step).values
+
                 except:
                     continue
 
@@ -122,41 +124,32 @@ def main():
 
                 for d in range(5):
 
-                    temps = [
-                        float(
-                            t2m_loc.sel(step=np.timedelta64(d*24+h, "h"), method="nearest").item()
-                        ) - 273.15
-                        for h in range(0, 24, 6)
-                    ]
-
-                    winds = [
-                        (
-                            (float(
-                                u10_loc.sel(step=np.timedelta64(d*24+h, "h"), method="nearest").item()
-                            ) ** 2 +
-                             float(
-                                v10_loc.sel(step=np.timedelta64(d*24+h, "h"), method="nearest").item()
-                             ) ** 2
-                            ) ** 0.5
-                        ) * 3.6
-                        for h in range(0, 24, 6)
-                    ]
-
+                    temps = []
+                    winds = []
                     clouds = []
-                    for h in range(0, 24, 6):
-                        step_val = np.timedelta64(d*24 + h, "h")
 
-                        l = float(lcc_loc.sel(step=step_val, method="nearest").item())
-                        m = float(mcc_loc.sel(step=step_val, method="nearest").item())
+                    for h in range(0, 24, 6):
+                        idx = d * 4 + h // 6
+
+                        temp = float(t2m_vals[idx]) - 273.15
+                        u = float(u10_vals[idx])
+                        v = float(v10_vals[idx])
+
+                        wind = ((u ** 2 + v ** 2) ** 0.5) * 3.6
+
+                        l = float(lcc_vals[idx])
+                        m = float(mcc_vals[idx])
 
                         if l > 1:
                             l /= 100
                         if m > 1:
                             m /= 100
 
+                        temps.append(temp)
+                        winds.append(wind)
                         clouds.append(cloud_code(max(l, m)))
 
-                    forecast_date = target_date + dt.timedelta(days=d)
+                    forecast_date = now + dt.timedelta(days=d)
 
                     writer.writerow([
                         cidade_nome,
