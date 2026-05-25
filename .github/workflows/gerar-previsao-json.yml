@@ -37,6 +37,6 @@ jobs:
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
-          git add previsao_*.json
+          git add previsao_00Z.csv
           git diff --quiet && git diff --staged --quiet || \
           (git commit -m "Auto update forecast (00Z/12Z)" && git push)
