@@ -1,4 +1,4 @@
-name: Gerar Previsão JSON
+name: Gerar Previsão CSV
 
 on:
   schedule:
