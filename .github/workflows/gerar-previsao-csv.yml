@@ -1,8 +1,11 @@
-name: Gerar Previsão CSV 00Z
+name: Gerar Previsão CSV
 
 on:
   schedule:
+    # Executa às 06:00 UTC (Rodada 00Z já disponível)
     - cron: '0 6 * * *'
+    # Executa às 18:00 UTC (Rodada 12Z já disponível)
+    - cron: '0 18 * * *'
 
   workflow_dispatch:
 
@@ -37,7 +40,9 @@ jobs:
 
       - name: Run forecast
         run: |
-          python -u previsao_00Z.py
+          # IMPORTANTE: Renomeie o seu script local para 'previsao.py' 
+          # ou altere o nome abaixo para corresponder ao arquivo correto.
+          python -u previsao.py
 
       - name: Commit and push
         run: |
@@ -47,4 +52,4 @@ jobs:
           git add previsao.csv
 
           git diff --cached --quiet || \
-          (git commit -m "Auto update forecast (00Z)" && git push)
+          (git commit -m "Auto update forecast" && git push)
