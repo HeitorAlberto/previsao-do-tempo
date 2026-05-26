@@ -8,6 +8,13 @@ const cloudMap = {
   3: "encoberto"
 };
 
+const LABELS = {
+  claro: "☀️ Ensolarado",
+  parcial: "⛅ Parcialmente nublado",
+  predominio: "🌥️ Nublado",
+  encoberto: "☁️ Encoberto",
+};
+
 async function carregarDados() {
   const arquivo = "previsao.csv";
   const base = location.hostname.includes("github.io") ? "/previsao-do-tempo/" : "./";
@@ -96,13 +103,6 @@ function detectarEstado(desc) {
   };
 }
 
-const LABELS = {
-  claro: "☀️ Ensolarado",
-  parcial: "⛅ Parcialmente nublado",
-  predominio: "🌥️ Nublado",
-  encoberto: "☁️ Encoberto",
-};
-
 function gerarResumoTempo(periods) {
   const m = detectarEstado(cloudMap[periods["06h"]?.cloud_desc]);
   const t = detectarEstado(cloudMap[periods["12h"]?.cloud_desc]);
@@ -111,7 +111,6 @@ function gerarResumoTempo(periods) {
     return "⛅ Variação de nuvens";
   }
 
-  // extremos só se persistirem
   if (m.tipo === "claro" && t.tipo === "claro") {
     return LABELS.claro;
   }
@@ -120,32 +119,36 @@ function gerarResumoTempo(periods) {
     return LABELS.encoberto;
   }
 
-  // intermediários
   if (m.tipo === t.tipo) {
     return LABELS[m.tipo];
   }
 
-  // melhora forte
   if (m.nivel >= 2 && t.nivel <= 1) {
     return "🌥️ Menos nuvens à tarde";
   }
 
-  // piora forte
   if (m.nivel <= 1 && t.nivel >= 2) {
     return "🌥️ Muitas nuvens à tarde";
   }
 
-  // melhora leve
   if (m.nivel > t.nivel) {
     return "⛅ Parcialmente nublado";
   }
 
-  // piora leve
   if (m.nivel < t.nivel) {
     return "🌥️ Aumento de nuvens";
   }
 
   return "⛅ Variação de nuvens";
+}
+
+function obterRotuloChuva(rainMm) {
+  const mm = Math.round(rainMm);
+
+  if (mm === 0) return "Sem chuva";
+  if (mm <= 9) return "Chuva leve";
+  if (mm <= 25) return "Chuva moderada";
+  return "Chuva forte";
 }
 
 function renderizarHistorico() {
@@ -177,6 +180,7 @@ function renderizarCidade(cidadeObj) {
 
   cidadeObj.forecast.forEach((d) => {
     const resumo = gerarResumoTempo(d.periods);
+    const rotuloChuva = obterRotuloChuva(d.rain_mm);
 
     const div = document.createElement("div");
     div.className = "card";
@@ -192,13 +196,12 @@ function renderizarCidade(cidadeObj) {
         <div class="data-1">🌡️ Temperatura</div>
         <div class="data-2">${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</div>
 
-        <div class="data-1">💧 Chuva</div>
+        <div class="data-1">💧 ${rotuloChuva}</div>
         <div class="data-2">${Math.round(d.rain_mm)} mm</div>
 
         <div class="data-1">🍃 Vento</div>
         <div class="data-2">${Math.round(d.wind_max_kmh)} km/h</div>
       </div>
-
     `;
 
     container.appendChild(div);
