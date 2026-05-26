@@ -9,9 +9,9 @@ const cloudMap = {
 };
 
 const LABELS = {
-  claro: "☀️ Ensolarado",
-  parcial: "⛅ Parcialmente nublado",
-  predominio: "🌥️ Nublado",
+  claro: "<img src='icons/sol.webp'> Ensolarado",
+  parcial: "<img src='icons/sol-nuvens.webp'> Parcialmente nublado",
+  predominio: "<img src='icons/nublado.webp'> Nublado",
   encoberto: "☁️ Encoberto",
 };
 
@@ -124,22 +124,22 @@ function gerarResumoTempo(periods) {
   }
 
   if (m.nivel >= 2 && t.nivel <= 1) {
-    return "🌥️ Menos nuvens à tarde";
+    return "<img src='icons/sol-nuvens.webp'> Aberturas à tarde";
   }
 
   if (m.nivel <= 1 && t.nivel >= 2) {
-    return "🌥️ Muitas nuvens à tarde";
+    return "<img src='icons/sol-nuvens.webp'> Muitas nuvens à tarde";
   }
 
   if (m.nivel > t.nivel) {
-    return "⛅ Parcialmente nublado";
+    return "<img src='icons/sol-nuvens.webp'> Parcialmente nublado";
   }
 
   if (m.nivel < t.nivel) {
-    return "🌥️ Aumento de nuvens";
+    return "<img src='icons/sol-nuvens.webp'> Mais nuvens à tarde";
   }
 
-  return "⛅ Variação de nuvens";
+  return "<img src='icons/sol-nuvens.webp'> Variação de nuvens";
 }
 
 function obterRotuloChuva(rainMm) {
