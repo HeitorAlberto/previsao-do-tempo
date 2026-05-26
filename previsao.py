@@ -39,7 +39,8 @@ def uf_from_code(city):
     return UF_MAP.get(str(city.get("codigo_uf", "")).zfill(2), "")
 
 def download(client, param, name, steps, run_hour, date_str):
-    path = os.path.join(GRIB_DIR, f"{name}_{run_hour:02d}.grib")
+    # Correção do cache: inclui a data no nome do arquivo para evitar ler o grib do dia anterior
+    path = os.path.join(GRIB_DIR, f"{name}_{date_str}_{run_hour:02d}.grib")
 
     if os.path.exists(path):
         return path
@@ -58,7 +59,7 @@ def download(client, param, name, steps, run_hour, date_str):
         print(f"\n[AVISO CRÍTICO] Arquivo {name} da rodada {run_hour:02d}Z de {date_str} não encontrado na Azure.")
         print(f"Detalhe técnico: {e}")
         print("[ABORTANDO] Execução encerrada para preservar os dados atuais do seu site.")
-        sys.exit(0) # Termina o script com sucesso (Código 0) para o GitHub Actions não disparar alerta de erro falso
+        sys.exit(0) # Termina o script com sucesso para o GitHub Actions manter o CSV antigo intocado
         
     return path
 
@@ -77,9 +78,10 @@ def cloud_code(val):
     if val < 0.8: return 2
     return 3
 
-def load_historical_today(today_str):
+def load_historical_today():
     """
-    Lê o CSV antigo e resgata a linha de 'Hoje' para rodadas de 12Z.
+    Lê o CSV antigo e resgata a PRIMEIRA linha encontrada para cada cidade.
+    Essa linha representa o 'Hoje' estável que já estava sendo exibido no site.
     """
     historical_data = {}
     if not os.path.exists(OUT_PATH):
@@ -89,8 +91,10 @@ def load_historical_today(today_str):
         with open(OUT_PATH, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                if row.get("dt") == today_str:
-                    historical_data[row["cidade"]] = row
+                cidade = row.get("cidade")
+                # Armazena apenas a primeira linha de cada cidade (o "Hoje" atual)
+                if cidade and cidade not in historical_data:
+                    historical_data[cidade] = row
     except Exception as e:
         print(f"[AVISO] Não foi possível ler o CSV antigo: {e}")
     
@@ -110,7 +114,6 @@ def main():
             base_date = now
 
         date_str = base_date.strftime("%Y%m%d")
-        today_csv_str = base_date.strftime("%Y-%m-%d")
 
         print(f"[INFO] Iniciando automação do modelo.")
         print(f"[INFO] Rodada Alvo: {run_hour:02d}Z | Data dos dados: {date_str}")
@@ -118,12 +121,12 @@ def main():
 
         historical_today = {}
         if run_hour == 12:
-            print(f"Carregando dados históricos de hoje ({today_csv_str}) do CSV atual...")
-            historical_today = load_historical_today(today_csv_str)
+            print("Carregando dados históricos do primeiro dia a partir do CSV atual...")
+            historical_today = load_historical_today()
 
         steps = list(range(0, 121, 6))
 
-        # Os downloads agora chamam a função com a trava try/except embutida
+        # Downloads e Leituras estruturadas
         tp = load_var(download(client, "tp", "chuva", steps, run_hour, date_str), 1.0)
         t2m = load_var(download(client, "2t", "temp", steps, run_hour, date_str))
         u10 = load_var(download(client, "10u", "u", steps, run_hour, date_str))
@@ -150,7 +153,7 @@ def main():
 
                 cidade_nome = f"{city.get('nome')} - {uf_from_code(city)}"
 
-                # Preserva o Hoje (00Z original) caso estejamos mesclando a rodada 12Z
+                # Preserva o Hoje original caso estejamos mesclando a rodada 12Z
                 if run_hour == 12:
                     row_today = historical_today.get(cidade_nome)
                     if row_today:
@@ -160,7 +163,8 @@ def main():
                             row_today["c1"], row_today["c2"], row_today["c3"], row_today["c4"]
                         ])
                     else:
-                        writer.writerow([cidade_nome, today_csv_str, 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0])
+                        # Fallback de segurança usando a data atual real do fuso
+                        writer.writerow([cidade_nome, now.strftime("%Y-%m-%d"), 0.0, 0.0, 0.0, 0.0, 0, 0, 0, 0])
 
                 try:
                     tp_loc = tp.sel(latitude=lat, longitude=lon, method="nearest")
