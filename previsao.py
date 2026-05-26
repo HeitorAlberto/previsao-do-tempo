@@ -17,11 +17,14 @@ os.makedirs(GRIB_DIR, exist_ok=True)
 
 def get_run_hour():
     """
-    Define automaticamente a rodada do modelo (00Z ou 12Z) 
-    com base no horário UTC atual de execução.
+    Define a rodada do modelo (00Z ou 12Z) baseando-se no horário seguro de liberação.
+    A rodada 00Z só é considerada segura para download a partir das 09:30 UTC (06h30 BR).
+    Antes disso, o script permanece buscando a rodada de 12Z.
     """
     now_utc = dt.datetime.now(UTC)
-    if 3 <= now_utc.hour < 15:
+    
+    # Só muda para 00Z se já passou das 09h30 UTC e ainda não passou das 15h00 UTC
+    if 9 <= now_utc.hour and (now_utc.hour > 9 or now_utc.minute >= 30) and now_utc.hour < 15:
         return 0
     else:
         return 12
@@ -41,14 +44,22 @@ def download(client, param, name, steps, run_hour, date_str):
     if os.path.exists(path):
         return path
 
-    client.retrieve(
-        date=date_str,
-        time=run_hour,
-        model="aifs-single",
-        param=param,
-        step=steps,
-        target=path
-    )
+    # TRAVA DE SEGURANÇA: Se o arquivo não existir na Azure, aborta sem destruir o CSV antigo
+    try:
+        client.retrieve(
+            date=date_str,
+            time=run_hour,
+            model="aifs-single",
+            param=param,
+            step=steps,
+            target=path
+        )
+    except Exception as e:
+        print(f"\n[AVISO CRÍTICO] Arquivo {name} da rodada {run_hour:02d}Z de {date_str} não encontrado na Azure.")
+        print(f"Detalhe técnico: {e}")
+        print("[ABORTANDO] Execução encerrada para preservar os dados atuais do seu site.")
+        sys.exit(0) # Termina o script com sucesso (Código 0) para o GitHub Actions não disparar alerta de erro falso
+        
     return path
 
 def load_var(path, scale=1.0):
@@ -68,8 +79,7 @@ def cloud_code(val):
 
 def load_historical_today(today_str):
     """
-    Lê o CSV antigo antes de apagá-lo e guarda na memória os dados 
-    do dia de hoje para cada cidade.
+    Lê o CSV antigo e resgata a linha de 'Hoje' para rodadas de 12Z.
     """
     historical_data = {}
     if not os.path.exists(OUT_PATH):
@@ -93,10 +103,7 @@ def main():
         now = dt.datetime.now(UTC)
         run_hour = get_run_hour()
 
-        print(f"[INFO] Executando automação para a rodada das {run_hour:02d}Z (Horário UTC atual: {now.strftime('%H:%M')})")
-
-        # Ajuste dinâmico de data
-        # Se rodar de madrugada (ex: rodada 12Z do dia anterior que está sendo coletada pós-meia-noite UTC)
+        # Ajuste dinâmico de data para rodadas de 12Z executadas na madrugada pós-meia-noite UTC
         if run_hour == 12 and now.hour < 15:
             base_date = now - dt.timedelta(days=1)
         else:
@@ -105,7 +112,10 @@ def main():
         date_str = base_date.strftime("%Y%m%d")
         today_csv_str = base_date.strftime("%Y-%m-%d")
 
-        # Se for rodada das 12Z, ativa o resgate do dia atual
+        print(f"[INFO] Iniciando automação do modelo.")
+        print(f"[INFO] Rodada Alvo: {run_hour:02d}Z | Data dos dados: {date_str}")
+        print(f"[INFO] Horário UTC da execução: {now.strftime('%H:%M')}")
+
         historical_today = {}
         if run_hour == 12:
             print(f"Carregando dados históricos de hoje ({today_csv_str}) do CSV atual...")
@@ -113,7 +123,7 @@ def main():
 
         steps = list(range(0, 121, 6))
 
-        # Downloads e Leitura
+        # Os downloads agora chamam a função com a trava try/except embutida
         tp = load_var(download(client, "tp", "chuva", steps, run_hour, date_str), 1.0)
         t2m = load_var(download(client, "2t", "temp", steps, run_hour, date_str))
         u10 = load_var(download(client, "10u", "u", steps, run_hour, date_str))
@@ -140,7 +150,7 @@ def main():
 
                 cidade_nome = f"{city.get('nome')} - {uf_from_code(city)}"
 
-                # Mesclagem automática da primeira linha para rodadas da tarde (12Z)
+                # Preserva o Hoje (00Z original) caso estejamos mesclando a rodada 12Z
                 if run_hour == 12:
                     row_today = historical_today.get(cidade_nome)
                     if row_today:
@@ -221,7 +231,7 @@ def main():
         print(f"Sucesso! {OUT_PATH} atualizado sem perder o histórico.")
 
     except Exception as e:
-        print(f"[ERRO] {e}")
+        print(f"[ERRO DESCONHECIDO] {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
