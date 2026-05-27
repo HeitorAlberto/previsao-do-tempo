@@ -22,7 +22,7 @@ from ecmwf.opendata import Client
 OUTDIR = "mapas"
 os.makedirs(OUTDIR, exist_ok=True)
 
-DAYS = 5
+DAYS = 10
 
 DPI = 200
 
@@ -407,7 +407,7 @@ def plot_total(total, states, start_date):
         weight="bold"
     )
 
-    outfile = f"{OUTDIR}/06.png"
+    outfile = f"{OUTDIR}/acumulado.png"
 
     plt.savefig(
         outfile,
