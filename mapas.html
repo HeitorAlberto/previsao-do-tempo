@@ -18,13 +18,22 @@
     #images-box {
       display: flex;
       flex-direction: column;
-      width: 90%;
+      align-items: center;
     }
 
     #images-box img {
-      width: 110%;
+      width: 60%;
       justify-self: center;
+      margin-bottom: 50px;
     }
+
+    @media (max-width: 600px) { 
+
+      #images-box img {
+        width: 100%;
+      }
+
+  }
   </style>
 </head>
 <body>
