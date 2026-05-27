@@ -18,7 +18,7 @@ os.makedirs(GRIB_DIR, exist_ok=True)
 def get_run_hour():
     """Define a rodada do modelo (00Z ou 12Z)."""
     now_utc = dt.datetime.now(UTC)
-    if 9 <= now_utc.hour and (now_utc.hour > 9 or now_utc.minute >= 30) and now_utc.hour < 15:
+    if 9 <= now_utc.hour < 15:
         return 0
     else:
         return 12
@@ -33,49 +33,43 @@ def uf_from_code(city):
     return UF_MAP.get(str(city.get("codigo_uf", "")).zfill(2), "")
 
 def save_metadata(path, run_hour, date_str):
-    """Gera um arquivo de auditoria com os dados técnicos do arquivo GRIB."""
     try:
         ds = xr.open_dataset(path, engine="cfgrib", backend_kwargs={"indexpath": ""})
         metadata = {
             "data_processamento": dt.datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC"),
             "data_referencia_modelo": str(ds.time.values),
             "modelo": ds.attrs.get("centre", "Desconhecido"),
-            "parametro_exemplo": ds.attrs.get("parameterName", "Desconhecido"),
             "execucao_solicitada": f"{date_str} {run_hour:02d}Z"
         }
         with open("metadata.txt", "w", encoding="utf-8") as f:
             for k, v in metadata.items():
                 f.write(f"{k.upper()}: {v}\n")
-        print(f"[INFO] Metadados registrados em metadata.txt")
     except Exception as e:
         print(f"[AVISO] Falha ao salvar metadados: {e}")
 
 def download(client, param, name, steps, run_hour, date_str):
-    """Realiza o download garantindo nomes únicos por data/rodada."""
-    path = os.path.join(GRIB_DIR, f"{name}_{date_str}_{run_hour:02d}.grib")
+    """Realiza o download em subpasta por data."""
+    data_dir = os.path.join(GRIB_DIR, date_str)
+    os.makedirs(data_dir, exist_ok=True)
+    
+    path = os.path.join(data_dir, f"{name}_{run_hour:02d}.grib")
     if os.path.exists(path):
         return path
 
     try:
         client.retrieve(
-            date=date_str,
-            time=run_hour,
-            model="aifs-single",
-            param=param,
-            step=steps,
-            target=path
+            date=date_str, time=run_hour, model="aifs-single",
+            param=param, step=steps, target=path
         )
     except Exception as e:
         print(f"\n[AVISO CRÍTICO] Falha no download de {name}: {e}")
-        sys.exit(0) # Aborta para preservar o CSV atual
+        sys.exit(0)
     return path
 
 def load_var(path, scale=1.0):
     ds = xr.open_dataset(path, engine="cfgrib", backend_kwargs={"indexpath": ""})
     var = list(ds.data_vars)[0]
-    data = (ds[var] * scale).assign_coords(
-        longitude=(((ds.longitude + 180) % 360) - 180)
-    )
+    data = (ds[var] * scale).assign_coords(longitude=(((ds.longitude + 180) % 360) - 180))
     return data.sel(latitude=slice(10, -40), longitude=slice(-85, -25)).load()
 
 def cloud_code(val):
@@ -92,10 +86,9 @@ def load_historical_today():
             reader = csv.DictReader(f)
             for row in reader:
                 cidade = row.get("cidade")
-                if cidade and cidade not in historical_data:
-                    historical_data[cidade] = row
+                if cidade: historical_data[cidade] = row
     except Exception as e:
-        print(f"[AVISO] Não foi possível ler o CSV antigo: {e}")
+        print(f"[AVISO] Falha ao ler CSV antigo: {e}")
     return historical_data
 
 def main():
@@ -103,16 +96,14 @@ def main():
         client = Client(source="azure")
         now = dt.datetime.now(UTC)
         run_hour = get_run_hour()
-
         base_date = now - dt.timedelta(days=1) if (run_hour == 12 and now.hour < 15) else now
         date_str = base_date.strftime("%Y%m%d")
 
-        print(f"[INFO] Iniciando. Rodada Alvo: {run_hour:02d}Z | Data: {date_str}")
+        print(f"[INFO] Iniciando. Rodada: {run_hour:02d}Z | Data: {date_str}")
 
         historical_today = load_historical_today() if run_hour == 12 else {}
         steps = list(range(0, 121, 6))
 
-        # Download e Auditoria
         tp_path = download(client, "tp", "chuva", steps, run_hour, date_str)
         save_metadata(tp_path, run_hour, date_str)
 
@@ -162,11 +153,9 @@ def main():
                     for h in [0, 6, 12, 18]:
                         target_step = (d * 24) + h if run_hour == 0 else 12 + ((d - 1) * 24) + h
                         idx = min(target_step // 6, len(t2m_vals) - 1)
-                        
                         temps.append(float(t2m_vals[idx]) - 273.15)
                         wind = (((float(u10_vals[idx])**2) + (float(v10_vals[idx])**2))**0.5) * 3.6
                         winds.append(wind)
-                        
                         l, m = float(lcc_vals[idx]), float(mcc_vals[idx])
                         clouds.append(cloud_code(max(l if l <= 1 else l/100, m if m <= 1 else m/100)))
 
