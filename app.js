@@ -9,10 +9,10 @@ const cloudMap = {
 };
 
 const LABELS = {
-  claro: "<img src='icons/sol.webp'> Ensolarado",
-  parcial: "<img src='icons/sol-nuvens.webp'> Parcialmente nublado",
-  predominio: "<img src='icons/nublado.webp'> Nublado",
-  encoberto: "☁️ Encoberto",
+  claro: "Ensolarado",
+  parcial: "Parcialmente nublado",
+  predominio: "Nublado",
+  encoberto: "Encoberto",
 };
 
 async function carregarDados() {
@@ -108,7 +108,7 @@ function gerarResumoTempo(periods) {
   const t = detectarEstado(cloudMap[periods["12h"]?.cloud_desc]);
 
   if (!m || !t) {
-    return "⛅ Variação de nuvens";
+    return "Variação de nuvens";
   }
 
   if (m.tipo === "claro" && t.tipo === "claro") {
@@ -124,22 +124,22 @@ function gerarResumoTempo(periods) {
   }
 
   if (m.nivel >= 2 && t.nivel <= 1) {
-    return "<img src='icons/sol-nuvens.webp'> Aberturas à tarde";
+    return "Aberturas à tarde";
   }
 
   if (m.nivel <= 1 && t.nivel >= 2) {
-    return "<img src='icons/sol-nuvens.webp'> Muitas nuvens à tarde";
+    return "Muitas nuvens à tarde";
   }
 
   if (m.nivel > t.nivel) {
-    return "<img src='icons/sol-nuvens.webp'> Parcialmente nublado";
+    return "Parcialmente nublado";
   }
 
   if (m.nivel < t.nivel) {
-    return "<img src='icons/sol-nuvens.webp'> Mais nuvens à tarde";
+    return "Mais nuvens à tarde";
   }
 
-  return "<img src='icons/sol-nuvens.webp'> Variação de nuvens";
+  return "Variação de nuvens";
 }
 
 function obterRotuloChuva(rainMm) {
@@ -193,14 +193,20 @@ function renderizarCidade(cidadeObj) {
       </div>
 
       <div class="data-row">
-        <div class="data-1">🌡️ Temperatura</div>
-        <div class="data-2">${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</div>
+        <div class="data">
+          <span>🌡️ Temperatura</span>
+          <strong> ${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</strong>
+        </div>
 
-        <div class="data-1">💧 ${rotuloChuva}</div>
-        <div class="data-2">${Math.round(d.rain_mm)} mm</div>
+        <div class="data">
+          <span>💧 ${rotuloChuva} </span>
+          <strong> ${Math.round(d.rain_mm)} mm </strong>
+        </div>
 
-        <div class="data-1">🍃 Vento</div>
-        <div class="data-2">${Math.round(d.wind_max_kmh)} km/h</div>
+        <div class="data">
+          <span>🍃 Vento </span>
+          <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
+        </div>
       </div>
     `;
 
