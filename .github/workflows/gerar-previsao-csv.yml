@@ -50,6 +50,7 @@ jobs:
           git config --global user.email "action@github.com"
 
           git add previsao.csv
+          git add metadata.txt
 
           git diff --cached --quiet || \
           (git commit -m "Auto update forecast" && git push)
