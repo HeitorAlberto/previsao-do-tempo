@@ -1,76 +1,218 @@
-let dados = {};
+let dadosCidadesLista = [];
+let cidadeAtualObj = null;
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
 
-const ICONS = {
-  0: "claro.webp",
-  1: "parcial.webp",
-  2: "predominio.webp",
-  3: "encoberto.webp"
+const DB_NAME = "PrevisaoWeatherDB";
+const DB_VERSION = 1;
+const STORE_NAME = "cache_previsoes";
+
+// bloqueio simples para evitar chamadas duplicadas
+let carregando = false;
+
+// --- MAPEAMENTO DE ESTADOS (UF) ---
+const UF_MAP = {
+  "12": "AC", "27": "AL", "13": "AM", "16": "AP", "29": "BA", "23": "CE", "53": "DF",
+  "32": "ES", "52": "GO", "21": "MA", "31": "MG", "50": "MS", "51": "MT", "15": "PA",
+  "25": "PB", "26": "PE", "22": "PI", "41": "PR", "33": "RJ", "24": "RN", "43": "RS",
+  "11": "RO", "14": "RR", "42": "SC", "35": "SP", "28": "SE", "17": "TO"
 };
 
+function ufFromCode(city) {
+  const codigo = String(city.codigo_uf || "").padStart(2, "0");
+  return UF_MAP[codigo] || "";
+}
+
+// --- MAPEAMENTO DE ÍCONES ---
+function obterIconeWMO(codigo) {
+  if (codigo === 0) return "icons/claro.webp";
+  if (codigo === 1) return "icons/parcial.webp";
+  if (codigo === 2) return "icons/predominio.webp";
+  return "icons/encoberto.webp";
+}
+
+// --- GERENCIAMENTO DO INDEXEDDB ---
+function abrirDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "nomeChave" });
+      }
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function calcularProximaExpiracao() {
+  const agora = new Date();
+  const exp00 = new Date(agora);
+  exp00.setHours(24, 0, 0, 0);
+
+  const exp12 = new Date(agora);
+  exp12.setHours(12, 0, 0, 0);
+
+  if (agora.getHours() >= 12) {
+    exp12.setDate(exp12.getDate() + 1);
+  }
+
+  return Math.min(exp00.getTime(), exp12.getTime());
+}
+
+async function salvarNoCache(nomeChave, dadosPrevisao) {
+  const db = await abrirDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  const store = tx.objectStore(STORE_NAME);
+
+  const registro = {
+    nomeChave,
+    dados: dadosPrevisao,
+    expiraEm: calcularProximaExpiracao()
+  };
+
+  store.put(registro);
+}
+
+async function obterDoCache(nomeChave) {
+  const db = await abrirDB();
+  return new Promise((resolve) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const request = store.get(nomeChave);
+
+    request.onsuccess = (e) => {
+      const registro = e.target.result;
+      if (!registro) return resolve(null);
+
+      if (Date.now() > registro.expiraEm) {
+        removerDoCache(nomeChave);
+        return resolve(null);
+      }
+      resolve(registro.dados);
+    };
+    request.onerror = () => resolve(null);
+  });
+}
+
+async function removerDoCache(nomeChave) {
+  const db = await abrirDB();
+  const tx = db.transaction(STORE_NAME, "readwrite");
+  tx.objectStore(STORE_NAME).delete(nomeChave);
+}
+
+// --- LOGICA DE CARREGAMENTO ---
 async function carregarDados() {
-  const base = location.hostname.includes("github.io")
-    ? "/previsao-do-tempo/"
-    : "./";
+  try {
+    const resCidades = await fetch("./cidades.json");
+    if (!resCidades.ok) throw new Error("Não foi possível carregar cidades.json");
+    dadosCidadesLista = await resCidades.json();
 
-  const hora = new Date().getUTCHours();
+    document.getElementById("cidade").textContent = "Digite e selecione uma cidade para ver a previsão";
+    renderizarHistorico();
+  } catch (e) {
+    console.error(e);
+    document.getElementById("cidade").textContent = "Erro ao carregar lista de cidades.";
+  }
+}
 
-  // regra simples:
-  // 00z -> madrugada/manhã UTC
-  // 12z -> tarde/noite UTC
-  const run = (hora >= 9 && hora < 21) ? "12z" : "00z";
+async function buscarPrevisaoOpenMeteo(city) {
+  if (carregando) return;
+  carregando = true;
 
-  const arquivo = `previsao_${run}.csv`;
+  const titulo = document.getElementById("cidade");
 
   try {
-    const res = await fetch(`${base}${arquivo}?v=${Date.now()}`);
-    const text = await res.text();
+    const uf = ufFromCode(city);
+    const nomeChave = uf ? `${city.nome} - ${uf}` : city.nome;
 
-    const lines = text.trim().split("\n").slice(1);
+    titulo.textContent = `Carregando previsão para ${city.nome}...`;
 
-    dados = {};
+    const cacheValido = await obterDoCache(nomeChave);
+    if (cacheValido) {
+      console.log(`Dados de [${nomeChave}] recuperados do IndexedDB.`);
+      cidadeAtualObj = cacheValido;
+      renderizarCidade(cidadeAtualObj);
+      return;
+    }
 
-    for (const line of lines) {
-      const cols = line.trim().split(",");
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&hourly=precipitation,temperature_2m,wind_speed_10m,cloud_cover&models=ecmwf_aifs025_single&timezone=America%2FSao_Paulo&forecast_days=7`;
 
-      if (cols.length !== 13) continue;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Erro na API Open-Meteo");
+    const forecastMeteo = await res.json();
 
-      const [
-        cidade,
-        dt,
-        r1, r2, r3, r4,
-        tmin, tmax, wmx,
-        c1, c2, c3, c4
-      ] = cols;
+    const hourly = forecastMeteo.hourly;
 
-      if (!cidade || !dt) continue;
+    const temp_2m = hourly.temperature_2m || hourly.temperature_2m_ecmwf_ifs;
+    const prec = hourly.precipitation || hourly.precipitation_ecmwf_ifs;
+    const wind = hourly.wind_speed_10m || hourly.wind_speed_10m_ecmwf_ifs;
+    const clouds_arr = hourly.cloud_cover || hourly.cloud_cover_ecmwf_ifs;
 
-      if (!dados[cidade]) {
-        dados[cidade] = { cidade, forecast: [] };
+    cidadeAtualObj = {
+      cidade: nomeChave,
+      forecast: []
+    };
+
+    const somarChuva = (inicio, fim) => {
+      let soma = 0;
+      for (let i = inicio; i < fim; i++) {
+        const valorHora = prec[i];
+        soma += (valorHora && !isNaN(valorHora)) ? Number(valorHora) : 0;
       }
+      return soma;
+    };
 
-      dados[cidade].forecast.push({
-        date: dt,
-        temp_min_c: Number(tmin) || 0,
-        temp_max_c: Number(tmax) || 0,
-        wind_max_kmh: Number(wmx) || 0,
+    for (let d = 0; d < 7; d++) {
+      const baseIdx = d * 24;
+      const dataISO = hourly.time[baseIdx].split("T")[0];
+      const idxs = [baseIdx, baseIdx + 6, baseIdx + 12, baseIdx + 18];
+
+      const temps = idxs.map(i => temp_2m[i] || 0);
+      const winds = idxs.map(i => wind[i] || 0);
+
+      const obterCodigoNuvem = (porcentagem) => {
+        const v = (porcentagem || 0) / 100;
+        if (v < 0.2) return 0;
+        if (v < 0.4) return 1;
+        if (v < 0.7) return 2;
+        return 3;
+      };
+
+      const r1 = somarChuva(baseIdx, baseIdx + 6);
+      const r2 = somarChuva(baseIdx + 6, baseIdx + 12);
+      const r3 = somarChuva(baseIdx + 12, baseIdx + 18);
+      const r4 = somarChuva(baseIdx + 18, baseIdx + 24);
+
+      const totalChuvaDia = r1 + r2 + r3 + r4;
+
+      cidadeAtualObj.forecast.push({
+        date: dataISO,
+        temp_min_c: Math.min(...temps),
+        temp_max_c: Math.max(...temps),
+        wind_max_kmh: Math.max(...winds),
+        rain_sum_mm: Number(totalChuvaDia.toFixed(1)),
         periods: {
-          "até 06h": { cloud_desc: Number(c1) || 0, rain_mm: Math.max(0, Number(r1) || 0) },
-          "até 12h": { cloud_desc: Number(c2) || 0, rain_mm: Math.max(0, Number(r2) || 0) },
-          "até 18h": { cloud_desc: Number(c3) || 0, rain_mm: Math.max(0, Number(r3) || 0) },
-          "até 24h": { cloud_desc: Number(c4) || 0, rain_mm: Math.max(0, Number(r4) || 0) }
+          "até 06h": { cloud_desc: obterCodigoNuvem(clouds_arr[idxs[0]]), rain_mm: Number(r1.toFixed(1)) },
+          "até 12h": { cloud_desc: obterCodigoNuvem(clouds_arr[idxs[1]]), rain_mm: Number(r2.toFixed(1)) },
+          "até 18h": { cloud_desc: obterCodigoNuvem(clouds_arr[idxs[2]]), rain_mm: Number(r3.toFixed(1)) },
+          "até 24h": { cloud_desc: obterCodigoNuvem(clouds_arr[idxs[3]]), rain_mm: Number(r4.toFixed(1)) }
         }
       });
     }
 
-    renderizarHistorico();
+    await salvarNoCache(nomeChave, cidadeAtualObj);
+    renderizarCidade(cidadeAtualObj);
 
   } catch (e) {
-    console.log("Erro ao carregar CSV", e);
-    dados = {};
+    console.error(e);
+    titulo.textContent = "Erro ao buscar previsão na API.";
+  } finally {
+    carregando = false;
   }
 }
 
+// --- INTERFACE E AUXILIARES ---
 function salvarHistorico() {
   localStorage.setItem("historico", JSON.stringify(historico));
 }
@@ -97,34 +239,28 @@ function normalizarTexto(texto) {
 }
 
 function obterIconeNuvem(valor) {
-  const arquivo = ICONS[valor];
-  if (!arquivo) return "";
-
-  return `
-    <img src="icons/${arquivo}" class="icone-tempo">
-  `;
+  return `<img src="${obterIconeWMO(valor)}" class="icone-tempo">`;
 }
 
 function renderizarHistorico() {
   const el = document.getElementById("historico");
   if (!el) return;
-
   el.innerHTML = "";
 
-  historico
-    .slice(0, 3)
-    .forEach((cidade) => {
-      const item = document.createElement("div");
-      item.className = "historico-item";
-      item.textContent = cidade;
-
-      item.onclick = () => {
-        const cidadeObj = dados[cidade];
-        if (cidadeObj) renderizarCidade(cidadeObj);
-      };
-
-      el.appendChild(item);
-    });
+  historico.slice(0, 3).forEach((nomeCidade) => {
+    const item = document.createElement("div");
+    item.className = "historico-item";
+    item.textContent = nomeCidade;
+    item.onclick = () => {
+      const city = dadosCidadesLista.find(c => {
+        const uf = ufFromCode(c);
+        const nomeGerado = uf ? `${c.nome} - ${uf}` : c.nome;
+        return nomeGerado === nomeCidade;
+      });
+      if (city) buscarPrevisaoOpenMeteo(city);
+    };
+    el.appendChild(item);
+  });
 }
 
 function renderizarCidade(cidadeObj) {
@@ -144,35 +280,30 @@ function renderizarCidade(cidadeObj) {
           <div class="periodo">
             <div class="hora">${hora}</div>
             <div class="icone">${obterIconeNuvem(p.cloud_desc)}</div>
-            <div class="chuva">${Math.round(p.rain_mm)} mm</div>
+            <div class="chuva">${p.rain_mm} mm</div>
           </div>
         `;
       })
       .join("");
 
     div.innerHTML = `
-      <h3>
-        ${obterDiaSemana(d.date)},
-        ${formatarData(d.date)}
-      </h3>
-
-      <div class="resumo-dia">
-        ${periodosHTML}
-      </div>
-
+      <h3>${obterDiaSemana(d.date)}, ${formatarData(d.date)}</h3>
       <div class="data-row">
         <div class="data">
           <span>🌡️ Temperatura</span>
           <strong>${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</strong>
         </div>
-
+        <div class="data">
+          <span>💧 Chuva Acumulada</span>
+          <strong>${d.rain_sum_mm} mm</strong>
+        </div>
         <div class="data">
           <span>🍃 Vento</span>
           <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
         </div>
       </div>
+      <div class="resumo-dia">${periodosHTML}</div>
     `;
-
     container.appendChild(div);
   });
 
@@ -188,60 +319,51 @@ function renderizarCidade(cidadeObj) {
 }
 
 function buscarCidade() {
-  const input = normalizarTexto(
-    document.getElementById("cidadeInput").value
-  );
-
-  const cidadeEncontrada = Object.values(dados).find((c) =>
-    normalizarTexto(c.cidade).includes(input)
+  const input = normalizarTexto(document.getElementById("cidadeInput").value);
+  const cidadeEncontrada = dadosCidadesLista.find((c) =>
+    normalizarTexto(c.nome).includes(input)
   );
 
   if (!cidadeEncontrada) {
-    document.getElementById("cidade").textContent = "Cidade não encontrada";
+    document.getElementById("cidade").textContent = "Cidade não encontrada na lista local";
     document.getElementById("container").innerHTML = "";
     return;
   }
-
-  renderizarCidade(cidadeEncontrada);
+  buscarPrevisaoOpenMeteo(cidadeEncontrada);
 }
 
-/* AUTOCOMPLETE */
-
+// --- EVENTOS ---
 const inputEl = document.getElementById("cidadeInput");
 const suggestions = document.getElementById("suggestions");
 
 inputEl.addEventListener("input", () => {
   const valor = normalizarTexto(inputEl.value);
   suggestions.innerHTML = "";
-
   if (!valor) return;
 
-  const filtrados = Object.values(dados)
-    .filter((c) => normalizarTexto(c.cidade).includes(valor))
+  const filtrados = dadosCidadesLista
+    .filter((c) => normalizarTexto(c.nome).includes(valor))
     .slice(0, 6);
 
   filtrados.forEach((c) => {
     const item = document.createElement("div");
-    item.textContent = c.cidade;
+    const uf = ufFromCode(c);
+    item.textContent = uf ? `${c.nome} - ${uf}` : c.nome;
 
     item.onclick = () => {
-      inputEl.value = c.cidade;
+      inputEl.value = c.nome;
       suggestions.innerHTML = "";
-      renderizarCidade(c);
+      buscarPrevisaoOpenMeteo(c);
     };
-
     suggestions.appendChild(item);
   });
 });
 
 document.addEventListener("click", (e) => {
-  if (e.target !== inputEl) {
-    suggestions.innerHTML = "";
-  }
+  if (e.target !== inputEl) suggestions.innerHTML = "";
 });
 
 document.getElementById("btnBuscar").addEventListener("click", buscarCidade);
-
 inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") buscarCidade();
 });

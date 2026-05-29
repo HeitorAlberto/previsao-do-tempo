@@ -128,11 +128,9 @@ h1 {
 
 .hora {
     font-size: 12px;
-}
-
-.chuva {
     font-weight: normal;
 }
+
 
 .data {
     display: flex;
