@@ -5,142 +5,186 @@ import datetime as dt
 import xarray as xr
 from ecmwf.opendata import Client
 from tqdm import tqdm
-import sys
 import csv
 
-# Configurações globais
 UTC = dt.timezone.utc
+
 CITIES_PATH = "cidades.json"
 GRIB_DIR = "grib"
-OUT_PATH = "previsao.csv"
+
+OUT_00Z = "previsao_00z.csv"
+OUT_12Z = "previsao_12z.csv"
+
 os.makedirs(GRIB_DIR, exist_ok=True)
 
+
+# ----------------------------
+# RUN LOGIC
+# ----------------------------
 def get_run_hour():
-    now_utc = dt.datetime.now(UTC)
-    return 0 if 9 <= now_utc.hour < 15 else 12
+    now = dt.datetime.now(UTC)
+    return 0 if 0 <= now.hour < 12 else 12
+
+
+# ----------------------------
+# JSON SAFE LOAD
+# ----------------------------
+def load_json(path):
+    with open(path, "r", encoding="utf-8-sig") as f:
+        return json.load(f)
+
+
+# ----------------------------
+# UF MAP
+# ----------------------------
+UF_MAP = {
+    "12":"AC","27":"AL","13":"AM","16":"AP","29":"BA","23":"CE","53":"DF",
+    "32":"ES","52":"GO","21":"MA","31":"MG","50":"MS","51":"MT","15":"PA",
+    "25":"PB","26":"PE","22":"PI","41":"PR","33":"RJ","24":"RN","43":"RS",
+    "11":"RO","14":"RR","42":"SC","35":"SP","28":"SE","17":"TO"
+}
 
 def uf_from_code(city):
-    UF_MAP = {
-        "12":"AC","27":"AL","13":"AM","16":"AP","29":"BA","23":"CE","53":"DF",
-        "32":"ES","52":"GO","21":"MA","31":"MG","50":"MS","51":"MT","15":"PA",
-        "25":"PB","26":"PE","22":"PI","41":"PR","33":"RJ","24":"RN","43":"RS",
-        "11":"RO","14":"RR","42":"SC","35":"SP","28":"SE","17":"TO"
-    }
     return UF_MAP.get(str(city.get("codigo_uf", "")).zfill(2), "")
 
-def save_metadata(path, run_hour, date_str):
-    """Gera arquivo com metadados da execução."""
-    try:
-        ds = xr.open_dataset(path, engine="cfgrib", backend_kwargs={"indexpath": ""})
-        metadata = {
-            "data_processamento": dt.datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC"),
-            "data_referencia_modelo": str(ds.time.values),
-            "modelo": ds.attrs.get("centre", "Desconhecido"),
-            "execucao_solicitada": f"{date_str} {run_hour:02d}Z"
-        }
-        with open("metadata.txt", "w", encoding="utf-8") as f:
-            for k, v in metadata.items():
-                f.write(f"{k.upper()}: {v}\n")
-    except Exception as e:
-        print(f"[AVISO] Falha ao salvar metadados: {e}")
 
-def download(client, param, name, steps, run_hour, date_str):
-    data_dir = os.path.join(GRIB_DIR, date_str)
-    os.makedirs(data_dir, exist_ok=True)
-    path = os.path.join(data_dir, f"{name}_{run_hour:02d}.grib")
-    
-    if not os.path.exists(path):
-        try:
-            client.retrieve(
-                date=date_str, time=run_hour, model="aifs-single",
-                param=param, step=steps, target=path
-            )
-        except Exception as e:
-            print(f"\n[ERRO] Falha no download de {name}: {e}")
-            sys.exit(1)
-    return path
+# ----------------------------
+# DOWNLOAD
+# ----------------------------
+def download(client, param, name, steps, date, hour):
+    dir_path = os.path.join(GRIB_DIR, date)
+    os.makedirs(dir_path, exist_ok=True)
 
-def load_var(path, scale=1.0):
+    file_path = os.path.join(dir_path, f"{name}_{hour:02d}.grib")
+
+    if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+        return file_path
+
+    client.retrieve(
+        date=date,
+        time=hour,
+        model="aifs-single",
+        param=param,
+        step=steps,
+        target=file_path
+    )
+
+    return file_path
+
+
+# ----------------------------
+# LOAD VAR
+# ----------------------------
+def load_var(path, scale=1.0, is_rain=False):
     ds = xr.open_dataset(path, engine="cfgrib", backend_kwargs={"indexpath": ""})
     var = list(ds.data_vars)[0]
-    data = (ds[var] * scale).assign_coords(longitude=(((ds.longitude + 180) % 360) - 180))
-    return data.sel(latitude=slice(10, -40), longitude=slice(-85, -25)).load()
 
-def cloud_code(val):
-    if val < 0.2: return 0
-    if val < 0.5: return 1
-    if val < 0.8: return 2
+    data = ds[var] * scale
+    data = data.assign_coords(longitude=(((ds.longitude + 180) % 360) - 180))
+
+    if is_rain:
+        data = data.diff(dim="step", label="lower")
+
+    return data.load()
+
+
+def extract_point(ds, lat, lon):
+    return ds.sel(latitude=lat, longitude=lon, method="nearest").values
+
+
+# ----------------------------
+# CLOUD CLASSIFICATION
+# ----------------------------
+def cloud_code(v):
+    v = np.clip(v, 0, 1)
+    if v < 0.2:
+        return 0
+    if v < 0.4:
+        return 1
+    if v < 0.7:
+        return 2
     return 3
 
-def main():
-    try:
-        client = Client(source="azure")
-        now = dt.datetime.now(UTC)
-        run_hour = get_run_hour()
-        base_date = now - dt.timedelta(days=1) if (run_hour == 12 and now.hour < 15) else now
-        date_str = base_date.strftime("%Y%m%d")
 
-        print(f"[INFO] Processando previsão de 10 dias. Rodada: {run_hour:02d}Z")
-        
-        # 10 dias = 240 horas
-        steps = list(range(0, 241, 6))
+# ----------------------------
+# PROCESS
+# ----------------------------
+def process(run_hour, out_file):
 
-        # Download e salvamento de metadados
-        tp_path = download(client, "tp", "chuva", steps, run_hour, date_str)
-        save_metadata(tp_path, run_hour, date_str)
+    client = Client(source="azure")
+    date = dt.datetime.now(UTC).strftime("%Y%m%d")
 
-        tp = load_var(tp_path, 1.0)
-        t2m = load_var(download(client, "2t", "temp", steps, run_hour, date_str))
-        u10 = load_var(download(client, "10u", "u", steps, run_hour, date_str))
-        v10 = load_var(download(client, "10v", "v", steps, run_hour, date_str))
-        lcc = load_var(download(client, "lcc", "lcc", steps, run_hour, date_str))
-        mcc = load_var(download(client, "mcc", "mcc", steps, run_hour, date_str))
+    steps = list(range(0, 241, 6))
 
-        with open(CITIES_PATH, "r", encoding="utf-8-sig") as f:
-            cities = json.load(f)
+    tp = load_var(download(client, "tp", "chuva", steps, date, run_hour), 1.0, True)
+    t2m = load_var(download(client, "2t", "temp", steps, date, run_hour))
+    u10 = load_var(download(client, "10u", "u", steps, date, run_hour))
+    v10 = load_var(download(client, "10v", "v", steps, date, run_hour))
+    lcc = load_var(download(client, "lcc", "lcc", steps, date, run_hour))
+    mcc = load_var(download(client, "mcc", "mcc", steps, date, run_hour))
 
-        with open(OUT_PATH, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            writer.writerow(["cidade","dt","r","tmin","tmax","wmx","c1","c2","c3","c4"])
+    cities = load_json(CITIES_PATH)
 
-            for city in tqdm(cities, desc="Processando"):
-                lat, lon = city.get("latitude"), city.get("longitude")
-                cidade_nome = f"{city.get('nome')} - {uf_from_code(city)}"
-                
-                tp_loc = tp.sel(latitude=lat, longitude=lon, method="nearest")
-                t2m_vals = t2m.sel(latitude=lat, longitude=lon, method="nearest").values
-                u10_vals = u10.sel(latitude=lat, longitude=lon, method="nearest").values
-                v10_vals = v10.sel(latitude=lat, longitude=lon, method="nearest").values
-                lcc_vals = lcc.sel(latitude=lat, longitude=lon, method="nearest").values
-                mcc_vals = mcc.sel(latitude=lat, longitude=lon, method="nearest").values
+    results = []
 
-                for d in range(10):
-                    step_start = d * 24 if run_hour == 0 else 12 + ((d - 1) * 24)
-                    step_end = (d + 1) * 24 if run_hour == 0 else 12 + (d * 24)
-                    
-                    if step_end > 240: break
+    for city in tqdm(cities, desc=f"Run {run_hour}Z"):
 
-                    val_end = tp_loc.sel(step=np.timedelta64(step_end, "h"), method="nearest")
-                    val_start = tp_loc.sel(step=np.timedelta64(step_start, "h"), method="nearest")
-                    rain_val = float((val_end - val_start).clip(min=0).item())
+        lat = city["latitude"]
+        lon = city["longitude"]
+        name = f'{city["nome"]} - {uf_from_code(city)}'
 
-                    temps, winds, clouds = [], [], []
-                    for h in [0, 6, 12, 18]:
-                        target_step = (d * 24) + h if run_hour == 0 else 12 + ((d - 1) * 24) + h
-                        idx = min(target_step // 6, len(t2m_vals) - 1)
-                        temps.append(float(t2m_vals[idx]) - 273.15)
-                        winds.append((((float(u10_vals[idx])**2) + (float(v10_vals[idx])**2))**0.5) * 3.6)
-                        l, m = float(lcc_vals[idx]), float(mcc_vals[idx])
-                        clouds.append(cloud_code(max(l if l <= 1 else l/100, m if m <= 1 else m/100)))
+        tp_p = extract_point(tp, lat, lon)
+        t2m_p = extract_point(t2m, lat, lon)
+        u10_p = extract_point(u10, lat, lon)
+        v10_p = extract_point(v10, lat, lon)
+        lcc_p = extract_point(lcc, lat, lon)
+        mcc_p = extract_point(mcc, lat, lon)
 
-                    writer.writerow([cidade_nome, (base_date + dt.timedelta(days=d)).strftime("%Y-%m-%d"), 
-                                     round(rain_val, 2), round(min(temps), 2), round(max(temps), 2), 
-                                     round(max(winds), 2), clouds[0], clouds[1], clouds[2], clouds[3]])
+        for d in range(10):
 
-        print(f"Sucesso! {OUT_PATH} atualizado com 10 dias.")
-    except Exception as e:
-        print(f"[ERRO] {e}")
-        sys.exit(1)
+            day = dt.datetime.now(UTC) + dt.timedelta(days=d)
 
+            base = d * 4
+            idx = [base, base+1, base+2, base+3]
+
+            rains = np.clip(tp_p[idx], 0, None)
+            temps = t2m_p[idx] - 273.15
+            winds = np.sqrt(u10_p[idx]**2 + v10_p[idx]**2) * 3.6
+
+            # FIX PRINCIPAL: normalização correta (0–1)
+            clouds = np.maximum(lcc_p[idx], mcc_p[idx]) / 100.0
+
+            results.append([
+                name,
+                day.strftime("%Y-%m-%d"),
+                *[round(x, 2) for x in rains],
+                round(float(np.min(temps)), 2),
+                round(float(np.max(temps)), 2),
+                round(float(np.max(winds)), 2),
+                cloud_code(clouds[0]),
+                cloud_code(clouds[1]),
+                cloud_code(clouds[2]),
+                cloud_code(clouds[3]),
+            ])
+
+    with open(out_file, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "cidade","dt",
+            "r1","r2","r3","r4",
+            "tmin","tmax","wmx",
+            "c1","c2","c3","c4"
+        ])
+        writer.writerows(results)
+
+
+# ----------------------------
+# ENTRYPOINT
+# ----------------------------
 if __name__ == "__main__":
-    main()
+    run = get_run_hour()
+
+    if run == 0:
+        process(0, OUT_00Z)
+    else:
+        process(12, OUT_12Z)

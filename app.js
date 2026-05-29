@@ -1,23 +1,26 @@
 let dados = {};
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
 
-const cloudMap = {
-  0: "claro",
-  1: "parcial",
-  2: "predominio",
-  3: "encoberto"
-};
-
-const LABELS = {
-  claro: "Ensolarado",
-  parcial: "Parcialmente nublado",
-  predominio: "Nublado",
-  encoberto: "Encoberto",
+const ICONS = {
+  0: "claro.webp",
+  1: "parcial.webp",
+  2: "predominio.webp",
+  3: "encoberto.webp"
 };
 
 async function carregarDados() {
-  const arquivo = "previsao.csv";
-  const base = location.hostname.includes("github.io") ? "/previsao-do-tempo/" : "./";
+  const base = location.hostname.includes("github.io")
+    ? "/previsao-do-tempo/"
+    : "./";
+
+  const hora = new Date().getUTCHours();
+
+  // regra simples:
+  // 00z -> madrugada/manhã UTC
+  // 12z -> tarde/noite UTC
+  const run = (hora >= 9 && hora < 21) ? "12z" : "00z";
+
+  const arquivo = `previsao_${run}.csv`;
 
   try {
     const res = await fetch(`${base}${arquivo}?v=${Date.now()}`);
@@ -28,28 +31,34 @@ async function carregarDados() {
     dados = {};
 
     for (const line of lines) {
+      const cols = line.trim().split(",");
+
+      if (cols.length !== 13) continue;
+
       const [
-        cidade, dt, r, tmin, tmax, wmx, c1, c2, c3, c4
-      ] = line.split(",");
+        cidade,
+        dt,
+        r1, r2, r3, r4,
+        tmin, tmax, wmx,
+        c1, c2, c3, c4
+      ] = cols;
+
+      if (!cidade || !dt) continue;
 
       if (!dados[cidade]) {
-        dados[cidade] = {
-          cidade,
-          forecast: []
-        };
+        dados[cidade] = { cidade, forecast: [] };
       }
 
       dados[cidade].forecast.push({
         date: dt,
-        rain_mm: Number(r),
-        temp_min_c: Number(tmin),
-        temp_max_c: Number(tmax),
-        wind_max_kmh: Number(wmx),
+        temp_min_c: Number(tmin) || 0,
+        temp_max_c: Number(tmax) || 0,
+        wind_max_kmh: Number(wmx) || 0,
         periods: {
-          "00h": { cloud_desc: Number(c1) },
-          "06h": { cloud_desc: Number(c2) },
-          "12h": { cloud_desc: Number(c3) },
-          "18h": { cloud_desc: Number(c4) }
+          "até 06h": { cloud_desc: Number(c1) || 0, rain_mm: Math.max(0, Number(r1) || 0) },
+          "até 12h": { cloud_desc: Number(c2) || 0, rain_mm: Math.max(0, Number(r2) || 0) },
+          "até 18h": { cloud_desc: Number(c3) || 0, rain_mm: Math.max(0, Number(r3) || 0) },
+          "até 24h": { cloud_desc: Number(c4) || 0, rain_mm: Math.max(0, Number(r4) || 0) }
         }
       });
     }
@@ -87,68 +96,13 @@ function normalizarTexto(texto) {
     .trim();
 }
 
-function detectarEstado(desc) {
-  const tipo = normalizarTexto(desc);
+function obterIconeNuvem(valor) {
+  const arquivo = ICONS[valor];
+  if (!arquivo) return "";
 
-  if (!(tipo in LABELS)) return null;
-
-  return {
-    tipo,
-    nivel: {
-      claro: 0,
-      parcial: 1,
-      predominio: 2,
-      encoberto: 3
-    }[tipo]
-  };
-}
-
-function gerarResumoTempo(periods) {
-  const m = detectarEstado(cloudMap[periods["06h"]?.cloud_desc]);
-  const t = detectarEstado(cloudMap[periods["12h"]?.cloud_desc]);
-
-  if (!m || !t) {
-    return "Variação de nuvens";
-  }
-
-  if (m.tipo === "claro" && t.tipo === "claro") {
-    return LABELS.claro;
-  }
-
-  if (m.tipo === "encoberto" && t.tipo === "encoberto") {
-    return LABELS.encoberto;
-  }
-
-  if (m.tipo === t.tipo) {
-    return LABELS[m.tipo];
-  }
-
-  if (m.nivel >= 2 && t.nivel <= 1) {
-    return "Aberturas à tarde";
-  }
-
-  if (m.nivel <= 1 && t.nivel >= 2) {
-    return "Muitas nuvens à tarde";
-  }
-
-  if (m.nivel > t.nivel) {
-    return "Parcialmente nublado";
-  }
-
-  if (m.nivel < t.nivel) {
-    return "Mais nuvens à tarde";
-  }
-
-  return "Variação de nuvens";
-}
-
-function obterRotuloChuva(rainMm) {
-  const mm = Math.round(rainMm);
-
-  if (mm === 0) return "Sem chuva";
-  if (mm <= 9) return "Chuva leve";
-  if (mm <= 25) return "Chuva moderada";
-  return "Chuva forte";
+  return `
+    <img src="icons/${arquivo}" class="icone-tempo">
+  `;
 }
 
 function renderizarHistorico() {
@@ -157,18 +111,20 @@ function renderizarHistorico() {
 
   el.innerHTML = "";
 
-  historico.slice(0, 3).forEach((cidade) => {
-    const item = document.createElement("div");
-    item.className = "historico-item";
-    item.textContent = cidade;
+  historico
+    .slice(0, 3)
+    .forEach((cidade) => {
+      const item = document.createElement("div");
+      item.className = "historico-item";
+      item.textContent = cidade;
 
-    item.onclick = () => {
-      const cidadeObj = dados[cidade];
-      if (cidadeObj) renderizarCidade(cidadeObj);
-    };
+      item.onclick = () => {
+        const cidadeObj = dados[cidade];
+        if (cidadeObj) renderizarCidade(cidadeObj);
+      };
 
-    el.appendChild(item);
-  });
+      el.appendChild(item);
+    });
 }
 
 function renderizarCidade(cidadeObj) {
@@ -179,32 +135,39 @@ function renderizarCidade(cidadeObj) {
   titulo.textContent = `📍 ${cidadeObj.cidade}`;
 
   cidadeObj.forecast.forEach((d) => {
-    const resumo = gerarResumoTempo(d.periods);
-    const rotuloChuva = obterRotuloChuva(d.rain_mm);
-
     const div = document.createElement("div");
     div.className = "card";
 
+    const periodosHTML = Object.entries(d.periods)
+      .map(([hora, p]) => {
+        return `
+          <div class="periodo">
+            <div class="hora">${hora}</div>
+            <div class="icone">${obterIconeNuvem(p.cloud_desc)}</div>
+            <div class="chuva">${Math.round(p.rain_mm)} mm</div>
+          </div>
+        `;
+      })
+      .join("");
+
     div.innerHTML = `
-      <h3>${obterDiaSemana(d.date)}, ${formatarData(d.date)}</h3>
+      <h3>
+        ${obterDiaSemana(d.date)},
+        ${formatarData(d.date)}
+      </h3>
 
       <div class="resumo-dia">
-        ${resumo}
+        ${periodosHTML}
       </div>
 
       <div class="data-row">
         <div class="data">
           <span>🌡️ Temperatura</span>
-          <strong> ${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</strong>
+          <strong>${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</strong>
         </div>
 
         <div class="data">
-          <span>💧 ${rotuloChuva} </span>
-          <strong> ${Math.round(d.rain_mm)} mm </strong>
-        </div>
-
-        <div class="data">
-          <span>🍃 Vento </span>
+          <span>🍃 Vento</span>
           <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
         </div>
       </div>
@@ -225,7 +188,9 @@ function renderizarCidade(cidadeObj) {
 }
 
 function buscarCidade() {
-  const input = normalizarTexto(document.getElementById("cidadeInput").value);
+  const input = normalizarTexto(
+    document.getElementById("cidadeInput").value
+  );
 
   const cidadeEncontrada = Object.values(dados).find((c) =>
     normalizarTexto(c.cidade).includes(input)
@@ -241,6 +206,7 @@ function buscarCidade() {
 }
 
 /* AUTOCOMPLETE */
+
 const inputEl = document.getElementById("cidadeInput");
 const suggestions = document.getElementById("suggestions");
 
@@ -269,10 +235,13 @@ inputEl.addEventListener("input", () => {
 });
 
 document.addEventListener("click", (e) => {
-  if (e.target !== inputEl) suggestions.innerHTML = "";
+  if (e.target !== inputEl) {
+    suggestions.innerHTML = "";
+  }
 });
 
 document.getElementById("btnBuscar").addEventListener("click", buscarCidade);
+
 inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") buscarCidade();
 });
