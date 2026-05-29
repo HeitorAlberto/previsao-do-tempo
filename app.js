@@ -174,7 +174,7 @@ async function buscarPrevisaoOpenMeteo(city) {
       return 3;
     };
 
-    for (let d = 0; d < 7; d++) {
+    for (let d = 0; d < 10; d++) {
       const baseIdx = d * 24;
       const dataISO = hourly.time[baseIdx].split("T")[0];
       const idxs = [baseIdx, baseIdx + 6, baseIdx + 12, baseIdx + 18];
