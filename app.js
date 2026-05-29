@@ -136,7 +136,7 @@ async function buscarPrevisaoOpenMeteo(city) {
       return;
     }
 
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&hourly=precipitation,temperature_2m,wind_speed_10m,cloud_cover&models=ecmwf_aifs025_single&timezone=America%2FSao_Paulo&forecast_days=7`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&hourly=precipitation,temperature_2m,wind_speed_10m,cloud_cover_low,cloud_cover_mid&models=ecmwf_aifs025_single&timezone=America%2FSao_Paulo&forecast_days=10`;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error("Erro na API Open-Meteo");
@@ -147,7 +147,9 @@ async function buscarPrevisaoOpenMeteo(city) {
     const temp_2m = hourly.temperature_2m || hourly.temperature_2m_ecmwf_ifs;
     const prec = hourly.precipitation || hourly.precipitation_ecmwf_ifs;
     const wind = hourly.wind_speed_10m || hourly.wind_speed_10m_ecmwf_ifs;
-    const clouds_arr = hourly.cloud_cover || hourly.cloud_cover_ecmwf_ifs;
+
+    const cloudLow = hourly.cloud_cover_low;
+    const cloudMid = hourly.cloud_cover_mid;
 
     cidadeAtualObj = {
       cidade: nomeChave,
@@ -163,6 +165,15 @@ async function buscarPrevisaoOpenMeteo(city) {
       return soma;
     };
 
+    const obterCodigoNuvem = (low, mid) => {
+      const valor = ((low || 0) + (mid || 0)) / 2;
+
+      if (valor < 20) return 0;
+      if (valor < 40) return 1;
+      if (valor < 70) return 2;
+      return 3;
+    };
+
     for (let d = 0; d < 7; d++) {
       const baseIdx = d * 24;
       const dataISO = hourly.time[baseIdx].split("T")[0];
@@ -170,14 +181,6 @@ async function buscarPrevisaoOpenMeteo(city) {
 
       const temps = idxs.map(i => temp_2m[i] || 0);
       const winds = idxs.map(i => wind[i] || 0);
-
-      const obterCodigoNuvem = (porcentagem) => {
-        const v = (porcentagem || 0) / 100;
-        if (v < 0.2) return 0;
-        if (v < 0.4) return 1;
-        if (v < 0.7) return 2;
-        return 3;
-      };
 
       const r1 = somarChuva(baseIdx, baseIdx + 6);
       const r2 = somarChuva(baseIdx + 6, baseIdx + 12);
@@ -193,10 +196,10 @@ async function buscarPrevisaoOpenMeteo(city) {
         wind_max_kmh: Math.max(...winds),
         rain_sum_mm: Number(totalChuvaDia.toFixed(1)),
         periods: {
-          "até 06h": { cloud_desc: obterCodigoNuvem(clouds_arr[idxs[0]]), rain_mm: Number(r1.toFixed(1)) },
-          "até 12h": { cloud_desc: obterCodigoNuvem(clouds_arr[idxs[1]]), rain_mm: Number(r2.toFixed(1)) },
-          "até 18h": { cloud_desc: obterCodigoNuvem(clouds_arr[idxs[2]]), rain_mm: Number(r3.toFixed(1)) },
-          "até 24h": { cloud_desc: obterCodigoNuvem(clouds_arr[idxs[3]]), rain_mm: Number(r4.toFixed(1)) }
+          "até 06h": { cloud_desc: obterCodigoNuvem(cloudLow[idxs[0]], cloudMid[idxs[0]]), rain_mm: Number(r1.toFixed(1)) },
+          "até 12h": { cloud_desc: obterCodigoNuvem(cloudLow[idxs[1]], cloudMid[idxs[1]]), rain_mm: Number(r2.toFixed(1)) },
+          "até 18h": { cloud_desc: obterCodigoNuvem(cloudLow[idxs[2]], cloudMid[idxs[2]]), rain_mm: Number(r3.toFixed(1)) },
+          "até 24h": { cloud_desc: obterCodigoNuvem(cloudLow[idxs[3]], cloudMid[idxs[3]]), rain_mm: Number(r4.toFixed(1)) }
         }
       });
     }
