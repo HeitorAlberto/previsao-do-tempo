@@ -313,7 +313,7 @@ function renderizarCidade(cidadeObj) {
           <strong>${d.rain_sum_mm} mm</strong>
         </div>
         <div class="data">
-          <span>🍃 Vento</span>
+          <span>🍃 Rajadas de vento</span>
           <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
         </div>
       </div>
