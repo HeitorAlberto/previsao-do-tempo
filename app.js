@@ -6,10 +6,8 @@ const DB_NAME = "PrevisaoWeatherDB";
 const DB_VERSION = 1;
 const STORE_NAME = "cache_previsoes";
 
-// bloqueio simples para evitar chamadas duplicadas
 let carregando = false;
 
-// --- MAPEAMENTO DE ESTADOS (UF) ---
 const UF_MAP = {
   "12": "AC", "27": "AL", "13": "AM", "16": "AP", "29": "BA", "23": "CE", "53": "DF",
   "32": "ES", "52": "GO", "21": "MA", "31": "MG", "50": "MS", "51": "MT", "15": "PA",
@@ -22,7 +20,6 @@ function ufFromCode(city) {
   return UF_MAP[codigo] || "";
 }
 
-// --- MAPEAMENTO DE ÍCONES ---
 function obterIconeWMO(codigo) {
   if (codigo === 0) return "icons/claro.webp";
   if (codigo === 1) return "icons/parcial.webp";
@@ -30,7 +27,6 @@ function obterIconeWMO(codigo) {
   return "icons/encoberto.webp";
 }
 
-// --- GERENCIAMENTO DO INDEXEDDB ---
 function abrirDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -101,18 +97,17 @@ async function removerDoCache(nomeChave) {
   tx.objectStore(STORE_NAME).delete(nomeChave);
 }
 
-// --- LOGICA DE CARREGAMENTO ---
 async function carregarDados() {
   try {
     const resCidades = await fetch("./cidades.json");
     if (!resCidades.ok) throw new Error("Não foi possível carregar cidades.json");
     dadosCidadesLista = await resCidades.json();
 
-    document.getElementById("cidade").textContent = "Digite e selecione uma cidade para ver a previsão";
+    document.getElementById("cidade").textContent = "Digite e selecione uma cidade no hostórico";
     renderizarHistorico();
   } catch (e) {
     console.error(e);
-    document.getElementById("cidade").textContent = "Erro ao carregar lista de cidades.";
+    document.getElementById("cidade").textContent = "Erro ao carregar a cidades.";
   }
 }
 
@@ -130,13 +125,12 @@ async function buscarPrevisaoOpenMeteo(city) {
 
     const cacheValido = await obterDoCache(nomeChave);
     if (cacheValido) {
-      console.log(`Dados de [${nomeChave}] recuperados do IndexedDB.`);
       cidadeAtualObj = cacheValido;
       renderizarCidade(cidadeAtualObj);
       return;
     }
 
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&hourly=precipitation,temperature_2m,wind_speed_10m,cloud_cover_low,cloud_cover_mid&models=ecmwf_aifs025_single&timezone=America%2FSao_Paulo&forecast_days=10`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&hourly=precipitation,temperature_2m,wind_gusts_10m,cloud_cover_low,cloud_cover_mid&models=ecmwf_ifs&timezone=America%2FSao_Paulo&forecast_days=10`;
 
     const res = await fetch(url);
     if (!res.ok) throw new Error("Erro na API Open-Meteo");
@@ -146,7 +140,7 @@ async function buscarPrevisaoOpenMeteo(city) {
 
     const temp_2m = hourly.temperature_2m || hourly.temperature_2m_ecmwf_ifs;
     const prec = hourly.precipitation || hourly.precipitation_ecmwf_ifs;
-    const wind = hourly.wind_speed_10m || hourly.wind_speed_10m_ecmwf_ifs;
+    const wind = hourly.wind_gusts_10m || hourly.wind_gusts_10m_ecmwf_ifs;
 
     const cloudLow = hourly.cloud_cover_low;
     const cloudMid = hourly.cloud_cover_mid;
@@ -165,12 +159,31 @@ async function buscarPrevisaoOpenMeteo(city) {
       return soma;
     };
 
-    const obterCodigoNuvem = (low, mid) => {
-      const valor = ((low || 0) + (mid || 0)) / 2;
+    // NOVA LÓGICA FINAL (ponderada por severidade)
+    const obterCodigoNuvem = (baseIdx) => {
+      let score = 0;
 
-      if (valor < 20) return 0;
-      if (valor < 40) return 1;
-      if (valor < 70) return 2;
+      for (let i = baseIdx; i < baseIdx + 6; i++) {
+        const low = cloudLow[i] || 0;
+        const mid = cloudMid[i] || 0;
+
+        const nivelHora = Math.max(low, mid);
+
+        let classe;
+        if (nivelHora < 20) classe = 0;
+        else if (nivelHora < 40) classe = 1;
+        else if (nivelHora < 70) classe = 2;
+        else classe = 3;
+
+        // peso por severidade (mais nuvem = mais impacto)
+        score += classe * (classe + 1);
+      }
+
+      const mediaPonderada = score / 6;
+
+      if (mediaPonderada < 0.8) return 0;
+      if (mediaPonderada < 1.6) return 1;
+      if (mediaPonderada < 2.4) return 2;
       return 3;
     };
 
@@ -196,10 +209,10 @@ async function buscarPrevisaoOpenMeteo(city) {
         wind_max_kmh: Math.max(...winds),
         rain_sum_mm: Number(totalChuvaDia.toFixed(1)),
         periods: {
-          "até 06h": { cloud_desc: obterCodigoNuvem(cloudLow[idxs[0]], cloudMid[idxs[0]]), rain_mm: Number(r1.toFixed(1)) },
-          "até 12h": { cloud_desc: obterCodigoNuvem(cloudLow[idxs[1]], cloudMid[idxs[1]]), rain_mm: Number(r2.toFixed(1)) },
-          "até 18h": { cloud_desc: obterCodigoNuvem(cloudLow[idxs[2]], cloudMid[idxs[2]]), rain_mm: Number(r3.toFixed(1)) },
-          "até 24h": { cloud_desc: obterCodigoNuvem(cloudLow[idxs[3]], cloudMid[idxs[3]]), rain_mm: Number(r4.toFixed(1)) }
+          "até 06h": { cloud_desc: obterCodigoNuvem(baseIdx), rain_mm: Number(r1.toFixed(1)) },
+          "até 12h": { cloud_desc: obterCodigoNuvem(baseIdx + 6), rain_mm: Number(r2.toFixed(1)) },
+          "até 18h": { cloud_desc: obterCodigoNuvem(baseIdx + 12), rain_mm: Number(r3.toFixed(1)) },
+          "até 24h": { cloud_desc: obterCodigoNuvem(baseIdx + 18), rain_mm: Number(r4.toFixed(1)) }
         }
       });
     }
@@ -215,7 +228,6 @@ async function buscarPrevisaoOpenMeteo(city) {
   }
 }
 
-// --- INTERFACE E AUXILIARES ---
 function salvarHistorico() {
   localStorage.setItem("historico", JSON.stringify(historico));
 }
@@ -335,7 +347,6 @@ function buscarCidade() {
   buscarPrevisaoOpenMeteo(cidadeEncontrada);
 }
 
-// --- EVENTOS ---
 const inputEl = document.getElementById("cidadeInput");
 const suggestions = document.getElementById("suggestions");
 
