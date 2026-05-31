@@ -159,31 +159,22 @@ async function buscarPrevisaoOpenMeteo(city) {
       return soma;
     };
 
-    // NOVA LÓGICA FINAL (ponderada por severidade)
     const obterCodigoNuvem = (baseIdx) => {
-      let score = 0;
+      const valores = [];
 
       for (let i = baseIdx; i < baseIdx + 6; i++) {
         const low = cloudLow[i] || 0;
         const mid = cloudMid[i] || 0;
 
-        const nivelHora = Math.max(low, mid);
-
-        let classe;
-        if (nivelHora < 20) classe = 0;
-        else if (nivelHora < 40) classe = 1;
-        else if (nivelHora < 70) classe = 2;
-        else classe = 3;
-
-        // peso por severidade (mais nuvem = mais impacto)
-        score += classe * (classe + 1);
+        valores.push(Math.max(low, mid));
       }
 
-      const mediaPonderada = score / 6;
+      const media =
+        valores.reduce((soma, valor) => soma + valor, 0) / valores.length;
 
-      if (mediaPonderada < 0.8) return 0;
-      if (mediaPonderada < 1.6) return 1;
-      if (mediaPonderada < 2.4) return 2;
+      if (media < 20) return 0;
+      if (media < 40) return 1;
+      if (media < 70) return 2;
       return 3;
     };
 
