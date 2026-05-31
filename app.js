@@ -2,10 +2,6 @@ let dadosCidadesLista = [];
 let cidadeAtualObj = null;
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
 
-const DB_NAME = "PrevisaoWeatherDB";
-const DB_VERSION = 1;
-const STORE_NAME = "cache_previsoes";
-
 let carregando = false;
 
 const UF_MAP = {
@@ -27,92 +23,31 @@ function obterIconeWMO(codigo) {
   return "icons/encoberto.webp";
 }
 
-function abrirDB() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "nomeChave" });
-      }
-    };
-    request.onsuccess = (e) => resolve(e.target.result);
-    request.onerror = (e) => reject(e.target.error);
-  });
-}
-
-function calcularProximaExpiracao() {
-  const agora = new Date();
-  const exp00 = new Date(agora);
-  exp00.setHours(24, 0, 0, 0);
-
-  const exp12 = new Date(agora);
-  exp12.setHours(12, 0, 0, 0);
-
-  if (agora.getHours() >= 12) {
-    exp12.setDate(exp12.getDate() + 1);
-  }
-
-  return Math.min(exp00.getTime(), exp12.getTime());
-}
-
-async function salvarNoCache(nomeChave, dadosPrevisao) {
-  const db = await abrirDB();
-  const tx = db.transaction(STORE_NAME, "readwrite");
-  const store = tx.objectStore(STORE_NAME);
-
-  const registro = {
-    nomeChave,
-    dados: dadosPrevisao,
-    expiraEm: calcularProximaExpiracao()
-  };
-
-  store.put(registro);
-}
-
-async function obterDoCache(nomeChave) {
-  const db = await abrirDB();
-  return new Promise((resolve) => {
-    const tx = db.transaction(STORE_NAME, "readonly");
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.get(nomeChave);
-
-    request.onsuccess = (e) => {
-      const registro = e.target.result;
-      if (!registro) return resolve(null);
-
-      if (Date.now() > registro.expiraEm) {
-        removerDoCache(nomeChave);
-        return resolve(null);
-      }
-      resolve(registro.dados);
-    };
-    request.onerror = () => resolve(null);
-  });
-}
-
-async function removerDoCache(nomeChave) {
-  const db = await abrirDB();
-  const tx = db.transaction(STORE_NAME, "readwrite");
-  tx.objectStore(STORE_NAME).delete(nomeChave);
-}
-
 async function carregarDados() {
   try {
     const resCidades = await fetch("./cidades.json");
-    if (!resCidades.ok) throw new Error("Não foi possível carregar cidades.json");
+
+    if (!resCidades.ok) {
+      throw new Error("Não foi possível carregar cidades.json");
+    }
+
     dadosCidadesLista = await resCidades.json();
 
-    document.getElementById("cidade").textContent = "Digite e selecione uma cidade no histórico";
+    document.getElementById("cidade").textContent =
+      "Busque uma cidade";
+
     renderizarHistorico();
+
   } catch (e) {
     console.error(e);
-    document.getElementById("cidade").textContent = "Erro ao carregar a cidades.";
+    document.getElementById("cidade").textContent =
+      "Erro ao carregar as cidades.";
   }
 }
 
 async function buscarPrevisaoOpenMeteo(city) {
   if (carregando) return;
+
   carregando = true;
 
   const titulo = document.getElementById("cidade");
@@ -121,26 +56,34 @@ async function buscarPrevisaoOpenMeteo(city) {
     const uf = ufFromCode(city);
     const nomeChave = uf ? `${city.nome} - ${uf}` : city.nome;
 
-    titulo.textContent = `Carregando previsão para ${city.nome}...`;
+    titulo.textContent = `⏳ Carregando previsão...`;
 
-    const cacheValido = await obterDoCache(nomeChave);
-    if (cacheValido) {
-      cidadeAtualObj = cacheValido;
-      renderizarCidade(cidadeAtualObj);
-      return;
-    }
-
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}&longitude=${city.longitude}&hourly=precipitation,temperature_2m,wind_gusts_10m,cloud_cover_low,cloud_cover_mid&models=ecmwf_ifs&timezone=America%2FSao_Paulo&forecast_days=10`;
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}` +
+      `&longitude=${city.longitude}` +
+      `&hourly=precipitation,temperature_2m,wind_gusts_10m,cloud_cover_low,cloud_cover_mid` +
+      `&models=ecmwf_ifs` +
+      `&timezone=America%2FSao_Paulo` +
+      `&forecast_days=10`;
 
     const res = await fetch(url);
-    if (!res.ok) throw new Error("Erro na API Open-Meteo");
+
+    if (!res.ok) {
+      throw new Error("Erro na API Open-Meteo");
+    }
+
     const forecastMeteo = await res.json();
 
     const hourly = forecastMeteo.hourly;
 
-    const temp_2m = hourly.temperature_2m || hourly.temperature_2m_ecmwf_ifs;
-    const prec = hourly.precipitation || hourly.precipitation_ecmwf_ifs;
-    const wind = hourly.wind_gusts_10m || hourly.wind_gusts_10m_ecmwf_ifs;
+    const temp_2m =
+      hourly.temperature_2m || hourly.temperature_2m_ecmwf_ifs;
+
+    const prec =
+      hourly.precipitation || hourly.precipitation_ecmwf_ifs;
+
+    const wind =
+      hourly.wind_gusts_10m || hourly.wind_gusts_10m_ecmwf_ifs;
 
     const cloudLow = hourly.cloud_cover_low;
     const cloudMid = hourly.cloud_cover_mid;
@@ -152,10 +95,14 @@ async function buscarPrevisaoOpenMeteo(city) {
 
     const somarChuva = (inicio, fim) => {
       let soma = 0;
+
       for (let i = inicio; i < fim; i++) {
         const valorHora = prec[i];
-        soma += (valorHora && !isNaN(valorHora)) ? Number(valorHora) : 0;
+        soma += (valorHora && !isNaN(valorHora))
+          ? Number(valorHora)
+          : 0;
       }
+
       return soma;
     };
 
@@ -170,7 +117,8 @@ async function buscarPrevisaoOpenMeteo(city) {
       }
 
       const media =
-        valores.reduce((soma, valor) => soma + valor, 0) / valores.length;
+        valores.reduce((soma, valor) => soma + valor, 0) /
+        valores.length;
 
       if (media < 20) return 0;
       if (media < 40) return 1;
@@ -180,8 +128,15 @@ async function buscarPrevisaoOpenMeteo(city) {
 
     for (let d = 0; d < 10; d++) {
       const baseIdx = d * 24;
+
       const dataISO = hourly.time[baseIdx].split("T")[0];
-      const idxs = [baseIdx, baseIdx + 6, baseIdx + 12, baseIdx + 18];
+
+      const idxs = [
+        baseIdx,
+        baseIdx + 6,
+        baseIdx + 12,
+        baseIdx + 18
+      ];
 
       const temps = idxs.map(i => temp_2m[i] || 0);
       const winds = idxs.map(i => wind[i] || 0);
@@ -200,15 +155,26 @@ async function buscarPrevisaoOpenMeteo(city) {
         wind_max_kmh: Math.max(...winds),
         rain_sum_mm: Number(totalChuvaDia.toFixed(1)),
         periods: {
-          "00h": { cloud_desc: obterCodigoNuvem(baseIdx), rain_mm: Number(r1.toFixed(1)) },
-          "06h": { cloud_desc: obterCodigoNuvem(baseIdx + 6), rain_mm: Number(r2.toFixed(1)) },
-          "12h": { cloud_desc: obterCodigoNuvem(baseIdx + 12), rain_mm: Number(r3.toFixed(1)) },
-          "18h": { cloud_desc: obterCodigoNuvem(baseIdx + 18), rain_mm: Number(r4.toFixed(1)) }
+          "00h": {
+            cloud_desc: obterCodigoNuvem(baseIdx),
+            rain_mm: Number(r1.toFixed(1))
+          },
+          "06h": {
+            cloud_desc: obterCodigoNuvem(baseIdx + 6),
+            rain_mm: Number(r2.toFixed(1))
+          },
+          "12h": {
+            cloud_desc: obterCodigoNuvem(baseIdx + 12),
+            rain_mm: Number(r3.toFixed(1))
+          },
+          "18h": {
+            cloud_desc: obterCodigoNuvem(baseIdx + 18),
+            rain_mm: Number(r4.toFixed(1))
+          }
         }
       });
     }
 
-    await salvarNoCache(nomeChave, cidadeAtualObj);
     renderizarCidade(cidadeAtualObj);
 
   } catch (e) {
@@ -230,8 +196,10 @@ function formatarData(dataISO) {
 
 function obterDiaSemana(dataISO) {
   const dias = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
   const [ano, mes, dia] = dataISO.split("-");
   const d = new Date(`${ano}-${mes}-${dia}T00:00:00`);
+
   return dias[d.getDay()];
 }
 
@@ -250,21 +218,30 @@ function obterIconeNuvem(valor) {
 
 function renderizarHistorico() {
   const el = document.getElementById("historico");
+
   if (!el) return;
+
   el.innerHTML = "";
 
   historico.slice(0, 3).forEach((nomeCidade) => {
     const item = document.createElement("div");
+
     item.className = "historico-item";
     item.textContent = nomeCidade;
+
     item.onclick = () => {
-      const city = dadosCidadesLista.find(c => {
+      const city = dadosCidadesLista.find((c) => {
         const uf = ufFromCode(c);
         const nomeGerado = uf ? `${c.nome} - ${uf}` : c.nome;
+
         return nomeGerado === nomeCidade;
       });
-      if (city) buscarPrevisaoOpenMeteo(city);
+
+      if (city) {
+        buscarPrevisaoOpenMeteo(city);
+      }
     };
+
     el.appendChild(item);
   });
 }
@@ -278,38 +255,44 @@ function renderizarCidade(cidadeObj) {
 
   cidadeObj.forecast.forEach((d) => {
     const div = document.createElement("div");
+
     div.className = "card";
 
     const periodosHTML = Object.entries(d.periods)
-      .map(([hora, p]) => {
-        return `
-          <div class="periodo">
-            <div class="hora">${hora}</div>
-            <div class="icone">${obterIconeNuvem(p.cloud_desc)}</div>
-            <div class="chuva">${p.rain_mm} mm</div>
-          </div>
-        `;
-      })
+      .map(([hora, p]) => `
+        <div class="periodo">
+          <div class="hora">${hora}</div>
+          <div class="icone">${obterIconeNuvem(p.cloud_desc)}</div>
+          <div class="chuva">${p.rain_mm} mm</div>
+        </div>
+      `)
       .join("");
 
     div.innerHTML = `
       <h3>${obterDiaSemana(d.date)}, ${formatarData(d.date)}</h3>
+
       <div class="data-row">
         <div class="data">
           <span>🌡️ Temperatura</span>
           <strong>${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</strong>
         </div>
+
         <div class="data">
           <span>💧 Chuva Acumulada</span>
           <strong>${d.rain_sum_mm} mm</strong>
         </div>
+
         <div class="data">
           <span>🍃 Rajadas de vento</span>
           <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
         </div>
       </div>
-      <div class="resumo-dia">${periodosHTML}</div>
+
+      <div class="resumo-dia">
+        ${periodosHTML}
+      </div>
     `;
+
     container.appendChild(div);
   });
 
@@ -325,16 +308,21 @@ function renderizarCidade(cidadeObj) {
 }
 
 function buscarCidade() {
-  const input = normalizarTexto(document.getElementById("cidadeInput").value);
+  const input =
+    normalizarTexto(document.getElementById("cidadeInput").value);
+
   const cidadeEncontrada = dadosCidadesLista.find((c) =>
     normalizarTexto(c.nome).includes(input)
   );
 
   if (!cidadeEncontrada) {
-    document.getElementById("cidade").textContent = "Cidade não encontrada na lista local";
+    document.getElementById("cidade").textContent =
+      "Cidade não encontrada na lista local";
+
     document.getElementById("container").innerHTML = "";
     return;
   }
+
   buscarPrevisaoOpenMeteo(cidadeEncontrada);
 }
 
@@ -343,7 +331,9 @@ const suggestions = document.getElementById("suggestions");
 
 inputEl.addEventListener("input", () => {
   const valor = normalizarTexto(inputEl.value);
+
   suggestions.innerHTML = "";
+
   if (!valor) return;
 
   const filtrados = dadosCidadesLista
@@ -352,25 +342,36 @@ inputEl.addEventListener("input", () => {
 
   filtrados.forEach((c) => {
     const item = document.createElement("div");
+
     const uf = ufFromCode(c);
-    item.textContent = uf ? `${c.nome} - ${uf}` : c.nome;
+
+    item.textContent =
+      uf ? `${c.nome} - ${uf}` : c.nome;
 
     item.onclick = () => {
       inputEl.value = c.nome;
       suggestions.innerHTML = "";
       buscarPrevisaoOpenMeteo(c);
     };
+
     suggestions.appendChild(item);
   });
 });
 
 document.addEventListener("click", (e) => {
-  if (e.target !== inputEl) suggestions.innerHTML = "";
+  if (e.target !== inputEl) {
+    suggestions.innerHTML = "";
+  }
 });
 
-document.getElementById("btnBuscar").addEventListener("click", buscarCidade);
+document
+  .getElementById("btnBuscar")
+  .addEventListener("click", buscarCidade);
+
 inputEl.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") buscarCidade();
+  if (e.key === "Enter") {
+    buscarCidade();
+  }
 });
 
 carregarDados();
