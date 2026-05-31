@@ -139,7 +139,8 @@ def download_tp(client, run_date):
 
     print("Baixando novo GRIB...")
 
-    steps = list(range(0, (DAYS * 24) + 1, 6))
+    # Ampliado para (DAYS * 24) + 7 para garantir o step extra de +3h necessário para a lógica de Brasília
+    steps = list(range(0, (DAYS * 24) + 7, 6))
 
     client.retrieve(
         date=run_str,
@@ -196,14 +197,16 @@ def daily_accum(tp, run_date):
 
     for d in range(1, DAYS + 1):
 
-        t1 = np.timedelta64(d * 24, "h")
-        t0 = np.timedelta64((d - 1) * 24, "h")
+        # Ajustado em +3 horas para alinhar com o horário de Brasília (03Z a 03Z)
+        t1 = np.timedelta64((d * 24) + 3, "h")
+        t0 = np.timedelta64(((d - 1) * 24) + 3, "h")
 
         a = tp.sel(step=t1, method="nearest")
         b = tp.sel(step=t0, method="nearest")
 
         da = (a - b).clip(min=0)
 
+        # A data representa o dia civil no fuso local (-3h)
         valid_date = run_date + dt.timedelta(days=d)
 
         daily.append(
