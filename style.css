@@ -131,7 +131,10 @@ h1 {
 
 .hora {
     font-size: 12px;
-    font-weight: normal;
+}
+
+.chuva {
+    font-weight: 400;
 }
 
 
