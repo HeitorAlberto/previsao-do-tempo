@@ -200,10 +200,10 @@ async function buscarPrevisaoOpenMeteo(city) {
         wind_max_kmh: Math.max(...winds),
         rain_sum_mm: Number(totalChuvaDia.toFixed(1)),
         periods: {
-          "até 06h": { cloud_desc: obterCodigoNuvem(baseIdx), rain_mm: Number(r1.toFixed(1)) },
-          "até 12h": { cloud_desc: obterCodigoNuvem(baseIdx + 6), rain_mm: Number(r2.toFixed(1)) },
-          "até 18h": { cloud_desc: obterCodigoNuvem(baseIdx + 12), rain_mm: Number(r3.toFixed(1)) },
-          "até 24h": { cloud_desc: obterCodigoNuvem(baseIdx + 18), rain_mm: Number(r4.toFixed(1)) }
+          "00h": { cloud_desc: obterCodigoNuvem(baseIdx), rain_mm: Number(r1.toFixed(1)) },
+          "06h": { cloud_desc: obterCodigoNuvem(baseIdx + 6), rain_mm: Number(r2.toFixed(1)) },
+          "12h": { cloud_desc: obterCodigoNuvem(baseIdx + 12), rain_mm: Number(r3.toFixed(1)) },
+          "18h": { cloud_desc: obterCodigoNuvem(baseIdx + 18), rain_mm: Number(r4.toFixed(1)) }
         }
       });
     }
