@@ -103,7 +103,7 @@ async function carregarDados() {
     if (!resCidades.ok) throw new Error("Não foi possível carregar cidades.json");
     dadosCidadesLista = await resCidades.json();
 
-    document.getElementById("cidade").textContent = "Digite e selecione uma cidade no hostórico";
+    document.getElementById("cidade").textContent = "Digite e selecione uma cidade no histórico";
     renderizarHistorico();
   } catch (e) {
     console.error(e);
