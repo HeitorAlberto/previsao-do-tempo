@@ -109,7 +109,7 @@ async function buscarPrevisaoOpenMeteo(city) {
     const obterCodigoNuvem = (baseIdx) => {
       const valores = [];
 
-      for (let i = baseIdx; i < baseIdx + 6; i++) {
+      for (let i = baseIdx; i < baseIdx + 3; i++) {
         const low = cloudLow[i] || 0;
         const mid = cloudMid[i] || 0;
 
@@ -131,49 +131,47 @@ async function buscarPrevisaoOpenMeteo(city) {
 
       const dataISO = hourly.time[baseIdx].split("T")[0];
 
-      const idxs = [
-        baseIdx,
-        baseIdx + 6,
-        baseIdx + 12,
-        baseIdx + 18
-      ];
+      const tempsDia =
+        temp_2m.slice(baseIdx, baseIdx + 24);
 
-      const temps = idxs.map(i => temp_2m[i] || 0);
-      const winds = idxs.map(i => wind[i] || 0);
+      const windsDia =
+        wind.slice(baseIdx, baseIdx + 24);
 
-      const r1 = somarChuva(baseIdx, baseIdx + 6);
-      const r2 = somarChuva(baseIdx + 6, baseIdx + 12);
-      const r3 = somarChuva(baseIdx + 12, baseIdx + 18);
-      const r4 = somarChuva(baseIdx + 18, baseIdx + 24);
+      const periods = {};
 
-      const totalChuvaDia = r1 + r2 + r3 + r4;
+      let totalChuvaDia = 0;
+
+      for (let h = 0; h < 24; h += 3) {
+        const inicio = baseIdx + h;
+        const fim = inicio + 3;
+
+        const chuva = somarChuva(inicio, fim);
+
+        totalChuvaDia += chuva;
+
+        periods[
+          `${String(h).padStart(2, "0")}h`
+        ] = {
+          cloud_desc: obterCodigoNuvem(inicio),
+          rain_mm: Number(chuva.toFixed(1))
+        };
+      }
 
       cidadeAtualObj.forecast.push({
         date: dataISO,
-        temp_min_c: Math.min(...temps),
-        temp_max_c: Math.max(...temps),
-        wind_max_kmh: Math.max(...winds),
+
+        temp_min_c: Math.min(...tempsDia),
+
+        temp_max_c: Math.max(...tempsDia),
+
+        wind_max_kmh: Math.max(...windsDia),
+
         rain_sum_mm: Number(totalChuvaDia.toFixed(1)),
-        periods: {
-          "00h": {
-            cloud_desc: obterCodigoNuvem(baseIdx),
-            rain_mm: Number(r1.toFixed(1))
-          },
-          "06h": {
-            cloud_desc: obterCodigoNuvem(baseIdx + 6),
-            rain_mm: Number(r2.toFixed(1))
-          },
-          "12h": {
-            cloud_desc: obterCodigoNuvem(baseIdx + 12),
-            rain_mm: Number(r3.toFixed(1))
-          },
-          "18h": {
-            cloud_desc: obterCodigoNuvem(baseIdx + 18),
-            rain_mm: Number(r4.toFixed(1))
-          }
-        }
+
+        periods
       });
     }
+
 
     renderizarCidade(cidadeAtualObj);
 

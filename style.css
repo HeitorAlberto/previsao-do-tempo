@@ -117,10 +117,10 @@ h1 {
     grid-template-columns: repeat(4, 1fr);
     text-align: center;
     font-weight: bold;
-    color: #000000;
     background-color: #fff1eb;
-    padding: 8px;
+    padding: 8px 0px;
     border-radius: 12px;
+    row-gap: 30px;
 }
 
 
