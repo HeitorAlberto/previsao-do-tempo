@@ -35,7 +35,7 @@ LEVELS = [
 COLORS = [
     "#ffffff",
     "#d9d9d9",
-    "#a6a6a6",
+    "#838383",
     "#66ff66",
     "#2dbf2d",
     "#c0d9ff",
