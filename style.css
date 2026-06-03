@@ -82,6 +82,7 @@ h1 {
     color: #21b45c;
     margin-bottom: 30px;
     text-decoration: none;
+    font-size: 16px;
 }
 
 #container {
@@ -136,8 +137,6 @@ h1 {
 .chuva {
     font-weight: 400;
     font-size: 12px;
-    background-color: #b1cbff;
-    padding: 6px;
 }
 
 
