@@ -257,7 +257,7 @@ function renderizarCidade(cidadeObj) {
         <div class="periodo">
           <div class="hora">${hora}</div>
           <div class="icone">${obterIconeNuvem(p.cloud_desc)}</div>
-          <div class="chuva">${p.rain_mm} mm</div>
+          <div class="chuva">💧 ${p.rain_mm} mm</div>
         </div>
       `)
       .join("");
