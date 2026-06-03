@@ -61,7 +61,7 @@ async function buscarPrevisaoOpenMeteo(city) {
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}` +
       `&longitude=${city.longitude}` +
-      `&hourly=precipitation,temperature_2m,wind_gusts_10m,cloud_cover_low,cloud_cover_mid` +
+      `&hourly=precipitation,temperature_2m,wind_gusts_10m,cloud_cover` +
       `&models=ecmwf_ifs` +
       `&timezone=America%2FSao_Paulo` +
       `&forecast_days=10`;
@@ -85,8 +85,7 @@ async function buscarPrevisaoOpenMeteo(city) {
     const wind =
       hourly.wind_gusts_10m || hourly.wind_gusts_10m_ecmwf_ifs;
 
-    const cloudLow = hourly.cloud_cover_low;
-    const cloudMid = hourly.cloud_cover_mid;
+    const cloudCover = hourly.cloud_cover;
 
     cidadeAtualObj = {
       cidade: nomeChave,
@@ -110,20 +109,17 @@ async function buscarPrevisaoOpenMeteo(city) {
       const valores = [];
 
       for (let i = baseIdx; i < baseIdx + 3; i++) {
-        const low = cloudLow[i] || 0;
-        const mid = cloudMid[i] || 0;
-
-        valores.push(Math.max(low, mid));
+        valores.push(cloudCover[i] || 0);
       }
 
       const media =
         valores.reduce((soma, valor) => soma + valor, 0) /
         valores.length;
 
-      if (media < 20) return 0;
-      if (media < 40) return 1;
-      if (media < 70) return 2;
-      return 3;
+      if (media < 20) return 0; // limpo
+      if (media < 50) return 1; // poucas nuvens
+      if (media < 80) return 2; // parcialmente nublado
+      return 3; // encoberto
     };
 
     for (let d = 0; d < 10; d++) {
