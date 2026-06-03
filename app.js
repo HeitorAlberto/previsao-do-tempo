@@ -61,7 +61,7 @@ async function buscarPrevisaoOpenMeteo(city) {
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}` +
       `&longitude=${city.longitude}` +
-      `&hourly=precipitation,temperature_2m,wind_gusts_10m,cloud_cover` +
+      `&hourly=precipitation,temperature_2m,wind_gusts_10m,cloud_cover,precipitation_probability` +
       `&models=ecmwf_ifs` +
       `&timezone=America%2FSao_Paulo` +
       `&forecast_days=10`;
@@ -86,6 +86,8 @@ async function buscarPrevisaoOpenMeteo(city) {
       hourly.wind_gusts_10m || hourly.wind_gusts_10m_ecmwf_ifs;
 
     const cloudCover = hourly.cloud_cover;
+
+    const precipProb = hourly.precipitation_probability;
 
     cidadeAtualObj = {
       cidade: nomeChave,
@@ -127,15 +129,13 @@ async function buscarPrevisaoOpenMeteo(city) {
 
       const dataISO = hourly.time[baseIdx].split("T")[0];
 
-      const tempsDia =
-        temp_2m.slice(baseIdx, baseIdx + 24);
-
-      const windsDia =
-        wind.slice(baseIdx, baseIdx + 24);
+      const tempsDia = temp_2m.slice(baseIdx, baseIdx + 24);
+      const windsDia = wind.slice(baseIdx, baseIdx + 24);
 
       const periods = {};
 
       let totalChuvaDia = 0;
+      let maxProbDia = 0;
 
       for (let h = 0; h < 24; h += 3) {
         const inicio = baseIdx + h;
@@ -143,27 +143,29 @@ async function buscarPrevisaoOpenMeteo(city) {
 
         const chuva = somarChuva(inicio, fim);
 
-        totalChuvaDia += chuva;
+        const probs = precipProb.slice(inicio, fim);
+        const probMax =
+          probs.length > 0
+            ? Math.max(...probs.filter(v => v != null && !isNaN(v)))
+            : 0;
 
-        periods[
-          `${String(h).padStart(2, "0")}h`
-        ] = {
+        totalChuvaDia += chuva;
+        maxProbDia = Math.max(maxProbDia, probMax || 0);
+
+        periods[`${String(h).padStart(2, "0")}h`] = {
           cloud_desc: obterCodigoNuvem(inicio),
-          rain_mm: Number(chuva.toFixed(1))
+          rain_mm: Number(chuva.toFixed(1)),
+          rain_prob: Math.round(probMax || 0)
         };
       }
 
       cidadeAtualObj.forecast.push({
         date: dataISO,
-
         temp_min_c: Math.min(...tempsDia),
-
         temp_max_c: Math.max(...tempsDia),
-
         wind_max_kmh: Math.max(...windsDia),
-
         rain_sum_mm: Number(totalChuvaDia.toFixed(1)),
-
+        rain_prob_max: Math.round(maxProbDia),
         periods
       });
     }
@@ -254,12 +256,12 @@ function renderizarCidade(cidadeObj) {
 
     const periodosHTML = Object.entries(d.periods)
       .map(([hora, p]) => `
-        <div class="periodo">
-          <div class="hora">${hora}</div>
-          <div class="icone">${obterIconeNuvem(p.cloud_desc)}</div>
-          <div class="chuva">💧 ${p.rain_mm} mm</div>
-        </div>
-      `)
+    <div class="periodo">
+      <div class="hora">${hora}</div>
+      <div class="icone">${obterIconeNuvem(p.cloud_desc)}</div>
+      <div class="chuva">💧 ${p.rain_mm} mm (${p.rain_prob}%)</div>
+    </div>
+  `)
       .join("");
 
     div.innerHTML = `
@@ -273,7 +275,7 @@ function renderizarCidade(cidadeObj) {
 
         <div class="data">
           <span>💧 Chuva Acumulada</span>
-          <strong>${d.rain_sum_mm} mm</strong>
+          <strong>${d.rain_sum_mm} mm (${d.rain_prob_max}%)</strong>
         </div>
 
         <div class="data">
