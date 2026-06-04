@@ -77,31 +77,37 @@ VISIONS.chuva = (ctx) => {
 
   let tipo;
 
-  // 1. evento forte sempre domina
+  // 1. evento extremo sempre domina
   if (pico >= 8) {
-    tipo = "🔵 Pancada forte de chuva";
+    tipo = "🔵 Pancada muito forte de chuva";
   }
 
-  // 2. pancadas fortes mesmo que poucas horas
+  // 2. pancadas fortes
   else if (pico >= 5) {
-    tipo = horas <= 3
-      ? "🔵 Chuva forte pontual"
-      : "🔵 Pancadas de chuva forte";
+    if (horas <= 3) {
+      tipo = "🔵 Pancada de chuva forte pontual";
+    } else {
+      tipo = "🔵 Pancadas de chuva forte";
+    }
   }
 
-  // 3. chuva contínua leve
-  else if (horas >= 8 && total >= 5) {
-    tipo = "🔵 Pancadas de chuva moderada";
+  // 3. chuva persistente relevante (aqui entra o TOTAL de verdade)
+  else if (total >= 15 && horas >= 6) {
+    tipo = "🔵 Chuva moderada ao longo do dia";
   }
 
-  // 4. chuva moderada distribuída
+  else if (total >= 8 && horas >= 6) {
+    tipo = "🔵 Chuva fraca a moderada ao longo do dia";
+  }
+
+  // 4. chuva frequente leve
   else if (horas >= 6) {
-    tipo = "🔵 Algumas pancadas de chuva";
+    tipo = "🔵 Pancadas de chuva leve";
   }
 
   // 5. eventos leves
   else if (total >= 1) {
-    tipo = "🔵 Pancadas de chuva isoladas";
+    tipo = "🔵 Pancadas isoladas de chuva";
   }
 
   else {
