@@ -58,7 +58,7 @@ VISIONS.nebulosidade = (ctx) => {
     tipo = "⛅ Parcialmente nublado";
   }
   else if (fechaProgressivo) {
-    tipo = "☁️ Nebulosidade aumentando com o passar do tempo";
+    tipo = "🌥️ Nebulosidade aumentando";
   }
   else {
     tipo = "⛅ Parcialmente nublado";
