@@ -335,7 +335,7 @@ function renderizarCidade(cidadeObj) {
         </div>
 
         <div class="data">
-          <span>🌧️ Chuva</span>
+          <span>☔ Chuva</span>
           <strong>${d.rain_sum_mm} mm (${d.rain_prob_max}%)</strong>
         </div>
 
