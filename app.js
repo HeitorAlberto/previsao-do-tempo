@@ -124,7 +124,7 @@ function gerarResumo(r) {
   const nuvem = r.nebulosidade.tipo;
 
   if (chuva === "Sem chuva relevante") {
-    return `${nuvem}.<br> Não chove.`;
+    return `${nuvem}.`;
   }
 
   return `${nuvem}. <br> ${chuva}.`;
