@@ -49,16 +49,16 @@ VISIONS.nebulosidade = (ctx) => {
     tipo = "☁️ Nublado";
   }
   else if (abreNaTarde) {
-    tipo = "⛅ Abre à tarde e volta a fechar à noite";
+    tipo = "⛅ Nebulosidade diminui à tarde, aumenta à noite";
   }
   else if (fechaNaNoite) {
     tipo = "🌥️ Nebulosidade maior a noite";
   }
   else if (abreProgressivo) {
-    tipo = "⛅ Aberturas";
+    tipo = "⛅ Parcialmente nublado";
   }
   else if (fechaProgressivo) {
-    tipo = "☁️ Céu fechando";
+    tipo = "☁️ Nebulosidade aumentando com o passar do tempo";
   }
   else {
     tipo = "⛅ Nebulosidade variável";
@@ -79,29 +79,29 @@ VISIONS.chuva = (ctx) => {
 
   // 1. evento forte sempre domina
   if (pico >= 8) {
-    tipo = "Pancada forte de chuva";
+    tipo = "🔵 Pancada forte de chuva";
   }
 
   // 2. pancadas fortes mesmo que poucas horas
   else if (pico >= 5) {
-    tipo = horas <= 4
-      ? "Pancadas fortes e isoladas"
-      : "Instabilidade com pancadas fortes";
+    tipo = horas <= 3
+      ? "🔵 Chuva forte pontual"
+      : "🔵 Pancadas de chuva forte";
   }
 
   // 3. chuva contínua leve
   else if (horas >= 8 && total >= 5) {
-    tipo = "Chuva moderada em muitos momentos";
+    tipo = "🔵 Pancadas de chuva moderada";
   }
 
   // 4. chuva moderada distribuída
   else if (horas >= 6) {
-    tipo = "Chuva em muitos momentos";
+    tipo = "🔵 Algumas pancadas de chuva";
   }
 
   // 5. eventos leves
   else if (total >= 1) {
-    tipo = "Pancadas ocasionais";
+    tipo = "🔵 Pancadas de chuva isoladas";
   }
 
   else {
@@ -111,33 +111,17 @@ VISIONS.chuva = (ctx) => {
   return { total, horas, pico, tipo };
 };
 
-/* ---- Vento ---- */
-VISIONS.vento = (ctx) => {
-  const wind = ctx.wind;
-
-  const max = Math.max(...wind);
-  const media = wind.reduce((a, b) => a + (b || 0), 0) / wind.length;
-
-  let tipo;
-
-  if (max < 20) tipo = "Rajadas de vento fracas";
-  else if (max < 40) tipo = "Rajadas de vento moderadas";
-  else tipo = "Rajadas de vento fortes";
-
-  return { max, media, tipo };
-};
 
 /* ---- Resumo final ---- */
 function gerarResumo(r) {
   const chuva = r.chuva.tipo;
   const nuvem = r.nebulosidade.tipo;
-  const vento = r.vento.tipo;
 
   if (chuva === "Sem chuva relevante") {
-    return `${nuvem}. ${vento}. Não chove.`;
+    return `${nuvem}.<br> Não chove.`;
   }
 
-  return `${nuvem}. ${chuva}. ${vento}.`;
+  return `${nuvem}. <br> ${chuva}.`;
 }
 
 /* ---- Motor principal ---- */
@@ -245,7 +229,6 @@ async function buscarPrevisaoOpenMeteo(city) {
 
         nebulosidade: analise.nebulosidade.tipo,
         chuva: analise.chuva.tipo,
-        vento: analise.vento.tipo,
 
         resumo: analise.resumo
       });
@@ -340,7 +323,7 @@ function renderizarCidade(cidadeObj) {
         </div>
 
         <div class="data">
-          <span>🍃 Vento</span>
+          <span>🍃 Rajadas de vento</span>
           <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
         </div>
 
