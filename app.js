@@ -244,7 +244,7 @@ function renderizarCidade(cidadeObj) {
       <div class="data-row">
 
         <div class="data">
-          <span>${d.nebulosidade}</span>
+          <span class="nebulosidade">${d.nebulosidade}</span>
         </div>
         
         <div class="data">

@@ -114,9 +114,9 @@ h1 {
 }
 
 
-.resumo-dia img {
-    width: 40px;
-    margin: 5px 0;
+.nebulosidade {
+    font-weight: bolder;
+    color: #9b9b9b;
 }
 
 .hora {
