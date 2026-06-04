@@ -43,16 +43,16 @@ VISIONS.nebulosidade = (ctx) => {
   const fechaProgressivo = mediaManha < mediaTarde && mediaTarde < mediaNoite;
 
   if (variacao < 15 && media < 30) {
-    tipo = "🌤️ Ensolarado";
+    tipo = "🌤️ Poucas nuvens";
   }
   else if (media > 70 && variacao < 20) {
     tipo = "☁️ Nublado";
   }
   else if (abreNaTarde) {
-    tipo = "⛅ Nebulosidade diminui à tarde, aumenta à noite";
+    tipo = "🌥️ Algumas aberturas à tarde";
   }
   else if (fechaNaNoite) {
-    tipo = "🌥️ Nebulosidade maior a noite";
+    tipo = "🌥️ Nebulosidade maior à noite";
   }
   else if (abreProgressivo) {
     tipo = "⛅ Parcialmente nublado";
@@ -61,7 +61,7 @@ VISIONS.nebulosidade = (ctx) => {
     tipo = "☁️ Nebulosidade aumentando com o passar do tempo";
   }
   else {
-    tipo = "⛅ Nebulosidade variável";
+    tipo = "⛅ Parcialmente nublado";
   }
 
   return { media, variacao, tipo };
@@ -97,7 +97,7 @@ VISIONS.chuva = (ctx) => {
   }
 
   else if (total >= 8 && horas >= 6) {
-    tipo = "🔵 Chuva fraca a moderada ao longo do dia";
+    tipo = "🔵 Chuva fraca ao longo do dia";
   }
 
   // 4. chuva frequente leve
