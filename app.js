@@ -107,23 +107,6 @@ async function buscarPrevisaoOpenMeteo(city) {
       return soma;
     };
 
-    const obterCodigoNuvem = (baseIdx) => {
-      const valores = [];
-
-      for (let i = baseIdx; i < baseIdx + 3; i++) {
-        valores.push(cloudCover[i] || 0);
-      }
-
-      const media =
-        valores.reduce((soma, valor) => soma + valor, 0) /
-        valores.length;
-
-      if (media < 20) return 0; // limpo
-      if (media < 50) return 1; // poucas nuvens
-      if (media < 80) return 2; // parcialmente nublado
-      return 3; // encoberto
-    };
-
     for (let d = 0; d < 10; d++) {
       const baseIdx = d * 24;
 
@@ -131,33 +114,34 @@ async function buscarPrevisaoOpenMeteo(city) {
 
       const tempsDia = temp_2m.slice(baseIdx, baseIdx + 24);
       const windsDia = wind.slice(baseIdx, baseIdx + 24);
+      const cloudDia = cloudCover.slice(baseIdx, baseIdx + 24);
 
-      const periods = {};
+      const mediaNebulosidade =
+        cloudDia.reduce((soma, v) => soma + (v || 0), 0) /
+        cloudDia.length;
 
-      let totalChuvaDia = 0;
-      let maxProbDia = 0;
+      let nebulosidadeDia;
 
-      for (let h = 0; h < 24; h += 3) {
-        const inicio = baseIdx + h;
-        const fim = inicio + 3;
-
-        const chuva = somarChuva(inicio, fim);
-
-        const probs = precipProb.slice(inicio, fim);
-        const probMax =
-          probs.length > 0
-            ? Math.max(...probs.filter(v => v != null && !isNaN(v)))
-            : 0;
-
-        totalChuvaDia += chuva;
-        maxProbDia = Math.max(maxProbDia, probMax || 0);
-
-        periods[`${String(h).padStart(2, "0")}h`] = {
-          cloud_desc: obterCodigoNuvem(inicio),
-          rain_mm: Number(chuva.toFixed(1)),
-          rain_prob: Math.round(probMax || 0)
-        };
+      if (mediaNebulosidade <= 30) {
+        nebulosidadeDia = "🌤️ Poucas nuvens";
+      } else if (mediaNebulosidade <= 80) {
+        nebulosidadeDia = "⛅ Nebulosidade variável";
+      } else {
+        nebulosidadeDia = "☁️ Nublado";
       }
+
+      const chuvaDia = prec.slice(baseIdx, baseIdx + 24);
+      const probsDia = precipProb.slice(baseIdx, baseIdx + 24);
+
+      const totalChuvaDia = chuvaDia.reduce(
+        (soma, v) => soma + (Number(v) || 0),
+        0
+      );
+
+      const maxProbDia = Math.max(
+        ...probsDia.filter(v => v != null && !isNaN(v)),
+        0
+      );
 
       cidadeAtualObj.forecast.push({
         date: dataISO,
@@ -166,7 +150,7 @@ async function buscarPrevisaoOpenMeteo(city) {
         wind_max_kmh: Math.max(...windsDia),
         rain_sum_mm: Number(totalChuvaDia.toFixed(1)),
         rain_prob_max: Math.round(maxProbDia),
-        periods
+        nebulosidade: nebulosidadeDia
       });
     }
 
@@ -254,20 +238,15 @@ function renderizarCidade(cidadeObj) {
 
     div.className = "card";
 
-    const periodosHTML = Object.entries(d.periods)
-      .map(([hora, p]) => `
-    <div class="periodo">
-      <div class="hora">${hora}</div>
-      <div class="icone">${obterIconeNuvem(p.cloud_desc)}</div>
-      <div class="chuva">💧 ${p.rain_mm} mm (${p.rain_prob}%)</div>
-    </div>
-  `)
-      .join("");
-
     div.innerHTML = `
       <h3>${obterDiaSemana(d.date)}, ${formatarData(d.date)}</h3>
 
       <div class="data-row">
+
+        <div class="data">
+          <span>${d.nebulosidade}</span>
+        </div>
+        
         <div class="data">
           <span>🌡️ Temperatura</span>
           <strong>${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</strong>
@@ -282,10 +261,7 @@ function renderizarCidade(cidadeObj) {
           <span>🍃 Rajadas de vento</span>
           <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
         </div>
-      </div>
 
-      <div class="resumo-dia">
-        ${periodosHTML}
       </div>
     `;
 
