@@ -43,10 +43,10 @@ VISIONS.nebulosidade = (ctx) => {
   const fechaProgressivo = mediaManha < mediaTarde && mediaTarde < mediaNoite;
 
   if (variacao < 15 && media < 30) {
-    tipo = "🌤️ Poucas nuvens";
+    tipo = "● Poucas nuvens";
   }
   else if (media > 70 && variacao < 20) {
-    tipo = "☁️ Nublado";
+    tipo = "● Nublado";
   }
   else if (abreNaTarde) {
     tipo = "● Sol aparece brevemente à tarde";
