@@ -49,19 +49,19 @@ VISIONS.nebulosidade = (ctx) => {
     tipo = "☁️ Nublado";
   }
   else if (abreNaTarde) {
-    tipo = "🌥️ Algumas aberturas à tarde";
+    tipo = "● Sol aparece brevemente à tarde";
   }
   else if (fechaNaNoite) {
-    tipo = "🌥️ Nebulosidade maior à noite";
+    tipo = "● Nebulosidade maior à noite";
   }
   else if (abreProgressivo) {
-    tipo = "⛅ Parcialmente nublado";
+    tipo = "● Parcialmente nublado";
   }
   else if (fechaProgressivo) {
-    tipo = "🌥️ Nebulosidade aumentando";
+    tipo = "● Nebulosidade aumentando";
   }
   else {
-    tipo = "⛅ Parcialmente nublado";
+    tipo = "● Parcialmente nublado";
   }
 
   return { media, variacao, tipo };
@@ -79,35 +79,35 @@ VISIONS.chuva = (ctx) => {
 
   // 1. evento extremo sempre domina
   if (pico >= 8) {
-    tipo = "☔ Pancada forte de chuva";
+    tipo = "● Pancada forte de chuva";
   }
 
   // 2. pancadas fortes
   else if (pico >= 5) {
     if (horas <= 3) {
-      tipo = "☔ Pancada de chuva forte pontual";
+      tipo = "● Pancada de chuva forte pontual";
     } else {
-      tipo = "☔ Pancadas de chuva forte";
+      tipo = "● Pancadas de chuva forte";
     }
   }
 
   // 3. chuva persistente relevante (aqui entra o TOTAL de verdade)
   else if (total >= 15 && horas >= 6) {
-    tipo = "☔ Chuva moderada ao longo do dia";
+    tipo = "● Chuva moderada ao longo do dia";
   }
 
   else if (total >= 8 && horas >= 6) {
-    tipo = "☔ Chuva fraca ao longo do dia";
+    tipo = "● Chuva fraca ao longo do dia";
   }
 
   // 4. chuva frequente leve
   else if (horas >= 6) {
-    tipo = "☔ Pancadas de chuva leve";
+    tipo = "● Pancadas de chuva leve";
   }
 
   // 5. eventos leves
   else if (total >= 1) {
-    tipo = "☔ Pancadas isoladas de chuva";
+    tipo = "● Pancadas isoladas de chuva";
   }
 
   else {
@@ -324,7 +324,7 @@ function renderizarCidade(cidadeObj) {
         </div>
 
         <div class="data">
-          <span>☔ Chuva</span>
+          <span>💧 Chuva acumulada</span>
           <strong>${d.rain_sum_mm} mm (${d.rain_prob_max}%)</strong>
         </div>
 
