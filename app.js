@@ -43,25 +43,25 @@ VISIONS.nebulosidade = (ctx) => {
   const fechaProgressivo = mediaManha < mediaTarde && mediaTarde < mediaNoite;
 
   if (variacao < 15 && media < 30) {
-    tipo = "● Poucas nuvens";
+    tipo = "Poucas nuvens";
   }
   else if (media > 70 && variacao < 20) {
-    tipo = "● Nublado";
+    tipo = "Nublado";
   }
   else if (abreNaTarde) {
-    tipo = "● Sol aparece brevemente à tarde";
+    tipo = "Sol aparece brevemente à tarde";
   }
   else if (fechaNaNoite) {
-    tipo = "● Nebulosidade maior à noite";
+    tipo = "Nebulosidade maior à noite";
   }
   else if (abreProgressivo) {
-    tipo = "● Parcialmente nublado";
+    tipo = "Parcialmente nublado";
   }
   else if (fechaProgressivo) {
-    tipo = "● Nebulosidade aumentando";
+    tipo = "Nebulosidade aumentando";
   }
   else {
-    tipo = "● Parcialmente nublado";
+    tipo = "Parcialmente nublado";
   }
 
   return { media, variacao, tipo };
@@ -79,35 +79,35 @@ VISIONS.chuva = (ctx) => {
 
   // 1. evento extremo sempre domina
   if (pico >= 8) {
-    tipo = "● Pancada forte de chuva";
+    tipo = "pancada forte de chuva";
   }
 
   // 2. pancadas fortes
   else if (pico >= 5) {
     if (horas <= 3) {
-      tipo = "● Pancada de chuva forte pontual";
+      tipo = "pancada de chuva forte pontual";
     } else {
-      tipo = "● Pancadas de chuva forte";
+      tipo = "pancadas de chuva forte";
     }
   }
 
   // 3. chuva persistente relevante (aqui entra o TOTAL de verdade)
   else if (total >= 15 && horas >= 6) {
-    tipo = "● Chuva moderada ao longo do dia";
+    tipo = "chuva moderada ao longo do dia";
   }
 
   else if (total >= 8 && horas >= 6) {
-    tipo = "● Chuva fraca ao longo do dia";
+    tipo = "chuva fraca ao longo do dia";
   }
 
   // 4. chuva frequente leve
   else if (horas >= 6) {
-    tipo = "● Pancadas de chuva leve";
+    tipo = "pancadas de chuva leve";
   }
 
   // 5. eventos leves
   else if (total >= 1) {
-    tipo = "● Pancadas isoladas de chuva";
+    tipo = "pancadas isoladas de chuva";
   }
 
   else {
@@ -127,7 +127,7 @@ function gerarResumo(r) {
     return `${nuvem}.`;
   }
 
-  return `${nuvem}. <br> ${chuva}.`;
+  return `${nuvem}, ${chuva}.`;
 }
 
 /* ---- Motor principal ---- */
@@ -319,17 +319,17 @@ function renderizarCidade(cidadeObj) {
         </div>
 
         <div class="data">
-          <span>🌡️ Temperatura</span>
+          <span>Temperatura</span>
           <strong>${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</strong>
         </div>
 
         <div class="data">
-          <span>💧 Chuva acumulada</span>
+          <span>Chuva acumulada</span>
           <strong>${d.rain_sum_mm} mm (${d.rain_prob_max}%)</strong>
         </div>
 
         <div class="data">
-          <span>🍃 Rajadas de vento</span>
+          <span>Rajadas de vento</span>
           <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
         </div>
 
