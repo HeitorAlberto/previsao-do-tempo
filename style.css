@@ -115,9 +115,9 @@ h1 {
 
 
 .resumo {
-    font-weight: 700;
-    color: rgb(58, 41, 212);
-    border-radius: 4px;
+    font-weight: bolder;
+    color: #9b9b9b;
+    line-height: 40px;
 }
 
 .hora {
