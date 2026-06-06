@@ -28,43 +28,108 @@ const VISIONS = {};
 VISIONS.nebulosidade = (ctx) => {
   const cloud = ctx.cloud;
 
-  const media = cloud.reduce((a, b) => a + (b || 0), 0) / cloud.length;
-  const variacao = Math.max(...cloud) - Math.min(...cloud);
+  if (!cloud?.length) {
+    return {
+      media: 0,
+      variacao: 0,
+      tipo: "Dados insuficientes"
+    };
+  }
 
-  const mediaManha = cloud.slice(0, 6).reduce((a, b) => a + (b || 0), 0) / 6;
-  const mediaTarde = cloud.slice(12, 18).reduce((a, b) => a + (b || 0), 0) / 6;
-  const mediaNoite = cloud.slice(18, 24).reduce((a, b) => a + (b || 0), 0) / 6;
+  const media =
+    cloud.reduce((a, b) => a + (b || 0), 0) / cloud.length;
+
+  const minimo = Math.min(...cloud);
+  const maximo = Math.max(...cloud);
+  const variacao = maximo - minimo;
+
+  const mediaManha =
+    cloud.slice(0, 6).reduce((a, b) => a + (b || 0), 0) / 6;
+
+  const mediaTarde =
+    cloud.slice(12, 18).reduce((a, b) => a + (b || 0), 0) / 6;
+
+  const mediaNoite =
+    cloud.slice(18, 24).reduce((a, b) => a + (b || 0), 0) / 6;
+
+  const tendencia = mediaNoite - mediaManha;
 
   let tipo;
 
-  const abreNaTarde = mediaManha > mediaTarde && mediaNoite > mediaTarde;
-  const fechaNaNoite = mediaManha < mediaTarde && mediaNoite > mediaTarde;
-  const abreProgressivo = mediaManha > mediaTarde && mediaTarde > mediaNoite;
-  const fechaProgressivo = mediaManha < mediaTarde && mediaTarde < mediaNoite;
+  // =========================
+  // PADRÕES ESPECÍFICOS
+  // =========================
 
-  if (variacao < 15 && media < 30) {
-    tipo = "● Poucas nuvens";
+  // Céu vai abrindo claramente
+  if (
+    tendencia <= -30 &&
+    mediaManha > 60 &&
+    mediaNoite < 40
+  ) {
+    tipo = "Céu abrindo gradualmente";
   }
-  else if (media > 70 && variacao < 20) {
-    tipo = "● Nublado";
+
+  // Céu vai fechando claramente
+  else if (
+    tendencia >= 30 &&
+    mediaManha < 40 &&
+    mediaNoite > 60
+  ) {
+    tipo = "Céu fechando gradualmente";
   }
-  else if (abreNaTarde) {
-    tipo = "● Sol aparece brevemente à tarde";
+
+  // Dia muito variável
+  else if (
+    variacao >= 60 &&
+    media >= 30 &&
+    media <= 70
+  ) {
+    tipo = "Variação de nebulosidade";
   }
-  else if (fechaNaNoite) {
-    tipo = "● Nebulosidade maior à noite";
+
+  // Muito nublado, mas com algumas aberturas
+  else if (
+    media >= 70 &&
+    minimo < 40
+  ) {
+    tipo = "Nebulosidade predominante com aberturas";
   }
-  else if (abreProgressivo) {
-    tipo = "● Parcialmente nublado";
+
+  // =========================
+  // PADRÕES GERAIS
+  // =========================
+
+  else if (media < 15) {
+    tipo = "Céu limpo";
   }
-  else if (fechaProgressivo) {
-    tipo = "● Nebulosidade aumentando";
+
+  else if (media < 35) {
+    tipo = "Predomínio de sol";
   }
+
+  else if (media < 60) {
+    tipo = "Sol entre nuvens";
+  }
+
+  else if (media < 85) {
+    tipo = "Predomínio de nuvens";
+  }
+
   else {
-    tipo = "● Parcialmente nublado";
+    tipo = "Encoberto";
   }
 
-  return { media, variacao, tipo };
+  return {
+    media,
+    minimo,
+    maximo,
+    variacao,
+    mediaManha,
+    mediaTarde,
+    mediaNoite,
+    tendencia,
+    tipo
+  };
 };
 
 /* ---- Chuva ---- */
@@ -79,35 +144,35 @@ VISIONS.chuva = (ctx) => {
 
   // 1. evento extremo sempre domina
   if (pico >= 8) {
-    tipo = "● Pancada forte de chuva";
+    tipo = "Pancada forte de chuva";
   }
 
   // 2. pancadas fortes
   else if (pico >= 5) {
     if (horas <= 3) {
-      tipo = "● Pancada de chuva forte pontual";
+      tipo = "Pancada de chuva forte pontual";
     } else {
-      tipo = "● Pancadas de chuva forte";
+      tipo = "Pancadas de chuva forte";
     }
   }
 
   // 3. chuva persistente relevante (aqui entra o TOTAL de verdade)
   else if (total >= 15 && horas >= 6) {
-    tipo = "● Chuva moderada ao longo do dia";
+    tipo = "Chuva moderada ao longo do dia";
   }
 
   else if (total >= 8 && horas >= 6) {
-    tipo = "● Chuva fraca ao longo do dia";
+    tipo = "Chuva fraca ao longo do dia";
   }
 
   // 4. chuva frequente leve
   else if (horas >= 6) {
-    tipo = "● Pancadas de chuva leve";
+    tipo = "Pancadas de chuva leve";
   }
 
   // 5. eventos leves
   else if (total >= 1) {
-    tipo = "● Pancadas isoladas de chuva";
+    tipo = "Pancadas isoladas de chuva";
   }
 
   else {
