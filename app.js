@@ -58,7 +58,7 @@ async function buscarPrevisaoOpenMeteo(city) {
 
     titulo.textContent = "⏳ Carregando...";
 
-    // Adicionado weather_code na requisição para mapear trovoadas
+  
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}` +
       `&longitude=${city.longitude}` +
@@ -111,7 +111,7 @@ async function buscarPrevisaoOpenMeteo(city) {
         return {
           nuvens: Math.round(medNuvens),
           chuva: Number(somChuva.toFixed(1)),
-          trovoadas: temTrovoada ? ", trovoadas" : ""
+          trovoadas: temTrovoada ? "trovoadas" : ""
         };
       };
 
@@ -221,22 +221,43 @@ function renderizarCidade(cidadeObj) {
           <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
         </div>
 
-        <div class="data periodos-bloco" style="grid-column: 1 / -1; margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px;">
-          <div>
-            
-            <strong>Madrugada</strong><br><br>
-            Nuvens ${d.p1.nuvens}%, chuva ${d.p1.chuva}mm${d.p1.trovoadas}<br><br>
-
-            <strong>Manhã</strong><br><br>
-            Nuvens ${d.p2.nuvens}%, chuva ${d.p2.chuva}mm${d.p2.trovoadas}<br><br>
-
-            <strong>Tarde</strong><br><br>
-            Nuvens ${d.p3.nuvens}%, chuva ${d.p3.chuva}mm${d.p3.trovoadas}<br><br>
-
-            <strong>Noite</strong><br><br>
-            Nuvens ${d.p4.nuvens}%, chuva ${d.p4.chuva}mm${d.p4.trovoadas}
+        <div class="periodos-bloco">
+          <div class="periodo">
+            <div><strong>Madrugada</strong></div>
+            <div class="periodo-infos">
+              <span class="nuvens">Nuvens ${d.p1.nuvens}%</span>
+              <span class="chuva">chuva ${d.p1.chuva} mm</span>
+              ${d.p1.trovoadas ? `<span class="trovoadas">${d.p1.trovoadas}</span><br>` : ""}
+            </div>
           </div>
+
+          <div class="periodo">
+            <div><strong>Manhã</strong></div>
+            <div class="periodo-infos">
+              <span class="nuvens">Nuvens ${d.p2.nuvens}%</span>
+              <span class="chuva"> chuva ${d.p2.chuva} mm</span>
+              ${d.p2.trovoadas ? `<span class="trovoadas">${d.p2.trovoadas}</span>` : ""}
+            </div>
+          </div>
+          
+          <div class="periodo">
+            <div><strong>Tarde</strong></div>
+            <div class="periodo-infos">
+              <span class="nuvens">Nuvens ${d.p3.nuvens}%</span>
+              <span class="chuva"> chuva ${d.p3.chuva} mm</span>
+              ${d.p3.trovoadas ? `<span class="trovoadas">${d.p3.trovoadas}</span><br>` : ""}<br>
+            </div>
+          </div>
+
+          <div class="periodo">
+            <div><strong>Noite</strong></div>
+            <div class="periodo-infos">
+              <span class="nuvens">Nuvens ${d.p4.nuvens}%</span>
+              <span class="chuva">chuva ${d.p4.chuva} mm</span>
+              ${d.p4.trovoadas ? `<span class="trovoadas">${d.p4.trovoadas}</span><br>` : ""}
+            </div>
         </div>
+      </div>
 
       </div>
     `;

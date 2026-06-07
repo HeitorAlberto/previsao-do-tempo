@@ -114,19 +114,46 @@ h1 {
 }
 
 
-.resumo {
-    font-weight: bolder;
-    color: #9b9b9b;
-    line-height: 40px;
+.periodos-bloco {
+    display: grid;
+    grid-template-columns: 1fr;
+    padding: 20px 0;
+    border-top: 1px solid rgb(226, 226, 226);
+    gap: 30px;
+} 
+
+.periodo {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.periodo-infos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .hora {
     font-size: 12px;
 }
 
+.nuvens {
+    background-color: #f0f0f0;
+    padding: 5px;
+    border-radius: 6px;
+}
+
 .chuva {
-    font-weight: 400;
-    font-size: 12px;
+    background-color: #cceaff;
+    padding: 5px;
+    border-radius: 6px;
+}
+
+.trovoadas {
+    background-color: #ffe3b5;
+    padding: 5px;
+    border-radius: 6px;
 }
 
 
