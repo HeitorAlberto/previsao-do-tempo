@@ -138,6 +138,18 @@ h1 {
     font-size: 12px;
 }
 
+.temperatura {
+    background-color: #ffc8b5;
+    padding: 5px;
+    border-radius: 6px;
+}
+
+.vento {
+    background-color: #c5ffb5;
+    padding: 5px;
+    border-radius: 6px;
+}
+
 .nuvens {
     background-color: #f0f0f0;
     padding: 5px;
