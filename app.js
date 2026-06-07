@@ -20,196 +20,6 @@ function ufFromCode(city) {
 }
 
 /* =========================
-   VISIONS SYSTEM (PLUGIN)
-========================= */
-const VISIONS = {};
-
-/* ---- Nebulosidade ---- */
-VISIONS.nebulosidade = (ctx) => {
-  const cloud = ctx.cloud;
-
-  if (!cloud?.length) {
-    return {
-      media: 0,
-      variacao: 0,
-      tipo: "Dados insuficientes"
-    };
-  }
-
-  const media =
-    cloud.reduce((a, b) => a + (b || 0), 0) / cloud.length;
-
-  const minimo = Math.min(...cloud);
-  const maximo = Math.max(...cloud);
-  const variacao = maximo - minimo;
-
-  const mediaManha =
-    cloud.slice(0, 6).reduce((a, b) => a + (b || 0), 0) / 6;
-
-  const mediaTarde =
-    cloud.slice(12, 18).reduce((a, b) => a + (b || 0), 0) / 6;
-
-  const mediaNoite =
-    cloud.slice(18, 24).reduce((a, b) => a + (b || 0), 0) / 6;
-
-  const tendencia = mediaNoite - mediaManha;
-
-  let tipo;
-
-  // =========================
-  // PADRÕES ESPECÍFICOS
-  // =========================
-
-  // Céu vai abrindo claramente
-  if (
-    tendencia <= -30 &&
-    mediaManha > 60 &&
-    mediaNoite < 40
-  ) {
-    tipo = "Céu abrindo gradualmente";
-  }
-
-  // Céu vai fechando claramente
-  else if (
-    tendencia >= 30 &&
-    mediaManha < 40 &&
-    mediaNoite > 60
-  ) {
-    tipo = "Céu fechando gradualmente";
-  }
-
-  // Dia muito variável
-  else if (
-    variacao >= 60 &&
-    media >= 30 &&
-    media <= 70
-  ) {
-    tipo = "Variação de nebulosidade";
-  }
-
-  // Muito nublado, mas com algumas aberturas
-  else if (
-    media >= 70 &&
-    minimo < 40
-  ) {
-    tipo = "Nebulosidade predominante com aberturas";
-  }
-
-  // =========================
-  // PADRÕES GERAIS
-  // =========================
-
-  else if (media < 15) {
-    tipo = "Céu limpo";
-  }
-
-  else if (media < 35) {
-    tipo = "Predomínio de sol";
-  }
-
-  else if (media < 60) {
-    tipo = "Sol entre nuvens";
-  }
-
-  else if (media < 85) {
-    tipo = "Predomínio de nuvens";
-  }
-
-  else {
-    tipo = "Encoberto";
-  }
-
-  return {
-    media,
-    minimo,
-    maximo,
-    variacao,
-    mediaManha,
-    mediaTarde,
-    mediaNoite,
-    tendencia,
-    tipo
-  };
-};
-
-/* ---- Chuva ---- */
-VISIONS.chuva = (ctx) => {
-  const rain = ctx.rain;
-
-  const total = rain.reduce((a, b) => a + (b || 0), 0);
-  const horas = rain.filter(v => v > 0.1).length;
-  const pico = Math.max(...rain);
-
-  let tipo;
-
-  // 1. evento extremo sempre domina
-  if (pico >= 8) {
-    tipo = "Pancada forte de chuva";
-  }
-
-  // 2. pancadas fortes
-  else if (pico >= 5) {
-    if (horas <= 3) {
-      tipo = "Pancada de chuva forte pontual";
-    } else {
-      tipo = "Pancadas de chuva forte";
-    }
-  }
-
-  // 3. chuva persistente relevante (aqui entra o TOTAL de verdade)
-  else if (total >= 15 && horas >= 6) {
-    tipo = "Chuva moderada ao longo do dia";
-  }
-
-  else if (total >= 8 && horas >= 6) {
-    tipo = "Chuva fraca ao longo do dia";
-  }
-
-  // 4. chuva frequente leve
-  else if (horas >= 6) {
-    tipo = "Pancadas de chuva leve";
-  }
-
-  // 5. eventos leves
-  else if (total >= 1) {
-    tipo = "Pancadas isoladas de chuva";
-  }
-
-  else {
-    tipo = "Sem chuva relevante";
-  }
-
-  return { total, horas, pico, tipo };
-};
-
-
-/* ---- Resumo final ---- */
-function gerarResumo(r) {
-  const chuva = r.chuva.tipo;
-  const nuvem = r.nebulosidade.tipo;
-
-  if (chuva === "Sem chuva relevante") {
-    return `${nuvem}.`;
-  }
-
-  return `${nuvem}. <br> ${chuva}.`;
-}
-
-/* ---- Motor principal ---- */
-function analisarDia(ctx) {
-  const resultado = {};
-
-  for (const key in VISIONS) {
-    resultado[key] = VISIONS[key](ctx);
-  }
-
-  resultado.resumo = gerarResumo(resultado);
-
-  return resultado;
-}
-
-
-/* =========================
    CARREGAR DADOS
 ========================= */
 async function carregarDados() {
@@ -248,10 +58,11 @@ async function buscarPrevisaoOpenMeteo(city) {
 
     titulo.textContent = "⏳ Carregando...";
 
+    // Adicionado weather_code na requisição para mapear trovoadas
     const url =
       `https://api.open-meteo.com/v1/forecast?latitude=${city.latitude}` +
       `&longitude=${city.longitude}` +
-      `&hourly=precipitation,temperature_2m,wind_gusts_10m,cloud_cover,precipitation_probability` +
+      `&hourly=precipitation,temperature_2m,wind_gusts_10m,cloud_cover,precipitation_probability,weather_code` +
       `&timezone=America%2FSao_Paulo&forecast_days=10`;
 
     const res = await fetch(url);
@@ -264,11 +75,15 @@ async function buscarPrevisaoOpenMeteo(city) {
     const wind = hourly.wind_gusts_10m;
     const cloud = hourly.cloud_cover;
     const prob = hourly.precipitation_probability;
+    const code = hourly.weather_code;
 
     cidadeAtualObj = {
       cidade: nomeChave,
       forecast: []
     };
+
+    // Códigos da Open-Meteo para trovoadas: 95, 96, 99
+    const codigosTrovonada = [95, 96, 99];
 
     for (let d = 0; d < 10; d++) {
       const i = d * 24;
@@ -278,15 +93,27 @@ async function buscarPrevisaoOpenMeteo(city) {
       const windDia = wind.slice(i, i + 24);
       const cloudDia = cloud.slice(i, i + 24);
       const probDia = prob.slice(i, i + 24);
-
-      const analise = analisarDia({
-        cloud: cloudDia,
-        rain: chuvaDia,
-        wind: windDia,
-        temp: tempsDia
-      });
+      const codeDia = code.slice(i, i + 24);
 
       const maxProb = Math.max(...probDia.filter(v => v != null), 0);
+      const chuvaTotalGeral = chuvaDia.reduce((a, b) => a + (b || 0), 0);
+
+      // Função interna para processar os blocos de 6 horas do dia
+      const processarPeriodo = (inicio, fim) => {
+        const cPeriodo = cloudDia.slice(inicio, fim);
+        const rPeriodo = chuvaDia.slice(inicio, fim);
+        const codePeriodo = codeDia.slice(inicio, fim);
+
+        const medNuvens = cPeriodo.reduce((a, b) => a + (b || 0), 0) / cPeriodo.length;
+        const somChuva = rPeriodo.reduce((a, b) => a + (b || 0), 0);
+        const temTrovoada = codePeriodo.some(c => codigosTrovonada.includes(c));
+
+        return {
+          nuvens: Math.round(medNuvens),
+          chuva: Number(somChuva.toFixed(1)),
+          trovoadas: temTrovoada ? ", trovoadas" : ""
+        };
+      };
 
       cidadeAtualObj.forecast.push({
         date: hourly.time[i].split("T")[0],
@@ -295,13 +122,13 @@ async function buscarPrevisaoOpenMeteo(city) {
         temp_max_c: Math.max(...tempsDia),
         wind_max_kmh: Math.max(...windDia),
 
-        rain_sum_mm: Number(analise.chuva.total.toFixed(1)),
+        rain_sum_mm: Number(chuvaTotalGeral.toFixed(1)),
         rain_prob_max: Math.round(maxProb),
 
-        nebulosidade: analise.nebulosidade.tipo,
-        chuva: analise.chuva.tipo,
-
-        resumo: analise.resumo
+        p1: processarPeriodo(0, 6),   // Até 6h
+        p2: processarPeriodo(6, 12),  // Até 12h
+        p3: processarPeriodo(12, 18), // Até 18h
+        p4: processarPeriodo(18, 24)  // Até 24h
       });
     }
 
@@ -380,10 +207,6 @@ function renderizarCidade(cidadeObj) {
       <div class="data-row">
 
         <div class="data">
-          <span class="resumo">${d.resumo}</span>
-        </div>
-
-        <div class="data">
           <span>🌡️ Temperatura</span>
           <strong>${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</strong>
         </div>
@@ -396,6 +219,23 @@ function renderizarCidade(cidadeObj) {
         <div class="data">
           <span>🍃 Rajadas de vento</span>
           <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
+        </div>
+
+        <div class="data periodos-bloco" style="grid-column: 1 / -1; margin-top: 8px; border-top: 1px solid #eee; padding-top: 8px;">
+          <div>
+            
+            <strong>Madrugada</strong><br><br>
+            Nuvens ${d.p1.nuvens}%, chuva ${d.p1.chuva}mm${d.p1.trovoadas}<br><br>
+
+            <strong>Manhã</strong><br><br>
+            Nuvens ${d.p2.nuvens}%, chuva ${d.p2.chuva}mm${d.p2.trovoadas}<br><br>
+
+            <strong>Tarde</strong><br><br>
+            Nuvens ${d.p3.nuvens}%, chuva ${d.p3.chuva}mm${d.p3.trovoadas}<br><br>
+
+            <strong>Noite</strong><br><br>
+            Nuvens ${d.p4.nuvens}%, chuva ${d.p4.chuva}mm${d.p4.trovoadas}
+          </div>
         </div>
 
       </div>
