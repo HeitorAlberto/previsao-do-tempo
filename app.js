@@ -207,17 +207,17 @@ function renderizarCidade(cidadeObj) {
       <div class="data-row">
 
         <div class="data">
-          <span>🌡️ Temperatura</span>
+          <span>Temperatura</span>
           <strong>${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</strong>
         </div>
 
         <div class="data">
-          <span>💧 Chuva acumulada</span>
+          <span>Chuva em 24h</span>
           <strong>${d.rain_sum_mm} mm (${d.rain_prob_max}%)</strong>
         </div>
 
         <div class="data">
-          <span>🍃 Rajadas de vento</span>
+          <span>Rajadas de vento</span>
           <strong>${Math.round(d.wind_max_kmh)} km/h</strong>
         </div>
 
