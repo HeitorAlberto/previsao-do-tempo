@@ -212,7 +212,7 @@ function renderizarCidade(cidadeObj) {
         </div>
 
         <div class="data">
-          <span>Chuva em 24h</span>
+          <span>Chuva acumulada</span>
           <strong class="chuva">${d.rain_sum_mm} mm (${d.rain_prob_max}%)</strong>
         </div>
 
@@ -225,36 +225,36 @@ function renderizarCidade(cidadeObj) {
           <div class="periodo">
             <div><strong>Madrugada</strong></div>
             <div class="periodo-infos">
-              <span class="nuvens">Nuvens ${d.p1.nuvens}%</span>
-              <span class="chuva">chuva ${d.p1.chuva} mm</span>
-              ${d.p1.trovoadas ? `<span class="trovoadas">${d.p1.trovoadas}</span><br>` : ""}
+              <span class="nuvens">☁️ ${d.p1.nuvens}%</span>
+              <span class="chuva">💧 ${d.p1.chuva} mm</span>
+              ${d.p1.trovoadas ? `<span class="trovoadas">⚡</span><br>` : ""}
             </div>
           </div>
 
           <div class="periodo">
             <div><strong>Manhã</strong></div>
             <div class="periodo-infos">
-              <span class="nuvens">Nuvens ${d.p2.nuvens}%</span>
-              <span class="chuva"> chuva ${d.p2.chuva} mm</span>
-              ${d.p2.trovoadas ? `<span class="trovoadas">${d.p2.trovoadas}</span>` : ""}
+              <span class="nuvens">☁️ ${d.p2.nuvens}%</span>
+              <span class="chuva">💧 ${d.p2.chuva} mm</span>
+              ${d.p2.trovoadas ? `<span class="trovoadas">⚡</span>` : ""}
             </div>
           </div>
           
           <div class="periodo">
             <div><strong>Tarde</strong></div>
             <div class="periodo-infos">
-              <span class="nuvens">Nuvens ${d.p3.nuvens}%</span>
-              <span class="chuva"> chuva ${d.p3.chuva} mm</span>
-              ${d.p3.trovoadas ? `<span class="trovoadas">${d.p3.trovoadas}</span><br>` : ""}<br>
+              <span class="nuvens">☁️ ${d.p3.nuvens}%</span>
+              <span class="chuva">💧 ${d.p3.chuva} mm</span>
+              ${d.p3.trovoadas ? `<span class="trovoadas">⚡</span><br>` : ""}<br>
             </div>
           </div>
 
           <div class="periodo">
             <div><strong>Noite</strong></div>
             <div class="periodo-infos">
-              <span class="nuvens">Nuvens ${d.p4.nuvens}%</span>
-              <span class="chuva">chuva ${d.p4.chuva} mm</span>
-              ${d.p4.trovoadas ? `<span class="trovoadas">${d.p4.trovoadas}</span><br>` : ""}
+              <span class="nuvens">☁️ ${d.p4.nuvens}%</span>
+              <span class="chuva">💧 ${d.p4.chuva} mm</span>
+              ${d.p4.trovoadas ? `<span class="trovoadas">⚡</span><br>` : ""}
             </div>
         </div>
       </div>

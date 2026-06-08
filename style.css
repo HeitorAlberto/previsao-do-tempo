@@ -144,30 +144,35 @@ h1 {
     background-color: #ffc8b5;
     padding: 5px;
     border-radius: 6px;
+    border: 2px solid #646464;
 }
 
 .vento {
     background-color: #c5ffb5;
     padding: 5px;
     border-radius: 6px;
+    border: 2px solid #646464;
 }
 
 .nuvens {
     background-color: #f0f0f0;
     padding: 5px;
     border-radius: 6px;
+    border: 2px solid #646464;
 }
 
 .chuva {
     background-color: #cceaff;
     padding: 5px;
     border-radius: 6px;
+    border: 2px solid #646464;
 }
 
 .trovoadas {
     background-color: #ffe3b5;
     padding: 5px;
     border-radius: 6px;
+    border: 2px solid #646464;
 }
 
 
