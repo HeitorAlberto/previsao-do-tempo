@@ -217,7 +217,7 @@ function renderizarCidade(cidadeObj) {
         </div>
 
         <div class="data">
-          <span>Rajadas de vento</span>
+          <span>Rajadas de vento máx</span>
           <span class="vento">${Math.round(d.wind_max_kmh)} km/h</span>
         </div>
 
@@ -227,7 +227,7 @@ function renderizarCidade(cidadeObj) {
             <div class="periodo-infos">
               <span class="nuvens">Nuvens ${d.p1.nuvens}%</span>
               <span class="chuva">💧 ${d.p1.chuva} mm</span>
-              ${d.p1.trovoadas ? `<span class="trovoadas">⚡</span><br>` : ""}
+              ${d.p1.trovoadas ? `<span class="trovoadas">Trovoadas⚡</span><br>` : ""}
             </div>
           </div>
 
@@ -236,7 +236,7 @@ function renderizarCidade(cidadeObj) {
             <div class="periodo-infos">
               <span class="nuvens">Nuvens ${d.p2.nuvens}%</span>
               <span class="chuva">💧 ${d.p2.chuva} mm</span>
-              ${d.p2.trovoadas ? `<span class="trovoadas">⚡</span>` : ""}
+              ${d.p2.trovoadas ? `<span class="trovoadas">Trovoadas⚡</span>` : ""}
             </div>
           </div>
           
@@ -245,7 +245,7 @@ function renderizarCidade(cidadeObj) {
             <div class="periodo-infos">
               <span class="nuvens">Nuvens ${d.p3.nuvens}%</span>
               <span class="chuva">💧 ${d.p3.chuva} mm</span>
-              ${d.p3.trovoadas ? `<span class="trovoadas">⚡</span><br>` : ""}<br>
+              ${d.p3.trovoadas ? `<span class="trovoadas">Trovoadas⚡</span><br>` : ""}<br>
             </div>
           </div>
 
@@ -254,7 +254,7 @@ function renderizarCidade(cidadeObj) {
             <div class="periodo-infos">
               <span class="nuvens">Nuvens ${d.p4.nuvens}%</span>
               <span class="chuva">💧 ${d.p4.chuva} mm</span>
-              ${d.p4.trovoadas ? `<span class="trovoadas">⚡</span><br>` : ""}
+              ${d.p4.trovoadas ? `<span class="trovoadas">Trovoadas⚡</span><br>` : ""}
             </div>
         </div>
       </div>
