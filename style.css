@@ -119,13 +119,15 @@ h1 {
     grid-template-columns: 1fr;
     padding: 20px 0;
     border-top: 1px solid rgb(226, 226, 226);
-    gap: 30px;
+    gap: 40px;
 } 
 
 .periodo {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 15px;
+    gap: 10px;
+    text-align: center;
+    justify-items: center;
 }
 
 .periodo-infos {
