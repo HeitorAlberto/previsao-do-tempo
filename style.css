@@ -126,8 +126,6 @@ h1 {
     display: grid;
     grid-template-columns: 1fr;
     gap: 10px;
-    text-align: center;
-    justify-items: center;
 }
 
 .periodo-infos {
