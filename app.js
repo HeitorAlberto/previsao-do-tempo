@@ -208,17 +208,17 @@ function renderizarCidade(cidadeObj) {
 
         <div class="data">
           <span>Temperatura</span>
-          <strong class="temperatura">${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</strong>
+          <span class="temperatura">${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</span>
         </div>
 
         <div class="data">
           <span>Chuva acumulada</span>
-          <strong class="chuva">${d.rain_sum_mm} mm (${d.rain_prob_max}%)</strong>
+          <span class="chuva">${d.rain_sum_mm} mm (${d.rain_prob_max}%)</span>
         </div>
 
         <div class="data">
           <span>Rajadas de vento</span>
-          <strong class="vento">${Math.round(d.wind_max_kmh)} km/h</strong>
+          <span class="vento">${Math.round(d.wind_max_kmh)} km/h</span>
         </div>
 
         <div class="periodos-bloco">
