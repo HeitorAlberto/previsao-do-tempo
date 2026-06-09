@@ -223,38 +223,38 @@ function renderizarCidade(cidadeObj) {
 
         <div class="periodos-bloco">
           <div class="periodo">
-            <div><strong>Madrugada</strong></div>
+            <div style="font-weight: bolder;">Madrugada</div>
             <div class="periodo-infos">
               <div class="nuvens">Nuvens ${d.p1.nuvens}%</div>
               <div class="chuva">${d.p1.chuva} mm</div>
-              ${d.p1.trovoadas ? `<div class="trovoadas">⚡</div><br>` : ""}
+              ${d.p1.trovoadas ? `<div class="trovoadas">Trovoadas⚡</div><br>` : ""}
             </div>
           </div>
 
           <div class="periodo">
-            <div><strong>Manhã</strong></div>
+            <div style="font-weight: bolder;">Manhã</div>
             <div class="periodo-infos">
               <div class="nuvens">Nuvens ${d.p2.nuvens}%</div>
               <div class="chuva">${d.p2.chuva} mm</div>
-              ${d.p2.trovoadas ? `<div class="trovoadas">⚡</div>` : ""}
+              ${d.p2.trovoadas ? `<div class="trovoadas">Trovoadas⚡</div>` : ""}
             </div>
           </div>
           
           <div class="periodo">
-            <div><strong>Tarde</strong></div>
+            <div style="font-weight: bolder;">Tarde</div>
             <div class="periodo-infos">
               <div class="nuvens">Nuvens ${d.p3.nuvens}%</div>
               <div class="chuva">${d.p3.chuva} mm</div>
-              ${d.p3.trovoadas ? `<div class="trovoadas">⚡</div><br>` : ""}<br>
+              ${d.p3.trovoadas ? `<div class="trovoadas">Trovoadas⚡</div><br>` : ""}<br>
             </div>
           </div>
 
           <div class="periodo">
-            <div><strong>Noite</strong></div>
+            <div style="font-weight: bolder;">Noite</div>
             <div class="periodo-infos">
               <div class="nuvens">Nuvens ${d.p4.nuvens}%</div>
               <div class="chuva">${d.p4.chuva} mm</div>
-              ${d.p4.trovoadas ? `<div class="trovoadas">⚡</div><br>` : ""}
+              ${d.p4.trovoadas ? `<div class="trovoadas">Trovoadas⚡</div><br>` : ""}
             </div>
         </div>
       </div>

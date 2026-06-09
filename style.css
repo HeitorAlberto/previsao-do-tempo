@@ -116,21 +116,21 @@ h1 {
 
 .periodos-bloco {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     padding: 20px 0;
     border-top: 1px solid rgb(226, 226, 226);
     gap: 40px;
 } 
 
 .periodo {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .periodo-infos {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 10px;
 }
 
@@ -148,6 +148,7 @@ h1 {
     border-radius: 6px;
     border: 2px solid #ffa88b;
     align-content: center;
+    text-align: center;
 }
 
 .vento {
@@ -156,6 +157,7 @@ h1 {
     border-radius: 6px;
     border: 2px solid #c1ffb0;
     align-content: center;
+    text-align: center;
 }
 
 .nuvens {
@@ -164,6 +166,7 @@ h1 {
     border-radius: 6px;
     border: 2px solid #c0c0c0;
     align-content: center;
+    text-align: center;
 }
 
 .chuva {
@@ -172,6 +175,7 @@ h1 {
     border-radius: 6px;
     border: 2px solid #b4e1ff;
     align-content: center;
+    text-align: center;
 }
 
 .trovoadas {
@@ -180,6 +184,7 @@ h1 {
     border-radius: 6px;
     border: 2px solid #ffce7f;
     align-content: center;
+    text-align: center;
 }
 
 
