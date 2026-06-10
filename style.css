@@ -123,15 +123,38 @@ h1 {
     gap: 40px;
 } 
 
-.periodo {
+.periodo, .periodo-infos {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-dados-horarios {
+    width: 200px;
+    font-weight: bolder;
+    padding: 10px;
+    background-color: white;
+    border: none;
+    justify-self: center;
+    border: 2px solid #eee;
+    border-radius: 6px;
+}
+
+.btn-dados-horarios:hover {
+    background-color: #eee;
+    cursor: pointer;
+}
+
+.horas {
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
-.periodo-infos {
+.hora-info {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: 10px;
 }
 
