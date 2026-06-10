@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
+
 * {
     margin: 0;
     padding: 0;
@@ -193,6 +194,108 @@ h1 {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+}
+
+/* Fundo escurecido que cobre toda a tela */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* Caixa branca do Modal */
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    gap: 20px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+
+.modal-horas-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.data-hora {
+    position: fixed;
+}
+
+.modal-content h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.modal-content p {
+    text-align: center;
+    font-weight: bold;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.hora {
+    font-size: 16px;
+}
+
+.modal-cabecalho {
+    position: sticky;
+    top: -20px;
+    /* compensa o padding do modal-content */
+    z-index: 10;
+
+    background: #fff;
+
+    padding: 20px 0 15px;
+    margin: -20px -20px 15px -20px;
+
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.modal-cabecalho h2 {
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.modal-cabecalho p {
+    text-align: center;
+    font-weight: bold;
+    color: #666;
+    margin: 0;
+}
+
+/* Botão de fechar */
+.btn-fechar-modal {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    align-self: center;
+}
+
+/* Cursor de clique para os períodos */
+.periodo {
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
 
