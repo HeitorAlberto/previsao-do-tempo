@@ -214,13 +214,29 @@ export function exibirModalHorarioUI(dadosDia) {
 
   const dh = dadosDia.dadosHorarios;
 
+  // Obtém a hora atual no fuso horário do Brasil (formato "HH:00")
+  const horaAtualBrasil = new Date().toLocaleTimeString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).split(":")[0] + ":00";
+
+  let elementoHoraAtual = null;
+
   for (let h = 0; h < dh.horas.length; h++) {
     const linha = document.createElement("div");
-
     linha.className = "horas";
 
+    // Verifica se a hora da linha corresponde à hora atual do Brasil
+    const ehHoraAtual = dh.horas[h] === horaAtualBrasil;
+
+    // Aplica o estilo dourado apenas na div da hora
+    const estiloHora = ehHoraAtual
+      ? 'style="font-weight: bolder; color: #ffb732;"'
+      : 'style="font-weight: bolder;"';
+
     linha.innerHTML = `
-      <div class="hora" style="font-weight:bolder;">
+      <div class="hora" ${estiloHora}>
         ${dh.horas[h]}
       </div>
 
@@ -243,6 +259,10 @@ export function exibirModalHorarioUI(dadosDia) {
       }
       </div>
     `;
+
+    if (ehHoraAtual) {
+      elementoHoraAtual = linha;
+    }
 
     containerHoras.appendChild(linha);
   }
@@ -273,4 +293,11 @@ export function exibirModalHorarioUI(dadosDia) {
   overlay.appendChild(content);
 
   document.body.appendChild(overlay);
+
+  // Desloca o scroll do container para exibir a linha atualizada na tela
+  if (elementoHoraAtual) {
+    setTimeout(() => {
+      elementoHoraAtual.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
+  }
 }
