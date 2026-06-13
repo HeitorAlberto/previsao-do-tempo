@@ -240,6 +240,10 @@ export function exibirModalHorarioUI(dadosDia) {
         ${dh.horas[h]}
       </div>
 
+      <div class="nuvens">
+          Nuvens ${Math.round(dh.nebulosidade[h])}%
+        </div>
+
       <div class="hora-info">
         <div class="temperatura">
           🌡️ ${Math.round(dh.temperaturas[h])}°C
@@ -249,9 +253,6 @@ export function exibirModalHorarioUI(dadosDia) {
           💧 ${Number(dh.chuvas[h]).toFixed(1)} mm (${dh.probabilidades[h]}%)
         </div>
 
-        <div class="nuvens">
-          Nuvens ${Math.round(dh.nebulosidade[h])}%
-        </div>
 
         ${dh.trovoadas?.[h]
         ? '<div class="trovoadas">⚡ Trovoadas</div>'
