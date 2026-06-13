@@ -153,7 +153,7 @@ h1 {
 
 .hora-info {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: wrap;
     gap: 10px;
 }
@@ -255,6 +255,7 @@ h1 {
     grid-template-columns: 1fr 1fr;
     gap: 40px 20px;
     margin-top: 15px;
+    font-size: 15px;
 }
 
 .data-hora {
