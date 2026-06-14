@@ -88,7 +88,7 @@ export function renderizarCidadeUI(
 
           <div class="periodo-infos">
             <div class="nuvens">
-              Nuvens ${d.p1.nuvens}%
+              ${d.p1.nuvens_desc}
             </div>
 
             <div class="chuva">
@@ -107,7 +107,7 @@ export function renderizarCidadeUI(
 
           <div class="periodo-infos">
             <div class="nuvens">
-              Nuvens ${d.p2.nuvens}%
+              ${d.p2.nuvens_desc}
             </div>
 
             <div class="chuva">
@@ -126,7 +126,7 @@ export function renderizarCidadeUI(
 
           <div class="periodo-infos">
             <div class="nuvens">
-              Nuvens ${d.p3.nuvens}%
+              ${d.p3.nuvens_desc}
             </div>
 
             <div class="chuva">
@@ -145,7 +145,7 @@ export function renderizarCidadeUI(
 
           <div class="periodo-infos">
             <div class="nuvens">
-              Nuvens ${d.p4.nuvens}%
+              ${d.p4.nuvens_desc}
             </div>
 
             <div class="chuva">
@@ -183,6 +183,16 @@ export function renderizarCidadeUI(
 /**
  * Modal com todas as horas do dia
  */
+
+function descricaoNuvens(percentual) {
+
+  if (percentual <= 20) return "Poucas nuvens";
+  if (percentual <= 50) return "Algumas nuvens";
+  if (percentual <= 80) return "Muitas nuvens";
+
+  return "Nublado";
+}
+
 export function exibirModalHorarioUI(dadosDia) {
   const modalAntigo =
     document.getElementById("modal-previsao");
@@ -241,8 +251,8 @@ export function exibirModalHorarioUI(dadosDia) {
       </div>
 
       <div class="nuvens">
-          Nuvens ${Math.round(dh.nebulosidade[h])}%
-        </div>
+        ${descricaoNuvens(dh.nebulosidade[h])}
+      </div>
 
       <div class="hora-info">
         <div class="temperatura">
