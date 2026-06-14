@@ -70,7 +70,7 @@ export function renderizarCidadeUI(
         <div class="data">
           <div>Chuva acumulada</div>
           <div class="chuva">
-            ${d.rain_sum_mm} mm (${d.rain_prob_max}%)
+            ${d.rain_sum_mm} mm
           </div>
         </div>
 
