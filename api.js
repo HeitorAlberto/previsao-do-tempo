@@ -30,10 +30,10 @@ export async function fetchPrevisao(city) {
 function descricaoNuvens(percentual) {
 
   if (percentual <= 20) return "Poucas nuvens";
-  if (percentual <= 50) return "Algumas nuvens";
+  if (percentual <= 50) return "Nuvens esparsas";
   if (percentual <= 80) return "Muitas nuvens";
 
-  return "Nublado";
+  return "Encoberto";
 }
 
 export function processarDadosPrevisao(data, city) {
