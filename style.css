@@ -187,12 +187,13 @@ h1 {
 }
 
 .nuvens {
-    background-color: #f0f0f0;
+    background-color: #5e5e5e;
     padding: 5px;
     border-radius: 6px;
     align-content: center;
     text-align: center;
     font-weight: bolder;
+    color: white;
 }
 
 .chuva {
