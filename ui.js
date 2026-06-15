@@ -96,7 +96,7 @@ export function renderizarCidadeUI(
             </div>
 
             ${d.p1.trovoadas
-        ? '<div class="trovoadas">Trovoadas ⚡</div>'
+        ? '<div class="trovoadas">Trovoadas</div>'
         : ''
       }
           </div>
@@ -115,7 +115,7 @@ export function renderizarCidadeUI(
             </div>
 
             ${d.p2.trovoadas
-        ? '<div class="trovoadas">Trovoadas ⚡</div>'
+        ? '<div class="trovoadas">Trovoadas</div>'
         : ''
       }
           </div>
@@ -134,7 +134,7 @@ export function renderizarCidadeUI(
             </div>
 
             ${d.p3.trovoadas
-        ? '<div class="trovoadas">Trovoadas ⚡</div>'
+        ? '<div class="trovoadas">Trovoadas</div>'
         : ''
       }
           </div>
@@ -153,7 +153,7 @@ export function renderizarCidadeUI(
             </div>
 
             ${d.p4.trovoadas
-        ? '<div class="trovoadas">Trovoadas ⚡</div>'
+        ? '<div class="trovoadas">Trovoadas</div>'
         : ''
       }
           </div>
