@@ -256,16 +256,16 @@ export function exibirModalHorarioUI(dadosDia) {
 
       <div class="hora-info">
         <div class="temperatura">
-          🌡️ ${Math.round(dh.temperaturas[h])}°C
+          ${Math.round(dh.temperaturas[h])}°C
         </div>
 
         <div class="chuva">
-          💧 ${Number(dh.chuvas[h]).toFixed(1)} mm (${dh.probabilidades[h]}%)
+          ${Number(dh.chuvas[h]).toFixed(1)} mm (${dh.probabilidades[h]}%)
         </div>
 
 
         ${dh.trovoadas?.[h]
-        ? '<div class="trovoadas">⚡ Trovoadas</div>'
+        ? '<div class="trovoadas">Trovoadas</div>'
         : ''
       }
       </div>
