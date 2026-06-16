@@ -345,4 +345,15 @@ h1 {
         column-gap: 30px;
     }
 
+    .periodos-bloco {
+        grid-template-columns: 1fr;
+    }
+
+    .periodo-infos {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
  }
