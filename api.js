@@ -33,7 +33,7 @@ function descricaoNuvens(percentual) {
   if (percentual <= 50) return "Nuvens esparsas";
   if (percentual <= 80) return "Muitas nuvens";
 
-  return "Encoberto";
+  return "Nublado";
 }
 
 export function processarDadosPrevisao(data, city) {
