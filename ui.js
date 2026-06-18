@@ -41,34 +41,112 @@ export function renderizarHistoricoUI(
 /**
  * Renderiza os cards de previsão
  */
+/**
+ * Renderiza os cards de previsão
+ */
 export function renderizarCidadeUI(
   cidadeObj,
   atualizarHistoricoCallback
 ) {
-  const container = document.getElementById("container");
-  const titulo = document.getElementById("cidade");
+  const container =
+    document.getElementById("container");
+
+  const titulo =
+    document.getElementById("cidade");
 
   container.innerHTML = "";
-  titulo.textContent = `📍 ${cidadeObj.cidade}`;
 
-  cidadeObj.forecast.forEach((d) => {
-    const card = document.createElement("div");
+  titulo.textContent =
+    `📍 ${cidadeObj.cidade}`;
+
+  let indiceAtual = 0;
+
+  function renderizarCard(indice) {
+    container.innerHTML = "";
+
+    const d =
+      cidadeObj.forecast[indice];
+
+    const podeVoltar =
+      indice > 0;
+
+    const podeAvancar =
+      indice <
+      cidadeObj.forecast.length - 1;
+
+    const card =
+      document.createElement("div");
 
     card.className = "card";
 
     card.innerHTML = `
-      <h3>${obterDiaSemana(d.date)}, ${formatarData(d.date)}</h3>
+      <h3
+        style="
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap:12px;
+        "
+      >
+        <button
+          class="btn-nav-card"
+          ${!podeVoltar ? "disabled" : ""}
+          style="
+            background:none;
+            border:none;
+            color:white;
+            cursor:pointer;
+            font-size:20px;
+            font-weight:bolder;
+            padding:0 8px;
+            opacity:${podeVoltar ? 1 : .3};
+          "
+        >
+          ◀︎
+        </button>
+
+        <span
+          style="
+            flex:1;
+            text-align:center;
+          "
+        >
+          ${obterDiaSemana(d.date)},
+          ${formatarData(d.date)}
+        </span>
+
+        <button
+          class="btn-nav-card"
+          ${!podeAvancar ? "disabled" : ""}
+          style="
+            background:none;
+            border:none;
+            color:white;
+            cursor:pointer;
+            font-size:20px;
+            font-weight:bolder;
+            padding:0 8px;
+            opacity:${podeAvancar ? 1 : .3};
+          "
+        >
+          ▶︎
+        </button>
+      </h3>
 
       <div class="data-row">
         <div class="data">
           <div>Temperatura</div>
+
           <div class="temperatura">
-            ${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°
+            ${Math.round(d.temp_min_c)}°
+            a
+            ${Math.round(d.temp_max_c)}°
           </div>
         </div>
 
         <div class="data">
           <div>Chuva acumulada</div>
+
           <div class="chuva">
             ${d.rain_sum_mm} mm
           </div>
@@ -76,108 +154,206 @@ export function renderizarCidadeUI(
 
         <div class="data">
           <div>Rajadas de vento máx</div>
+
           <div class="vento">
-            ${Math.round(d.wind_max_kmh)} km/h
+            ${Math.round(
+      d.wind_max_kmh
+    )} km/h
           </div>
         </div>
       </div>
 
       <div class="periodos-bloco">
+
         <div class="periodo">
-          <div style="font-weight:bolder;">Madrugada</div>
+          <div class="periodo-titulo">
+            Madrugada
+          </div>
 
           <div class="periodo-infos">
-            <div class="nuvens">
+
+            <div>
               ${d.p1.nuvens_desc}
             </div>
 
-            <div class="chuva">
+            <div style="color: #0085de">
               ${d.p1.chuva} mm
             </div>
 
             ${d.p1.trovoadas
-        ? '<div class="trovoadas">Trovoadas</div>'
-        : ''
+        ? `
+                <div style="color: orangered">
+                  Trovoadas
+                </div>
+              `
+        : ""
       }
+
           </div>
         </div>
 
         <div class="periodo">
-          <div style="font-weight:bolder;">Manhã</div>
+          <div class="periodo-titulo">
+            Manhã
+          </div>
 
           <div class="periodo-infos">
-            <div class="nuvens">
+
+            <div>
               ${d.p2.nuvens_desc}
             </div>
 
-            <div class="chuva">
+            <div style="color: #0085de">
               ${d.p2.chuva} mm
             </div>
 
             ${d.p2.trovoadas
-        ? '<div class="trovoadas">Trovoadas</div>'
-        : ''
+        ? `
+                <div style="color: orangered">
+                  Trovoadas
+                </div>
+              `
+        : ""
       }
+
           </div>
         </div>
 
         <div class="periodo">
-          <div style="font-weight:bolder;">Tarde</div>
+          <div class="periodo-titulo">
+            Tarde
+          </div>
 
           <div class="periodo-infos">
-            <div class="nuvens">
+
+            <div>
               ${d.p3.nuvens_desc}
             </div>
 
-            <div class="chuva">
+            <div style="color: #0085de">
               ${d.p3.chuva} mm
             </div>
 
             ${d.p3.trovoadas
-        ? '<div class="trovoadas">Trovoadas</div>'
-        : ''
+        ? `
+                <div style="color: orangered">
+                  Trovoadas
+                </div>
+              `
+        : ""
       }
+
           </div>
         </div>
 
         <div class="periodo">
-          <div style="font-weight:bolder;">Noite</div>
+          <div class="periodo-titulo">
+            Noite
+          </div>
 
           <div class="periodo-infos">
-            <div class="nuvens">
+
+            <div>
               ${d.p4.nuvens_desc}
             </div>
 
-            <div class="chuva">
+            <div style="color: #0085de">
               ${d.p4.chuva} mm
             </div>
 
             ${d.p4.trovoadas
-        ? '<div class="trovoadas">Trovoadas</div>'
-        : ''
+        ? `
+                <div style="color: orangered">
+                  Trovoadas
+                </div>
+              `
+        : ""
       }
+
           </div>
         </div>
+
       </div>
 
-      <button class="btn-dados-horarios">
+      <button
+        class="btn-dados-horarios"
+      >
         Dados horários
       </button>
     `;
 
+    const botoes =
+      card.querySelectorAll(
+        ".btn-nav-card"
+      );
+
+    botoes[0]
+      .addEventListener(
+        "click",
+        () => {
+          if (
+            indiceAtual > 0
+          ) {
+            indiceAtual--;
+
+            renderizarCard(
+              indiceAtual
+            );
+          }
+        }
+      );
+
+    botoes[1]
+      .addEventListener(
+        "click",
+        () => {
+          if (
+            indiceAtual <
+            cidadeObj.forecast
+              .length - 1
+          ) {
+            indiceAtual++;
+
+            renderizarCard(
+              indiceAtual
+            );
+          }
+        }
+      );
+
     card
-      .querySelector(".btn-dados-horarios")
-      .addEventListener("click", () => {
-        exibirModalHorarioUI(d);
-      });
+      .querySelector(
+        ".btn-dados-horarios"
+      )
+      .addEventListener(
+        "click",
+        () => {
+          exibirModalHorarioUI(
+            d
+          );
+        }
+      );
 
-    container.appendChild(card);
-  });
+    container.appendChild(
+      card
+    );
+  }
 
-  atualizarHistoricoCallback(cidadeObj.cidade);
+  renderizarCard(
+    indiceAtual
+  );
 
-  document.getElementById("cidadeInput").value = "";
-  document.getElementById("suggestions").innerHTML = "";
+  atualizarHistoricoCallback(
+    cidadeObj.cidade
+  );
+
+  document.getElementById(
+    "cidadeInput"
+  ).value = "";
+
+  document.getElementById(
+    "suggestions"
+  ).innerHTML = "";
 }
 
 /**
