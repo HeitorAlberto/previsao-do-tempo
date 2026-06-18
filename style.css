@@ -149,6 +149,8 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    text-align: center;
+    font-weight: bolder;
 }
 
 .hora-info {
@@ -164,6 +166,11 @@ h1 {
 
 .hora {
     font-size: 12px;
+    text-align: center;
+    background-color: #000000;
+    color: white;
+    padding: 5px;
+    border-radius: 6px;
 }
 
 .temperatura {
@@ -207,7 +214,7 @@ h1 {
 }
 
 .trovoadas {
-    background-color: #ffbd52;
+    background-color: #ffb53f;
     padding: 5px;
     border-radius: 6px;
     align-content: center;

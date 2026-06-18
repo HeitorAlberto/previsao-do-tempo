@@ -250,22 +250,22 @@ export function exibirModalHorarioUI(dadosDia) {
         ${dh.horas[h]}
       </div>
 
-      <div class="nuvens">
+      <div>
         ${descricaoNuvens(dh.nebulosidade[h])}
       </div>
 
       <div class="hora-info">
-        <div class="temperatura">
+        <div>
           ${Math.round(dh.temperaturas[h])}°C
         </div>
 
-        <div class="chuva">
+        <div>
           ${Number(dh.chuvas[h]).toFixed(1)} mm (${dh.probabilidades[h]}%)
         </div>
 
 
         ${dh.trovoadas?.[h]
-        ? '<div class="trovoadas">Trovoadas</div>'
+      ? '<div style="color: #ffb732;">Trovoadas</div>'
         : ''
       }
       </div>
