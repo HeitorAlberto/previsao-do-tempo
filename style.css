@@ -120,13 +120,12 @@ h1 {
     grid-template-columns: 1fr 1fr;
     padding: 20px 0;
     border-top: 1px solid rgb(226, 226, 226);
-    gap: 40px 5px;
+    gap: 40px 0px;
 } 
 
 .periodo-titulo {
     background-color: #ededed;
     padding: 5px;
-    border-radius: 6px;
     font-weight: bolder;
 }
 
