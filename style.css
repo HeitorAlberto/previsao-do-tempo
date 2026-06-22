@@ -348,12 +348,12 @@ h1 {
     }
 
     .periodos-bloco {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
     }
 
     .periodo-infos {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         flex-wrap: wrap;
         gap: 10px;
         justify-content: center;
