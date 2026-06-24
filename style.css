@@ -104,7 +104,6 @@ h1 {
     background-color: #000000;
     padding: 10px 0;
     color: #ffffff;
-    border-radius: 6px;
 }
 
 
@@ -119,7 +118,6 @@ h1 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     padding: 20px 0;
-    border-top: 1px solid rgb(226, 226, 226);
     gap: 40px 0px;
 } 
 
@@ -245,7 +243,7 @@ h1 {
     align-content: center;
     gap: 20px;
     background: #fff;
-    padding: 20px;
+    padding: 20px 80px;
     border-radius: 8px;
     max-width: 500px;
     width: 90%;
@@ -257,7 +255,7 @@ h1 {
 
 .modal-horas-container {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 40px 20px;
     margin-top: 15px;
     font-size: 15px;
