@@ -167,7 +167,7 @@ export function renderizarCidadeUI(
 
         <div class="periodo">
           <div class="periodo-titulo">
-            Madrugada
+            00h - 06h
           </div>
 
           <div class="periodo-infos">
@@ -194,7 +194,7 @@ export function renderizarCidadeUI(
 
         <div class="periodo">
           <div class="periodo-titulo">
-            Manhã
+            06h - 12h
           </div>
 
           <div class="periodo-infos">
@@ -221,7 +221,7 @@ export function renderizarCidadeUI(
 
         <div class="periodo">
           <div class="periodo-titulo">
-            Tarde
+            12h - 18h
           </div>
 
           <div class="periodo-infos">
@@ -248,7 +248,7 @@ export function renderizarCidadeUI(
 
         <div class="periodo">
           <div class="periodo-titulo">
-            Noite
+            18h - 24h
           </div>
 
           <div class="periodo-infos">
