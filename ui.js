@@ -361,12 +361,11 @@ export function renderizarCidadeUI(
  */
 
 function descricaoNuvens(percentual) {
+  if (percentual <= 20) return "<img src='icones/poucas-nuvens.png'>";
+  if (percentual <= 50) return "<img src='icones/nuvens-esparsas.png'>";
+  if (percentual <= 80) return "<img src='icones/muitas-nuvens.png'>";
 
-  if (percentual <= 20) return "Poucas nuvens";
-  if (percentual <= 50) return "Nuvens esparsas";
-  if (percentual <= 80) return "Muitas nuvens";
-
-  return "Nublado";
+  return "<img src='icones/nublado.png'>";
 }
 
 export function exibirModalHorarioUI(dadosDia) {

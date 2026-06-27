@@ -106,6 +106,10 @@ h1 {
     color: #ffffff;
 }
 
+img {
+    width: 50px;
+}
+
 
 .data-row {
     display: grid;
