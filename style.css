@@ -1,11 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
 
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: "Inter", sans-serif;
+    font-family: "Google Sans", sans-serif;
 }
 
 header {
@@ -104,6 +104,7 @@ h1 {
     background-color: #000000;
     padding: 10px 0;
     color: #ffffff;
+    border-radius: 8px;
 }
 
 img {
@@ -120,15 +121,17 @@ img {
 
 .periodos-bloco {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     padding: 20px 0;
-    gap: 40px 0px;
+    gap: 40px 2px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
 } 
 
 .periodo-titulo {
-    background-color: #ededed;
-    padding: 5px;
     font-weight: bolder;
+    border-radius: 8px;
+    font-size: 16px;
 }
 
 .periodo, .periodo-infos {
@@ -169,8 +172,9 @@ img {
     gap: 10px;
 }
 
-.periodo-infos > span {
+.periodo-infos {
     text-align: center;
+    font-weight: bolder;
 }
 
 .hora {
@@ -183,12 +187,13 @@ img {
 }
 
 .temperatura {
-    color: #ff794d;
+    color: #ff6229;
     padding: 5px;
     border-radius: 6px;
     align-content: center;
     text-align: center;
     font-weight: bolder;
+    font-size: 24px;
 }
 
 .vento {
@@ -198,6 +203,7 @@ img {
     align-content: center;
     text-align: center;
     font-weight: bolder;
+    font-size: 24px;
 }
 
 .chuva {
@@ -207,6 +213,7 @@ img {
     align-content: center;
     text-align: center;
     font-weight: bolder;
+    font-size: 24px;
 }
 
 .trovoadas {

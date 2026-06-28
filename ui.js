@@ -182,7 +182,7 @@ export function renderizarCidadeUI(
 
             ${d.p1.trovoadas
         ? `
-                <div style="color: orangered">
+                <div style="color: #ff6229">
                   Trovoadas
                 </div>
               `
@@ -209,7 +209,7 @@ export function renderizarCidadeUI(
 
             ${d.p2.trovoadas
         ? `
-                <div style="color: orangered">
+                <div style="color: #ff6229;">
                   Trovoadas
                 </div>
               `
@@ -236,7 +236,7 @@ export function renderizarCidadeUI(
 
             ${d.p3.trovoadas
         ? `
-                <div style="color: orangered">
+                <div style="color: #ff6229;">
                   Trovoadas
                 </div>
               `
@@ -263,7 +263,7 @@ export function renderizarCidadeUI(
 
             ${d.p4.trovoadas
         ? `
-                <div style="color: orangered">
+                <div style="color: #ff6229;">
                   Trovoadas
                 </div>
               `
@@ -417,7 +417,7 @@ export function exibirModalHorarioUI(dadosDia) {
 
     // Aplica o estilo dourado apenas na div da hora
     const estiloHora = ehHoraAtual
-      ? 'style="font-weight: bolder; color: #ffb732;"'
+      ? 'style="font-weight: bolder; color: #ff6229;"'
       : 'style="font-weight: bolder;"';
 
     linha.innerHTML = `
@@ -440,7 +440,7 @@ export function exibirModalHorarioUI(dadosDia) {
 
 
         ${dh.trovoadas?.[h]
-      ? '<div style="color: #ffb732;">Trovoadas</div>'
+      ? '<div style="color: #ff6229;">Trovoadas</div>'
         : ''
       }
       </div>
