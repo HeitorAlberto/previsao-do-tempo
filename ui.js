@@ -19,7 +19,7 @@ function descricaoNuvens(percentual, hora) {
  */
 function gerarHtmlPeriodo(titulo, periodoDados) {
   const trovoadaHtml = periodoDados.trovoadas 
-    ? `<div style="color: #ff6229">Trovoadas</div>` 
+    ? `<div style="color: #ff6229"><img src="icones/trovoadas.png" width="70px"></div>` 
     : '';
 
   return `
@@ -116,7 +116,7 @@ export function renderizarCidadeUI(cidadeObj, atualizarHistoricoCallback) {
         ${gerarHtmlPeriodo("00h", d.p1)}
         ${gerarHtmlPeriodo("06h", d.p2)}
         ${gerarHtmlPeriodo("12h", d.p3)}
-        ${gerarHtmlPeriodo("18h", d.p4)}
+        ${gerarHtmlPeriodo("18 h", d.p4)}
       </div>
 
       <button class="btn-dados-horarios">Dados horários</button>
