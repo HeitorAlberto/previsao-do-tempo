@@ -168,8 +168,10 @@ img {
 .hora-info {
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
     gap: 10px;
+    align-items: center;
+    min-width: 125px; 
+    flex-shrink: 0;
 }
 
 .periodo-infos {
@@ -248,12 +250,10 @@ img {
 .modal-content {
     display: flex;
     flex-direction: column;
-    align-content: center;
-    gap: 20px;
     background: #fff;
-    padding: 20px 80px;
+    padding: 20px 30px;
     border-radius: 8px;
-    max-width: 500px;
+    max-width: 600px;
     width: 90%;
     max-height: 80vh;
     overflow-y: auto;
@@ -262,11 +262,14 @@ img {
 
 
 .modal-horas-container {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 40px 20px;
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
     margin-top: 15px;
     font-size: 15px;
+    overflow-x: auto;
+    padding-bottom: 30px;
+    width: 100%;
 }
 
 .data-hora {
