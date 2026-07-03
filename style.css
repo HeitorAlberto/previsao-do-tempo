@@ -122,9 +122,7 @@ img {
 .periodos-bloco {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-    padding: 20px 0;
-    gap: 40px 2px;
-    background-color: #f5f5f5;
+    gap: 5px;
     border-radius: 8px;
 } 
 
@@ -132,6 +130,12 @@ img {
     font-weight: bolder;
     border-radius: 8px;
     font-size: 16px;
+}
+
+.periodo {
+    border: 2px solid #eee;
+    padding: 10px;
+    border-radius: 8px;
 }
 
 .periodo, .periodo-infos {
@@ -176,7 +180,6 @@ img {
 
 .periodo-infos {
     text-align: center;
-    font-weight: bolder;
 }
 
 .hora {
