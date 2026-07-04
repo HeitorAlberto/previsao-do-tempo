@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
 
-
 * {
     margin: 0;
     padding: 0;
@@ -22,8 +21,6 @@ h1 {
     display: grid;
     justify-content: center;
     padding: 40px 0;
-    
-
 }
 
 #cidadeInput, #btnBuscar {
@@ -71,12 +68,10 @@ h1 {
   background: #f2f2f2;
 }
 
-
 #cidade {
     margin-bottom: 40px;
     text-align: center;
 }
-
 
 .info-modelo, #btn-mapas {
     text-align: center;
@@ -92,11 +87,12 @@ h1 {
     justify-items: center;
     margin-top: 50px;
 }
+
 .card {
     display: grid;
-    width: 400px;
+    width: 480px;
     gap: 20px;
-    padding-bottom: 50px;
+    padding-bottom: 30px;
 }
 
 .card h3 {
@@ -111,13 +107,11 @@ img {
     width: 50px;
 }
 
-
 .data-row {
     display: grid;
     grid-template-columns: 1fr;
     gap: 20px;
 }
-
 
 .periodos-bloco {
     display: grid;
@@ -136,6 +130,8 @@ img {
     border: 2px solid #eee;
     padding: 10px;
     border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
 .periodo, .periodo-infos {
@@ -145,28 +141,31 @@ img {
     text-align: center;
 }
 
-.btn-dados-horarios {
-    width: 200px;
-    font-weight: bolder;
-    padding: 10px;
-    background-color: white;
-    border: none;
-    justify-self: center;
-    border: 2px solid #eee;
-    border-radius: 6px;
+.periodo-infos {
+    text-align: center;
 }
 
-.btn-dados-horarios:hover {
-    background-color: #eee;
-    cursor: pointer;
+/* Container de horas integrado ao Card (Ex-Modal horizontal) */
+.card-horas-container {
+    display: flex;
+    flex-direction: row;      /* Horas lado a lado */
+    gap: 15px;
+    padding: 15px 5px 20px 5px;
+    border-top: 2px solid #eee;
+    width: 100%;             /* Respeita os 400px do card */
+    overflow-x: auto;        /* Rolagem horizontal */
+    scroll-behavior: smooth;
 }
 
-.horas {
+/* Colunas individuais de hora dentro do card */
+.card-horas-container .horas {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 12px;
     text-align: center;
     font-weight: bolder;
+    flex-shrink: 0;          /* Impede que o conteúdo esprema */
 }
 
 .hora-info {
@@ -178,17 +177,25 @@ img {
     flex-shrink: 0;
 }
 
-.periodo-infos {
-    text-align: center;
-}
-
 .hora {
-    font-size: 12px;
+    font-size: 16px;
     text-align: center;
-    background-color: #000000;
-    color: white;
+    color: rgb(0, 0, 0);
     padding: 5px;
     border-radius: 6px;
+    width: 100%;
+}
+
+.horas {
+    border: 2px solid #eee;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.titulo-periodo-hora {
+    text-align: center;
+    font-weight: bolder;
+    margin-top: 25px;
 }
 
 .temperatura {
@@ -227,7 +234,6 @@ img {
     font-weight: bolder;
 }
 
-
 .data {
     display: flex;
     flex-direction: row;
@@ -235,113 +241,27 @@ img {
     align-items: center;
 }
 
-/* Fundo escurecido que cobre toda a tela */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+/* Customização para a barra de rolagem horizontal das horas */
+.card-horas-container::-webkit-scrollbar {
+    height: 6px;
 }
 
-/* Caixa branca do Modal */
-.modal-content {
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-    padding: 20px 30px;
-    border-radius: 8px;
-    max-width: 600px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    position: relative;
+.card-horas-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
 }
 
-
-.modal-horas-container {
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
-    margin-top: 15px;
-    font-size: 15px;
-    overflow-x: auto;
-    padding-bottom: 30px;
-    width: 100%;
+.card-horas-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
 }
 
-.data-hora {
-    position: fixed;
+.card-horas-container::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
 }
 
-.modal-content h2 {
-    text-align: center;
-    margin-bottom: 10px;
-}
-
-.modal-content p {
-    text-align: center;
-    font-weight: bold;
-    color: #666;
-    margin-bottom: 15px;
-}
-
-.hora {
-    font-size: 16px;
-}
-
-.modal-cabecalho {
-    position: sticky;
-    top: -20px;
-    /* compensa o padding do modal-content */
-    z-index: 10;
-
-    background: #fff;
-
-    padding: 20px 0 15px;
-    margin: -20px -20px 15px -20px;
-
-    border-bottom: 1px solid #e5e5e5;
-}
-
-.modal-cabecalho h2 {
-    text-align: center;
-    margin-bottom: 8px;
-}
-
-.modal-cabecalho p {
-    text-align: center;
-    font-weight: bold;
-    color: #666;
-    margin: 0;
-}
-
-/* Botão de fechar */
-.btn-fechar-modal {
-    background: #ff4d4d;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px;
-    align-self: center;
-}
-
-/* Cursor de clique para os períodos */
-.periodo {
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-
+/* Responsividade Mobile */
 @media (max-width: 600px) { 
-
     header h1 {
         font-size: 26px;
     }
@@ -369,5 +289,4 @@ img {
         gap: 10px;
         justify-content: center;
     }
-
- }
+}

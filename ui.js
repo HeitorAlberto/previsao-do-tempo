@@ -35,6 +35,47 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
 }
 
 /**
+ * Gera a estrutura HTML dos dados horários (antigo modal, agora embutido).
+ */
+function gerarHtmlDadosHorarios(dadosDia) {
+  const dh = dadosDia.dadosHorarios;
+  if (!dh || !dh.horas) return '';
+
+  const horaAtualBrasil = new Date().toLocaleTimeString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).split(":")[0] + ":00";
+
+  let linhasHtml = "";
+
+  for (let h = 0; h < dh.horas.length; h++) {
+    const ehHoraAtual = dh.horas[h] === horaAtualBrasil;
+    const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; background-color: #dfdfdf;"' : 'style="font-weight: bolder;"';
+    const trovoadaHtml = dh.trovoadas?.[h] ? '<div style="color: #ff6229;">Trovoadas</div>' : '';
+    const idHoraAtual = ehHoraAtual ? 'id="hora-atual-card"' : '';
+
+    linhasHtml += `
+      <div class="horas" ${idHoraAtual}>
+        <div class="hora" ${estiloHora}>${dh.horas[h]}</div>
+        <div>${descricaoNuvens(dh.nebulosidade[h], dh.horas[h])}</div>
+        <div class="hora-info">
+          <div>${Math.round(dh.temperaturas[h])}°C</div>
+          <div>${Number(dh.chuvas[h]).toFixed(1)} mm (${dh.probabilidades[h]}%)</div>
+          ${trovoadaHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="card-horas-container" style="max-height: 300px; overflow-y: auto; border-top: 1px solid #ddd; padding-top: 15px;">
+      ${linhasHtml}
+    </div>
+  `;
+}
+
+/**
  * Renderiza a lista de cidades buscadas recentemente (Histórico)
  */
 export function renderizarHistoricoUI(historico, dadosCidadesLista, ufFromCode, callbackClique) {
@@ -84,7 +125,6 @@ export function renderizarCidadeUI(cidadeObj, atualizarHistoricoCallback) {
     const card = document.createElement("div");
     card.className = "card";
 
-    // Estilos dinâmicos encapsulados para manter o código limpo
     const estiloBtnVoltar = `background:none; border:none; color:white; cursor:pointer; font-size:20px; font-weight:bolder; padding:0 8px; opacity:${podeVoltar ? 1 : .3};`;
     const estiloBtnAvancar = `background:none; border:none; color:white; cursor:pointer; font-size:20px; font-weight:bolder; padding:0 8px; opacity:${podeAvancar ? 1 : .3};`;
 
@@ -112,17 +152,21 @@ export function renderizarCidadeUI(cidadeObj, atualizarHistoricoCallback) {
         </div>
       </div>
 
+      <div class="titulo-periodo-hora">Dados por período</div>
+
       <div class="periodos-bloco">
-        ${gerarHtmlPeriodo("00h", d.p1)}
-        ${gerarHtmlPeriodo("06h", d.p2)}
-        ${gerarHtmlPeriodo("12h", d.p3)}
-        ${gerarHtmlPeriodo("18h", d.p4)}
+        ${gerarHtmlPeriodo("00h - 06h", d.p1)}
+        ${gerarHtmlPeriodo("06h - 12h", d.p2)}
+        ${gerarHtmlPeriodo("12h - 18h", d.p3)}
+        ${gerarHtmlPeriodo("18h - 00h", d.p4)}
       </div>
 
-      <button class="btn-dados-horarios">Dados horários</button>
+      <div class="titulo-periodo-hora">Dados por hora</div>
+
+      ${gerarHtmlDadosHorarios(d)}
     `;
 
-    // Listeners de eventos usando seletores mais específicos
+    // Listeners de navegação dos dias
     card.querySelector(".btn-voltar").addEventListener("click", () => {
       if (indiceAtual > 0) {
         indiceAtual--;
@@ -137,11 +181,16 @@ export function renderizarCidadeUI(cidadeObj, atualizarHistoricoCallback) {
       }
     });
 
-    card.querySelector(".btn-dados-horarios").addEventListener("click", () => {
-      exibirModalHorarioUI(d);
-    });
-
     container.appendChild(card);
+
+    // Scroll suave para a hora atual executado diretamente na montagem do card
+    const elementoHoraAtual = card.querySelector("#hora-atual-card");
+    if (elementoHoraAtual) {
+      setTimeout(() => {
+        // inline: "center" garante o alinhamento correto na horizontal
+        elementoHoraAtual.scrollIntoView({ behavior: "smooth", inline: "start" });
+      }, 50);
+    }
   }
 
   renderizarCard(indiceAtual);
@@ -149,87 +198,4 @@ export function renderizarCidadeUI(cidadeObj, atualizarHistoricoCallback) {
 
   document.getElementById("cidadeInput").value = "";
   document.getElementById("suggestions").innerHTML = "";
-}
-
-/**
- * Modal com todas as horas do dia
- */
-export function exibirModalHorarioUI(dadosDia) {
-  const modalAntigo = document.getElementById("modal-previsao");
-  if (modalAntigo) modalAntigo.remove();
-
-  document.body.style.overflow = "hidden";
-
-  const overlay = document.createElement("div");
-  overlay.id = "modal-previsao";
-  overlay.className = "modal-overlay";
-
-  const content = document.createElement("div");
-  content.className = "modal-content";
-
-  const cabecalho = document.createElement("div");
-  cabecalho.className = "modal-cabecalho";
-
-  const titulo = document.createElement("p");
-  titulo.textContent = `${obterDiaSemana(dadosDia.date)}, ${formatarData(dadosDia.date)}`;
-  cabecalho.appendChild(titulo);
-
-  const containerHoras = document.createElement("div");
-  containerHoras.className = "modal-horas-container";
-
-  const dh = dadosDia.dadosHorarios;
-
-  const horaAtualBrasil = new Date().toLocaleTimeString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    hour: "2-digit",
-    minute: "2-digit"
-  }).split(":")[0] + ":00";
-
-  let elementoHoraAtual = null;
-
-  for (let h = 0; h < dh.horas.length; h++) {
-    const linha = document.createElement("div");
-    linha.className = "horas";
-
-    const ehHoraAtual = dh.horas[h] === horaAtualBrasil;
-    const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: #ff6229;"' : 'style="font-weight: bolder;"';
-    const trovoadaHtml = dh.trovoadas?.[h] ? '<div style="color: #ff6229;">Trovoadas</div>' : '';
-
-    linha.innerHTML = `
-      <div class="hora" ${estiloHora}>${dh.horas[h]}</div>
-      <div>${descricaoNuvens(dh.nebulosidade[h], dh.horas[h])}</div>
-      <div class="hora-info">
-        <div>${Math.round(dh.temperaturas[h])}°C</div>
-        <div>${Number(dh.chuvas[h]).toFixed(1)} mm (${dh.probabilidades[h]}%)</div>
-        ${trovoadaHtml}
-      </div>
-    `;
-
-    if (ehHoraAtual) elementoHoraAtual = linha;
-    containerHoras.appendChild(linha);
-  }
-
-  const btnFechar = document.createElement("button");
-  btnFechar.className = "btn-fechar-modal";
-  btnFechar.textContent = "Fechar";
-
-  const fecharModal = () => {
-    overlay.remove();
-    document.body.style.overflow = "";
-  };
-
-  btnFechar.addEventListener("click", fecharModal);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) fecharModal();
-  });
-
-  content.append(cabecalho, containerHoras, btnFechar);
-  overlay.appendChild(content);
-  document.body.appendChild(overlay);
-
-  if (elementoHoraAtual) {
-  setTimeout(() => {
-    elementoHoraAtual.scrollIntoView({ behavior: "smooth", inline: "center" });
-  }, 50);
-}
 }
