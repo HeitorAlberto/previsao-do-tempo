@@ -187,8 +187,11 @@ export function renderizarCidadeUI(cidadeObj, atualizarHistoricoCallback) {
     const elementoHoraAtual = card.querySelector("#hora-atual-card");
     if (elementoHoraAtual) {
       setTimeout(() => {
-        // inline: "center" garante o alinhamento correto na horizontal
-        elementoHoraAtual.scrollIntoView({ behavior: "smooth", inline: "start" });
+        elementoHoraAtual.scrollIntoView({ 
+          behavior: "smooth", 
+          inline: "start",
+          block: "nearest"  // Impede que a página (body) se mova verticalmente se o elemento já estiver visível na região
+        });
       }, 50);
     }
   }
