@@ -108,6 +108,7 @@ h1 {
     padding: 12px;
     color: #ffffff;
     border-radius: 8px;
+    font-size: 18px;
 }
 
 
@@ -191,7 +192,7 @@ img {
     display: flex;
     flex-direction: row;   
     gap: 12px;
-    padding: 10px 0 20px 0;
+    padding-bottom: 20px;
     width: 100%;             
     overflow-x: auto;      
     scroll-behavior: smooth;
@@ -234,7 +235,7 @@ img {
 
 .indicacao-rolagem {
     text-align: center;
-    font-size: 25px;
+    font-size: 12px;
     font-weight: bolder;
     color: #e0e0e0;
     margin-top: -20px;
@@ -250,19 +251,19 @@ img {
 
 .temperatura {
     color: #ff6229;
-    font-size: 25px;
+    font-size: 20px;
     font-weight: bolder;
 }
 
 .vento {
     color: #24a700;
-    font-size: 25px;
+    font-size: 20px;
     font-weight: bolder;
 }
 
 .chuva {
     color: #0085de;
-    font-size: 25px;
+    font-size: 20px;
     font-weight: bolder;
 }
 
