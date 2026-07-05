@@ -69,7 +69,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
   }
 
   return `
-    <div class="card-horas-container" style="max-height: 300px; overflow-y: auto; border-top: 1px solid #ddd; padding-top: 15px;">
+    <div class="card-horas-container" style="max-height: 300px; overflow-y: auto;">
       ${linhasHtml}
     </div>
   `;

@@ -148,12 +148,11 @@ img {
 /* Container de horas integrado ao Card (Ex-Modal horizontal) */
 .card-horas-container {
     display: flex;
-    flex-direction: row;      /* Horas lado a lado */
+    flex-direction: row;   
     gap: 15px;
-    padding: 15px 5px 20px 5px;
-    border-top: 2px solid #eee;
-    width: 100%;             /* Respeita os 400px do card */
-    overflow-x: auto;        /* Rolagem horizontal */
+    padding: 0 5px;
+    width: 100%;             
+    overflow-x: auto;      
     scroll-behavior: smooth;
 }
 
