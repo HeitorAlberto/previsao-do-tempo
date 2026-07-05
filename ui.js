@@ -27,15 +27,19 @@ function descricaoNuvens(percentual, hora, temTrovoada = false) {
  * Gera o HTML padrão para os blocos de períodos (Madrugada, Manhã, Tarde, Noite).
  * Agora renderiza a nuvem com raio de forma dinâmica se houver trovoada no período.
  */
+/**
+ * Gera o HTML padrão para os blocos de períodos (Madrugada, Manhã, Tarde, Noite).
+ * Agora renderiza a nuvem com raio de forma dinâmica se houver trovoada no período.
+ */
 function gerarHtmlPeriodo(titulo, periodoDados) {
   const temTrovoadaNoPeriodo = periodoDados.trovoadas === "trovoadas";
   
   // Define uma hora aproximada para o período para ajustar ícones de dia ou noite
-  let horaAproximada = "12h";
-  if (titulo.includes("00h - 06h")) horaAproximada = "03h";
-  if (titulo.includes("06h - 12h")) horaAproximada = "09h";
-  if (titulo.includes("12h - 18h")) horaAproximada = "15h";
-  if (titulo.includes("18h - 00h")) horaAproximada = "21h";
+  let horaAproximada = "12:00";
+  if (titulo.includes("00h - 06h")) horaAproximada = "03:00";
+  if (titulo.includes("06h - 12h")) horaAproximada = "09:00";
+  if (titulo.includes("12h - 18h")) horaAproximada = "15:00";
+  if (titulo.includes("18h - 00h")) horaAproximada = "21:00";
 
   const iconeDinamico = descricaoNuvens(periodoDados.nuvens_pct, horaAproximada, temTrovoadaNoPeriodo);
 
@@ -96,7 +100,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
         <div class="hora-info">
           <div>${Math.round(dh.temperaturas[h])}°C</div>
           <div style="color: #0085de">
-            ${mmChuva.toFixed(1)} mm${intensidade} (${dh.probabilidades[h]}%)
+            ${mmChuva.toFixed(1)} mm ${intensidade} - ${dh.probabilidades[h]}%
           </div>
           <div style="color: #24a700; font-size: 12px;">💨 ${rajadaVento} km/h</div>
         </div>
