@@ -150,7 +150,7 @@ img {
     display: flex;
     flex-direction: row;   
     gap: 15px;
-    padding: 0 5px;
+    padding-bottom: 25px;
     width: 100%;             
     overflow-x: auto;      
     scroll-behavior: smooth;
