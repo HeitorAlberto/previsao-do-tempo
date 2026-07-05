@@ -42,6 +42,7 @@ h1 {
   position: absolute;
   background: white;
   width: 100%;
+  z-index: 10;
 }
 
 .suggestions div {
@@ -79,18 +80,24 @@ h1 {
     margin-bottom: 30px;
     text-decoration: none;
     font-size: 16px;
+    display: block; /* Garante alinhamento central */
+}
+
+.hidden {
+    display: none !important;
 }
 
 #container {
-    display: grid;
-    grid-template-columns: 1fr;
-    justify-items: center;
-    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+    padding: 0 20px;
+    margin-top: 20px;
 }
 
 .card {
-    display: grid;
-    width: 480px;
+    display: none;
+    width: 100%;
+    max-width: 550px; /* Limita a largura máxima do card */
     gap: 20px;
     padding-bottom: 30px;
 }
@@ -98,62 +105,97 @@ h1 {
 .card h3 {
     text-align: center;
     background-color: #000000;
-    padding: 10px 0;
+    padding: 12px;
     color: #ffffff;
     border-radius: 8px;
+}
+
+
+.btn-nav-card {
+    background: none; 
+    border: none;            
+    color: #ffffff;         
+    font-size: 26px;      
+    font-weight: 900;   
+    cursor: pointer;        
+    outline: none;           
+}
+
+.btn-nav-card:disabled {
+    color: #ffffff;
+    opacity: 0.3;           
+    cursor: not-allowed;    
+}
+
+.btn-nav-card:not([disabled]):active {
+    transform: scale(0.9);
 }
 
 img {
     width: 50px;
 }
 
+/* Exibe temperatura, chuva e vento lado a lado em telas maiores */
 .data-row {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.data {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 15px 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    text-align: center;
+    font-size: 14px;
+}
+
+.data div:first-child {
+    margin-bottom: 5px;
+    color: #666;
 }
 
 .periodos-bloco {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 5px;
-    border-radius: 8px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
 } 
 
 .periodo-titulo {
     font-weight: bolder;
-    border-radius: 8px;
-    font-size: 16px;
+    font-size: 14px;
+    margin-bottom: 5px;
 }
 
 .periodo {
     border: 2px solid #eee;
-    padding: 10px;
+    padding: 10px 5px;
     border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.2s;
+    background-color: #fff;
 }
 
 .periodo, .periodo-infos {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     text-align: center;
+    font-size: 13px;
 }
 
-.periodo-infos {
-    text-align: center;
-}
-
-/* Container de horas integrado ao Card (Ex-Modal horizontal) */
+/* Container de horas corrigido (apenas rolagem horizontal) */
 .card-horas-container {
     display: flex;
     flex-direction: row;   
-    gap: 15px;
-    padding-bottom: 25px;
+    gap: 12px;
+    padding: 10px 0 20px 0;
     width: 100%;             
     overflow-x: auto;      
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* Rolagem suave no iOS */
 }
 
 /* Colunas individuais de hora dentro do card */
@@ -161,66 +203,66 @@ img {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     text-align: center;
     font-weight: bolder;
-    flex-shrink: 0;          /* Impede que o conteúdo esprema */
+    flex-shrink: 0; 
+    border: 2px solid #eee;
+    padding: 12px;
+    border-radius: 8px;
+    background-color: #fff;
 }
 
 .hora-info {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
-    min-width: 125px; 
+    min-width: 115px; 
     flex-shrink: 0;
+    font-size: 13px;
 }
 
 .hora {
-    font-size: 16px;
+    font-size: 15px;
     text-align: center;
     color: rgb(0, 0, 0);
-    padding: 5px;
+    padding: 3px;
     border-radius: 6px;
     width: 100%;
 }
 
-.horas {
-    border: 2px solid #eee;
-    padding: 10px;
-    border-radius: 8px;
+.indicacao-rolagem {
+    text-align: center;
+    font-size: 25px;
+    font-weight: bolder;
+    color: #e0e0e0;
+    margin-top: -20px;
 }
 
 .titulo-periodo-hora {
     text-align: center;
     font-weight: bolder;
-    margin-top: 25px;
+    margin-top: 15px;
+    font-size: 16px;
+    color: #333;
 }
 
 .temperatura {
     color: #ff6229;
-    padding: 5px;
-    border-radius: 6px;
-    align-content: center;
-    text-align: center;
+    font-size: 25px;
     font-weight: bolder;
 }
 
 .vento {
     color: #24a700;
-    padding: 5px;
-    border-radius: 6px;
-    align-content: center;
-    text-align: center;
+    font-size: 25px;
     font-weight: bolder;
 }
 
 .chuva {
     color: #0085de;
-    padding: 5px;
-    border-radius: 6px;
-    align-content: center;
-    text-align: center;
+    font-size: 25px;
     font-weight: bolder;
 }
 
@@ -228,16 +270,8 @@ img {
     background-color: #ffb53f;
     padding: 5px;
     border-radius: 6px;
-    align-content: center;
     text-align: center;
     font-weight: bolder;
-}
-
-.data {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
 }
 
 /* Customização para a barra de rolagem horizontal das horas */
@@ -262,7 +296,7 @@ img {
 /* Responsividade Mobile */
 @media (max-width: 600px) { 
     header h1 {
-        font-size: 26px;
+        font-size: 24px;
     }
 
     #cidade {
@@ -270,22 +304,28 @@ img {
     }
 
     .card {
-        width: 90%;
+        max-width: 100%;
     }
 
+    /* No mobile, empilha as informações principais */
     .data-row {
-        column-gap: 30px;
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
 
+    .data {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 12px 20px;
+    }
+
+    .data div:first-child {
+        margin-bottom: 0;
+    }
+
+    /* Períodos ficam em blocos de 2x2 no mobile */
     .periodos-bloco {
         grid-template-columns: 1fr 1fr;
-    }
-
-    .periodo-infos {
-        display: flex;
-        flex-direction: column;
-        flex-wrap: wrap;
         gap: 10px;
-        justify-content: center;
     }
 }

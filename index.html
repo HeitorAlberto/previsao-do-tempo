@@ -33,7 +33,39 @@
 
   <a href="mapas.html" id="btn-mapas" target="_blank"><h3>Mapas de chuva</h3></a>
 
-  <div id="container"></div>
+  <div id="container">
+    <div class="card hidden">
+      
+      <h3 style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <button id="btnVoltar" class="btn-nav-card btn-voltar">&larr;</button>
+        <span id="dataExibida" style="flex:1; text-align:center;">--/--/----</span>
+        <button id="btnAvancar" class="btn-nav-card btn-avancar">&rarr;</button>
+      </h3>
+
+      <div class="data-row">
+        <div class="data">
+          <div><strong>Temperatura</strong></div>
+          <div id="temperatura" class="temperatura">--° a --°</div>
+        </div>
+        <div class="data">
+          <div><strong>Chuva acumulada</strong></div>
+          <div id="chuva" class="chuva">-- mm</div>
+        </div>
+        <div class="data">
+          <div><strong>Rajadas de vento</strong></div>
+          <div id="vento" class="vento">-- km/h</div>
+        </div>
+      </div>
+
+      <div class="titulo-periodo-hora">Dados por período</div>
+      <div id="periodosBloco" class="periodos-bloco"></div>
+
+      <div class="titulo-periodo-hora">Dados por hora</div>
+      <div id="horasBloco" class="card-horas-container"></div>
+      <div class="indicacao-rolagem">&larr; &rarr;</div>
+
+    </div>
+</div>
 
   <script type="module" src="./main.js"></script>
 </body>

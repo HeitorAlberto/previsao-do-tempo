@@ -28,7 +28,7 @@ export async function fetchPrevisao({ latitude, longitude }) {
 }
 
 /**
- * Converte porcentagem de nebulosidade em tag de imagem HTML.
+ * Converte porcentagem de nebulosidade in tag de imagem HTML.
  */
 function descricaoNuvens(percentual, hora = 12) {
   const noite = hora >= 18 || hora < 6;
@@ -79,10 +79,14 @@ export function processarDadosPrevisao(data, city) {
       const cPeriodo = cloudDia.slice(inicio, fim);
       const rPeriodo = chuvaDia.slice(inicio, fim);
       const codePeriodo = codeDia.slice(inicio, fim);
+      const probPeriodo = probDia.slice(inicio, fim); // Fatiando probabilidades do período
 
       const medNuvens = somarValores(cPeriodo) / cPeriodo.length;
       const somChuva = somarValores(rPeriodo);
       const temTrovoada = codePeriodo.some(c => CODIGOS_TROVOADA.includes(c));
+      
+      // Obtém o pico de probabilidade dentro das 6 horas deste período
+      const maxProbPeriodo = Math.max(...probPeriodo.filter(v => v != null), 0);
 
       // Passa a hora média aproximada do período para definir ícone de dia/noite corretamente
       const horaMediaPeriodo = inicio + (fim - inicio) / 2;
@@ -91,6 +95,7 @@ export function processarDadosPrevisao(data, city) {
         nuvens_pct: Math.round(medNuvens),
         nuvens_desc: descricaoNuvens(medNuvens, horaMediaPeriodo),
         chuva: Number(somChuva.toFixed(1)),
+        probabilidade: Math.round(maxProbPeriodo), // Enviando a probabilidade máxima calculada
         trovoadas: temTrovoada ? "trovoadas" : ""
       };
     };
@@ -109,6 +114,7 @@ export function processarDadosPrevisao(data, city) {
         chuvas: chuvaDia,
         probabilidades: probDia,
         nebulosidade: cloudDia,
+        rajadas: windDia, // Vinculado para corrigir o erro dos dados zerados
         trovoadas: codeDia.map(c => CODIGOS_TROVOADA.includes(c))
       },
 

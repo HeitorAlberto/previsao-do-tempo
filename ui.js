@@ -27,7 +27,11 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
       <div class="periodo-titulo">${titulo}</div>
       <div class="periodo-infos">
         <div>${periodoDados.nuvens_desc}</div>
-        <div style="color: #0085de">${periodoDados.chuva} mm</div>
+        
+        <div style="color: #0085de; font-weight: bolder;">
+          ${periodoDados.chuva} mm (${periodoDados.probabilidade}%)
+        </div>
+        
         ${trovoadaHtml}
       </div>
     </div>
@@ -55,28 +59,30 @@ function gerarHtmlDadosHorarios(dadosDia) {
     const trovoadaHtml = dh.trovoadas?.[h] ? '<div style="color: #ff6229;">Trovoadas</div>' : '';
     const idHoraAtual = ehHoraAtual ? 'id="hora-atual-card"' : '';
 
+    // PEGA O DADO DE RAJADA (Ajuste o nome '.rajadas' se na sua API for diferente, ex: .wind_gusts)
+    const rajadaVento = dh.rajadas?.[h] ? Math.round(dh.rajadas[h]) : 0;
+
     linhasHtml += `
       <div class="horas" ${idHoraAtual}>
         <div class="hora" ${estiloHora}>${dh.horas[h]}</div>
         <div>${descricaoNuvens(dh.nebulosidade[h], dh.horas[h])}</div>
         <div class="hora-info">
           <div>${Math.round(dh.temperaturas[h])}°C</div>
-          <div>${Number(dh.chuvas[h]).toFixed(1)} mm (${dh.probabilidades[h]}%)</div>
+          <div style="color: #0085de">${Number(dh.chuvas[h]).toFixed(1)} mm (${dh.probabilidades[h]}%)</div>
+          
+          <div style="color: #24a700; font-size: 12px;">${rajadaVento} km/h</div>
+          
           ${trovoadaHtml}
         </div>
       </div>
     `;
   }
 
-  return `
-    <div class="card-horas-container" style="max-height: 300px; overflow-y: auto;">
-      ${linhasHtml}
-    </div>
-  `;
+  return linhasHtml;
 }
 
 /**
- * Renderiza a lista de cidades buscadas recentemente (Histórico)
+ * Renderiza la lista de cidades buscadas recentemente (Histórico)
  */
 export function renderizarHistoricoUI(historico, dadosCidadesLista, ufFromCode, callbackClique) {
   const el = document.getElementById("historico");
@@ -104,101 +110,65 @@ export function renderizarHistoricoUI(historico, dadosCidadesLista, ufFromCode, 
 }
 
 /**
- * Renderiza os cards de previsão
+ * Renderiza os dados do dia selecionado usando a estrutura fixa do HTML
  */
-export function renderizarCidadeUI(cidadeObj, atualizarHistoricoCallback) {
-  const container = document.getElementById("container");
-  const titulo = document.getElementById("cidade");
+export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCallback) {
 
-  container.innerHTML = "";
-  titulo.textContent = `📍 ${cidadeObj.cidade}`;
-
-  let indiceAtual = 0;
-
-  function renderizarCard(indice) {
-    container.innerHTML = "";
-
-    const d = cidadeObj.forecast[indice];
-    const podeVoltar = indice > 0;
-    const podeAvancar = indice < cidadeObj.forecast.length - 1;
-
-    const card = document.createElement("div");
-    card.className = "card";
-
-    const estiloBtnVoltar = `background:none; border:none; color:white; cursor:pointer; font-size:20px; font-weight:bolder; padding:0 8px; opacity:${podeVoltar ? 1 : .3};`;
-    const estiloBtnAvancar = `background:none; border:none; color:white; cursor:pointer; font-size:20px; font-weight:bolder; padding:0 8px; opacity:${podeAvancar ? 1 : .3};`;
-
-    card.innerHTML = `
-      <h3 style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-        <button class="btn-nav-card btn-voltar" ${!podeVoltar ? "disabled" : ""} style="${estiloBtnVoltar}">◀︎</button>
-        <span style="flex:1; text-align:center;">
-          ${obterDiaSemana(d.date)}, ${formatarData(d.date)}
-        </span>
-        <button class="btn-nav-card btn-avancar" ${!podeAvancar ? "disabled" : ""} style="${estiloBtnAvancar}">▶︎</button>
-      </h3>
-
-      <div class="data-row">
-        <div class="data">
-          <div>Temperatura</div>
-          <div class="temperatura">${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°</div>
-        </div>
-        <div class="data">
-          <div>Chuva acumulada</div>
-          <div class="chuva">${d.rain_sum_mm} mm</div>
-        </div>
-        <div class="data">
-          <div>Rajadas de vento máx</div>
-          <div class="vento">${Math.round(d.wind_max_kmh)} km/h</div>
-        </div>
-      </div>
-
-      <div class="titulo-periodo-hora">Dados por período</div>
-
-      <div class="periodos-bloco">
-        ${gerarHtmlPeriodo("00h - 06h", d.p1)}
-        ${gerarHtmlPeriodo("06h - 12h", d.p2)}
-        ${gerarHtmlPeriodo("12h - 18h", d.p3)}
-        ${gerarHtmlPeriodo("18h - 00h", d.p4)}
-      </div>
-
-      <div class="titulo-periodo-hora">Dados por hora</div>
-
-      ${gerarHtmlDadosHorarios(d)}
-    `;
-
-    // Listeners de navegação dos dias
-    card.querySelector(".btn-voltar").addEventListener("click", () => {
-      if (indiceAtual > 0) {
-        indiceAtual--;
-        renderizarCard(indiceAtual);
-      }
-    });
-
-    card.querySelector(".btn-avancar").addEventListener("click", () => {
-      if (indiceAtual < cidadeObj.forecast.length - 1) {
-        indiceAtual++;
-        renderizarCard(indiceAtual);
-      }
-    });
-
-    container.appendChild(card);
-
-    // Scroll suave para a hora atual executado diretamente na montagem do card
-    const elementoHoraAtual = card.querySelector("#hora-atual-card");
-    if (elementoHoraAtual) {
-      setTimeout(() => {
-        elementoHoraAtual.scrollIntoView({ 
-          behavior: "smooth", 
-          inline: "start",
-          block: "nearest"  // Impede que a página (body) se mova verticalmente se o elemento já estiver visível na região
-        });
-      }, 50);
-    }
+  const card = document.querySelector(".card");
+  if (card) {
+    card.classList.remove("hidden");
+    card.style.display = "grid"; // <-- ADICIONE ESTA LINHA AQUI!
   }
 
-  renderizarCard(indiceAtual);
-  atualizarHistoricoCallback(cidadeObj.cidade);
+  const titulo = document.getElementById("cidade");
+  titulo.textContent = `📍 ${cidadeObj.cidade}`;
 
-  document.getElementById("cidadeInput").value = "";
-  document.getElementById("suggestions").innerHTML = "";
+  const d = cidadeObj.forecast[indiceAtual];
+  const podeVoltar = indiceAtual > 0;
+  const podeAvancar = indiceAtual < cidadeObj.forecast.length - 1;
+
+  // 1. Atualiza elementos textuais simples
+  document.getElementById("dataExibida").textContent = `${obterDiaSemana(d.date)}, ${formatarData(d.date)}`;
+  document.getElementById("temperatura").textContent = `${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°`;
+  document.getElementById("chuva").textContent = `${d.rain_sum_mm} mm`;
+  document.getElementById("vento").textContent = `${Math.round(d.wind_max_kmh)} km/h`;
+
+  // 2. Atualiza os blocos internos complexos
+  document.getElementById("periodosBloco").innerHTML = `
+    ${gerarHtmlPeriodo("00h - 06h", d.p1)}
+    ${gerarHtmlPeriodo("06h - 12h", d.p2)}
+    ${gerarHtmlPeriodo("12h - 18h", d.p3)}
+    ${gerarHtmlPeriodo("18h - 00h", d.p4)}
+  `;
+
+  document.getElementById("horasBloco").innerHTML = gerarHtmlDadosHorarios(d);
+
+  // 3. Atualiza os botões e suas opacidades diretamente por seletores estáticos
+  const btnVoltar = document.getElementById("btnVoltar");
+  const btnAvancar = document.getElementById("btnAvancar");
+
+  btnVoltar.disabled = !podeVoltar;
+  btnVoltar.style.opacity = podeVoltar ? "1" : ".3";
+
+  btnAvancar.disabled = !podeAvancar;
+  btnAvancar.style.opacity = podeAvancar ? "1" : ".3";
+
+  // 4. Executa o scroll suave se a hora atual estiver renderizada
+  const elementoHoraAtual = document.getElementById("hora-atual-card");
+  if (elementoHoraAtual) {
+    setTimeout(() => {
+      elementoHoraAtual.scrollIntoView({ 
+        behavior: "smooth", 
+        inline: "start",
+        block: "nearest"
+      });
+    }, 50);
+  }
+
+  // Se a função foi ativada por uma busca inicial, limpa o input e atualiza histórico
+  if (typeof atualizarHistoricoCallback === "function") {
+    atualizarHistoricoCallback(cidadeObj.cidade);
+    document.getElementById("cidadeInput").value = "";
+    document.getElementById("suggestions").innerHTML = "";
+  }
 }

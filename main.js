@@ -7,6 +7,10 @@ let dadosCidadesLista = [];
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
 let carregando = false;
 
+// Controle de paginação dos dias
+let diaAtualIndex = 0; 
+let dadosPrevisaoGlobais = null; 
+
 const inputEl = document.getElementById("cidadeInput");
 const suggestions = document.getElementById("suggestions");
 const titulo = document.getElementById("cidade");
@@ -51,16 +55,49 @@ async function buscarPrevisaoOpenMeteo(city) {
 
   try {
     const data = await fetchPrevisao(city);
-    const cidadeAtualObj = processarDadosPrevisao(data, city);
+    dadosPrevisaoGlobais = processarDadosPrevisao(data, city);
+    
+    // Sempre que buscar uma nova cidade, reinicia para o primeiro dia
+    diaAtualIndex = 0; 
 
-    // Agora passa apenas 2 parâmetros. O ui.js cuida do clique do modal sozinho.
-    renderizarCidadeUI(cidadeAtualObj, atualizarHistorico);
+    // Renderiza a UI passando o objeto de dados, o índice do dia e o callback do histórico
+    renderizarCidadeUI(dadosPrevisaoGlobais, diaAtualIndex, atualizarHistorico);
+    
+    // Ativa os cliques dos botões de avançar/voltar que já estão no HTML
+    configurarBotoesNavegacao();
+
   } catch (e) {
     console.error(e);
     titulo.textContent = "Erro na previsão.";
   } finally {
     carregando = false;
   }
+}
+
+/**
+ * Configura os cliques dos botões de avançar e voltar do HTML
+ */
+function configurarBotoesNavegacao() {
+  const btnVoltar = document.getElementById("btnVoltar");
+  const btnAvancar = document.getElementById("btnAvancar");
+
+  // .onclick limpa eventos anteriores evitando bugs se o usuário buscar várias cidades
+  btnVoltar.onclick = () => {
+    if (diaAtualIndex > 0) {
+      diaAtualIndex--;
+      // Não passamos o callback aqui para não reinserir no histórico a cada clique de navegação
+      renderizarCidadeUI(dadosPrevisaoGlobais, diaAtualIndex);
+    }
+  };
+
+  btnAvancar.onclick = () => {
+    // Verificação usando '.forecast' que é o padrão do seu objeto
+    if (dadosPrevisaoGlobais && dadosPrevisaoGlobais.forecast && diaAtualIndex < dadosPrevisaoGlobais.forecast.length - 1) { 
+      diaAtualIndex++;
+      // Não passamos o callback aqui para não reinserir no histórico a cada clique de navegação
+      renderizarCidadeUI(dadosPrevisaoGlobais, diaAtualIndex);
+    }
+  };
 }
 
 /**
