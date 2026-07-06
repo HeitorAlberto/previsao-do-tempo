@@ -1,9 +1,32 @@
-import { normalizarTexto, ufFromCode } from './utils.js';
-import { buscarCidadesJSON, fetchPrevisao, processarDadosPrevisao } from './api.js';
+import { normalizarTexto } from './utils.js';
+import { fetchPrevisao, processarDadosPrevisao } from './api.js';
 import { renderizarHistoricoUI, renderizarCidadeUI } from './ui.js';
 
+// Função integrada de Geocoding para o Autocomplete Global
+async function obterCidadesDaAPI(termo) {
+  if (!termo) return [];
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(termo)}&count=6&language=pt`;
+  
+  try {
+    const resposta = await fetch(url);
+    const dados = await resposta.json();
+    if (!dados.results) return [];
+    
+    return dados.results.map(cidade => ({
+      id: cidade.id,
+      nome: cidade.name,
+      pais: cidade.country_code ? cidade.country_code.toUpperCase() : "",
+      regiao: cidade.admin1 || "",
+      latitude: cidade.latitude,
+      longitude: cidade.longitude
+    }));
+  } catch (erro) {
+    console.error("Erro na busca de cidades:", erro);
+    return [];
+  }
+}
+
 // Estado global da aplicação
-let dadosCidadesLista = [];
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
 let carregando = false;
 
@@ -16,16 +39,15 @@ const suggestions = document.getElementById("suggestions");
 const titulo = document.getElementById("cidade");
 
 /**
- * Inicializa a aplicação carregando a lista de cidades do JSON local
+ * Inicializa a aplicação configurando o estado inicial e o histórico
  */
 async function iniciar() {
   try {
-    dadosCidadesLista = await buscarCidadesJSON();
-    titulo.textContent = "Busque uma cidade";
+    titulo.textContent = "Busque uma cidade do mundo";
     renderizarHistorico();
   } catch (e) {
     console.error(e);
-    titulo.textContent = "Erro ao carregar cidades.";
+    titulo.textContent = "Erro ao carregar aplicação.";
   }
 }
 
@@ -34,13 +56,43 @@ function salvarHistorico() {
 }
 
 function renderizarHistorico() {
-  renderizarHistoricoUI(historico, dadosCidadesLista, ufFromCode, buscarPrevisaoOpenMeteo);
+  /**
+   * Função simulada ajustada: 
+   * Formata de maneira limpa o texto complementar do histórico (ex: "SP - BR" ou "Texas - US").
+   * Remove termos como "State of" que a API Open-Meteo retorna para o Brasil.
+   */
+  const ufFromCodeSimulado = (cidade) => {
+    if (!cidade) return "";
+    
+    let regiaoLimpa = cidade.regiao || "";
+    // Limpa o prefixo "State of " caso a API retorne em inglês para estados brasileiros
+    if (regiaoLimpa.toLowerCase().startsWith("state of ")) {
+      regiaoLimpa = regiaoLimpa.substring(9);
+    }
+
+    if (regiaoLimpa && cidade.pais) {
+      return `${regiaoLimpa} - ${cidade.pais}`;
+    }
+    return cidade.pais || regiaoLimpa;
+  };
+
+  // Envia a lista e o formatador visual para o ui.js
+  renderizarHistoricoUI(historico, historico, ufFromCodeSimulado, buscarPrevisaoOpenMeteo);
 }
 
-function atualizarHistorico(nomeCidade) {
-  historico = historico.filter(c => c !== nomeCidade);
-  historico.unshift(nomeCidade);
+function atualizarHistorico(cidadeObjeto) {
+  if (!cidadeObjeto || !cidadeObjeto.nome) return;
+
+  // Filtra duplicados de forma estrita protegendo contra objetos quebrados
+  historico = historico.filter(c => {
+    if (!c) return false;
+    if (typeof c === 'string') return c !== cidadeObjeto.nome;
+    return (c.id && cidadeObjeto.id) ? c.id !== cidadeObjeto.id : c.nome !== cidadeObjeto.nome;
+  });
+
+  historico.unshift(cidadeObjeto);
   historico = historico.slice(0, 3);
+
   salvarHistorico();
   renderizarHistorico();
 }
@@ -49,6 +101,21 @@ function atualizarHistorico(nomeCidade) {
  * Dispara a busca da previsão do tempo na API Open-Meteo
  */
 async function buscarPrevisaoOpenMeteo(city) {
+  if (!city) return;
+
+  // Se o histórico antigo contiver strings ou dados sem coordenadas, recupera via API dinamicamente
+  if (typeof city === "string" || !city.latitude || !city.longitude) {
+    const termoBusca = typeof city === "string" ? city : city.nome;
+    titulo.textContent = "⏳ Buscando dados do histórico...";
+    const resultados = await obterCidadesDaAPI(termoBusca);
+    if (resultados && resultados.length > 0) {
+      city = resultados[0];
+    } else {
+      titulo.textContent = "Erro ao recuperar cidade.";
+      return;
+    }
+  }
+
   if (carregando) return;
   carregando = true;
   titulo.textContent = "⏳ Carregando...";
@@ -57,13 +124,9 @@ async function buscarPrevisaoOpenMeteo(city) {
     const data = await fetchPrevisao(city);
     dadosPrevisaoGlobais = processarDadosPrevisao(data, city);
     
-    // Sempre que buscar uma nova cidade, reinicia para o primeiro dia
     diaAtualIndex = 0; 
 
-    // Renderiza a UI passando o objeto de dados, o índice do dia e o callback do histórico
     renderizarCidadeUI(dadosPrevisaoGlobais, diaAtualIndex, atualizarHistorico);
-    
-    // Ativa os cliques dos botões de avançar/voltar que já estão no HTML
     configurarBotoesNavegacao();
 
   } catch (e) {
@@ -81,82 +144,91 @@ function configurarBotoesNavegacao() {
   const btnVoltar = document.getElementById("btnVoltar");
   const btnAvancar = document.getElementById("btnAvancar");
 
-  // .onclick limpa eventos anteriores evitando bugs se o usuário buscar várias cidades
   btnVoltar.onclick = () => {
     if (diaAtualIndex > 0) {
       diaAtualIndex--;
-      // Não passamos o callback aqui para não reinserir no histórico a cada clique de navegação
       renderizarCidadeUI(dadosPrevisaoGlobais, diaAtualIndex);
     }
   };
 
   btnAvancar.onclick = () => {
-    // Verificação usando '.forecast' que é o padrão do seu objeto
     if (dadosPrevisaoGlobais && dadosPrevisaoGlobais.forecast && diaAtualIndex < dadosPrevisaoGlobais.forecast.length - 1) { 
       diaAtualIndex++;
-      // Não passamos o callback aqui para não reinserir no histórico a cada clique de navegação
       renderizarCidadeUI(dadosPrevisaoGlobais, diaAtualIndex);
     }
   };
 }
 
 /**
- * Processa o clique da barra de busca principal
+ * Processa o clique do botão de busca ou tecla Enter
  */
-function buscarCidade() {
-  const input = normalizarTexto(inputEl.value);
-  const cidadeEncontrada = dadosCidadesLista.find(c =>
-    normalizarTexto(c.nome).includes(input)
-  );
+async function buscarCidade() {
+  const termo = inputEl.value.trim();
+  if (!termo) return;
 
-  if (!cidadeEncontrada) {
-    titulo.textContent = "Cidade não encontrada";
-    return;
+  titulo.textContent = "⏳ Buscando...";
+  try {
+    const resultados = await obterCidadesDaAPI(termo);
+    
+    if (!resultados || resultados.length === 0) {
+      titulo.textContent = "Cidade não encontrada";
+      return;
+    }
+
+    buscarPrevisaoOpenMeteo(resultados[0]);
+  } catch (error) {
+    console.error(error);
+    titulo.textContent = "Erro ao buscar cidade.";
   }
-
-  buscarPrevisaoOpenMeteo(cidadeEncontrada);
 }
 
 /* ==========================================================================
    Ouvintes de Eventos (Event Listeners)
    ========================================================================== */
 
-// Evento de Digitação para Autocomplete (Sugestões)
+let timeoutId;
 inputEl.addEventListener("input", () => {
-  const valor = normalizarTexto(inputEl.value);
+  clearTimeout(timeoutId);
+  const valor = inputEl.value.trim();
   suggestions.innerHTML = "";
-  if (!valor) return;
+  if (!valor || valor.length < 3) return; 
 
-  const filtrados = dadosCidadesLista
-    .filter(c => normalizarTexto(c.nome).includes(valor))
-    .slice(0, 6);
-
-  filtrados.forEach(c => {
-    const item = document.createElement("div");
-    const uf = ufFromCode(c);
-    item.textContent = uf ? `${c.nome} - ${uf}` : c.nome;
-
-    item.onclick = () => {
-      inputEl.value = c.nome;
+  timeoutId = setTimeout(async () => {
+    try {
+      const filtrados = await obterCidadesDaAPI(valor);
       suggestions.innerHTML = "";
-      buscarPrevisaoOpenMeteo(c);
-    };
-    suggestions.appendChild(item);
-  });
+
+      filtrados.slice(0, 6).forEach(c => {
+        const item = document.createElement("div");
+        
+        let regiaoFiltro = c.regiao;
+        if (regiaoFiltro.toLowerCase().startsWith("state of ")) {
+          regiaoFiltro = regiaoFiltro.substring(9);
+        }
+
+        const localizacao = regiaoFiltro ? `${c.nome}, ${regiaoFiltro} - ${c.pais}` : `${c.nome} - ${c.pais}`;
+        item.textContent = localizacao;
+
+        item.onclick = () => {
+          inputEl.value = c.nome;
+          suggestions.innerHTML = "";
+          buscarPrevisaoOpenMeteo(c);
+        };
+        suggestions.appendChild(item);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }, 300);
 });
 
-// Fecha a caixa de sugestões se clicar em qualquer outro ponto do documento
 document.addEventListener("click", (e) => {
   if (e.target !== inputEl) suggestions.innerHTML = "";
 });
 
-// Clique no botão de busca
 document.getElementById("btnBuscar").addEventListener("click", buscarCidade);
-
-// Atalho da tecla Enter no input
 inputEl.addEventListener("keydown", (e) => {
   if (e.key === "Enter") buscarCidade();
 });
 
-// Inicialização automática do App
 iniciar();

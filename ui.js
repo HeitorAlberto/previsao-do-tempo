@@ -27,10 +27,6 @@ function descricaoNuvens(percentual, hora, temTrovoada = false) {
  * Gera o HTML padrão para os blocos de períodos (Madrugada, Manhã, Tarde, Noite).
  * Agora renderiza a nuvem com raio de forma dinâmica se houver trovoada no período.
  */
-/**
- * Gera o HTML padrão para os blocos de períodos (Madrugada, Manhã, Tarde, Noite).
- * Agora renderiza a nuvem com raio de forma dinâmica se houver trovoada no período.
- */
 function gerarHtmlPeriodo(titulo, periodoDados) {
   const temTrovoadaNoPeriodo = periodoDados.trovoadas === "trovoadas";
   
@@ -112,7 +108,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
 }
 
 /**
- * Renderiza la lista de cidades buscadas recentemente (Histórico)
+ * Renderiza a lista de cidades buscadas recentemente (Histórico)
  */
 export function renderizarHistoricoUI(historico, dadosCidadesLista, ufFromCode, callbackClique) {
   const el = document.getElementById("historico");
@@ -120,19 +116,36 @@ export function renderizarHistoricoUI(historico, dadosCidadesLista, ufFromCode, 
 
   el.innerHTML = "";
 
-  historico.slice(0, 3).forEach((nomeCidade) => {
+  historico.slice(0, 3).forEach((cidadeItem) => {
     const item = document.createElement("div");
     item.className = "historico-item";
-    item.textContent = nomeCidade;
+    
+    // Tratamento para suportar tanto strings antigas quanto novos objetos salvos no localStorage
+    const nomeExibicao = typeof cidadeItem === "string" ? cidadeItem : cidadeItem.nome;
+    const infoExtra = typeof ufFromCode === "function" ? ufFromCode(cidadeItem) : "";
+    
+    item.textContent = infoExtra ? `${nomeExibicao} - ${infoExtra}` : nomeExibicao;
 
     item.onclick = () => {
+      // Se já for o objeto completo da API global, dispara o callback diretamente
+      if (typeof cidadeItem === "object" && cidadeItem !== null) {
+        callbackClique(cidadeItem);
+        return;
+      }
+
+      // Fallback para histórico antigo/retrocompatibilidade baseado em busca na lista local
       const city = dadosCidadesLista.find((c) => {
-        const uf = ufFromCode(c);
+        const uf = typeof ufFromCode === "function" ? ufFromCode(c) : "";
         const nome = uf ? `${c.nome} - ${uf}` : c.nome;
-        return nome === nomeCidade;
+        return nome === cidadeItem;
       });
 
-      if (city) callbackClique(city);
+      if (city) {
+        callbackClique(city);
+      } else {
+        // Se não achou na lista local antiga, envia a string pura para o main.js buscar na API
+        callbackClique(cidadeItem);
+      }
     };
 
     el.appendChild(item);
@@ -143,7 +156,6 @@ export function renderizarHistoricoUI(historico, dadosCidadesLista, ufFromCode, 
  * Renderiza os dados do dia selecionado usando a estrutura fixa do HTML
  */
 export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCallback) {
-  // Força a remoção do estado oculto e reativa o Grid do card
   const card = document.querySelector(".card");
   if (card) {
     card.classList.remove("hidden");
@@ -190,10 +202,8 @@ export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCal
 
   if (elementoHoraAtual && containerHoras) {
     setTimeout(() => {
-      // Calcula a posição exata do card em relação ao container horizontal
       const deslocamentoEsquerda = elementoHoraAtual.offsetLeft - containerHoras.offsetLeft;
       
-      // Move exclusivamente o container horizontal, sem afetar o body ou a tela vertical
       containerHoras.scrollTo({
         left: deslocamentoEsquerda,
         behavior: "smooth"
@@ -203,7 +213,8 @@ export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCal
 
   // Se a função foi ativada por uma busca inicial, limpa o input e atualiza o histórico
   if (typeof atualizarHistoricoCallback === "function") {
-    atualizarHistoricoCallback(cidadeObj.cidade);
+    // Passa o objeto original da cidade de volta para salvar o objeto completo no localStorage
+    atualizarHistoricoCallback(cidadeObj._cidadeBruta || { nome: cidadeObj.cidade });
     document.getElementById("cidadeInput").value = "";
     document.getElementById("suggestions").innerHTML = "";
   }
