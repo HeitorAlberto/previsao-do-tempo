@@ -1,26 +1,13 @@
 import { obterDiaSemana, formatarData } from './utils.js';
 
-/**
- * Converte nebulosidade e estado de trovoada em tag de imagem HTML.
- * Gerencia versões diurnas e noturnas dos ícones.
- */
-function descricaoNuvens(percentual, hora, temTrovoada = false) {
-  const horaNumero = Number(hora.toString().split(":")[0]);
-  const noite = horaNumero >= 18 || horaNumero < 6;
-  const sufixo = noite ? 'noite-' : '';
 
-  // 1. SE HOUVER TROVOADA: Agrupa em 3 níveis práticos
-  if (temTrovoada) {
-    if (percentual <= 50) return `<img src='icones/${sufixo}nuvens-esparsas-trovoadas.png'>`;
-    if (percentual <= 80) return `<img src='icones/${sufixo}muitas-nuvens-trovoadas.png'>`;
-    return `<img src='icones/${sufixo}trovoadas.png'>`;
-  }
+function descricaoNuvens(percentual) {
 
-  // 2. LÓGICA PADRÃO (Sem trovoada)
-  if (percentual <= 20) return `<img src='icones/${sufixo}poucas-nuvens.png'>`;
-  if (percentual <= 50) return `<img src='icones/${sufixo}nuvens-esparsas.png'>`;
-  if (percentual <= 80) return `<img src='icones/${sufixo}muitas-nuvens.png'>`;
-  return `<img src='icones/${sufixo}nublado.png'>`;
+  if (percentual <= 20) return `Poucas nuvens`;
+  if (percentual <= 50) return `Nuvens esparsas`;
+  if (percentual <= 80) return `Muitas nuvens`;
+  return `Nublado`;
+
 }
 
 /**
@@ -37,13 +24,13 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
   if (titulo.includes("12h - 18h")) horaAproximada = "15:00";
   if (titulo.includes("18h - 00h")) horaAproximada = "21:00";
 
-  const iconeDinamico = descricaoNuvens(periodoDados.nuvens_pct, horaAproximada, temTrovoadaNoPeriodo);
+  const nuvens_desc = descricaoNuvens(periodoDados.nuvens_pct, horaAproximada, temTrovoadaNoPeriodo);
 
   return `
     <div class="periodo">
       <div class="periodo-titulo">${titulo}</div>
       <div class="periodo-infos">
-        <div>${iconeDinamico}</div>
+        <div class="nuvens-desc">${nuvens_desc}</div>
         <div style="color: #0085de; font-weight: bolder;">
           ${periodoDados.chuva} mm (${periodoDados.probabilidade}%)
         </div>
@@ -92,7 +79,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
     linhasHtml += `
       <div class="horas" ${idHoraAtual}>
         <div class="hora" ${estiloHora}>${dh.horas[h]}</div>
-        <div>${descricaoNuvens(dh.nebulosidade[h], dh.horas[h], temTrovoadaNaHora)}</div>
+        <div class="nuvens-desc">${descricaoNuvens(dh.nebulosidade[h], dh.horas[h])}</div>
         <div class="hora-info">
           <div>${Math.round(dh.temperaturas[h])}°C</div>
           <div style="color: #0085de">

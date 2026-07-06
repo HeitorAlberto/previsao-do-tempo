@@ -53,14 +53,12 @@ export async function fetchPrevisao({ latitude, longitude }) {
 /**
  * Converte porcentagem de nebulosidade em tag de imagem HTML.
  */
-function descricaoNuvens(percentual, hora = 12) {
-  const noite = hora >= 18 || hora < 6;
-  const prefixo = noite ? "noite-" : "";
+function descricaoNuvens(percentual) {
 
-  if (percentual <= 20) return `<img src="icones/${prefixo}poucas-nuvens.png">`;
-  if (percentual <= 50) return `<img src="icones/${prefixo}nuvens-esparsas.png">`;
-  if (percentual <= 80) return `<img src="icones/${prefixo}muitas-nuvens.png">`;
-  return `<img src="icones/${prefixo}nublado.png">`;
+  if (percentual <= 20) return `Poucas nuvens`;
+  if (percentual <= 50) return `Nuvens esparsas`;
+  if (percentual <= 80) return `Muitas nuvens`;
+  return `Nublado`;
 }
 
 /**
