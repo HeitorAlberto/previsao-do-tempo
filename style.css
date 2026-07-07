@@ -162,8 +162,7 @@ img {
 
 .periodos-bloco {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(2, 1fr);
 } 
 
 .periodo-titulo {
@@ -177,7 +176,6 @@ img {
 }
 
 .periodo {
-    border: 2px solid #eee;
     padding: 10px 5px;
     border-radius: 8px;
     background-color: #fff;
@@ -195,12 +193,12 @@ img {
 .card-horas-container {
     display: flex;
     flex-direction: row;   
-    gap: 12px;
     padding-bottom: 20px;
     width: 100%;             
     overflow-x: auto;      
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch; /* Rolagem suave no iOS */
+    gap: 15px;
 }
 
 /* Colunas individuais de hora dentro do card */
@@ -211,11 +209,7 @@ img {
     gap: 10px;
     text-align: center;
     font-weight: bolder;
-    flex-shrink: 0; 
-    border: 2px solid #eee;
-    padding: 12px;
-    border-radius: 8px;
-    background-color: #fff;
+    flex-shrink: 0;
 }
 
 .hora-info {
