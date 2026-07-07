@@ -1,27 +1,28 @@
-export const UF_MAP = {
-  "12": "AC", "27": "AL", "13": "AM", "16": "AP", "29": "BA", "23": "CE", "53": "DF",
-  "32": "ES", "52": "GO", "21": "MA", "31": "MG", "50": "MS", "51": "MT", "15": "PA",
-  "25": "PB", "26": "PE", "22": "PI", "41": "PR", "33": "RJ", "24": "RN", "43": "RS",
-  "11": "RO", "14": "RR", "42": "SC", "35": "SP", "28": "SE", "17": "TO"
-};
-
-export function ufFromCode(city) {
-  const codigo = String(city.codigo_uf || "").padStart(2, "0");
-  return UF_MAP[codigo] || "";
-}
-
+/**
+ * Converte data do padrão ISO (AAAA-MM-DD) para o padrão brasileiro (DD/MM/AAAA)
+ */
 export function formatarData(dataISO) {
+  if (!dataISO) return "";
   const [ano, mes, dia] = dataISO.split("-");
   return `${dia}/${mes}/${ano}`;
 }
 
+/**
+ * Retorna o dia da semana abreviado com base na data ISO (AAAA-MM-DD)
+ */
 export function obterDiaSemana(dataISO) {
+  if (!dataISO) return "";
   const dias = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
   const [ano, mes, dia] = dataISO.split("-");
+  
+  // O uso de T00:00:00 garante que o fuso horário local não desloque a data real
   const d = new Date(`${ano}-${mes}-${dia}T00:00:00`);
   return dias[d.getDay()];
 }
 
+/**
+ * Remove acentos, caracteres especiais e normaliza o texto para buscas.
+ */
 export function normalizarTexto(texto) {
   return (texto || "")
     .toLowerCase()

@@ -4,49 +4,26 @@ const HORAS_POR_DIA = 24;
 const DIAS_PREVISAO = 10;
 
 /**
- * Busca cidades no mundo todo usando a Geocoding API da Open-Meteo.
+ * Cria uma string de localização limpa e padronizada por vírgulas sem duplicações.
+ * Exemplo de saída garantida: "Maceió, Alagoas, BR" ou "Paris, Île-de-France, FR"
  */
-export async function buscarCidadesAPI(termo) {
-  if (!termo) return [];
+export function formatarLocalizacao(cidadeObj) {
+  if (!cidadeObj) return "";
+  
+  // Pega a região (admin1) e o país diretamente do objeto
+  const regiao = cidadeObj.admin1 || cidadeObj.regiao || "";
+  const pais = cidadeObj.country_code?.toUpperCase() || cidadeObj.pais || "";
 
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(termo)}&count=6&language=pt`;
-
-  try {
-    const resposta = await fetch(url);
-    const dados = await resposta.json();
-
-    if (!dados.results) return [];
-
-    return dados.results.map(cidade => ({
-      id: cidade.id,
-      nome: cidade.name,
-      pais: cidade.country_code ? cidade.country_code.toUpperCase() : "",
-      regiao: cidade.admin1 || "",
-      latitude: cidade.latitude,
-      longitude: cidade.longitude
-    }));
-  } catch (erro) {
-    console.error("Erro ao buscar cidades na Geocoding API:", erro);
-    return [];
-  }
+  const partes = [cidadeObj.name || cidadeObj.nome, regiao, pais];
+  
+  // O Set remove itens duplicados se houver conflito (ex: Região idêntica à cidade)
+  return [...new Set(partes)].filter(Boolean).join(", ");
 }
 
 /**
- * Busca a previsão do tempo baseada nas coordenadas da cidade.
+ * Calcula a soma de um array tratando valores nulos/undefined.
  */
-export async function fetchPrevisao({ latitude, longitude }) {
-  if (!latitude || !longitude) {
-    throw new Error("Coordenadas de latitude ou longitude inválidas ou ausentes.");
-  }
-
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
-              `&hourly=precipitation,temperature_2m,wind_gusts_10m,cloud_cover,precipitation_probability,weather_code` +
-              `&timezone=auto&forecast_days=${DIAS_PREVISAO}`;
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Erro ao buscar previsão da API");
-  return res.json();
-}
+const somarValores = (arr) => arr.reduce((acc, val) => acc + (val || 0), 0);
 
 /**
  * Converte porcentagem de nebulosidade em texto descritivo.
@@ -59,21 +36,6 @@ export function obterDescricaoNuvens(percentual) {
 }
 
 /**
- * Cria uma string de localização limpa e padronizada por vírgulas sem duplicações.
- */
-export function formatarLocalizacao(city) {
-  if (!city) return "";
-  const partes = [city.nome || city.name, city.regiao, city.pais];
-  // O Set remove duplicados caso a região seja idêntica ao nome da cidade
-  return [...new Set(partes)].filter(Boolean).join(", ");
-}
-
-/**
- * Calcula a soma de um array tratando valores nulos/undefined.
- */
-const somarValores = (arr) => arr.reduce((acc, val) => acc + (val || 0), 0);
-
-/**
  * Processa os dados brutos da Open-Meteo para a estrutura utilizada na UI.
  */
 export function processarDadosPrevisao(data, city) {
@@ -82,7 +44,7 @@ export function processarDadosPrevisao(data, city) {
 
   const cidadeAtualObj = {
     cidade: nomeChave,
-    _cidadeBruta: city, // Guarda o objeto original com latitude e longitude para o histórico
+    _cidadeBruta: city, // Guarda o objeto original para o histórico
     forecast: []
   };
 

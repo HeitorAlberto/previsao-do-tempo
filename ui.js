@@ -1,28 +1,13 @@
 import { obterDiaSemana, formatarData } from './utils.js';
-
-function descricaoNuvens(percentual) {
-  if (percentual <= 20) return `Poucas nuvens`;
-  if (percentual <= 50) return `Nuvens esparsas`;
-  if (percentual <= 80) return `Muitas nuvens`;
-  return `Nublado`;
-}
+import { obterDescricaoNuvens, formatarLocalizacao } from './parser.js';
 
 /**
  * Gera o HTML padrão para os blocos de períodos (Madrugada, Manhã, Tarde, Noite).
- * Renderiza o texto de trovoada na última linha do bloco, se houver.
  */
 function gerarHtmlPeriodo(titulo, periodoDados) {
-  const temTrovoadaNoPeriodo = periodoDados.trovoadas === "trovoadas" || periodoDados.trovoadas === true;
+  const temTrovoadaNoPeriodo = periodoDados.trovoadas === true;
+  const nuvens_desc = obterDescricaoNuvens(periodoDados.nuvens_pct);
   
-  let horaAproximada = "12:00";
-  if (titulo.includes("00h - 06h")) horaAproximada = "03:00";
-  if (titulo.includes("06h - 12h")) horaAproximada = "09:00";
-  if (titulo.includes("12h - 18h")) horaAproximada = "15:00";
-  if (titulo.includes("18h - 00h")) horaAproximada = "21:00";
-
-  const nuvens_desc = descricaoNuvens(periodoDados.nuvens_pct);
-  
-  // Cria a última linha condicional para a trovoada
   const trovoadaHtml = temTrovoadaNoPeriodo 
     ? `<div style="color: #ff4500; font-weight: bold; margin-top: 2px;">Trovoadas</div>` 
     : '';
@@ -43,7 +28,6 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
 
 /**
  * Gera a estrutura HTML dos dados horários com rolagem horizontal.
- * Exibe o texto de trovoada na última linha de cada hora, se houver.
  */
 function gerarHtmlDadosHorarios(dadosDia) {
   const dh = dadosDia.dadosHorarios;
@@ -62,10 +46,8 @@ function gerarHtmlDadosHorarios(dadosDia) {
     const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: white; background-color: black"' : 'style="font-weight: bolder;"';
     const idHoraAtual = ehHoraAtual ? 'id="hora-atual-card"' : '';
     const rajadaVento = dh.rajadas?.[h] ? Math.round(dh.rajadas[h]) : 0;
+    const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
     
-    const temTrovoadaNaHora = dh.trovoadas?.[h] === "trovoadas" || dh.trovoadas?.[h] === true;
-    
-    // Cria a última linha condicional para a trovoada na hora
     const trovoadaHoraHtml = temTrovoadaNaHora 
       ? `<div style="color: #ff4500; font-weight: bold; font-size: 11px; margin-top: 2px;">Trovoadas</div>` 
       : '';
@@ -74,11 +56,10 @@ function gerarHtmlDadosHorarios(dadosDia) {
     let intensidade = "Sem chuva";
 
     if (mmChuva > 0) {
-      
-      if (mmChuva <= 1.0) {
+      if (mmChuva <= 3.0) {
         intensidade = "Chuva Fraca";
       } else if (mmChuva <= 10.0) {
-        intensidade = " Chuva Moderada";
+        intensidade = "Chuva Moderada";
       } else {
         intensidade = "Chuva Forte";
       }
@@ -87,7 +68,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
     linhasHtml += `
       <div class="horas" ${idHoraAtual}>
         <div class="hora" ${estiloHora}>${dh.horas[h]}</div>
-        <div class="nuvens-desc">${descricaoNuvens(dh.nebulosidade[h])}</div>
+        <div class="nuvens-desc">${obterDescricaoNuvens(dh.nebulosidade[h])}</div>
         <div class="hora-info">
           <div>${Math.round(dh.temperaturas[h])}°C</div>
           <div style="color: #0085de">
@@ -106,7 +87,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
 /**
  * Renderiza a lista de cidades buscadas recentemente (Histórico)
  */
-export function renderizarHistoricoUI(historico, dadosCidadesLista, ufFromCode, callbackClique) {
+export function renderizarHistoricoUI(historico, callbackClique) {
   const el = document.getElementById("historico");
   if (!el) return;
 
@@ -116,30 +97,12 @@ export function renderizarHistoricoUI(historico, dadosCidadesLista, ufFromCode, 
     const item = document.createElement("div");
     item.className = "historico-item";
     
-    const nomeExibicao = typeof cidadeItem === "string" ? cidadeItem : cidadeItem.nome;
-    const infoExtra = typeof ufFromCode === "function" ? ufFromCode(cidadeItem) : "";
-    
-    item.textContent = infoExtra ? `${nomeExibicao}, ${infoExtra}` : nomeExibicao;
+    // Usa o centralizador de strings do parser se o item for um objeto bruto
+    item.textContent = typeof cidadeItem === "object" && cidadeItem !== null
+      ? formatarLocalizacao(cidadeItem)
+      : cidadeItem;
 
-    item.onclick = () => {
-      if (typeof cidadeItem === "object" && cidadeItem !== null) {
-        callbackClique(cidadeItem);
-        return;
-      }
-
-      const city = dadosCidadesLista.find((c) => {
-        const uf = typeof ufFromCode === "function" ? ufFromCode(c) : "";
-        const nome = uf ? `${c.nome}, ${uf}` : c.nome;
-        return nome === cidadeItem;
-      });
-
-      if (city) {
-        callbackClique(city);
-      } else {
-        callbackClique(cidadeItem);
-      }
-    };
-
+    item.onclick = () => callbackClique(cidadeItem);
     el.appendChild(item);
   });
 }
@@ -190,7 +153,6 @@ export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCal
   if (elementoHoraAtual && containerHoras) {
     setTimeout(() => {
       const deslocamentoEsquerda = elementoHoraAtual.offsetLeft - containerHoras.offsetLeft;
-      
       containerHoras.scrollTo({
         left: deslocamentoEsquerda,
         behavior: "smooth"

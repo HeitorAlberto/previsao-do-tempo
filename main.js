@@ -1,30 +1,6 @@
 import { normalizarTexto } from './utils.js';
-import { fetchPrevisao, processarDadosPrevisao } from './api.js';
+import { fetchPrevisao, processarDadosPrevisao, buscarCidadesAPI, formatarLocalizacao } from './api.js';
 import { renderizarHistoricoUI, renderizarCidadeUI } from './ui.js';
-
-// Função integrada de Geocoding para o Autocomplete Global
-async function obterCidadesDaAPI(termo) {
-  if (!termo) return [];
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(termo)}&count=6&language=pt`;
-  
-  try {
-    const resposta = await fetch(url);
-    const dados = await resposta.json();
-    if (!dados.results) return [];
-    
-    return dados.results.map(cidade => ({
-      id: cidade.id,
-      nome: cidade.name,
-      pais: cidade.country_code ? cidade.country_code.toUpperCase() : "",
-      regiao: cidade.admin1 || "",
-      latitude: cidade.latitude,
-      longitude: cidade.longitude
-    }));
-  } catch (erro) {
-    console.error("Erro na busca de cidades:", erro);
-    return [];
-  }
-}
 
 // Estado global da aplicação
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
@@ -56,28 +32,8 @@ function salvarHistorico() {
 }
 
 function renderizarHistorico() {
-  /**
-   * Função simulada ajustada: 
-   * Formata de maneira limpa o texto complementar do histórico (ex: "SP - BR" ou "Texas - US").
-   * Remove termos como "State of" que a API Open-Meteo retorna para o Brasil.
-   */
-  const ufFromCodeSimulado = (cidade) => {
-    if (!cidade) return "";
-    
-    let regiaoLimpa = cidade.regiao || "";
-    // Limpa o prefixo "State of " caso a API retorne em inglês para estados brasileiros
-    if (regiaoLimpa.toLowerCase().startsWith("state of ")) {
-      regiaoLimpa = regiaoLimpa.substring(9);
-    }
-
-    if (regiaoLimpa && cidade.pais) {
-      return `${regiaoLimpa}, ${cidade.pais}`;
-    }
-    return cidade.pais || regiaoLimpa;
-  };
-
-  // Envia a lista e o formatador visual para o ui.js
-  renderizarHistoricoUI(historico, historico, ufFromCodeSimulado, buscarPrevisaoOpenMeteo);
+  // Envia a lista e a função de clique direto para a interface do ui.js
+  renderizarHistoricoUI(historico, buscarPrevisaoOpenMeteo);
 }
 
 function atualizarHistorico(cidadeObjeto) {
@@ -107,7 +63,7 @@ async function buscarPrevisaoOpenMeteo(city) {
   if (typeof city === "string" || !city.latitude || !city.longitude) {
     const termoBusca = typeof city === "string" ? city : city.nome;
     titulo.textContent = "⏳ Buscando dados do histórico...";
-    const resultados = await obterCidadesDaAPI(termoBusca);
+    const resultados = await buscarCidadesAPI(termoBusca);
     if (resultados && resultados.length > 0) {
       city = resultados[0];
     } else {
@@ -168,7 +124,7 @@ async function buscarCidade() {
 
   titulo.textContent = "⏳ Buscando...";
   try {
-    const resultados = await obterCidadesDaAPI(termo);
+    const resultados = await buscarCidadesAPI(termo);
     
     if (!resultados || resultados.length === 0) {
       titulo.textContent = "Cidade não encontrada";
@@ -195,19 +151,14 @@ inputEl.addEventListener("input", () => {
 
   timeoutId = setTimeout(async () => {
     try {
-      const filtrados = await obterCidadesDaAPI(valor);
+      const filtrados = await buscarCidadesAPI(valor);
       suggestions.innerHTML = "";
 
       filtrados.slice(0, 6).forEach(c => {
         const item = document.createElement("div");
         
-        let regiaoFiltro = c.regiao;
-        if (regiaoFiltro.toLowerCase().startsWith("state of ")) {
-          regiaoFiltro = regiaoFiltro.substring(9);
-        }
-
-        const localizacao = regiaoFiltro ? `${c.nome}, ${regiaoFiltro}, ${c.pais}` : `${c.nome}, ${c.pais}`;
-        item.textContent = localizacao;
+        // Formata a localização usando a regra centralizada e sem duplicados
+        item.textContent = formatarLocalizacao(c);
 
         item.onclick = () => {
           inputEl.value = c.nome;
