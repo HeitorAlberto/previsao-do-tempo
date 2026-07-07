@@ -71,7 +71,7 @@ function renderizarHistorico() {
     }
 
     if (regiaoLimpa && cidade.pais) {
-      return `${regiaoLimpa} - ${cidade.pais}`;
+      return `${regiaoLimpa}, ${cidade.pais}`;
     }
     return cidade.pais || regiaoLimpa;
   };
@@ -206,7 +206,7 @@ inputEl.addEventListener("input", () => {
           regiaoFiltro = regiaoFiltro.substring(9);
         }
 
-        const localizacao = regiaoFiltro ? `${c.nome}, ${regiaoFiltro} - ${c.pais}` : `${c.nome} - ${c.pais}`;
+        const localizacao = regiaoFiltro ? `${c.nome}, ${regiaoFiltro}, ${c.pais}` : `${c.nome}, ${c.pais}`;
         item.textContent = localizacao;
 
         item.onclick = () => {

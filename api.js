@@ -74,9 +74,9 @@ export function processarDadosPrevisao(data, city) {
   let nomeChave = city.nome;
   
   if (uf) {
-    nomeChave = `${city.nome} - ${uf}`;
+    nomeChave = `${city.nome}, ${uf}`;
   } else if (city.pais) {
-    nomeChave = city.regiao ? `${city.nome}, ${city.regiao} - ${city.pais}` : `${city.nome} - ${city.pais}`;
+    nomeChave = city.regiao ? `${city.nome}, ${city.regiao}, ${city.pais}` : `${city.nome}, ${city.pais}`;
   }
 
   const { hourly } = data;

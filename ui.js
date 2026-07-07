@@ -1,30 +1,31 @@
 import { obterDiaSemana, formatarData } from './utils.js';
 
-
 function descricaoNuvens(percentual) {
-
   if (percentual <= 20) return `Poucas nuvens`;
   if (percentual <= 50) return `Nuvens esparsas`;
   if (percentual <= 80) return `Muitas nuvens`;
   return `Nublado`;
-
 }
 
 /**
  * Gera o HTML padrão para os blocos de períodos (Madrugada, Manhã, Tarde, Noite).
- * Agora renderiza a nuvem com raio de forma dinâmica se houver trovoada no período.
+ * Renderiza o texto de trovoada na última linha do bloco, se houver.
  */
 function gerarHtmlPeriodo(titulo, periodoDados) {
-  const temTrovoadaNoPeriodo = periodoDados.trovoadas === "trovoadas";
+  const temTrovoadaNoPeriodo = periodoDados.trovoadas === "trovoadas" || periodoDados.trovoadas === true;
   
-  // Define uma hora aproximada para o período para ajustar ícones de dia ou noite
   let horaAproximada = "12:00";
   if (titulo.includes("00h - 06h")) horaAproximada = "03:00";
   if (titulo.includes("06h - 12h")) horaAproximada = "09:00";
   if (titulo.includes("12h - 18h")) horaAproximada = "15:00";
   if (titulo.includes("18h - 00h")) horaAproximada = "21:00";
 
-  const nuvens_desc = descricaoNuvens(periodoDados.nuvens_pct, horaAproximada, temTrovoadaNoPeriodo);
+  const nuvens_desc = descricaoNuvens(periodoDados.nuvens_pct);
+  
+  // Cria a última linha condicional para a trovoada
+  const trovoadaHtml = temTrovoadaNoPeriodo 
+    ? `<div style="color: #ff4500; font-weight: bold; margin-top: 2px;">Trovoadas</div>` 
+    : '';
 
   return `
     <div class="periodo">
@@ -34,6 +35,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
         <div style="color: #0085de; font-weight: bolder;">
           ${periodoDados.chuva} mm (${periodoDados.probabilidade}%)
         </div>
+        ${trovoadaHtml}
       </div>
     </div>
   `;
@@ -41,7 +43,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
 
 /**
  * Gera a estrutura HTML dos dados horários com rolagem horizontal.
- * Exibe a intensidade qualitativa da chuva e ícones de trovoada hora a hora.
+ * Exibe o texto de trovoada na última linha de cada hora, se houver.
  */
 function gerarHtmlDadosHorarios(dadosDia) {
   const dh = dadosDia.dadosHorarios;
@@ -57,35 +59,42 @@ function gerarHtmlDadosHorarios(dadosDia) {
 
   for (let h = 0; h < dh.horas.length; h++) {
     const ehHoraAtual = dh.horas[h] === horaAtualBrasil;
-    const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; background-color: #dfdfdf;"' : 'style="font-weight: bolder;"';
+    const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: white; background-color: black"' : 'style="font-weight: bolder;"';
     const idHoraAtual = ehHoraAtual ? 'id="hora-atual-card"' : '';
     const rajadaVento = dh.rajadas?.[h] ? Math.round(dh.rajadas[h]) : 0;
-    const temTrovoadaNaHora = dh.trovoadas?.[h] || false;
+    
+    const temTrovoadaNaHora = dh.trovoadas?.[h] === "trovoadas" || dh.trovoadas?.[h] === true;
+    
+    // Cria a última linha condicional para a trovoada na hora
+    const trovoadaHoraHtml = temTrovoadaNaHora 
+      ? `<div style="color: #ff4500; font-weight: bold; font-size: 11px; margin-top: 2px;">Trovoadas</div>` 
+      : '';
 
-    // Lógica calibrada de escala de intensidade de chuva para uso urbano
     const mmChuva = Number(dh.chuvas[h]);
-    let intensidade = "";
+    let intensidade = "Sem chuva";
 
     if (mmChuva > 0) {
+      
       if (mmChuva <= 1.0) {
-        intensidade = " - Fraca";
+        intensidade = "Chuva Fraca";
       } else if (mmChuva <= 10.0) {
-        intensidade = " - Moderada";
+        intensidade = " Chuva Moderada";
       } else {
-        intensidade = " - Forte";
+        intensidade = "Chuva Forte";
       }
     }
 
     linhasHtml += `
       <div class="horas" ${idHoraAtual}>
         <div class="hora" ${estiloHora}>${dh.horas[h]}</div>
-        <div class="nuvens-desc">${descricaoNuvens(dh.nebulosidade[h], dh.horas[h])}</div>
+        <div class="nuvens-desc">${descricaoNuvens(dh.nebulosidade[h])}</div>
         <div class="hora-info">
           <div>${Math.round(dh.temperaturas[h])}°C</div>
           <div style="color: #0085de">
-            ${mmChuva.toFixed(1)} mm ${intensidade} - ${dh.probabilidades[h]}%
+            ${intensidade} <br> ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%)
           </div>
-          <div style="color: #24a700; font-size: 12px;">💨 ${rajadaVento} km/h</div>
+          <div style="color: #24a700; font-size: 12px;">${rajadaVento} km/h</div>
+          ${trovoadaHoraHtml}
         </div>
       </div>
     `;
@@ -107,30 +116,26 @@ export function renderizarHistoricoUI(historico, dadosCidadesLista, ufFromCode, 
     const item = document.createElement("div");
     item.className = "historico-item";
     
-    // Tratamento para suportar tanto strings antigas quanto novos objetos salvos no localStorage
     const nomeExibicao = typeof cidadeItem === "string" ? cidadeItem : cidadeItem.nome;
     const infoExtra = typeof ufFromCode === "function" ? ufFromCode(cidadeItem) : "";
     
-    item.textContent = infoExtra ? `${nomeExibicao} - ${infoExtra}` : nomeExibicao;
+    item.textContent = infoExtra ? `${nomeExibicao}, ${infoExtra}` : nomeExibicao;
 
     item.onclick = () => {
-      // Se já for o objeto completo da API global, dispara o callback diretamente
       if (typeof cidadeItem === "object" && cidadeItem !== null) {
         callbackClique(cidadeItem);
         return;
       }
 
-      // Fallback para histórico antigo/retrocompatibilidade baseado em busca na lista local
       const city = dadosCidadesLista.find((c) => {
         const uf = typeof ufFromCode === "function" ? ufFromCode(c) : "";
-        const nome = uf ? `${c.nome} - ${uf}` : c.nome;
+        const nome = uf ? `${c.nome}, ${uf}` : c.nome;
         return nome === cidadeItem;
       });
 
       if (city) {
         callbackClique(city);
       } else {
-        // Se não achou na lista local antiga, envia a string pura para o main.js buscar na API
         callbackClique(cidadeItem);
       }
     };
@@ -156,13 +161,11 @@ export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCal
   const podeVoltar = indiceAtual > 0;
   const podeAvancar = indiceAtual < cidadeObj.forecast.length - 1;
 
-  // 1. Atualiza elementos textuais simples
   document.getElementById("dataExibida").textContent = `${obterDiaSemana(d.date)}, ${formatarData(d.date)}`;
   document.getElementById("temperatura").textContent = `${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°`;
   document.getElementById("chuva").textContent = `${d.rain_sum_mm} mm`;
   document.getElementById("vento").textContent = `${Math.round(d.wind_max_kmh)} km/h`;
 
-  // 2. Atualiza os blocos internos complexos dos períodos do dia
   document.getElementById("periodosBloco").innerHTML = `
     ${gerarHtmlPeriodo("00h - 06h", d.p1)}
     ${gerarHtmlPeriodo("06h - 12h", d.p2)}
@@ -170,10 +173,8 @@ export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCal
     ${gerarHtmlPeriodo("18h - 00h", d.p4)}
   `;
 
-  // 3. Atualiza os blocos internos das horas
   document.getElementById("horasBloco").innerHTML = gerarHtmlDadosHorarios(d);
 
-  // 4. Atualiza os botões de navegação e suas opacidades
   const btnVoltar = document.getElementById("btnVoltar");
   const btnAvancar = document.getElementById("btnAvancar");
 
@@ -183,7 +184,6 @@ export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCal
   btnAvancar.disabled = !podeAvancar;
   btnAvancar.style.opacity = podeAvancar ? "1" : ".3";
 
-  // 5. Executa o scroll suave se a hora atual estiver renderizada no carrossel
   const elementoHoraAtual = document.getElementById("hora-atual-card");
   const containerHoras = document.getElementById("horasBloco");
 
@@ -198,9 +198,7 @@ export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCal
     }, 50);
   }
 
-  // Se a função foi ativada por uma busca inicial, limpa o input e atualiza o histórico
   if (typeof atualizarHistoricoCallback === "function") {
-    // Passa o objeto original da cidade de volta para salvar o objeto completo no localStorage
     atualizarHistoricoCallback(cidadeObj._cidadeBruta || { nome: cidadeObj.cidade });
     document.getElementById("cidadeInput").value = "";
     document.getElementById("suggestions").innerHTML = "";
