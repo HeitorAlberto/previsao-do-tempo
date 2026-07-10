@@ -160,10 +160,6 @@ img {
     color: #666;
 }
 
-.info-label {
-    font-size: 16px;
-}
-
 .periodos-bloco {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -176,22 +172,21 @@ img {
     padding: 5px;
     color: rgb(0, 0, 0);
     background-color: rgb(224, 224, 224);
+    border-radius: 4px;
 }
 
 .periodo {
+    padding: 10px 5px;
+    border-radius: 8px;
     background-color: #fff;
-    padding-bottom: 15px;
 }
 
 .periodo, .periodo-infos {
     display: flex;
     flex-direction: column;
+    gap: 8px;
     text-align: center;
     font-size: 18px;
-}
-
-.periodo-infos {
-    gap: 5px;
 }
 
 /* Container de horas corrigido (apenas rolagem horizontal) */
@@ -214,6 +209,8 @@ img {
     gap: 10px;
     text-align: center;
     flex-shrink: 0;
+    border: 1px solid rgb(219, 219, 219);
+    border-radius: 6px;
     padding: 5px;
 }
 
@@ -231,10 +228,12 @@ img {
     font-size: 15px;
     text-align: center;
     padding: 3px;
+    border-radius: 6px;
     width: 100%;
     padding: 5px;
     color: rgb(0, 0, 0);
     background-color: rgb(224, 224, 224);
+    border-radius: 4px;
 }
 
 .indicacao-rolagem {
@@ -333,5 +332,6 @@ img {
     /* Períodos ficam em blocos de 2x2 no mobile */
     .periodos-bloco {
         grid-template-columns: 1fr 1fr;
+        gap: 10px;
     }
 }
