@@ -206,7 +206,7 @@ header h1 {
 }
 
 .temperatura, .vento, .chuva {
-    font-size: 28px;
+    font-size: 16px;
     font-weight: bold;
 }
 
@@ -265,7 +265,6 @@ header h1 {
     flex-direction: column;
     gap: 8px;
     text-align: center;
-    font-size: 16px;
 }
 
 /* Bloco de Horas (Ocupa a outra metade da tela) */
@@ -387,4 +386,5 @@ header h1 {
     .data-row {
         grid-template-columns: 1fr;
     }
+
 }

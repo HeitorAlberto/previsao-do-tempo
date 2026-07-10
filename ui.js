@@ -57,11 +57,11 @@ function gerarHtmlDadosHorarios(dadosDia) {
 
     if (mmChuva > 0) {
       if (mmChuva <= 3.0) {
-        intensidade = "Fraca";
+        intensidade = "Chuva Fraca";
       } else if (mmChuva <= 10.0) {
-        intensidade = "Moderada";
+        intensidade = "Chuva Moderada";
       } else {
-        intensidade = "Forte";
+        intensidade = "Chuva Forte";
       }
     }
 
@@ -71,7 +71,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
         <div class="nuvens-desc">${obterDescricaoNuvens(dh.nebulosidade[h])}</div>
         <div class="hora-info">
           <div class="temperatura">${Math.round(dh.temperaturas[h])}°C</div>
-          <div style="color: #0085de">
+          <div style="color: #0085de; text-align: center">
             ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%) <br> ${intensidade}
           </div>
           <div style="color: #24a700;">${rajadaVento} km/h</div>
