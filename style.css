@@ -167,7 +167,7 @@ img {
 
 .periodo-titulo {
     font-weight: bolder;
-    font-size: 14px;
+    font-size: 18px;
     margin-bottom: 5px;
     padding: 5px;
     color: rgb(0, 0, 0);
@@ -186,7 +186,7 @@ img {
     flex-direction: column;
     gap: 8px;
     text-align: center;
-    font-size: 13px;
+    font-size: 18px;
 }
 
 /* Container de horas corrigido (apenas rolagem horizontal) */
@@ -208,8 +208,10 @@ img {
     align-items: center;
     gap: 10px;
     text-align: center;
-    font-weight: bolder;
     flex-shrink: 0;
+    border: 1px solid rgb(219, 219, 219);
+    border-radius: 6px;
+    padding: 5px;
 }
 
 .hora-info {
@@ -217,9 +219,9 @@ img {
     flex-direction: column;
     gap: 8px;
     align-items: center;
-    min-width: 115px; 
+    min-width: 150px; 
     flex-shrink: 0;
-    font-size: 13px;
+    font-size: 18px;
 }
 
 .hora {
@@ -252,37 +254,30 @@ img {
 
 .nuvens-desc {
     color: #000000;
-    font-weight: bolder;
-    font-size: 12px;
+    font-size: 18px;
     background-color: #ffffff;
     border-radius: 3px;
     padding: 5px;
 }
 
 .temperatura {
-    color: #ff6229;
+    color: red;
     font-size: 20px;
-    font-weight: bolder;
 }
 
 .vento {
     color: #24a700;
     font-size: 20px;
-    font-weight: bolder;
 }
 
 .chuva {
     color: #0085de;
     font-size: 20px;
-    font-weight: bolder;
 }
 
 .trovoadas {
-    background-color: #ffb53f;
-    padding: 5px;
-    border-radius: 6px;
-    text-align: center;
-    font-weight: bolder;
+    color: orangered;
+    margin-top: 2px;
 }
 
 /* Customização para a barra de rolagem horizontal das horas */

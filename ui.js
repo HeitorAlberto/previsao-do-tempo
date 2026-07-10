@@ -9,7 +9,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
   const nuvens_desc = obterDescricaoNuvens(periodoDados.nuvens_pct);
   
   const trovoadaHtml = temTrovoadaNoPeriodo 
-    ? `<div style="color: #ff4500; font-weight: bold; margin-top: 2px;">Trovoadas</div>` 
+    ? `<div class="trovoadas">Trovoadas</div>` 
     : '';
 
   return `
@@ -17,7 +17,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
       <div class="periodo-titulo">${titulo}</div>
       <div class="periodo-infos">
         <div class="nuvens-desc">${nuvens_desc}</div>
-        <div style="color: #0085de; font-weight: bolder;">
+        <div class="chuva" style="font-weight: normal">
           ${periodoDados.chuva} mm (${periodoDados.probabilidade}%)
         </div>
         ${trovoadaHtml}
@@ -49,7 +49,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
     const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
     
     const trovoadaHoraHtml = temTrovoadaNaHora 
-      ? `<div style="color: #ff4500; font-weight: bold; font-size: 11px; margin-top: 2px;">Trovoadas</div>` 
+      ? `<div class="trovoadas">Trovoadas</div>` 
       : '';
 
     const mmChuva = Number(dh.chuvas[h]);
@@ -70,11 +70,11 @@ function gerarHtmlDadosHorarios(dadosDia) {
         <div class="hora" ${estiloHora}>${dh.horas[h]}</div>
         <div class="nuvens-desc">${obterDescricaoNuvens(dh.nebulosidade[h])}</div>
         <div class="hora-info">
-          <div>${Math.round(dh.temperaturas[h])}°C</div>
+          <div class="temperatura">${Math.round(dh.temperaturas[h])}°C</div>
           <div style="color: #0085de">
             ${intensidade} <br> ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%)
           </div>
-          <div style="color: #24a700; font-size: 12px;">${rajadaVento} km/h</div>
+          <div style="color: #24a700;">${rajadaVento} km/h</div>
           ${trovoadaHoraHtml}
         </div>
       </div>
