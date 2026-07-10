@@ -9,42 +9,39 @@
 </head>
 <body>
 
-  <!-- 1. TOPO DA PÁGINA: Identificação e Navegação -->
   <header>
     <h1>Previsão do Tempo</h1>
-    <a href="mapas.html" id="btn-mapas" target="_blank"><h3>Mapas de chuva - Brasil</h3></a>
   </header>
 
-  <!-- 2. PAINEL DE CONTROLE: Busca e Histórico -->
-  <section id="box-search">
+  <div id="box-search">
     <div class="search-wrapper">
       <input id="cidadeInput" placeholder="Digite a cidade" autocomplete="off">
       <div id="suggestions" class="suggestions"></div>
     </div>
+
     <button id="btnBuscar">Buscar</button>
+
     <div id="historico"></div>
-  </section>
 
-  <!-- 3. INFORMAÇÕES DO LOCAL DA CONSULTA -->
-  <section class="local-info">
-    <h2 id="cidade"></h2>
-    <h3 class="info-modelo">Fonte: ECMWF/Open-Meteo API</h3>
-  </section>
+  </div>
 
-  <!-- 4. CONTAINER PRINCIPAL DE DADOS -->
-  <main id="container">
+  
+
+  <h2 id="cidade"></h2>
+
+  <h3 class="info-modelo">Fonte: ECMWF/Open-Meteo API</h3>
+
+  <a href="mapas.html" id="btn-mapas" target="_blank"><h3>Mapas de chuva - Brasil</h3></a>
+
+  <div id="container">
     <div class="card hidden">
       
-      <!-- Navegação de Datas -->
-      <div class="card-header-nav">
-        <h3 style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
-          <button id="btnVoltar" class="btn-nav-card btn-voltar">&larr;</button>
-          <span id="dataExibida" style="flex:1; text-align:center;">--/--/----</span>
-          <button id="btnAvancar" class="btn-nav-card btn-avancar">&rarr;</button>
-        </h3>
-      </div>
+      <h3 style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <button id="btnVoltar" class="btn-nav-card btn-voltar">&larr;</button>
+        <span id="dataExibida" style="flex:1; text-align:center;">--/--/----</span>
+        <button id="btnAvancar" class="btn-nav-card btn-avancar">&rarr;</button>
+      </h3>
 
-      <!-- Métricas Principais do Dia -->
       <div class="data-row">
         <div class="data">
           <div><strong class="info-label">Temperatura</strong></div>
@@ -60,18 +57,15 @@
         </div>
       </div>
 
-      <!-- Detalhamento Temporal -->
-      <div class="detalhes-tempo">
-        <div class="titulo-periodo-hora">Dados por período</div>
-        <div id="periodosBloco" class="periodos-bloco"></div>
+      <div class="titulo-periodo-hora">Dados por período</div>
+      <div id="periodosBloco" class="periodos-bloco"></div>
 
-        <div class="titulo-periodo-hora">Dados por hora</div>
-        <div id="horasBloco" class="card-horas-container"></div>
-        <div class="indicacao-rolagem">&larr; Rolagem lateral &rarr;</div>
-      </div>
+      <div class="titulo-periodo-hora">Dados por hora</div>
+      <div id="horasBloco" class="card-horas-container"></div>
+      <div class="indicacao-rolagem">&larr; Rolagem lateral &rarr;</div>
 
     </div>
-  </main>
+</div>
 
   <script type="module" src="./main.js"></script>
 </body>

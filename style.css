@@ -7,179 +7,140 @@
     font-family: "Google Sans", sans-serif;
 }
 
-body {
-    background-color: #f8f9fa; /* Fundo leve para destacar o painel */
-    color: #333;
-}
-
-/* 1. TOPO INTEGRADO */
 header {
     background-color: black;
     color: #ff6229;
-    padding: 15px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid #ff6229;
+    padding: 20px 0;
 }
 
-header h1 {
-    font-size: 24px;
+h1 {
+    text-align: center;
 }
 
-#btn-mapas {
-    color: #21b45c;
-    text-decoration: none;
-    font-size: 16px;
-}
-
-#btn-mapas h3 {
-    font-weight: 500;
-}
-
-/* 2. BARRA DE BUSCA (Estilo Filtro de Painel) */
 #box-search {
-    display: flex;
+    display: grid;
     justify-content: center;
-    align-items: center;
-    gap: 10px;
-    padding: 20px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    padding: 40px 0;
 }
 
-#cidadeInput {
+#cidadeInput, #btnBuscar {
     font-size: 16px;
-    width: 350px;
-    padding: 12px;
-    text-align: left;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-}
-
-#btnBuscar {
-    font-size: 16px;
-    padding: 12px 24px;
-    background-color: black;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
+    width: 300px;
+    padding: 10px 0;
+    text-align: center;
 }
 
 .search-wrapper {
-    position: relative;
-    width: 350px;
+  position: relative;
+  width: 300px;
 }
 
 .suggestions {
-    border: 1px solid #ccc;
-    max-height: 200px;
-    overflow-y: auto;
-    position: absolute;
-    background: white;
-    width: 100%;
-    z-index: 10;
-    border-radius: 0 0 6px 6px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  border: 1px solid #ccc;
+  max-height: 200px;
+  overflow-y: auto;
+  position: absolute;
+  background: white;
+  width: 100%;
+  z-index: 10;
 }
 
 .suggestions div {
-    padding: 10px;
-    cursor: pointer;
+  padding: 8px;
+  cursor: pointer;
 }
 
 .suggestions div:hover {
-    background: #eee;
+  background: #eee;
 }
 
 #historico {
-    margin: 0;
-    display: flex;
-    gap: 10px;
-    width: auto;
+  margin: 20px auto;
+  width: 300px;
 }
 
 .historico-item {
-    padding: 8px 15px;
-    background-color: #eee;
-    border-radius: 20px;
-    font-size: 14px;
-    border: none;
-    cursor: pointer;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
 }
 
 .historico-item:hover {
-    background: #ddd;
-}
-
-/* 3. TÍTULO E FONTE */
-.local-info {
-    text-align: center;
-    margin-top: 30px;
+  background: #f2f2f2;
 }
 
 #cidade {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 5px;
+    margin-bottom: 40px;
+    text-align: center;
 }
 
-.info-modelo {
-    color: #666;
-    font-size: 14px;
-    font-weight: normal;
+.info-modelo, #btn-mapas {
+    text-align: center;
+    color: #21b45c;
+    margin-bottom: 30px;
+    text-decoration: none;
+    font-size: 16px;
+    display: block; /* Garante alinhamento central */
 }
 
-/* 4. GRID DO PAINEL PRINCIPAL (Aqui acontece a mágica do Dashboard) */
+.hidden {
+    display: none !important;
+}
+
 #container {
-    max-width: 1200px;
-    margin: 30px auto;
+    display: flex;
+    justify-content: center;
     padding: 0 20px;
+    margin-top: 20px;
 }
 
 .card {
-    display: none; /* Controlado pelo JS */
-    grid-template-columns: repeat(12, 1fr); /* Sistema de 12 colunas */
-    gap: 20px;
+    display: none;
     width: 100%;
-}
-
-/* Cabeçalho de Navegação de Datas dentro do Painel */
-.card-header-nav {
-    grid-column: span 12;
+    max-width: 550px; /* Limita a largura máxima do card */
+    gap: 20px;
+    padding-bottom: 30px;
 }
 
 .card h3 {
     text-align: center;
     background-color: #000000;
-    padding: 15px;
+    padding: 12px;
     color: #ffffff;
     border-radius: 8px;
     font-size: 18px;
 }
 
+
 .btn-nav-card {
     background: none; 
     border: none;            
-    color: #ffffff;          
+    color: #ffffff;         
     font-size: 26px;      
     font-weight: 900;   
     cursor: pointer;        
+    outline: none;           
 }
 
 .btn-nav-card:disabled {
+    color: #ffffff;
     opacity: 0.3;           
     cursor: not-allowed;    
 }
 
-/* Linha de Métricas Principais (Ocupa o topo do painel) */
+.btn-nav-card:not([disabled]):active {
+    transform: scale(0.9);
+}
+
+img {
+    width: 50px;
+}
+
+/* Exibe temperatura, chuva e vento lado a lado em telas maiores */
 .data-row {
-    grid-column: span 12;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
+    gap: 15px;
 }
 
 .data {
@@ -187,204 +148,190 @@ header h1 {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 25px 15px;
+    padding: 15px 10px;
     border-radius: 8px;
-    background-color: white;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+    text-align: center;
+    font-size: 14px;
 }
 
 .data div:first-child {
-    margin-bottom: 8px;
+    margin-bottom: 5px;
+    color: #666;
 }
 
 .info-label {
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #718096;
-}
-
-.temperatura, .vento, .chuva {
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.temperatura { color: #e53e3e; }
-.vento { color: #38a169; }
-.chuva { color: #3182ce; }
-
-/* REORGANIZAÇÃO DOS BLOCOS (Lado a Lado no Desktop) */
-.detalhes-tempo {
-    grid-column: span 12;
-    display: grid;
-    grid-template-columns: 1fr; /* Divide a tela em duas colunas */
-    gap: 20px;
-}
-
-/* Força os títulos a se comportarem como seções de painel */
-.titulo-periodo-hora {
-    grid-column: span 1; /* Cada título fica em cima do seu respectivo bloco */
-    text-align: left;
-    font-weight: bold;
-    font-size: 18px;
-    color: #1a202c;
-    margin-bottom: 10px;
-    border-left: 4px solid #ff6229;
-    padding-left: 10px;
-}
-
-.periodos-bloco {
-    grid-column: span 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-    align-content: start;
-}
-
-.periodo {
-    background-color: white;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-}
-
-.periodo-titulo {
-    font-weight: bold;
-    font-size: 14px;
-    padding: 10px;
-    color: #fff;
-    background-color: black;
-    text-align: center;
-}
-
-.periodo-infos {
-    padding: 15px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    text-align: center;
     font-size: 16px;
 }
 
-/* Bloco de Horas (Ocupa a outra metade da tela) */
-.horas-wrapper {
-    grid-column: span 1;
-    display: flex;
-    flex-direction: column;
+.periodos-bloco {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+} 
+
+.periodo-titulo {
+    font-weight: bolder;
+    font-size: 18px;
+    margin-bottom: 5px;
+    padding: 5px;
+    color: rgb(0, 0, 0);
+    background-color: rgb(224, 224, 224);
 }
 
+.periodo {
+    background-color: #fff;
+    padding-bottom: 15px;
+}
+
+.periodo, .periodo-infos {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    font-size: 18px;
+}
+
+.periodo-infos {
+    gap: 5px;
+}
+
+/* Container de horas corrigido (apenas rolagem horizontal) */
 .card-horas-container {
     display: flex;
     flex-direction: row;   
-    padding: 15px;
+    padding-bottom: 20px;
     width: 100%;             
     overflow-x: auto;      
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch; /* Rolagem suave no iOS */
     gap: 15px;
-    background-color: white;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
+/* Colunas individuais de hora dentro do card */
 .card-horas-container .horas {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    flex-shrink: 0;
-    background: #f8f9fa;
-    padding: 10px;
-    border-radius: 6px;
-    border: 1px solid #edf2f7;
-}
-
-.hora {
-    font-size: 14px;
-    font-weight: bold;
+    gap: 10px;
     text-align: center;
-    padding: 6px;
-    width: 100%;
-    color: white;
-    background-color: #4a5568;
-    border-radius: 4px;
+    flex-shrink: 0;
+    padding: 5px;
 }
 
 .hora-info {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
-    min-width: 120px; 
-    font-size: 15px;
+    min-width: 150px; 
+    flex-shrink: 0;
+    font-size: 18px;
 }
 
-.nuvens-desc {
-    font-size: 14px;
-    font-weight: 500;
+.hora {
+    font-size: 15px;
+    text-align: center;
+    padding: 3px;
+    width: 100%;
+    padding: 5px;
+    color: rgb(0, 0, 0);
+    background-color: rgb(224, 224, 224);
 }
 
 .indicacao-rolagem {
-    text-align: right;
+    text-align: center;
     font-size: 12px;
-    font-weight: bold;
-    color: #a0aec0;
-    margin-top: 5px;
+    font-weight: bolder;
+    color: #e0e0e0;
+    margin-top: -20px;
+}
+
+.titulo-periodo-hora {
+    text-align: center;
+    font-weight: bolder;
+    margin-top: 15px;
+    font-size: 16px;
+    color: #333;
+}
+
+.nuvens-desc {
+    color: #000000;
+    font-size: 18px;
+    background-color: #ffffff;
+    border-radius: 3px;
+    padding: 5px;
+}
+
+.temperatura {
+    color: red;
+    font-size: 20px;
+}
+
+.vento {
+    color: #24a700;
+    font-size: 20px;
+}
+
+.chuva {
+    color: #0085de;
+    font-size: 20px;
 }
 
 .trovoadas {
-    font-size: 14px;
-    font-weight: bold;
-    color: #d69e2e;
+    margin-top: 2px;
+    text-shadow: 2px 2px 2px #bbbbbb;
 }
 
-/* Scrollbar do Painel */
-.card-horas-container::-webkit-scrollbar { height: 6px; }
-.card-horas-container::-webkit-scrollbar-track { background: #f1f1f1; }
-.card-horas-container::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 10px; }
-
-.hidden { display: none !important; }
-
-/* 5. RESPONSIVIDADE (Se a tela diminuir, ele volta a empilhar elegantemente) */
-@media (max-width: 900px) { 
-    .detalhes-tempo {
-        grid-template-columns: 1fr;
-    }
-    .titulo-periodo-hora {
-        grid-column: span 1;
-    }
-    .periodos-bloco {
-        grid-column: span 1;
-    }
-    .horas-wrapper {
-        grid-column: span 1;
-    }
+/* Customização para a barra de rolagem horizontal das horas */
+.card-horas-container::-webkit-scrollbar {
+    height: 6px;
 }
 
+.card-horas-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.card-horas-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.card-horas-container::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+/* Responsividade Mobile */
 @media (max-width: 600px) { 
-    header {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-    #box-search {
-        flex-direction: column;
-        width: 100%;
-    }
-    #cidadeInput, .search-wrapper {
-        width: 100%;
-    }
-    #historico {
-        flex-wrap: wrap;
-        justify-content: center;
+    header h1 {
+        font-size: 24px;
     }
 
     #cidade {
         font-size: 20px;
     }
+
+    .card {
+        max-width: 100%;
+    }
+
+    /* No mobile, empilha as informações principais */
     .data-row {
         grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .data {
+        flex-direction: row;
+        justify-content: space-between;
+        padding: 12px 20px;
+    }
+
+    .data div:first-child {
+        margin-bottom: 0;
+    }
+
+    /* Períodos ficam em blocos de 2x2 no mobile */
+    .periodos-bloco {
+        grid-template-columns: 1fr 1fr;
     }
 }

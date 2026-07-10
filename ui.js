@@ -9,7 +9,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
   const nuvens_desc = obterDescricaoNuvens(periodoDados.nuvens_pct);
   
   const trovoadaHtml = temTrovoadaNoPeriodo 
-    ? `<div class="trovoadas">Trovoada</div>` 
+    ? `<div class="trovoadas">⚡⚡⚡</div>` 
     : '';
 
   return `
@@ -49,7 +49,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
     const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
     
     const trovoadaHoraHtml = temTrovoadaNaHora 
-      ? `<div class="trovoadas">Trovoada</div>` 
+      ? `<div class="trovoadas">⚡⚡⚡</div>` 
       : '';
 
     const mmChuva = Number(dh.chuvas[h]);
@@ -57,11 +57,11 @@ function gerarHtmlDadosHorarios(dadosDia) {
 
     if (mmChuva > 0) {
       if (mmChuva <= 3.0) {
-        intensidade = "Fraca";
+        intensidade = "Chuva Fraca";
       } else if (mmChuva <= 10.0) {
-        intensidade = "Moderada";
+        intensidade = "Chuva Moderada";
       } else {
-        intensidade = "Forte";
+        intensidade = "Chuva Forte";
       }
     }
 
@@ -72,7 +72,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
         <div class="hora-info">
           <div class="temperatura">${Math.round(dh.temperaturas[h])}°C</div>
           <div style="color: #0085de">
-            ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%) <br> ${intensidade}
+            ${intensidade} <br> ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%)
           </div>
           <div style="color: #24a700;">${rajadaVento} km/h</div>
           ${trovoadaHoraHtml}
@@ -97,6 +97,7 @@ export function renderizarHistoricoUI(historico, callbackClique) {
     const item = document.createElement("div");
     item.className = "historico-item";
     
+    // Usa o centralizador de strings do parser se o item for um objeto bruto
     item.textContent = typeof cidadeItem === "object" && cidadeItem !== null
       ? formatarLocalizacao(cidadeItem)
       : cidadeItem;
@@ -113,13 +114,12 @@ export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCal
   const card = document.querySelector(".card");
   if (card) {
     card.classList.remove("hidden");
-    card.style.display = "grid"; // Alterado de 'grid' para conversar perfeitamente com o CSS do painel
+    card.style.display = "grid";
   }
 
   const titulo = document.getElementById("cidade");
-  titulo.textContent = `${cidadeObj.cidade}`;
+  titulo.textContent = `📍 ${cidadeObj.cidade}`;
 
-  // CORREÇÃO AQUI: Mudado de cityObj para cidadeObj para sumir com o ReferenceError da linha 125
   const d = cidadeObj.forecast[indiceAtual];
   const podeVoltar = indiceAtual > 0;
   const podeAvancar = indiceAtual < cidadeObj.forecast.length - 1;

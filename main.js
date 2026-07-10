@@ -62,8 +62,7 @@ async function buscarPrevisaoOpenMeteo(city) {
   // Se o histórico antigo contiver strings ou dados sem coordenadas, recupera via API dinamicamente
   if (typeof city === "string" || !city.latitude || !city.longitude) {
     const termoBusca = typeof city === "string" ? city : city.nome;
-    // Modificado: Remoção do emoji de ampulheta
-    titulo.textContent = "Buscando dados do histórico...";
+    titulo.textContent = "⏳ Buscando dados do histórico...";
     const resultados = await buscarCidadesAPI(termoBusca);
     if (resultados && resultados.length > 0) {
       city = resultados[0];
@@ -75,8 +74,7 @@ async function buscarPrevisaoOpenMeteo(city) {
 
   if (carregando) return;
   carregando = true;
-  // Modificado: Remoção do emoji de ampulheta
-  titulo.textContent = "Carregando...";
+  titulo.textContent = "⏳ Carregando...";
 
   try {
     const data = await fetchPrevisao(city);
@@ -124,8 +122,7 @@ async function buscarCidade() {
   const termo = inputEl.value.trim();
   if (!termo) return;
 
-  // Modificado: Remoção do emoji de ampulheta
-  titulo.textContent = "Buscando...";
+  titulo.textContent = "⏳ Buscando...";
   try {
     const resultados = await buscarCidadesAPI(termo);
     
