@@ -276,8 +276,8 @@ img {
 }
 
 .trovoadas {
-    color: orangered;
     margin-top: 2px;
+    text-shadow: 2px 2px 2px #bbbbbb;
 }
 
 /* Customização para a barra de rolagem horizontal das horas */

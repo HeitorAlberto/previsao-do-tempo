@@ -9,7 +9,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
   const nuvens_desc = obterDescricaoNuvens(periodoDados.nuvens_pct);
   
   const trovoadaHtml = temTrovoadaNoPeriodo 
-    ? `<div class="trovoadas">Trovoadas</div>` 
+    ? `<div class="trovoadas">⚡⚡⚡</div>` 
     : '';
 
   return `
@@ -49,7 +49,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
     const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
     
     const trovoadaHoraHtml = temTrovoadaNaHora 
-      ? `<div class="trovoadas">Trovoadas</div>` 
+      ? `<div class="trovoadas">⚡⚡⚡</div>` 
       : '';
 
     const mmChuva = Number(dh.chuvas[h]);
