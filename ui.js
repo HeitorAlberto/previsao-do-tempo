@@ -133,8 +133,20 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
 
+    // Calcula a média de nuvens do dia com base nos 4 períodos da resposta
+    const mediaNuvens = (d.p1.nuvens_pct + d.p2.nuvens_pct + d.p3.nuvens_pct + d.p4.nuvens_pct) / 4;
+
+    let classeClima = "";
+    if (mediaNuvens < 30) {
+        classeClima = "clima-limpo";    // Poucas nuvens (Dia Claro)
+    } else if (mediaNuvens <= 70) {
+        classeClima = "clima-misto";    // Muitas nuvens
+    } else {
+        classeClima = "clima-nublado";  // Nublado
+    }
+
     card.innerHTML = `
-      <div class="card-header-linha ${classeFimSemana}">
+      <div class="card-header-linha ${classeFimSemana} ${classeClima}">
         <div class="dia-data">${textoData}</div>
         <div style="color: #ff6229;">🌡️ ${textoTemp}</div>
         <div style="color: #0085de;">💧 ${textoChuva}</div>

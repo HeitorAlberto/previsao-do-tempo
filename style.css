@@ -124,11 +124,28 @@ h1 {
     display: grid;
     grid-template-columns: 1.5fr 1fr 1fr 1fr;
     align-items: center;
-    padding: 15px;
+    background-color: #ffffff; /* Fundo sempre branco */
+    padding: 15px 15px 15px 10px; /* Reduzimos um pouco o padding esquerdo para equilibrar com a borda */
     font-size: 12px;
     text-align: center;
     border-bottom: 1px solid #eee;
-    transition: background-color 0.2s;
+    border-left: 4px solid transparent; /* Cria o espaço da borda lateral esquerda */
+    transition: border-color 0.3s ease; /* Transição suave na cor da borda */
+}
+
+/* ☀️ Borda Amarela/Laranja para Poucas Nuvens (Dia Claro) */
+.card-header-linha.clima-limpo {
+    border-left-color: #ffb300; 
+}
+
+/* ⛅ Borda Azul Clara para Muitas Nuvens (Sol entre nuvens) */
+.card-header-linha.clima-misto {
+    border-left-color: #2196f3; 
+}
+
+/* ☁️ Borda Cinza Neutra para Nublado (Tempo fechado) */
+.card-header-linha.clima-nublado {
+    border-left-color: #9e9e9e; 
 }
 
 .card-header-linha .dia-data {
