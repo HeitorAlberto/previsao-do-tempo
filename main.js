@@ -5,9 +5,6 @@ import { renderizarHistoricoUI, renderizarCidadeUI } from './ui.js';
 // Estado global da aplicação
 let historico = JSON.parse(localStorage.getItem("historico")) || [];
 let carregando = false;
-
-// Controle de paginação dos dias
-let diaAtualIndex = 0; 
 let dadosPrevisaoGlobais = null; 
 
 const inputEl = document.getElementById("cidadeInput");
@@ -32,14 +29,12 @@ function salvarHistorico() {
 }
 
 function renderizarHistorico() {
-  // Envia a lista e a função de clique direto para a interface do ui.js
   renderizarHistoricoUI(historico, buscarPrevisaoOpenMeteo);
 }
 
 function atualizarHistorico(cidadeObjeto) {
   if (!cidadeObjeto || !cidadeObjeto.nome) return;
 
-  // Filtra duplicados de forma estrita protegendo contra objetos quebrados
   historico = historico.filter(c => {
     if (!c) return false;
     if (typeof c === 'string') return c !== cidadeObjeto.nome;
@@ -59,7 +54,6 @@ function atualizarHistorico(cidadeObjeto) {
 async function buscarPrevisaoOpenMeteo(city) {
   if (!city) return;
 
-  // Se o histórico antigo contiver strings ou dados sem coordenadas, recupera via API dinamicamente
   if (typeof city === "string" || !city.latitude || !city.longitude) {
     const termoBusca = typeof city === "string" ? city : city.nome;
     titulo.textContent = "⏳ Buscando dados do histórico...";
@@ -80,10 +74,7 @@ async function buscarPrevisaoOpenMeteo(city) {
     const data = await fetchPrevisao(city);
     dadosPrevisaoGlobais = processarDadosPrevisao(data, city);
     
-    diaAtualIndex = 0; 
-
-    renderizarCidadeUI(dadosPrevisaoGlobais, diaAtualIndex, atualizarHistorico);
-    configurarBotoesNavegacao();
+    renderizarCidadeUI(dadosPrevisaoGlobais, 0, atualizarHistorico);
 
   } catch (e) {
     console.error(e);
@@ -91,28 +82,6 @@ async function buscarPrevisaoOpenMeteo(city) {
   } finally {
     carregando = false;
   }
-}
-
-/**
- * Configura os cliques dos botões de avançar e voltar do HTML
- */
-function configurarBotoesNavegacao() {
-  const btnVoltar = document.getElementById("btnVoltar");
-  const btnAvancar = document.getElementById("btnAvancar");
-
-  btnVoltar.onclick = () => {
-    if (diaAtualIndex > 0) {
-      diaAtualIndex--;
-      renderizarCidadeUI(dadosPrevisaoGlobais, diaAtualIndex);
-    }
-  };
-
-  btnAvancar.onclick = () => {
-    if (dadosPrevisaoGlobais && dadosPrevisaoGlobais.forecast && diaAtualIndex < dadosPrevisaoGlobais.forecast.length - 1) { 
-      diaAtualIndex++;
-      renderizarCidadeUI(dadosPrevisaoGlobais, diaAtualIndex);
-    }
-  };
 }
 
 /**
@@ -157,7 +126,6 @@ inputEl.addEventListener("input", () => {
       filtrados.slice(0, 6).forEach(c => {
         const item = document.createElement("div");
         
-        // Formata a localização usando a regra centralizada e sem duplicados
         item.textContent = formatarLocalizacao(c);
 
         item.onclick = () => {

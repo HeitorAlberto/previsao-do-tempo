@@ -7,6 +7,10 @@
     font-family: "Google Sans", sans-serif;
 }
 
+body {
+    padding-bottom: 50px;
+}
+
 header {
     background-color: black;
     color: #ff6229;
@@ -24,7 +28,7 @@ h1 {
 }
 
 #cidadeInput, #btnBuscar {
-    font-size: 16px;
+    font-size: 12px;
     width: 300px;
     padding: 10px 0;
     text-align: center;
@@ -79,8 +83,8 @@ h1 {
     color: #21b45c;
     margin-bottom: 30px;
     text-decoration: none;
-    font-size: 16px;
-    display: block; /* Garante alinhamento central */
+    font-size: 12px;
+    display: block;
 }
 
 .hidden {
@@ -89,58 +93,71 @@ h1 {
 
 #container {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
     padding: 0 20px;
     margin-top: 20px;
+    width: 100%;
 }
 
 .card {
-    display: none;
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    max-width: 550px; /* Limita a largura máxima do card */
-    gap: 20px;
-    padding-bottom: 30px;
-}
-
-.card h3 {
-    text-align: center;
-    background-color: #000000;
-    padding: 12px;
-    color: #ffffff;
+    max-width: 750px;
+    border: 1px solid #ddd;
     border-radius: 8px;
-    font-size: 18px;
+    overflow: hidden;
+    background: #fff;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease;
+    padding-bottom: 0;
 }
 
-
-.btn-nav-card {
-    background: none; 
-    border: none;            
-    color: #ffffff;         
-    font-size: 26px;      
-    font-weight: 900;   
-    cursor: pointer;        
-    outline: none;           
+.card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.btn-nav-card:disabled {
-    color: #ffffff;
-    opacity: 0.3;           
-    cursor: not-allowed;    
+/* Linhas agora com fundo branco e texto preto por padrão */
+.card-header-linha {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    align-items: center;
+    padding: 15px;
+    font-size: 12px;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
 }
 
-.btn-nav-card:not([disabled]):active {
-    transform: scale(0.9);
+.card-header-linha .dia-data {
+    text-align: left;
+    font-weight: bold;
+    padding-left: 10px;
+    color: #000000;
+}
+
+/* Destestaque dourado para fins de semana (Sáb/Dom) */
+.card-header-linha.fim-semana .dia-data {
+    color: #d4af37; /* Tom dourado elegante e legível no fundo branco */
+}
+
+.card-content {
+    display: none; 
+    padding: 20px;
+    flex-direction: column;
+    gap: 20px;
+    background-color: #fafafa;
+    cursor: default;
+}
+
+.card.active .card-content {
+    display: flex;
 }
 
 img {
     width: 50px;
-}
-
-/* Exibe temperatura, chuva e vento lado a lado em telas maiores */
-.data-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 15px;
 }
 
 .data {
@@ -152,7 +169,7 @@ img {
     border-radius: 8px;
     border: 1px solid #eee;
     text-align: center;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .data div:first-child {
@@ -162,12 +179,13 @@ img {
 
 .periodos-bloco {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
 } 
 
 .periodo-titulo {
     font-weight: bolder;
-    font-size: 18px;
+    font-size: 12px;
     margin-bottom: 5px;
     padding: 5px;
     color: rgb(0, 0, 0);
@@ -186,10 +204,9 @@ img {
     flex-direction: column;
     gap: 8px;
     text-align: center;
-    font-size: 18px;
+    font-size: 12px;
 }
 
-/* Container de horas corrigido (apenas rolagem horizontal) */
 .card-horas-container {
     display: flex;
     flex-direction: row;   
@@ -197,11 +214,10 @@ img {
     width: 100%;             
     overflow-x: auto;      
     scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch; /* Rolagem suave no iOS */
+    -webkit-overflow-scrolling: touch;
     gap: 15px;
 }
 
-/* Colunas individuais de hora dentro do card */
 .card-horas-container .horas {
     display: flex;
     flex-direction: column;
@@ -221,11 +237,11 @@ img {
     align-items: center;
     min-width: 150px; 
     flex-shrink: 0;
-    font-size: 18px;
+    font-size: 12px;
 }
 
 .hora {
-    font-size: 15px;
+    font-size: 12px;
     text-align: center;
     padding: 3px;
     border-radius: 6px;
@@ -248,13 +264,13 @@ img {
     text-align: center;
     font-weight: bolder;
     margin-top: 15px;
-    font-size: 16px;
+    font-size: 12px;
     color: #333;
 }
 
 .nuvens-desc {
     color: #000000;
-    font-size: 18px;
+    font-size: 12px;
     background-color: #ffffff;
     border-radius: 3px;
     padding: 5px;
@@ -262,17 +278,14 @@ img {
 
 .temperatura {
     color: red;
-    font-size: 20px;
 }
 
 .vento {
     color: #24a700;
-    font-size: 20px;
 }
 
 .chuva {
     color: #0085de;
-    font-size: 20px;
 }
 
 .trovoadas {
@@ -280,7 +293,6 @@ img {
     text-shadow: 2px 2px 2px #bbbbbb;
 }
 
-/* Customização para a barra de rolagem horizontal das horas */
 .card-horas-container::-webkit-scrollbar {
     height: 6px;
 }
@@ -308,30 +320,16 @@ img {
     #cidade {
         font-size: 20px;
     }
-
-    .card {
-        max-width: 100%;
+    
+    .card-header-linha, .dia-data {
+        padding-left: 0;
+        font-size: 12px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+        width: 100%;
     }
 
-    /* No mobile, empilha as informações principais */
-    .data-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .data {
-        flex-direction: row;
-        justify-content: space-between;
-        padding: 12px 20px;
-    }
-
-    .data div:first-child {
-        margin-bottom: 0;
-    }
-
-    /* Períodos ficam em blocos de 2x2 no mobile */
     .periodos-bloco {
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
+        grid-template-columns: 1fr;
     }
 }

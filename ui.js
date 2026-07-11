@@ -29,7 +29,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
 /**
  * Gera a estrutura HTML dos dados horários com rolagem horizontal.
  */
-function gerarHtmlDadosHorarios(dadosDia) {
+function gerarHtmlDadosHorarios(dadosDia, cardId) {
   const dh = dadosDia.dadosHorarios;
   if (!dh || !dh.horas) return '';
 
@@ -44,7 +44,7 @@ function gerarHtmlDadosHorarios(dadosDia) {
   for (let h = 0; h < dh.horas.length; h++) {
     const ehHoraAtual = dh.horas[h] === horaAtualBrasil;
     const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: white; background-color: black"' : 'style="font-weight: bolder;"';
-    const idHoraAtual = ehHoraAtual ? 'id="hora-atual-card"' : '';
+    const idHoraAtual = ehHoraAtual ? `id="hora-atual-card-${cardId}"` : '';
     const rajadaVento = dh.rajadas?.[h] ? Math.round(dh.rajadas[h]) : 0;
     const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
     
@@ -97,7 +97,6 @@ export function renderizarHistoricoUI(historico, callbackClique) {
     const item = document.createElement("div");
     item.className = "historico-item";
     
-    // Usa o centralizador de strings do parser se o item for um objeto bruto
     item.textContent = typeof cidadeItem === "object" && cidadeItem !== null
       ? formatarLocalizacao(cidadeItem)
       : cidadeItem;
@@ -108,57 +107,84 @@ export function renderizarHistoricoUI(historico, callbackClique) {
 }
 
 /**
- * Renderiza os dados do dia selecionado usando a estrutura fixa do HTML
+ * Renderiza todos os dias lado a lado em linha de forma expansível
  */
-export function renderizarCidadeUI(cidadeObj, indiceAtual, atualizarHistoricoCallback) {
-  const card = document.querySelector(".card");
-  if (card) {
-    card.classList.remove("hidden");
-    card.style.display = "grid";
-  }
+export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistoricoCallback) {
+  const container = document.getElementById("container");
+  if (!container) return;
+
+  container.innerHTML = ""; 
 
   const titulo = document.getElementById("cidade");
   titulo.textContent = `📍 ${cidadeObj.cidade}`;
 
-  const d = cidadeObj.forecast[indiceAtual];
-  const podeVoltar = indiceAtual > 0;
-  const podeAvancar = indiceAtual < cidadeObj.forecast.length - 1;
+  cidadeObj.forecast.forEach((d, index) => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.dataset.index = index;
 
-  document.getElementById("dataExibida").textContent = `${obterDiaSemana(d.date)}, ${formatarData(d.date)}`;
-  document.getElementById("temperatura").textContent = `${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°`;
-  document.getElementById("chuva").textContent = `${d.rain_sum_mm} mm`;
-  document.getElementById("vento").textContent = `${Math.round(d.wind_max_kmh)} km/h`;
+    const diaSemana = obterDiaSemana(d.date);
+    const textoData = `${diaSemana}, ${formatarData(d.date)}`;
+    const textoTemp = `${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°`;
+    const textoChuva = `${d.rain_sum_mm} mm`;
+    const textoVento = `${Math.round(d.wind_max_kmh)} km/h`;
 
-  document.getElementById("periodosBloco").innerHTML = `
-    ${gerarHtmlPeriodo("00h - 06h", d.p1)}
-    ${gerarHtmlPeriodo("06h - 12h", d.p2)}
-    ${gerarHtmlPeriodo("12h - 18h", d.p3)}
-    ${gerarHtmlPeriodo("18h - 00h", d.p4)}
-  `;
+    // Verifica se a string do dia da semana corresponde a Sábado ou Domingo
+    const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
+    const classeFimSemana = ehFimSemana ? "fim-semana" : "";
 
-  document.getElementById("horasBloco").innerHTML = gerarHtmlDadosHorarios(d);
+    card.innerHTML = `
+      <div class="card-header-linha ${classeFimSemana}">
+        <div class="dia-data">${textoData}</div>
+        <div style="color: #ff6229;">🌡️ ${textoTemp}</div>
+        <div style="color: #0085de;">💧 ${textoChuva}</div>
+        <div style="color: #24a700;">🍃 ${textoVento}</div>
+      </div>
+      
+      <div class="card-content">
+        <div class="titulo-periodo-hora">Dados por período</div>
+        <div class="periodos-bloco">
+          ${gerarHtmlPeriodo("00h - 06h", d.p1)}
+          ${gerarHtmlPeriodo("06h - 12h", d.p2)}
+          ${gerarHtmlPeriodo("12h - 18h", d.p3)}
+          ${gerarHtmlPeriodo("18h - 00h", d.p4)}
+        </div>
 
-  const btnVoltar = document.getElementById("btnVoltar");
-  const btnAvancar = document.getElementById("btnAvancar");
+        <div class="titulo-periodo-hora">Dados por hora</div>
+        <div id="horasBloco-${index}" class="card-horas-container">
+          ${gerarHtmlDadosHorarios(d, index)}
+        </div>
+        <div class="indicacao-rolagem">&larr; Rolagem lateral &rarr;</div>
+      </div>
+    `;
 
-  btnVoltar.disabled = !podeVoltar;
-  btnVoltar.style.opacity = podeVoltar ? "1" : ".3";
+    card.addEventListener("click", (e) => {
+      if (e.target.closest('.card-content')) return;
 
-  btnAvancar.disabled = !podeAvancar;
-  btnAvancar.style.opacity = podeAvancar ? "1" : ".3";
+      const estaAtivo = card.classList.contains("active");
+      
+      document.querySelectorAll(".card").forEach(c => c.classList.remove("active"));
 
-  const elementoHoraAtual = document.getElementById("hora-atual-card");
-  const containerHoras = document.getElementById("horasBloco");
+      if (!estaAtivo) {
+        card.classList.add("active");
 
-  if (elementoHoraAtual && containerHoras) {
-    setTimeout(() => {
-      const deslocamentoEsquerda = elementoHoraAtual.offsetLeft - containerHoras.offsetLeft;
-      containerHoras.scrollTo({
-        left: deslocamentoEsquerda,
-        behavior: "smooth"
-      });
-    }, 50);
-  }
+        const elementoHoraAtual = document.getElementById(`hora-atual-card-${index}`);
+        const containerHoras = document.getElementById(`horasBloco-${index}`);
+
+        if (elementoHoraAtual && containerHoras) {
+          setTimeout(() => {
+            const deslocamentoEsquerda = elementoHoraAtual.offsetLeft - containerHoras.offsetLeft;
+            containerHoras.scrollTo({
+              left: deslocamentoEsquerda,
+              behavior: "smooth"
+            });
+          }, 50);
+        }
+      }
+    });
+
+    container.appendChild(card);
+  });
 
   if (typeof atualizarHistoricoCallback === "function") {
     atualizarHistoricoCallback(cidadeObj._cidadeBruta || { nome: cidadeObj.cidade });
