@@ -148,18 +148,31 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     card.innerHTML = `
       <div class="card-header-linha ${classeFimSemana} ${classeClima}">
         <div class="dia-data">${textoData}</div>
-        <div class="textoTemp" >🌡️ ${textoTemp}</div>
-        <div class="textoChuva">💧 ${textoChuva}</div>
-        <div class="textoVento">🍃 ${textoVento}</div>
-      </div>
+
+        <div class="textoTemp" >
+         <div class="rotulo-dados">Temperatura</div>
+         <div>${textoTemp}</div>
+        </div>
+        
+        <div class="textoChuva">
+          <div class="rotulo-dados">Chuva </div>
+          <div>${textoChuva}</div>
+        </div>
+        
+        <div class="textoVento">
+          <div class="rotulo-dados">Rajadas vento</div>
+          <div>${textoVento}</div>
+        </div>
+      
+        </div>
       
       <div class="card-content">
         <div class="titulo-periodo-hora">Dados por período</div>
         <div class="periodos-bloco">
-          ${gerarHtmlPeriodo("00h - 06h", d.p1)}
-          ${gerarHtmlPeriodo("06h - 12h", d.p2)}
-          ${gerarHtmlPeriodo("12h - 18h", d.p3)}
-          ${gerarHtmlPeriodo("18h - 00h", d.p4)}
+          ${gerarHtmlPeriodo("00h", d.p1)}
+          ${gerarHtmlPeriodo("06h", d.p2)}
+          ${gerarHtmlPeriodo("12h", d.p3)}
+          ${gerarHtmlPeriodo("18h", d.p4)}
         </div>
 
         <div class="titulo-periodo-hora">Dados por hora</div>
