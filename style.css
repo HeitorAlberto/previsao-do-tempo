@@ -115,6 +115,27 @@ h1 {
     padding-bottom: 0;
 }
 
+.textoTemp {
+    background-color: rgb(255, 169, 159);
+    width: 90px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.textoChuva {
+    background-color: rgb(193, 237, 255);
+    width: 90px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.textoVento {
+    background-color: rgb(207, 255, 159);
+    width: 90px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
 .card:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
@@ -140,7 +161,7 @@ h1 {
 
 /* ⛅ Borda Azul Clara para Muitas Nuvens (Sol entre nuvens) */
 .card-header-linha.clima-misto {
-    border-left-color: #2196f3; 
+    border-left-color: #b2dcff; 
 }
 
 /* ☁️ Borda Cinza Neutra para Nublado (Tempo fechado) */

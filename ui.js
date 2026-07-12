@@ -148,9 +148,9 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     card.innerHTML = `
       <div class="card-header-linha ${classeFimSemana} ${classeClima}">
         <div class="dia-data">${textoData}</div>
-        <div style="color: #ff6229;">🌡️ ${textoTemp}</div>
-        <div style="color: #0085de;">💧 ${textoChuva}</div>
-        <div style="color: #24a700;">🍃 ${textoVento}</div>
+        <div class="textoTemp" >🌡️ ${textoTemp}</div>
+        <div class="textoChuva">💧 ${textoChuva}</div>
+        <div class="textoVento">🍃 ${textoVento}</div>
       </div>
       
       <div class="card-content">
