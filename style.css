@@ -115,27 +115,6 @@ h1 {
     padding-bottom: 0;
 }
 
-.textoTemp {
-    background-color: rgb(255, 169, 159);
-    width: 90px;
-    padding: 5px;
-    border-radius: 5px;
-}
-
-.textoChuva {
-    background-color: rgb(193, 237, 255);
-    width: 90px;
-    padding: 5px;
-    border-radius: 5px;
-}
-
-.textoVento {
-    background-color: rgb(207, 255, 159);
-    width: 90px;
-    padding: 5px;
-    border-radius: 5px;
-}
-
 .card:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
@@ -186,7 +165,6 @@ h1 {
     padding: 20px;
     flex-direction: column;
     gap: 20px;
-    background-color: #fafafa;
     cursor: default;
 }
 
@@ -357,6 +335,16 @@ img {
 
     #cidade {
         font-size: 20px;
+    }
+
+    .card-header-linha {
+        justify-content: center;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .dia-data {
+        justify-self: center;
     }
     
     .card-header-linha, .dia-data {
