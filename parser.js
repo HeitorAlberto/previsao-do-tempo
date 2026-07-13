@@ -10,14 +10,19 @@ const DIAS_PREVISAO = 10;
 export function formatarLocalizacao(cidadeObj) {
   if (!cidadeObj) return "";
   
-  // Pega a região (admin1) e o país diretamente do objeto
+  // 1. Identifica o nome da cidade
+  const cidade = cidadeObj.name || cidadeObj.nome || "";
+  
+  // 2. Coleta região e país
   const regiao = cidadeObj.admin1 || cidadeObj.regiao || "";
   const pais = cidadeObj.country_code?.toUpperCase() || cidadeObj.pais || "";
 
-  const partes = [cidadeObj.name || cidadeObj.nome, regiao, pais];
+  // 3. Agrupa o "Estado, País" removendo duplicados e vazios
+  const detalhes = [...new Set([regiao, pais])].filter(Boolean).join(", ");
   
-  // O Set remove itens duplicados se houver conflito (ex: Região idêntica à cidade)
-  return [...new Set(partes)].filter(Boolean).join(", ");
+  // 4. Se só tiver a cidade, retorna apenas ela. Se tiver detalhes, junta com <br>
+  if (!cidade) return detalhes;
+  return detalhes ? `<strong>${cidade}</strong> <br>${detalhes}` : cidade;
 }
 
 /**

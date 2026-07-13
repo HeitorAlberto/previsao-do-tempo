@@ -97,7 +97,7 @@ export function renderizarHistoricoUI(historico, callbackClique) {
     const item = document.createElement("div");
     item.className = "historico-item";
     
-    item.textContent = typeof cidadeItem === "object" && cidadeItem !== null
+    item.innerHTML = typeof cidadeItem === "object" && cidadeItem !== null
       ? formatarLocalizacao(cidadeItem)
       : cidadeItem;
 
@@ -116,7 +116,10 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
   container.innerHTML = ""; 
 
   const titulo = document.getElementById("cidade");
-  titulo.textContent = `📍 ${cidadeObj.cidade}`;
+  
+  // ALTERAÇÃO AQUI: Usa o objeto bruto para formatar a localização completa com quebra de linha
+  const dadosLocalizacao = cidadeObj._cidadeBruta || { nome: cidadeObj.cidade };
+  titulo.innerHTML = `📍 ${formatarLocalizacao(dadosLocalizacao)}`;
 
   cidadeObj.forecast.forEach((d, index) => {
     const card = document.createElement("div");
@@ -129,20 +132,18 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const textoChuva = `${d.rain_sum_mm} mm`;
     const textoVento = `${Math.round(d.wind_max_kmh)} km/h`;
 
-    // Verifica se a string do dia da semana corresponde a Sábado ou Domingo
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
 
-    // Calcula a média de nuvens do dia com base nos 4 períodos da resposta
     const mediaNuvens = (d.p1.nuvens_pct + d.p2.nuvens_pct + d.p3.nuvens_pct + d.p4.nuvens_pct) / 4;
 
     let classeClima = "";
     if (mediaNuvens < 30) {
-        classeClima = "clima-limpo";    // Poucas nuvens (Dia Claro)
+        classeClima = "clima-limpo";
     } else if (mediaNuvens <= 70) {
-        classeClima = "clima-misto";    // Muitas nuvens
+        classeClima = "clima-misto";
     } else {
-        classeClima = "clima-nublado";  // Nublado
+        classeClima = "clima-nublado";
     }
 
     card.innerHTML = `
@@ -164,7 +165,7 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
           <div>${textoVento}</div>
         </div>
       
-        </div>
+      </div>
       
       <div class="card-content">
         <div class="titulo-periodo-hora">Dados por período</div>
