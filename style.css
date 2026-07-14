@@ -104,8 +104,7 @@ h1 {
 .card {
     display: flex;
     flex-direction: column;
-    width: 100%;
-    max-width: 750px;
+    width: 900px;
     border: 1px solid #ddd;
     border-radius: 8px;
     overflow: hidden;
@@ -126,8 +125,9 @@ h1 {
 
 /* Linhas agora com fundo branco e texto preto por padrão */
 .card-header-linha {
-    display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
     align-items: center;
     background-color: #ffffff; /* Fundo sempre branco */
     padding: 15px 15px 15px 10px; /* Reduzimos um pouco o padding esquerdo para equilibrar com a borda */
@@ -136,6 +136,10 @@ h1 {
     border-bottom: 1px solid #eee;
     border-left: 4px solid transparent; /* Cria o espaço da borda lateral esquerda */
     transition: border-color 0.3s ease; /* Transição suave na cor da borda */
+}
+
+.card-header-linha > div {
+    width: 120px;
 }
 
 /* ☀️ Borda Amarela/Laranja para Poucas Nuvens (Dia Claro) */
@@ -158,6 +162,10 @@ h1 {
     font-weight: bold;
     padding-left: 10px;
     color: #000000;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-content: center;
+    align-items: center;
 }
 
 /* Destestaque dourado para fins de semana (Sáb/Dom) */
@@ -177,9 +185,13 @@ h1 {
     display: flex;
 }
 
-img {
-    width: 50px;
+.texto-nuvens {
+    width: 80px;
+    text-align: right;
+    color: gray;
+    font-weight: bolder;
 }
+
 
 .data {
     display: flex;
@@ -318,45 +330,4 @@ img {
 
 .card-horas-container::-webkit-scrollbar-thumb:hover {
     background: #aaa;
-}
-
-/* Responsividade Mobile */
-@media (max-width: 600px) { 
-    header h1 {
-        font-size: 24px;
-    }
-
-    #cidade {
-        font-size: 20px;
-    }
-
-    .card-header-linha {
-        justify-content: center;
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .dia-data {
-        justify-self: center;
-    }
-    
-    .card-header-linha, .dia-data {
-        padding-left: 0;
-        font-size: 16px;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-        padding-left: 10px;
-        width: 100%;
-    }
-
-    .textoTemp, .textoVento, .textoChuva {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-    }
-
-
-    .periodos-bloco {
-        grid-template-columns: 1fr 1fr;
-    }
 }

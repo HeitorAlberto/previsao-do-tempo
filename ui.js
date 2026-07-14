@@ -85,6 +85,47 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
 }
 
 /**
+ * Define o nome do arquivo de imagem do clima com base na nebulosidade dos 4 períodos.
+ */
+function obterTextoNuvens(d) {
+  const p1 = d.p1.nuvens_pct;
+  const p2 = d.p2.nuvens_pct;
+  const p3 = d.p3.nuvens_pct;
+  const p4 = d.p4.nuvens_pct;
+  
+  const periodos = [p1, p2, p3, p4];
+  
+  // 1. Poucas nuvens: se todos os períodos estiverem abaixo de 30%
+  const todosPoucaNuvem = periodos.every(pct => pct < 30);
+  if (todosPoucaNuvem) {
+    return 'Poucas nuvens';
+  }
+  
+  // 2. Nublado: se todos os períodos estiverem acima de 70%
+  const todosNublado = periodos.every(pct => pct > 70);
+  if (todosNublado) {
+    return 'Nublado';
+  }
+  
+  // 3. Parcialmente nublado: metade acima ou igual a 50% e metade abaixo de 50%
+  const acima50 = periodos.filter(pct => pct >= 50).length;
+  const abaixo50 = periodos.filter(pct => pct < 50).length;
+  if (acima50 === 2 && abaixo50 === 2) {
+    return 'Parcialmente nublado';
+  }
+  
+  // Fallback seguro usando a média caso caia em combinações mistas (ex: 3 períodos altos e 1 baixo)
+  const mediaNuvens = (p1 + p2 + p3 + p4) / 4;
+  if (mediaNuvens < 30) {
+    return 'Poucas nuvens';
+  } else if (mediaNuvens <= 70) {
+    return 'Parcialmente nublado';
+  } else {
+    return 'Nublado';
+  }
+}
+
+/**
  * Renderiza a lista de cidades buscadas recentemente (Histórico)
  */
 export function renderizarHistoricoUI(historico, callbackClique) {
@@ -117,7 +158,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
 
   const titulo = document.getElementById("cidade");
   
-  // ALTERAÇÃO AQUI: Usa o objeto bruto para formatar a localização completa com quebra de linha
   const dadosLocalizacao = cidadeObj._cidadeBruta || { nome: cidadeObj.cidade };
   titulo.innerHTML = `${formatarLocalizacao(dadosLocalizacao)}`;
 
@@ -148,9 +188,13 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
 
     card.innerHTML = `
       <div class="card-header-linha ${classeFimSemana} ${classeClima}">
-        <div class="dia-data">${textoData}</div>
+        <div class="dia-data">
+          <strong>${textoData}</strong>
+        </div>
 
-        <div class="textoTemp" >
+        <div class="texto-nuvens">${obterTextoNuvens(d)}</div>
+
+        <div class="textoTemp">
          <div class="rotulo-dados">Temperatura</div>
          <div>${textoTemp}</div>
         </div>
