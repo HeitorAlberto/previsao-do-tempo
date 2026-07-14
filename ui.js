@@ -119,7 +119,7 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
   
   // ALTERAÇÃO AQUI: Usa o objeto bruto para formatar a localização completa com quebra de linha
   const dadosLocalizacao = cidadeObj._cidadeBruta || { nome: cidadeObj.cidade };
-  titulo.innerHTML = `📍 ${formatarLocalizacao(dadosLocalizacao)}`;
+  titulo.innerHTML = `${formatarLocalizacao(dadosLocalizacao)}`;
 
   cidadeObj.forecast.forEach((d, index) => {
     const card = document.createElement("div");
