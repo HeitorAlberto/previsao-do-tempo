@@ -188,8 +188,9 @@ h1 {
 .texto-nuvens {
     width: 80px;
     text-align: left;
-    color: gray;
     font-weight: bolder;
+    color: #9e9e9e;
+    border-radius: 6px;
 }
 
 
@@ -329,4 +330,82 @@ h1 {
 
 .card-horas-container::-webkit-scrollbar-thumb:hover {
     background: #aaa;
+}
+
+
+
+/* ==========================================
+   MEDIA QUERIES (RESPONSIVIDADE)
+   ========================================== */
+
+/* Tablets e Telas Médias (Até 950px) */
+@media (max-width: 950px) {
+    .card {
+        width: 100%;
+        max-width: 700px; /* Limita um tamanho confortável para tablets */
+    }
+
+    .card-header-linha {
+        gap: 20px; /* Reduz o espaçamento entre as informações da linha */
+        font-size: 14px;
+        flex-wrap: wrap; /* Permite que os elementos quebrem linha se faltar espaço */
+        justify-content: space-between;
+    }
+
+    .card-header-linha > div {
+        width: auto; /* Deixa o conteúdo definir o espaço necessário */
+        min-width: 100px;
+    }
+}
+
+/* Celulares e Telas Pequenas (Até 480px) */
+@media (max-width: 480px) {
+    #box-search {
+        padding: 20px 0;
+    }
+
+    #cidadeInput, #btnBuscar, .search-wrapper {
+        width: 100%; /* Inputs ocupam toda a largura em telas pequenas */
+        max-width: 280px;
+        margin: 0 auto;
+    }
+
+    .card {
+        width: 100%;
+    }
+
+    /* Ajusta a linha do cabeçalho do card para telas muito estreitas */
+    .card-header-linha {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        text-align: left;
+        padding: 12px;
+    }
+
+    .card-header-linha .dia-data {
+        grid-column: span 2; /* Dia e data ganham destaque no topo do card */
+        padding-left: 0;
+        margin-bottom: 5px;
+    }
+
+    /* Ajusta o bloco de períodos de 4 colunas para 2 colunas */
+    .periodos-bloco {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .periodo {
+        border: 1px solid #f0f0f0; /* Um leve contorno para separar os períodos visualmente */
+    }
+
+    /* O container de horas horizontal já possui scroll nativo, 
+       apenas garantimos que ele flua perfeitamente no toque */
+    .card-horas-container {
+        padding-bottom: 15px;
+    }
+    
+    .hora-info {
+        min-width: 130px; /* Um pouco mais estreito para caber mais dados na tela */
+    }
 }
