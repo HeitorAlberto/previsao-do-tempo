@@ -194,7 +194,6 @@ h1 {
     justify-content: center;
     align-items: center;
     padding: 15px 10px;
-    border-radius: 8px;
     border: 1px solid #eee;
     text-align: center;
     font-size: 12px;
@@ -218,12 +217,10 @@ h1 {
     padding: 5px;
     color: rgb(0, 0, 0);
     background-color: rgb(224, 224, 224);
-    border-radius: 4px;
 }
 
 .periodo {
     padding: 10px 5px;
-    border-radius: 8px;
     background-color: #fff;
 }
 
@@ -253,7 +250,6 @@ h1 {
     gap: 10px;
     text-align: center;
     flex-shrink: 0;
-    border-radius: 6px;
     padding: 5px;
 }
 
@@ -271,12 +267,10 @@ h1 {
     font-size: 12px;
     text-align: center;
     padding: 3px;
-    border-radius: 6px;
     width: 100%;
     padding: 5px;
     color: rgb(0, 0, 0);
     background-color: rgb(224, 224, 224);
-    border-radius: 4px;
 }
 
 .indicacao-rolagem {
@@ -298,9 +292,6 @@ h1 {
 .nuvens-desc {
     color: #000000;
     font-size: 12px;
-    background-color: #ffffff;
-    border-radius: 3px;
-    padding: 5px;
 }
 
 
@@ -314,12 +305,10 @@ h1 {
 
 .card-horas-container::-webkit-scrollbar-track {
     background: #f1f1f1;
-    border-radius: 10px;
 }
 
 .card-horas-container::-webkit-scrollbar-thumb {
     background: #ccc;
-    border-radius: 10px;
 }
 
 .card-horas-container::-webkit-scrollbar-thumb:hover {
