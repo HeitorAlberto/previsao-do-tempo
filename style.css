@@ -106,16 +106,10 @@ h1 {
     flex-direction: column;
     width: 900px;
     border: 1px solid #ddd;
-    border-radius: 8px;
     overflow: hidden;
     background: #fff;
     cursor: pointer;
-    transition: box-shadow 0.2s ease;
     padding-bottom: 0;
-}
-
-.card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .rotulo-dados {
@@ -211,6 +205,7 @@ h1 {
     color: #666;
 }
 
+
 .periodos-bloco {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -258,7 +253,6 @@ h1 {
     gap: 10px;
     text-align: center;
     flex-shrink: 0;
-    border: 1px solid rgb(219, 219, 219);
     border-radius: 6px;
     padding: 5px;
 }

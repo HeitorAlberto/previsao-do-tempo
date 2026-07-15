@@ -70,11 +70,11 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
         <div class="hora" ${estiloHora}>${dh.horas[h]}</div>
         <div class="nuvens-desc">${obterDescricaoNuvens(dh.nebulosidade[h])}</div>
         <div class="hora-info">
-          <div class="temperatura">${Math.round(dh.temperaturas[h])}°C</div>
-          <div style="color: #0085de">
+          <div>${Math.round(dh.temperaturas[h])}°C</div>
+          <div>
             ${intensidade} <br> ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%)
           </div>
-          <div style="color: #24a700;">${rajadaVento} km/h</div>
+          <div> Rajadas: ${rajadaVento} km/h</div>
           ${trovoadaHoraHtml}
         </div>
       </div>
