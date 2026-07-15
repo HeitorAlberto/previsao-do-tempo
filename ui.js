@@ -9,7 +9,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
   const nuvens_desc = obterDescricaoNuvens(periodoDados.nuvens_pct);
   
   const trovoadaHtml = temTrovoadaNoPeriodo 
-    ? `<div class="trovoadas">⚡⚡⚡</div>` 
+    ? `<div class="trovoadas">Trovoadas⚡</div>` 
     : '';
 
   return `
@@ -49,7 +49,7 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
     const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
     
     const trovoadaHoraHtml = temTrovoadaNaHora 
-      ? `<div class="trovoadas">⚡⚡⚡</div>` 
+      ? `<div class="trovoadas">Trovoadas⚡</div>` 
       : '';
 
     const mmChuva = Number(dh.chuvas[h]);
@@ -86,6 +86,7 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
 
 /**
  * Define o nome do arquivo de imagem do clima com base na nebulosidade dos 4 períodos.
+ * Adiciona o emoji de raio se houver qualquer previsão de trovoada no dia.
  */
 function obterTextoNuvens(d) {
   const p1 = d.p1.nuvens_pct;
@@ -94,35 +95,41 @@ function obterTextoNuvens(d) {
   const p4 = d.p4.nuvens_pct;
   
   const periodos = [p1, p2, p3, p4];
+  let textoBase = "";
   
   // 1. Poucas nuvens: se todos os períodos estiverem abaixo de 30%
   const todosPoucaNuvem = periodos.every(pct => pct < 30);
   if (todosPoucaNuvem) {
-    return 'Poucas nuvens';
-  }
-  
-  // 2. Nublado: se todos os períodos estiverem acima de 70%
-  const todosNublado = periodos.every(pct => pct > 70);
-  if (todosNublado) {
-    return 'Nublado';
-  }
-  
-  // 3. Parcialmente nublado: metade acima ou igual a 50% e metade abaixo de 50%
-  const acima50 = periodos.filter(pct => pct >= 50).length;
-  const abaixo50 = periodos.filter(pct => pct < 50).length;
-  if (acima50 === 2 && abaixo50 === 2) {
-    return 'Parcialmente nublado';
-  }
-  
-  // Fallback seguro usando a média caso caia em combinações mistas (ex: 3 períodos altos e 1 baixo)
-  const mediaNuvens = (p1 + p2 + p3 + p4) / 4;
-  if (mediaNuvens < 30) {
-    return 'Poucas nuvens';
-  } else if (mediaNuvens <= 70) {
-    return 'Parcialmente nublado';
+    textoBase = 'Poucas nuvens';
   } else {
-    return 'Nublado';
+    // 2. Nublado: se todos os períodos estiverem acima de 70%
+    const todosNublado = periodos.every(pct => pct > 70);
+    if (todosNublado) {
+      textoBase = 'Nublado';
+    } else {
+      // 3. Parcialmente nublado: metade acima ou igual a 50% e metade abaixo de 50%
+      const acima50 = periodos.filter(pct => pct >= 50).length;
+      const abaixo50 = periodos.filter(pct => pct < 50).length;
+      if (acima50 === 2 && abaixo50 === 2) {
+        textoBase = 'Parcialmente nublado';
+      } else {
+        // Fallback seguro usando a média caso caia em combinações mistas (ex: 3 períodos altos e 1 baixo)
+        const mediaNuvens = (p1 + p2 + p3 + p4) / 4;
+        if (mediaNuvens < 30) {
+          textoBase = 'Poucas nuvens';
+        } else if (mediaNuvens <= 70) {
+          textoBase = 'Parcialmente nublado';
+        } else {
+          textoBase = 'Nublado';
+        }
+      }
+    }
   }
+
+  // Verifica se há previsão de trovoadas em qualquer um dos períodos do dia
+  const temTrovoadaNoDia = d.p1.trovoadas === true || d.p2.trovoadas === true || d.p3.trovoadas === true || d.p4.trovoadas === true;
+
+  return temTrovoadaNoDia ? `${textoBase}⚡` : textoBase;
 }
 
 /**

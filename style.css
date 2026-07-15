@@ -187,7 +187,7 @@ h1 {
 
 .texto-nuvens {
     width: 80px;
-    text-align: right;
+    text-align: left;
     color: gray;
     font-weight: bolder;
 }
@@ -311,7 +311,6 @@ h1 {
 
 .trovoadas {
     margin-top: 2px;
-    text-shadow: 2px 2px 2px #bbbbbb;
 }
 
 .card-horas-container::-webkit-scrollbar {
