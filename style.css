@@ -148,7 +148,7 @@ h1 {
 
 /* ☁️ Borda Cinza Neutra para Nublado (Tempo fechado) */
 .card-header-linha.clima-nublado {
-    border-left-color: #686868; 
+    border-left-color: #686868;
 }
 
 .card-header-linha .dia-data {
