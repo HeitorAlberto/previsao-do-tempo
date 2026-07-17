@@ -12,6 +12,15 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
     ? `<div class="trovoadas">Trovoadas⚡</div>` 
     : '';
 
+  // Mapeia diferentes nomenclaturas possíveis para evitar o valor zerado
+  const valorRajada = periodoDados.wind_max_kmh 
+    || periodoDados.rajada 
+    || periodoDados.wind_gust 
+    || periodoDados.rajadas 
+    || 0;
+
+  const rajadaPeriodo = Math.round(Number(valorRajada));
+
   return `
     <div class="periodo">
       <div class="periodo-titulo">${titulo}</div>
@@ -19,6 +28,9 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
         <div class="nuvens-desc">${nuvens_desc}</div>
         <div class="chuva" style="font-weight: normal">
           ${periodoDados.chuva} mm (${periodoDados.probabilidade}%)
+        </div>
+        <div class="vento-periodo" style="font-weight: normal">
+          Rajadas: ${rajadaPeriodo} km/h
         </div>
         ${trovoadaHtml}
       </div>
@@ -39,7 +51,7 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
     minute: "2-digit"
   }).split(":")[0] + ":00";
 
-  let linhasHtml = "";
+  let linesHtml = "";
 
   for (let h = 0; h < dh.horas.length; h++) {
     const ehHoraAtual = dh.horas[h] === horaAtualBrasil;
@@ -65,7 +77,7 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
       }
     }
 
-    linhasHtml += `
+    linesHtml += `
       <div class="horas" ${idHoraAtual}>
         <div class="hora" ${estiloHora}>${dh.horas[h]}</div>
         <div class="nuvens-desc">${obterDescricaoNuvens(dh.nebulosidade[h])}</div>
@@ -81,10 +93,8 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
     `;
   }
 
-  return linhasHtml;
+  return linesHtml;
 }
-
-
 
 /**
  * Renderiza a lista de cidades buscadas recentemente (Histórico)
@@ -136,7 +146,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
 
-
     card.innerHTML = `
       <div class="card-header-linha ${classeFimSemana}">
         <div class="dia-data">
@@ -145,7 +154,7 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
 
        <div class="infos-dia">
          <div class="textoTemp">
-         <div class="rotulo-dados">Temperatura</div>
+         <div class="rotulo-dados">Temperatura (°C)</div>
          <div class="info-valor">${textoTemp}</div>
         </div>
         

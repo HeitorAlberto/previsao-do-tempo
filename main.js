@@ -16,7 +16,7 @@ const titulo = document.getElementById("cidade");
  */
 async function iniciar() {
   try {
-    titulo.textContent = "Busque uma cidade do mundo";
+    titulo.textContent = "Busque uma cidade";
     renderizarHistorico();
   } catch (e) {
     console.error(e);
@@ -56,12 +56,12 @@ async function buscarPrevisaoOpenMeteo(city) {
 
   if (typeof city === "string" || !city.latitude || !city.longitude) {
     const termoBusca = typeof city === "string" ? city : city.nome;
-    titulo.textContent = "⏳ Buscando dados do histórico...";
+    titulo.textContent = "⏳ Buscando dados...";
     const resultados = await buscarCidadesAPI(termoBusca);
     if (resultados && resultados.length > 0) {
       city = resultados[0];
     } else {
-      titulo.textContent = "Erro ao recuperar cidade.";
+      titulo.textContent = "❌ Erro ao recuperar cidade.";
       return;
     }
   }
@@ -78,7 +78,7 @@ async function buscarPrevisaoOpenMeteo(city) {
 
   } catch (e) {
     console.error(e);
-    titulo.textContent = "Erro na previsão.";
+    titulo.textContent = "❌ Erro na previsão.";
   } finally {
     carregando = false;
   }
@@ -96,14 +96,14 @@ async function buscarCidade() {
     const resultados = await buscarCidadesAPI(termo);
     
     if (!resultados || resultados.length === 0) {
-      titulo.textContent = "Cidade não encontrada";
+      titulo.textContent = "❌ Cidade não encontrada";
       return;
     }
 
     buscarPrevisaoOpenMeteo(resultados[0]);
   } catch (error) {
     console.error(error);
-    titulo.textContent = "Erro ao buscar cidade.";
+    titulo.textContent = "❌ Erro ao buscar cidade.";
   }
 }
 

@@ -20,7 +20,7 @@ export async function buscarCidadesAPI(termo) {
     return dados.results.map(cidade => ({
       id: cidade.id,
       nome: cidade.name,
-      pais: cidade.country_code ? cidade.country_code.toUpperCase() : "",
+      pais: city.country_code ? cidade.country_code.toUpperCase() : "",
       regiao: cidade.admin1 || "",
       latitude: cidade.latitude,
       longitude: cidade.longitude
@@ -101,22 +101,26 @@ export function processarDadosPrevisao(data, city) {
     const maxProb = Math.max(...probDia.filter(v => v != null), 0);
     const chuvaTotalGeral = somarValores(chuvaDia);
 
+    // Ajustado para receber e processar as rajadas de vento do período
     const processarPeriodo = (inicio, fim) => {
       const cPeriodo = cloudDia.slice(inicio, fim);
       const rPeriodo = chuvaDia.slice(inicio, fim);
       const codePeriodo = codeDia.slice(inicio, fim);
       const probPeriodo = probDia.slice(inicio, fim);
+      const wPeriodo = windDia.slice(inicio, fim);
 
       const medNuvens = somarValores(cPeriodo) / cPeriodo.length;
       const somChuva = somarValores(rPeriodo);
       const temTrovoada = codePeriodo.some(c => CODIGOS_TROVOADA.includes(c));
       const maxProbPeriodo = Math.max(...probPeriodo.filter(v => v != null), 0);
+      const maxVentoPeriodo = Math.max(...wPeriodo.filter(v => v != null), 0);
 
       return {
         nuvens_pct: Math.round(medNuvens),
         chuva: Number(somChuva.toFixed(1)),
         probabilidade: Math.round(maxProbPeriodo),
-        trovoadas: temTrovoada
+        trovoadas: temTrovoada,
+        wind_max_kmh: maxVentoPeriodo // Aqui salvamos a rajada máxima do período
       };
     };
 

@@ -23,7 +23,7 @@ h1 {
 
 #box-search {
     display: grid;
-    justify-content: center;
+    justify-items: center;
     padding: 40px 0;
 }
 
@@ -60,7 +60,9 @@ h1 {
 
 #historico {
   margin: 20px auto;
-  width: 300px;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
 }
 
 .historico-item {
@@ -84,7 +86,7 @@ h1 {
     color: #21b45c;
     margin-bottom: 30px;
     text-decoration: none;
-    font-size: 12px;
+    font-size: 16px;
     display: block;
 }
 
@@ -323,6 +325,16 @@ h1 {
         width: 100%; /* Inputs ocupam toda a largura em telas pequenas */
         max-width: 280px;
         margin: 0 auto;
+    }
+
+    #historico {
+        max-width: 280px;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .historico-item {
+        max-width: 280px;
     }
 
     .card {
