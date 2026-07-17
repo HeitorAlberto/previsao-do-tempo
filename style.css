@@ -76,6 +76,7 @@ h1 {
 #cidade {
     text-align: center;
     margin-bottom: 40px;
+    font-weight: normal;
 }
 
 .info-modelo, #btn-mapas {
