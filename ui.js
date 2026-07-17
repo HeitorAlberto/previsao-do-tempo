@@ -143,20 +143,22 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
           <strong>${textoData}</strong>
         </div>
 
-        <div class="textoTemp">
+       <div class="infos-dia">
+         <div class="textoTemp">
          <div class="rotulo-dados">Temperatura</div>
-         <div>${textoTemp}</div>
+         <div class="info-valor">${textoTemp}</div>
         </div>
         
         <div class="textoChuva">
-          <div class="rotulo-dados">Chuva </div>
-          <div>${textoChuva}</div>
+          <div class="rotulo-dados">Chuva acumulada </div>
+          <div class="info-valor">${textoChuva}</div>
         </div>
         
         <div class="textoVento">
           <div class="rotulo-dados">Rajadas vento</div>
-          <div>${textoVento}</div>
+          <div class="info-valor">${textoVento}</div>
         </div>
+       </div>
       
       </div>
       
