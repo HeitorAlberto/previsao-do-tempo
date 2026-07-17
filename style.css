@@ -118,9 +118,9 @@ h1 {
 
 /* Linhas agora com fundo branco e texto preto por padrão */
 .card-header-linha {
-    display: flex;
-    flex-direction: row;
-    gap: 50px;
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    gap: 20px;
     align-items: center;
     justify-content: space-between;
     background-color: #ffffff;

@@ -155,7 +155,7 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
         </div>
         
         <div class="textoVento">
-          <div class="rotulo-dados">Rajadas vento</div>
+          <div class="rotulo-dados">Rajadas de vento</div>
           <div class="info-valor">${textoVento}</div>
         </div>
        </div>
