@@ -120,7 +120,7 @@ h1 {
 /* Linhas agora com fundo branco e texto preto por padrão */
 .card-header-linha {
     display: grid;
-    grid-template-columns: 1fr 3fr;
+    grid-template-columns: 1fr 4fr;
     gap: 20px;
     align-items: center;
     justify-content: space-between;
@@ -143,7 +143,7 @@ h1 {
 
 /* Destestaque dourado para fins de semana (Sáb/Dom) */
 .card-header-linha.fim-semana .dia-data {
-    color: #d4af37; /* Tom dourado elegante e legível no fundo branco */
+    color: orangered;
 }
 
 .card-content {
@@ -152,6 +152,7 @@ h1 {
     flex-direction: column;
     gap: 20px;
     cursor: default;
+    background-color: #fafafa;
 }
 
 .card.active .card-content {
@@ -187,13 +188,12 @@ h1 {
     font-size: 12px;
     margin-bottom: 5px;
     padding: 5px;
-    color: rgb(0, 0, 0);
-    background-color: rgb(224, 224, 224);
+    color: #ffffff;
+    background-color: #000000;
 }
 
 .periodo {
     padding: 10px 5px;
-    background-color: #fff;
 }
 
 .periodo, .periodo-infos {
@@ -241,8 +241,8 @@ h1 {
     padding: 3px;
     width: 100%;
     padding: 5px;
-    color: rgb(0, 0, 0);
-    background-color: rgb(224, 224, 224);
+    color: rgb(255, 255, 255);
+    background-color: #000000;
 }
 
 .indicacao-rolagem {
