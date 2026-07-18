@@ -9,7 +9,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
   const nuvens_desc = obterDescricaoNuvens(periodoDados.nuvens_pct);
   
   const trovoadaHtml = temTrovoadaNoPeriodo 
-    ? `<div class="trovoadas">Trovoadas⚡</div>` 
+    ? `<div class="trovoadas">Trovoadas</div>` 
     : '';
 
   // Mapeia diferentes nomenclaturas possíveis para evitar o valor zerado
@@ -20,6 +20,13 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
     || 0;
 
   const rajadaPeriodo = Math.round(Number(valorRajada));
+  
+  // Alerta visual para vento forte (>= 40 km/h)
+  const alertaVento = rajadaPeriodo >= 40 ? ' ⚠️' : '';
+
+  // Alerta para chuva volumosa por período (>= 10 mm no período)
+  const mmChuvaPeriodo = Number(periodoDados.chuva) || 0;
+  const alertaChuva = mmChuvaPeriodo >= 10 ? ' ⚠️' : '';
 
   return `
     <div class="periodo">
@@ -27,10 +34,10 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
       <div class="periodo-infos">
         <div class="nuvens-desc">${nuvens_desc}</div>
         <div class="chuva" style="font-weight: normal">
-          ${periodoDados.chuva} mm (${periodoDados.probabilidade}%)
+          ${mmChuvaPeriodo} mm (${periodoDados.probabilidade}%)${alertaChuva}
         </div>
         <div class="vento-periodo" style="font-weight: normal">
-          Rajadas: ${rajadaPeriodo} km/h
+          Rajadas: ${rajadaPeriodo} km/h${alertaVento}
         </div>
         ${trovoadaHtml}
       </div>
@@ -66,10 +73,10 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
     const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
     
     const trovoadaHoraHtml = temTrovoadaNaHora 
-      ? `<div class="trovoadas">Trovoadas⚡</div>` 
+      ? `<div class="trovoadas">Trovoadas</div>` 
       : '';
 
-    const mmChuva = Number(dh.chuvas[h]);
+    const mmChuva = Number(dh.chuvas[h]) || 0;
     let intensidade = "Sem chuva";
 
     if (mmChuva > 0) {
@@ -84,6 +91,12 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
 
     // Altera "xx:xx" para "xxh" ou "Agora"
     const horaExibicao = ehHoraAtual ? "Agora" : `${horaTextoOriginal.split(':')[0]}h`;
+    
+    // Alerta visual para vento forte (>= 40 km/h)
+    const alertaVentoHora = rajadaVento >= 40 ? ' ⚠️' : '';
+
+    // Alerta visual para chuva forte na hora (>= 10 mm/h - critério de chuva forte/torrencial do INMET)
+    const alertaChuvaHora = mmChuva >= 10 ? ' ⚠️' : '';
 
     linesHtml += `
       <div class="horas" ${idHoraAtual}>
@@ -92,9 +105,9 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
         <div class="hora-info">
           <div>${Math.round(dh.temperaturas[h])}°C</div>
           <div>
-            ${intensidade} <br> ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%)
+            ${intensidade} <br> ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%)${alertaChuvaHora}
           </div>
-          <div> Rajadas: ${rajadaVento} km/h</div>
+          <div> Rajadas: ${rajadaVento} km/h${alertaVentoHora}</div>
           ${trovoadaHoraHtml}
         </div>
       </div>
@@ -148,8 +161,16 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const diaSemana = obterDiaSemana(d.date);
     const textoData = `${diaSemana}, ${formatarData(d.date)}`;
     const textoTemp = `${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°`;
-    const textoChuva = `${d.rain_sum_mm} mm`;
-    const textoVento = `${Math.round(d.wind_max_kmh)} km/h`;
+    
+    // Tratamento e alerta para Acumulado Total do Dia (Critério INMET >= 30 mm/dia)
+    const acumuladoChuvaDia = Number(d.rain_sum_mm) || 0;
+    const alertaChuvaMax = acumuladoChuvaDia >= 30 ? ' ⚠️' : '';
+    const textoChuva = `${acumuladoChuvaDia} mm${alertaChuvaMax}`;
+    
+    // Tratamento e alerta na máxima de vento do dia (Card Header >= 40 km/h)
+    const ventoMaximoDia = Math.round(d.wind_max_kmh);
+    const alertaVentoMaximo = ventoMaximoDia >= 40 ? ' ⚠️' : '';
+    const textoVento = `${ventoMaximoDia} km/h${alertaVentoMaximo}`;
 
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
