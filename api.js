@@ -20,7 +20,7 @@ export async function buscarCidadesAPI(termo) {
     return dados.results.map(cidade => ({
       id: cidade.id,
       nome: cidade.name,
-      pais: city.country_code ? cidade.country_code.toUpperCase() : "",
+      pais: cidade.country_code ? cidade.country_code.toUpperCase() : "", // CORRIGIDO AQUI
       regiao: cidade.admin1 || "",
       latitude: cidade.latitude,
       longitude: cidade.longitude
