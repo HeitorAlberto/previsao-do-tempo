@@ -39,22 +39,27 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
 }
 
 /**
- * Gera a estrutura HTML dos dados horários com rolagem horizontal.
+ * Gera a estrutura HTML dos dados horários com rolagem horizontal (Apenas para o dia atual).
  */
 function gerarHtmlDadosHorarios(dadosDia, cardId) {
+  // Só gera dados horários se for o primeiro card (dia atual)
+  if (cardId !== 0) return '';
+
   const dh = dadosDia.dadosHorarios;
   if (!dh || !dh.horas) return '';
 
   const horaAtualBrasil = new Date().toLocaleTimeString("pt-BR", {
     timeZone: "America/Sao_Paulo",
     hour: "2-digit",
-    minute: "2-digit"
-  }).split(":")[0] + ":00";
+    hour12: false
+  }) + ":00";
 
   let linesHtml = "";
 
   for (let h = 0; h < dh.horas.length; h++) {
-    const ehHoraAtual = dh.horas[h] === horaAtualBrasil;
+    const horaTextoOriginal = dh.horas[h]; // Ex: "14:00"
+    const ehHoraAtual = horaTextoOriginal === horaAtualBrasil;
+    
     const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: white; background-color: black"' : 'style="font-weight: bolder;"';
     const idHoraAtual = ehHoraAtual ? `id="hora-atual-card-${cardId}"` : '';
     const rajadaVento = dh.rajadas?.[h] ? Math.round(dh.rajadas[h]) : 0;
@@ -77,9 +82,12 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
       }
     }
 
+    // Altera "xx:xx" para "xxh" ou "Agora"
+    const horaExibicao = ehHoraAtual ? "Agora" : `${horaTextoOriginal.split(':')[0]}h`;
+
     linesHtml += `
       <div class="horas" ${idHoraAtual}>
-        <div class="hora" ${estiloHora}>${dh.horas[h]}</div>
+        <div class="hora" ${estiloHora}>${horaExibicao}</div>
         <div class="nuvens-desc">${obterDescricaoNuvens(dh.nebulosidade[h])}</div>
         <div class="hora-info">
           <div>${Math.round(dh.temperaturas[h])}°C</div>
@@ -146,6 +154,15 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
 
+    // Só exibe a seção inteira de "Dados por hora" se for o dia atual (index 0)
+    const blocoHorasHtml = index === 0 ? `
+      <div class="titulo-periodo-hora">Dados por hora</div>
+      <div id="horasBloco-${index}" class="card-horas-container">
+        ${gerarHtmlDadosHorarios(d, index)}
+      </div>
+      <div class="indicacao-rolagem">&larr; Rolagem lateral &rarr;</div>
+    ` : '';
+
     card.innerHTML = `
       <div class="card-header-linha ${classeFimSemana}">
         <div class="dia-data">
@@ -154,21 +171,20 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
 
        <div class="infos-dia">
          <div class="textoTemp">
-         <div class="rotulo-dados">Temperatura (°C)</div>
-         <div class="info-valor">${textoTemp}</div>
-        </div>
+           <div class="rotulo-dados">Temperatura (°C)</div>
+           <div class="info-valor">${textoTemp}</div>
+         </div>
         
-        <div class="textoChuva">
-          <div class="rotulo-dados">Chuva acumulada </div>
-          <div class="info-valor">${textoChuva}</div>
-        </div>
+         <div class="textoChuva">
+           <div class="rotulo-dados">Chuva acumulada </div>
+           <div class="info-valor">${textoChuva}</div>
+         </div>
         
-        <div class="textoVento">
-          <div class="rotulo-dados">Rajadas de vento</div>
-          <div class="info-valor">${textoVento}</div>
-        </div>
+         <div class="textoVento">
+           <div class="rotulo-dados">Rajadas de vento</div>
+           <div class="info-valor">${textoVento}</div>
+         </div>
        </div>
-      
       </div>
       
       <div class="card-content">
@@ -179,12 +195,7 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
           ${gerarHtmlPeriodo("12h", d.p3)}
           ${gerarHtmlPeriodo("18h", d.p4)}
         </div>
-
-        <div class="titulo-periodo-hora">Dados por hora</div>
-        <div id="horasBloco-${index}" class="card-horas-container">
-          ${gerarHtmlDadosHorarios(d, index)}
-        </div>
-        <div class="indicacao-rolagem">&larr; Rolagem lateral &rarr;</div>
+        ${blocoHorasHtml}
       </div>
     `;
 
@@ -198,17 +209,20 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
       if (!estaAtivo) {
         card.classList.add("active");
 
-        const elementoHoraAtual = document.getElementById(`hora-atual-card-${index}`);
-        const containerHoras = document.getElementById(`horasBloco-${index}`);
+        // O scrollto automático agora só roda se for o card do dia atual
+        if (index === 0) {
+          const elementoHoraAtual = document.getElementById(`hora-atual-card-${index}`);
+          const containerHoras = document.getElementById(`horasBloco-${index}`);
 
-        if (elementoHoraAtual && containerHoras) {
-          setTimeout(() => {
-            const deslocamentoEsquerda = elementoHoraAtual.offsetLeft - containerHoras.offsetLeft;
-            containerHoras.scrollTo({
-              left: deslocamentoEsquerda,
-              behavior: "smooth"
-            });
-          }, 50);
+          if (elementoHoraAtual && containerHoras) {
+            setTimeout(() => {
+              const deslocamentoEsquerda = elementoHoraAtual.offsetLeft - containerHoras.offsetLeft;
+              containerHoras.scrollTo({
+                left: deslocamentoEsquerda,
+                behavior: "smooth"
+              });
+            }, 50);
+          }
         }
       }
     });
