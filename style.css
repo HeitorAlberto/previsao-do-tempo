@@ -187,7 +187,6 @@ h1 {
 
 .periodo-titulo {
     font-weight: bolder;
-    font-size: 12px;
     margin-bottom: 5px;
     padding: 5px;
     color: #ffffff;
@@ -196,6 +195,7 @@ h1 {
 
 .periodo {
     padding: 10px 5px;
+    font-size: 16px;
 }
 
 .periodo, .periodo-infos {
@@ -203,7 +203,6 @@ h1 {
     flex-direction: column;
     gap: 8px;
     text-align: center;
-    font-size: 12px;
 }
 
 .card-horas-container {
@@ -234,11 +233,14 @@ h1 {
     align-items: center;
     min-width: 150px; 
     flex-shrink: 0;
-    font-size: 12px;
+}
+
+.horas {
+    font-size: 16px;
+    width: 240px;
 }
 
 .hora {
-    font-size: 12px;
     text-align: center;
     padding: 3px;
     width: 100%;
@@ -259,13 +261,11 @@ h1 {
     text-align: center;
     font-weight: bolder;
     margin-top: 15px;
-    font-size: 12px;
     color: #333;
 }
 
 .nuvens-desc {
     color: #000000;
-    font-size: 12px;
 }
 
 
@@ -369,14 +369,16 @@ h1 {
 
     /* Ajusta o bloco de períodos de 4 colunas para 2 colunas */
     .periodos-bloco {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr;
         gap: 15px;
+        border: 2px solid gray;
     }
 
     /* O container de horas horizontal já possui scroll nativo, 
        apenas garantimos que ele flua perfeitamente no toque */
     .card-horas-container {
         padding-bottom: 15px;
+        border: 2px solid gray;
     }
     
     .hora-info {
