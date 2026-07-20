@@ -9,7 +9,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
   const nuvens_desc = obterDescricaoNuvens(periodoDados.nuvens_pct);
   
   const trovoadaHtml = temTrovoadaNoPeriodo 
-    ? `<div class="trovoadas">Trovoadas</div>` 
+    ? `<div class="trovoadas">⚡⚡⚡</div>` 
     : '';
 
   // Mapeia diferentes nomenclaturas possíveis para evitar o valor zerado
@@ -34,7 +34,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
       <div class="periodo-infos">
         <div class="nuvens-desc">${nuvens_desc}</div>
         <div class="chuva" style="font-weight: normal">
-          ${mmChuvaPeriodo} mm (${periodoDados.probabilidade}%)${alertaChuva}
+          ${mmChuvaPeriodo} mm ${alertaChuva}
         </div>
         <div class="vento-periodo" style="font-weight: normal">
           Rajadas: ${rajadaPeriodo} km/h${alertaVento}
@@ -73,7 +73,7 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
     const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
     
     const trovoadaHoraHtml = temTrovoadaNaHora 
-      ? `<div class="trovoadas">Trovoadas</div>` 
+      ? `<div class="trovoadas">⚡⚡⚡</div>` 
       : '';
 
     const mmChuva = Number(dh.chuvas[h]) || 0;
