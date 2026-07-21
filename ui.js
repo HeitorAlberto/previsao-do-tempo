@@ -2,6 +2,30 @@ import { obterDiaSemana, formatarData } from './utils.js';
 import { obterDescricaoNuvens, formatarLocalizacao } from './parser.js';
 
 /**
+ * Funções auxiliares para definição de cores de acordo com os valores
+ */
+function obterCorChuva(mm) {
+  if (mm <= 0) return '#000'; // Cinza sem chuva
+  if (mm <= 3.0) return '#0288D1'; // Azul (fraca)
+  if (mm <= 10.0) return '#F9A825'; // Amarelo/Âmbar (moderada)
+  return '#D32F2F'; // Vermelho (forte)
+}
+
+function obterCorVento(kmh) {
+  if (kmh < 40) return '#000'; // Normal (Sem alerta)
+  if (kmh < 60) return '#F9A825'; // Amarelo (Perigo Potencial - INMET)
+  if (kmh < 100) return '#F57C00'; // Laranja (Perigo - INMET)
+  return '#D32F2F'; // Vermelho (Grande Perigo - INMET)
+}
+
+function obterCorTemperatura(temp) {
+  if (temp < 15) return '#0288D1';
+  if (temp <= 28) return '#000';
+  if (temp <= 32) return '#f55600';
+  return '#9d1200'; 
+}
+
+/**
  * Gera o HTML padrão para os blocos de períodos (Madrugada, Manhã, Tarde, Noite).
  */
 function gerarHtmlPeriodo(titulo, periodoDados) {
@@ -12,7 +36,6 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
     ? `<div class="trovoadas">⚡⚡⚡</div>` 
     : '';
 
-  // Mapeia diferentes nomenclaturas possíveis para evitar o valor zerado
   const valorRajada = periodoDados.wind_max_kmh 
     || periodoDados.rajada 
     || periodoDados.wind_gust 
@@ -20,24 +43,21 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
     || 0;
 
   const rajadaPeriodo = Math.round(Number(valorRajada));
-  
-  // Alerta visual para vento forte (>= 40 km/h)
-  const alertaVento = rajadaPeriodo >= 40 ? ' ⚠️' : '';
+  const corVento = obterCorVento(rajadaPeriodo);
 
-  // Alerta para chuva volumosa por período (>= 10 mm no período)
   const mmChuvaPeriodo = Number(periodoDados.chuva) || 0;
-  const alertaChuva = mmChuvaPeriodo >= 10 ? ' ⚠️' : '';
+  const corChuva = obterCorChuva(mmChuvaPeriodo);
 
   return `
     <div class="periodo">
       <div class="periodo-titulo">${titulo}</div>
       <div class="periodo-infos">
         <div class="nuvens-desc">${nuvens_desc}</div>
-        <div class="chuva" style="font-weight: normal">
-          ${mmChuvaPeriodo} mm ${alertaChuva}
+        <div class="chuva" style="color: ${corChuva}">
+          ${mmChuvaPeriodo} mm
         </div>
-        <div class="vento-periodo" style="font-weight: normal">
-          Rajadas: ${rajadaPeriodo} km/h${alertaVento}
+        <div class="vento-periodo" style="color: ${corVento}">
+          Rajadas: ${rajadaPeriodo} km/h
         </div>
         ${trovoadaHtml}
       </div>
@@ -49,7 +69,6 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
  * Gera a estrutura HTML dos dados horários com rolagem horizontal (Apenas para o dia atual).
  */
 function gerarHtmlDadosHorarios(dadosDia, cardId) {
-  // Só gera dados horários se for o primeiro card (dia atual)
   if (cardId !== 0) return '';
 
   const dh = dadosDia.dadosHorarios;
@@ -64,50 +83,43 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
   let linesHtml = "";
 
   for (let h = 0; h < dh.horas.length; h++) {
-    const horaTextoOriginal = dh.horas[h]; // Ex: "14:00"
+    const horaTextoOriginal = dh.horas[h];
     const ehHoraAtual = horaTextoOriginal === horaAtualBrasil;
     
     const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: white; background-color: black"' : 'style="font-weight: bolder;"';
     const idHoraAtual = ehHoraAtual ? `id="hora-atual-card-${cardId}"` : '';
-    const rajadaVento = dh.rajadas?.[h] ? Math.round(dh.rajadas[h]) : 0;
-    const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
     
+    // Tratamento e cálculo de cores para o bloco horário
+    const tempHora = Math.round(dh.temperaturas[h]);
+    const corTemp = obterCorTemperatura(tempHora);
+
+    const rajadaVento = dh.rajadas?.[h] ? Math.round(dh.rajadas[h]) : 0;
+    
+    const corVento = obterCorVento(rajadaVento);
+
+    const mmChuva = Number(dh.chuvas[h]) || 0;
+
+    const corChuva = obterCorChuva(mmChuva);
+
+    const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
     const trovoadaHoraHtml = temTrovoadaNaHora 
       ? `<div class="trovoadas">⚡⚡⚡</div>` 
       : '';
 
-    const mmChuva = Number(dh.chuvas[h]) || 0;
-    let intensidade = "Sem chuva";
-
-    if (mmChuva > 0) {
-      if (mmChuva <= 3.0) {
-        intensidade = "Chuva Fraca";
-      } else if (mmChuva <= 10.0) {
-        intensidade = "Chuva Moderada";
-      } else {
-        intensidade = "Chuva Forte";
-      }
-    }
-
-    // Altera "xx:xx" para "xxh" ou "Agora"
     const horaExibicao = ehHoraAtual ? "Agora" : `${horaTextoOriginal.split(':')[0]}h`;
-    
-    // Alerta visual para vento forte (>= 40 km/h)
-    const alertaVentoHora = rajadaVento >= 40 ? ' ⚠️' : '';
-
-    // Alerta visual para chuva forte na hora (>= 10 mm/h - critério de chuva forte/torrencial do INMET)
-    const alertaChuvaHora = mmChuva >= 10 ? ' ⚠️' : '';
 
     linesHtml += `
       <div class="horas" ${idHoraAtual}>
         <div class="hora" ${estiloHora}>${horaExibicao}</div>
         <div class="nuvens-desc">${obterDescricaoNuvens(dh.nebulosidade[h])}</div>
         <div class="hora-info">
-          <div>${Math.round(dh.temperaturas[h])}°C</div>
-          <div>
-            ${intensidade} <br> ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%)${alertaChuvaHora}
+          <div style="color: ${corTemp};">${tempHora}°C</div>
+          <div style="color: ${corChuva};">
+            ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%)
           </div>
-          <div> Rajadas: ${rajadaVento} km/h${alertaVentoHora}</div>
+          <div style="color: ${corVento};">
+            Rajadas: ${rajadaVento} km/h
+          </div>
           ${trovoadaHoraHtml}
         </div>
       </div>
@@ -162,12 +174,10 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const textoData = `${diaSemana}, ${formatarData(d.date)}`;
     const textoTemp = `${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°`;
     
-    // Tratamento e alerta para Acumulado Total do Dia (Critério INMET >= 30 mm/dia)
     const acumuladoChuvaDia = Number(d.rain_sum_mm) || 0;
     const alertaChuvaMax = acumuladoChuvaDia >= 30 ? ' ⚠️' : '';
     const textoChuva = `${acumuladoChuvaDia} mm${alertaChuvaMax}`;
     
-    // Tratamento e alerta na máxima de vento do dia (Card Header >= 40 km/h)
     const ventoMaximoDia = Math.round(d.wind_max_kmh);
     const alertaVentoMaximo = ventoMaximoDia >= 40 ? ' ⚠️' : '';
     const textoVento = `${ventoMaximoDia} km/h${alertaVentoMaximo}`;
@@ -175,7 +185,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
 
-    // Só exibe a seção inteira de "Dados por hora" se for o dia atual (index 0)
     const blocoHorasHtml = index === 0 ? `
       <div class="titulo-periodo-hora">Dados por hora</div>
       <div id="horasBloco-${index}" class="card-horas-container">
@@ -230,7 +239,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
       if (!estaAtivo) {
         card.classList.add("active");
 
-        // O scrollto automático agora só roda se for o card do dia atual
         if (index === 0) {
           const elementoHoraAtual = document.getElementById(`hora-atual-card-${index}`);
           const containerHoras = document.getElementById(`horasBloco-${index}`);
