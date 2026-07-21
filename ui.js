@@ -98,7 +98,7 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
     const horaTextoOriginal = dh.horas[h];
     const ehHoraAtual = cardId === 0 && horaTextoOriginal === horaAtualBrasil;
     
-    const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: white; background-color: black"' : 'style="font-weight: bolder;"';
+    const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: black;"' : 'style="font-weight: bolder;"';
     const idHoraAtual = ehHoraAtual ? `id="hora-atual-card-${cardId}"` : '';
     
     // Processa valores para a janela de 3 horas (h até h+2)
@@ -215,12 +215,10 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const textoTemp = `${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°`;
     
     const acumuladoChuvaDia = Number(d.rain_sum_mm) || 0;
-    const alertaChuvaMax = acumuladoChuvaDia >= 30 ? ' ⚠️' : '';
-    const textoChuva = `${acumuladoChuvaDia} mm${alertaChuvaMax}`;
+    const textoChuva = `${acumuladoChuvaDia} mm`;
     
     const ventoMaximoDia = Math.round(d.wind_max_kmh);
-    const alertaVentoMaximo = ventoMaximoDia >= 40 ? ' ⚠️' : '';
-    const textoVento = `${ventoMaximoDia} km/h${alertaVentoMaximo}`;
+    const textoVento = `${ventoMaximoDia} km/h`;
 
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
