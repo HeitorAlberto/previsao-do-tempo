@@ -4,29 +4,39 @@ import { obterDescricaoNuvens, formatarLocalizacao } from './parser.js';
 /**
  * Funções auxiliares para definição de cores de acordo com os valores
  */
-function obterCorChuva(mm) {
-  if (mm <= 0) return '#000'; // Cinza sem chuva
-  if (mm <= 3.0) return '#0288D1'; // Azul (fraca)
-  if (mm <= 10.0) return '#F9A825'; // Amarelo/Âmbar (moderada)
-  return '#D32F2F'; // Vermelho (forte)
+
+// Regra para janelas de 6 horas (Acumulado / Saturação)
+function obterCorChuvaPeriodo(mm) {
+  if (mm <= 0) return '#000';
+  if (mm <= 15.0) return '#0288D1';  // Azul (fraca em 6h)
+  if (mm <= 35.0) return '#F9A825';  // Amarelo (moderada)
+  return '#D32F2F';                  // Vermelho (forte em 6h)
+}
+
+// Regra para janelas de 3 horas (Intensidade / Acumulado Curto)
+function obterCorChuva3h(mm) {
+  if (mm <= 0) return '#000';
+  if (mm <= 5.0) return '#0288D1';   // Azul (fraca em 3h)
+  if (mm <= 15.0) return '#F9A825';  // Amarelo (moderada em 3h)
+  return '#D32F2F';                  // Vermelho (forte em 3h)
 }
 
 function obterCorVento(kmh) {
-  if (kmh < 40) return '#000'; // Normal (Sem alerta)
-  if (kmh < 60) return '#F9A825'; // Amarelo (Perigo Potencial - INMET)
-  if (kmh < 100) return '#F57C00'; // Laranja (Perigo - INMET)
-  return '#D32F2F'; // Vermelho (Grande Perigo - INMET)
+  if (kmh < 40) return '#000';       // Normal
+  if (kmh < 60) return '#F9A825';    // Amarelo (Perigo Potencial - INMET)
+  if (kmh < 100) return '#F57C00';   // Laranja (Perigo - INMET)
+  return '#D32F2F';                  // Vermelho (Grande Perigo - INMET)
 }
 
 function obterCorTemperatura(temp) {
-  if (temp < 15) return '#0288D1';
-  if (temp <= 28) return '#000';
-  if (temp <= 32) return '#f55600';
-  return '#9d1200'; 
+  if (temp < 15) return '#0288D1';   // Frio (Azul)
+  if (temp <= 28) return '#000';      // Agradável (Preto)
+  if (temp <= 32) return '#f55600';   // Quente (Laranja)
+  return '#9d1200';                  // Muito Quente (Vermelho)
 }
 
 /**
- * Gera o HTML padrão para os blocos de períodos (Madrugada, Manhã, Tarde, Noite).
+ * Gera o HTML padrão para os blocos de períodos (Madrugada, Manhã, Tarde, Noite - 6 em 6h).
  */
 function gerarHtmlPeriodo(titulo, periodoDados) {
   const temTrovoadaNoPeriodo = periodoDados.trovoadas === true;
@@ -46,7 +56,7 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
   const corVento = obterCorVento(rajadaPeriodo);
 
   const mmChuvaPeriodo = Number(periodoDados.chuva) || 0;
-  const corChuva = obterCorChuva(mmChuvaPeriodo);
+  const corChuva = obterCorChuvaPeriodo(mmChuvaPeriodo);
 
   return `
     <div class="periodo">
@@ -66,10 +76,11 @@ function gerarHtmlPeriodo(titulo, periodoDados) {
 }
 
 /**
- * Gera a estrutura HTML dos dados horários com rolagem horizontal (Apenas para o dia atual).
+ * Gera a estrutura HTML dos dados em intervalos de 3 horas (Apenas para os dias 0 e 1).
  */
-function gerarHtmlDadosHorarios(dadosDia, cardId) {
-  if (cardId !== 0) return '';
+function gerarHtmlDados3Horas(dadosDia, cardId) {
+  // Apenas renderiza se for o 1º dia (index 0) ou 2º dia (index 1)
+  if (cardId > 1) return '';
 
   const dh = dadosDia.dadosHorarios;
   if (!dh || !dh.horas) return '';
@@ -82,43 +93,72 @@ function gerarHtmlDadosHorarios(dadosDia, cardId) {
 
   let linesHtml = "";
 
-  for (let h = 0; h < dh.horas.length; h++) {
+  // Percorre os dados saltando de 3 em 3 horas
+  for (let h = 0; h < dh.horas.length; h += 3) {
     const horaTextoOriginal = dh.horas[h];
-    const ehHoraAtual = horaTextoOriginal === horaAtualBrasil;
+    const ehHoraAtual = cardId === 0 && horaTextoOriginal === horaAtualBrasil;
     
     const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: white; background-color: black"' : 'style="font-weight: bolder;"';
     const idHoraAtual = ehHoraAtual ? `id="hora-atual-card-${cardId}"` : '';
     
-    // Tratamento e cálculo de cores para o bloco horário
-    const tempHora = Math.round(dh.temperaturas[h]);
+    // Processa valores para a janela de 3 horas (h até h+2)
+    const fatiaHoras = Math.min(3, dh.horas.length - h);
+    
+    // 1. Média de Nebulosidade no bloco de 3h
+    let somaNuvens = 0;
+    for (let i = 0; i < fatiaHoras; i++) {
+      somaNuvens += dh.nebulosidade?.[h + i] || 0;
+    }
+    const mediaNuvens = Math.round(somaNuvens / fatiaHoras);
+    const descNuvens3h = obterDescricaoNuvens(mediaNuvens);
+
+    // 2. Temperatura Pontual na hora inicial do bloco (ex: 15h -> 34°C)
+    const tempHora = dh.temperaturas?.[h] !== undefined 
+      ? Math.round(dh.temperaturas[h]) 
+      : 0;
     const corTemp = obterCorTemperatura(tempHora);
 
-    const rajadaVento = dh.rajadas?.[h] ? Math.round(dh.rajadas[h]) : 0;
-    
-    const corVento = obterCorVento(rajadaVento);
+    // 3. Maior rajada de vento (Pico) no bloco de 3h
+    let maxRajada = 0;
+    for (let i = 0; i < fatiaHoras; i++) {
+      const r = dh.rajadas?.[h + i] ? Math.round(dh.rajadas[h + i]) : 0;
+      if (r > maxRajada) maxRajada = r;
+    }
+    const corVento = obterCorVento(maxRajada);
 
-    const mmChuva = Number(dh.chuvas[h]) || 0;
+    // 4. Soma do acumulado de chuva e maior probabilidade nas 3 horas
+    let somaChuva = 0;
+    let maxProb = 0;
+    for (let i = 0; i < fatiaHoras; i++) {
+      somaChuva += Number(dh.chuvas?.[h + i]) || 0;
+      const prob = dh.probabilidades?.[h + i] || 0;
+      if (prob > maxProb) maxProb = prob;
+    }
+    const corChuva = obterCorChuva3h(somaChuva);
 
-    const corChuva = obterCorChuva(mmChuva);
-
-    const temTrovoadaNaHora = dh.trovoadas?.[h] === true;
-    const trovoadaHoraHtml = temTrovoadaNaHora 
-      ? `<div class="trovoadas">⚡⚡⚡</div>` 
-      : '';
+    // 5. Trovoada presente em qualquer uma das 3 horas
+    let temTrovoada = false;
+    for (let i = 0; i < fatiaHoras; i++) {
+      if (dh.trovoadas?.[h + i] === true) {
+        temTrovoada = true;
+        break;
+      }
+    }
+    const trovoadaHoraHtml = temTrovoada ? `<div class="trovoadas">⚡⚡⚡</div>` : '';
 
     const horaExibicao = ehHoraAtual ? "Agora" : `${horaTextoOriginal.split(':')[0]}h`;
 
     linesHtml += `
       <div class="horas" ${idHoraAtual}>
         <div class="hora" ${estiloHora}>${horaExibicao}</div>
-        <div class="nuvens-desc">${obterDescricaoNuvens(dh.nebulosidade[h])}</div>
+        <div class="nuvens-desc">${descNuvens3h}</div>
         <div class="hora-info">
-          <div style="color: ${corTemp};">${tempHora}°C</div>
+          <div style="color: ${corTemp}; font-weight: bold;">${tempHora}°C</div>
           <div style="color: ${corChuva};">
-            ${mmChuva.toFixed(1)} mm (${dh.probabilidades[h]}%)
+            ${somaChuva.toFixed(1)} mm (${maxProb}%)
           </div>
           <div style="color: ${corVento};">
-            Rajadas: ${rajadaVento} km/h
+            Rajadas: ${maxRajada} km/h
           </div>
           ${trovoadaHoraHtml}
         </div>
@@ -185,10 +225,11 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
 
-    const blocoHorasHtml = index === 0 ? `
-      <div class="titulo-periodo-hora">Dados por hora</div>
+    // Exibe o bloco detalhado de 3h apenas no 1º (index 0) e 2º dia (index 1)
+    const blocoHorasHtml = (index === 0 || index === 1) ? `
+      <div class="titulo-periodo-hora">Previsão a cada 3 horas</div>
       <div id="horasBloco-${index}" class="card-horas-container">
-        ${gerarHtmlDadosHorarios(d, index)}
+        ${gerarHtmlDados3Horas(d, index)}
       </div>
       <div class="indicacao-rolagem">&larr; Rolagem lateral &rarr;</div>
     ` : '';
@@ -218,7 +259,7 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
       </div>
       
       <div class="card-content">
-        <div class="titulo-periodo-hora">Dados por período</div>
+        <div class="titulo-periodo-hora">Dados por período (6h)</div>
         <div class="periodos-bloco">
           ${gerarHtmlPeriodo("00h", d.p1)}
           ${gerarHtmlPeriodo("06h", d.p2)}
