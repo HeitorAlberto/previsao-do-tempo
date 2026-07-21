@@ -108,7 +108,8 @@ h1 {
     display: flex;
     flex-direction: column;
     width: 900px;
-    border: 1px solid #000000;
+    border: 2px solid #cecece;
+    border-radius: 10px;
     overflow: hidden;
     background: #fff;
     cursor: pointer;
@@ -117,6 +118,7 @@ h1 {
 .rotulo-dados {
         font-weight: bolder;
         color: #9e9e9e;
+        display: none;
 }
 
 /* Linhas agora com fundo branco e texto preto por padrão */
@@ -137,6 +139,11 @@ h1 {
     justify-content: space-around;
     gap: 50px;
     
+}
+
+.info-valor {
+    width: 100px;
+    text-align: left;
 }
 
 .infos-dia > div {
@@ -182,11 +189,11 @@ h1 {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 5px;
+    margin-bottom: 40px;
 } 
 
 .periodo-titulo {
     font-weight: bolder;
-    padding: 5px;
 }
 
 .periodo {
@@ -198,7 +205,6 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    text-align: center;
 }
 
 .card-horas-container {
@@ -215,9 +221,7 @@ h1 {
 .card-horas-container .horas {
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 10px;
-    text-align: center;
     flex-shrink: 0;
     padding: 5px;
 }
@@ -226,19 +230,16 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    align-items: center;
     min-width: 150px; 
     flex-shrink: 0;
 }
 
 .horas {
     font-size: 16px;
-    width: 240px;
+    width: 180px;
 }
 
 .hora {
-    text-align: center;
-    padding: 3px;
     width: 100%;
     padding: 5px;
 }
@@ -331,14 +332,10 @@ h1 {
         max-width: 280px;
     }
 
-    #container {
-        padding: 0;
-        background-color: #f8f8f8;
-    }
+   
 
     .card {
         width: 100%;
-        border: 0;
     }
 
     /* Ajusta a linha do cabeçalho do card para telas muito estreitas */
@@ -351,15 +348,18 @@ h1 {
         font-size: 16px;
     }
 
+
     .infos-dia {
-        display: grid;
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px;
         gap: 20px;
     }
 
     .textoTemp, .textoChuva, .textoVento {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         justify-content: space-between;
     }
 
@@ -373,10 +373,19 @@ h1 {
 
     /* Ajusta o bloco de períodos de 4 colunas para 2 colunas */
     .periodos-bloco {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+        padding: 10px;
         gap: 15px;
     }
-    
+
+    .periodo-titulo {
+        text-align: left;
+    }
+
+    .periodo-infos {
+        text-align: left; 
+    }
+
     .hora-info {
         min-width: 130px; /* Um pouco mais estreito para caber mais dados na tela */
     }

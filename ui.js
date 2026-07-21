@@ -240,18 +240,15 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
 
        <div class="infos-dia">
          <div class="textoTemp">
-           <div class="rotulo-dados">Temperatura (°C)</div>
-           <div class="info-valor">${textoTemp}</div>
+           <div class="info-valor">🌡️ ${textoTemp}</div>
          </div>
         
          <div class="textoChuva">
-           <div class="rotulo-dados">Chuva acumulada </div>
-           <div class="info-valor">${textoChuva}</div>
+           <div class="info-valor">💧 ${textoChuva}</div>
          </div>
         
          <div class="textoVento">
-           <div class="rotulo-dados">Rajadas de vento</div>
-           <div class="info-valor">${textoVento}</div>
+           <div class="info-valor">🍃${textoVento}</div>
          </div>
        </div>
       </div>
@@ -259,10 +256,10 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
       <div class="card-content">
         <div class="titulo-periodo-hora">Dados por período (6h)</div>
         <div class="periodos-bloco">
-          ${gerarHtmlPeriodo("00h", d.p1)}
-          ${gerarHtmlPeriodo("06h", d.p2)}
-          ${gerarHtmlPeriodo("12h", d.p3)}
-          ${gerarHtmlPeriodo("18h", d.p4)}
+          ${gerarHtmlPeriodo("00h a 06h", d.p1)}
+          ${gerarHtmlPeriodo("06h a 12h", d.p2)}
+          ${gerarHtmlPeriodo("12h a 18h", d.p3)}
+          ${gerarHtmlPeriodo("18h a 00h", d.p4)}
         </div>
         ${blocoHorasHtml}
       </div>
