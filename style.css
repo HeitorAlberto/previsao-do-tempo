@@ -241,15 +241,13 @@ h1 {
 
 .hora {
     width: 100%;
-    padding: 5px;
 }
 
 .indicacao-rolagem {
     text-align: center;
-    font-size: 12px;
+    font-size: 16px;
     font-weight: bolder;
     color: #e0e0e0;
-    margin-top: -20px;
 }
 
 .titulo-periodo-hora {
