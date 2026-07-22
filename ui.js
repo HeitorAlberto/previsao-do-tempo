@@ -156,7 +156,7 @@ function gerarHtmlPeriodo(titulo, periodoDados, valoresNuvens6h = []) {
   }
   
   const trovoadaHtml = temTrovoadaNoPeriodo 
-    ? `<div class="trovoadas">⚡⚡⚡</div>` 
+    ? `⚡` 
     : '';
 
   const valorRajada = periodoDados?.wind_max_kmh 
@@ -175,14 +175,13 @@ function gerarHtmlPeriodo(titulo, periodoDados, valoresNuvens6h = []) {
     <div class="periodo">
       <div class="periodo-titulo">${titulo}</div>
       <div class="periodo-infos">
-        <div class="nuvens-desc">${descFinalNuvens}</div>
+        <div class="nuvens-desc">${descFinalNuvens}${trovoadaHtml}</div>
         <div class="chuva" style="color: ${corChuva}">
           ${mmChuvaPeriodo} mm
         </div>
         <div class="vento-periodo" style="color: ${corVento}">
           Rajadas: ${rajadaPeriodo} km/h
         </div>
-        ${trovoadaHtml}
       </div>
     </div>
   `;
@@ -249,14 +248,14 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
         break;
       }
     }
-    const trovoadaHoraHtml = temTrovoada ? `<div class="trovoadas">⚡⚡⚡</div>` : '';
+    const trovoadaHoraHtml = temTrovoada ? `⚡` : '';
 
     const horaExibicao = ehHoraAtual ? "Agora" : `${horaTextoOriginal.split(':')[0]}h`;
 
     linesHtml += `
       <div class="horas" ${idHoraAtual}>
         <div class="hora" ${estiloHora}>${horaExibicao}</div>
-        <div class="nuvens-desc">${descNuvens3h}</div>
+        <div class="nuvens-desc">${descNuvens3h}${trovoadaHoraHtml}</div>
         <div class="hora-info">
           <div style="color: ${corTemp}; font-weight: bold;">${tempHora}°C</div>
           <div style="color: ${corChuva};">
@@ -265,7 +264,6 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
           <div style="color: ${corVento};">
             Rajadas: ${maxRajada} km/h
           </div>
-          ${trovoadaHoraHtml}
         </div>
       </div>
     `;
