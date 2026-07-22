@@ -20,7 +20,7 @@ export async function buscarCidadesAPI(termo) {
     return dados.results.map(cidade => ({
       id: cidade.id,
       nome: cidade.name,
-      pais: cidade.country_code ? cidade.country_code.toUpperCase() : "", // CORRIGIDO AQUI
+      pais: cidade.country_code ? cidade.country_code.toUpperCase() : "",
       regiao: cidade.admin1 || "",
       latitude: cidade.latitude,
       longitude: cidade.longitude
@@ -64,7 +64,6 @@ export function obterDescricaoNuvens(percentual) {
 export function formatarLocalizacao(city) {
   if (!city) return "";
   const partes = [city.nome || city.name, city.regiao, city.pais];
-  // O Set remove duplicados caso a região seja idêntica ao nome da cidade
   return [...new Set(partes)].filter(Boolean).join(", ");
 }
 
@@ -101,7 +100,7 @@ export function processarDadosPrevisao(data, city) {
     const maxProb = Math.max(...probDia.filter(v => v != null), 0);
     const chuvaTotalGeral = somarValores(chuvaDia);
 
-    // Ajustado para receber e processar as rajadas de vento do período
+    // Processa cada período de 6 horas mantendo o array de nebulosidade individual
     const processarPeriodo = (inicio, fim) => {
       const cPeriodo = cloudDia.slice(inicio, fim);
       const rPeriodo = chuvaDia.slice(inicio, fim);
@@ -109,18 +108,17 @@ export function processarDadosPrevisao(data, city) {
       const probPeriodo = probDia.slice(inicio, fim);
       const wPeriodo = windDia.slice(inicio, fim);
 
-      const medNuvens = somarValores(cPeriodo) / cPeriodo.length;
       const somChuva = somarValores(rPeriodo);
       const temTrovoada = codePeriodo.some(c => CODIGOS_TROVOADA.includes(c));
       const maxProbPeriodo = Math.max(...probPeriodo.filter(v => v != null), 0);
       const maxVentoPeriodo = Math.max(...wPeriodo.filter(v => v != null), 0);
 
       return {
-        nuvens_pct: Math.round(medNuvens),
+        nebulosidade: cPeriodo, // Passa as 6 horas brutas para o front calcular a moda/desempate
         chuva: Number(somChuva.toFixed(1)),
         probabilidade: Math.round(maxProbPeriodo),
         trovoadas: temTrovoada,
-        wind_max_kmh: maxVentoPeriodo // Aqui salvamos a rajada máxima do período
+        wind_max_kmh: maxVentoPeriodo
       };
     };
 
