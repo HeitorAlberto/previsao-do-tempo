@@ -123,7 +123,7 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
           <div class="nuvens-desc">${descNuvens3h}${trovoadaHoraHtml}</div>
           <div style="color: ${corTemp}">${tempHora}°C</div>
           <div style="color: ${corChuva};">
-            ${somaChuva.toFixed(1)} mm (${maxProb}%)
+            ${somaChuva.toFixed(1)} mm
           </div>
           <div style="color: ${corVento};">
             Rajadas: ${maxRajada} km/h
