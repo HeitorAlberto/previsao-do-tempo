@@ -342,15 +342,17 @@ h1 {
     .visao-geral-dia {
         padding: 10px;
         border: 1px solid lightgray;
+        background-color: lightgray;
         border-radius: 6px;
         text-align: center;
         align-content: center;
+        width: 100%;
+        font-weight: bold;
     }
 
     .infos-dia {
-        display: flex;
-        flex-wrap: wrap;
-        flex-direction: row;
+        display: grid;
+        grid-template-columns: 1fr;
         padding: 2px;
         gap: 20px;
     }
