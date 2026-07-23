@@ -54,6 +54,87 @@ function calcularModaNuvens(valores) {
 }
 
 /**
+ * Lógica para calcular a Visão Geral do Dia (Descrição dominante + Alertas)
+ */
+function obterVisaoGeralDia(dadosDia) {
+  const dh = dadosDia.dadosHorarios;
+  if (!dh || !dh.horas || dh.horas.length === 0) return { texto: '', alertasHtml: '' };
+
+  // 1. Extração da descrição de nuvens em cada bloco de 3h
+  const descricoes3h = [];
+  const periodos = []; // Para saber o período do dia (manhã, tarde, noite)
+
+  for (let h = 0; h < dh.horas.length; h += 3) {
+    const fatia = Math.min(3, dh.horas.length - h);
+    const valoresNuvens = [];
+    for (let i = 0; i < fatia; i++) {
+      valoresNuvens.push(dh.nebulosidade?.[h + i] || 0);
+    }
+    const moda = calcularModaNuvens(valoresNuvens);
+    const desc = obterDescricaoNuvens(moda);
+    descricoes3h.push(desc);
+
+    // Mapeamento simples de período baseado no índice/hora
+    const horaNum = parseInt(String(dh.horas[h]).match(/\d+/)?.[0] || h, 10);
+    if (horaNum >= 6 && horaNum < 12) periodos.push({ periodo: 'pela manhã', desc });
+    else if (horaNum >= 12 && horaNum < 18) periodos.push({ periodo: 'à tarde', desc });
+    else periodos.push({ periodo: 'à noite', desc });
+  }
+
+  // 2. Cálculo da moda das descrições textuais
+  const freqMap = {};
+  let maxFreq = 0;
+
+  descricoes3h.forEach(desc => {
+    freqMap[desc] = (freqMap[desc] || 0) + 1;
+    if (freqMap[desc] > maxFreq) maxFreq = freqMap[desc];
+  });
+
+  const empatados = Object.keys(freqMap).filter(desc => freqMap[desc] === maxFreq);
+
+  let textoVisaoGeral = "";
+
+  // Caso 1: Vencedor único sem empates
+  if (empatados.length === 1) {
+    textoVisaoGeral = empatados[0];
+  } 
+  // Caso 2: Empates e combinações customizáveis
+  else {
+    // Exemplo de regra customizada: Verifica se a condição mais severa ocorre em um período específico
+    const tarde = periodos.find(p => p.periodo === 'à tarde');
+    const noite = periodos.find(p => p.periodo === 'à noite');
+    const manha = periodos.find(p => p.periodo === 'pela manhã');
+
+    if (tarde && empatados.includes(tarde.desc)) {
+      textoVisaoGeral = `${tarde.desc} ${tarde.periodo}`;
+    } else if (noite && empatados.includes(noite.desc)) {
+      textoVisaoGeral = `${noite.desc} ${noite.periodo}`;
+    } else if (manha && empatados.includes(manha.desc)) {
+      textoVisaoGeral = `${manha.desc} ${manha.periodo}`;
+    } else {
+      // Fallback padrão se não houver um padrão temporal claro
+      textoVisaoGeral = empatados.join(' / ');
+    }
+  }
+
+  // 3. Verificação de Alertas Globais do Dia (Trovoadas, Ventos, Chuvas)
+  const temTrovoada = dh.trovoadas?.some(t => t === true);
+  const maxChuvaDia = Number(dadosDia.rain_sum_mm) || 0;
+  const maxVentoDia = Number(dadosDia.wind_max_kmh) || 0;
+
+  let alertasHtml = '';
+
+  if (temTrovoada) {
+    alertasHtml += ` <span title="Possibilidade de Trovoadas">⚡</span>`;
+  }
+  
+  return {
+    texto: textoVisaoGeral,
+    alertasHtml
+  };
+}
+
+/**
  * Identifica o índice do bloco (0, 3, 6, 9...) correspondente à hora atual
  */
 function obterIndiceBlocoAtual(horas) {
@@ -76,15 +157,12 @@ function obterIndiceBlocoAtual(horas) {
   let menorDiferenca = Infinity;
   let indiceEncontrado = 0;
 
-  // Itera pelos blocos de 3 em 3 para mapear o bloco correto diretamente
   for (let i = 0; i < horasNumericas.length; i += 3) {
     const hBloco = horasNumericas[i];
-    // Se a hora atual está dentro do bloco de 3 horas
     if (horaAtualNum >= hBloco && horaAtualNum < hBloco + 3) {
       return i;
     }
     
-    // Guardar fallback caso esteja fora do alcance padrão
     const diff = Math.abs(horaAtualNum - hBloco);
     if (diff < menorDiferenca) {
       menorDiferenca = diff;
@@ -221,6 +299,9 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
 
+    // Obtenção da Visão Geral do Dia
+    const visaoGeral = obterVisaoGeralDia(d);
+
     card.innerHTML = `
       <div class="card-header-linha ${classeFimSemana}">
         <div class="dia-data">
@@ -228,6 +309,10 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
         </div>
 
         <div class="infos-dia">
+          <div class="visao-geral-dia">
+            ${visaoGeral.texto}${visaoGeral.alertasHtml}
+          </div>
+
           <div class="textoTemp">
             <div class="info-valor">🌡️ Temperatura <br> ${textoTemp}</div>
           </div>
@@ -262,7 +347,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
         card.classList.add("active");
 
         if (index === 0) {
-          // Aguarda o fim da animação/renderização CSS antes de rolar
           setTimeout(() => {
             const elementoHoraAtual = document.getElementById(`hora-atual-card-${index}`);
             const containerHoras = document.getElementById(`horasBloco-${index}`);
@@ -271,7 +355,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
               const rectElemento = elementoHoraAtual.getBoundingClientRect();
               const rectContainer = containerHoras.getBoundingClientRect();
 
-              // Calcula o deslocamento exato baseado na posição visual relativa ao viewport
               const scrollTarget = containerHoras.scrollLeft + (rectElemento.left - rectContainer.left);
 
               containerHoras.scrollTo({

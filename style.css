@@ -107,7 +107,7 @@ h1 {
 .card {
     display: flex;
     flex-direction: column;
-    width: 900px;
+    width: 1060px;
     border: 2px solid #cecece;
     border-radius: 10px;
     overflow: hidden;
@@ -133,6 +133,12 @@ h1 {
     text-align: center;
 }
 
+.visao-geral-dia {
+    align-content: center;
+    width: 140px;
+    text-align: left;
+}
+
 .infos-dia {
     display: flex;
     justify-content: space-around;
@@ -141,10 +147,6 @@ h1 {
 
 .info-valor {
     text-align: right;
-}
-
-.infos-dia > div {
-    width: auto;
 }
 
 .card-header-linha.fim-semana .dia-data {
@@ -337,11 +339,19 @@ h1 {
         font-size: 16px;
     }
 
+    .visao-geral-dia {
+        padding: 10px;
+        border: 1px solid lightgray;
+        border-radius: 6px;
+        text-align: center;
+        align-content: center;
+    }
+
     .infos-dia {
         display: flex;
         flex-wrap: wrap;
         flex-direction: row;
-        padding: 10px;
+        padding: 2px;
         gap: 20px;
     }
 
