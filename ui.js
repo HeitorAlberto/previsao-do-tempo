@@ -54,23 +54,37 @@ function calcularModaNuvens(valores) {
 }
 
 /**
+ * Identifica o bloco de 3 horas correspondente à hora atual do Brasil
+ */
+function obterIndiceHoraAtual(horas) {
+  const agora = new Date().toLocaleTimeString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "2-digit",
+    hour12: false
+  });
+  const horaAtualNum = parseInt(agora, 10);
+
+  // Encontra o bloco de 3h mais próximo/atual
+  return horas.findIndex((hStr) => {
+    const horaBloco = parseInt(hStr.split(':')[0], 10);
+    return horaAtualNum >= horaBloco && horaAtualNum < horaBloco + 3;
+  });
+}
+
+/**
  * Gera a estrutura HTML dos dados em intervalos de 3 horas
  */
 function gerarHtmlDados3Horas(dadosDia, cardId) {
   const dh = dadosDia.dadosHorarios;
   if (!dh || !dh.horas) return '';
 
-  const horaAtualBrasil = new Date().toLocaleTimeString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    hour: "2-digit",
-    hour12: false
-  }) + ":00";
+  // Só marca "Agora" se for o primeiro card (dia atual / index 0)
+  const indiceHoraAtual = cardId === 0 ? obterIndiceHoraAtual(dh.horas) : -1;
 
   let linesHtml = "";
 
   for (let h = 0; h < dh.horas.length; h += 3) {
-    const horaTextoOriginal = dh.horas[h];
-    const ehHoraAtual = cardId === 0 && horaTextoOriginal === horaAtualBrasil;
+    const ehHoraAtual = cardId === 0 && (h === indiceHoraAtual || (indiceHoraAtual === -1 && h === 0));
     
     const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: black;"' : 'style="font-weight: bolder;"';
     const idHoraAtual = ehHoraAtual ? `id="hora-atual-card-${cardId}"` : '';
@@ -114,6 +128,7 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
     }
     const trovoadaHoraHtml = temTrovoada ? `⚡` : '';
 
+    const horaTextoOriginal = dh.horas[h];
     const horaExibicao = ehHoraAtual ? "Agora" : `${horaTextoOriginal.split(':')[0]}h`;
 
     linesHtml += `
@@ -223,19 +238,20 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
       if (!estaAtivo) {
         card.classList.add("active");
 
+        // Executa apenas no dia atual (cardIndex === 0)
         if (index === 0) {
-          const elementoHoraAtual = document.getElementById(`hora-atual-card-${index}`);
-          const containerHoras = document.getElementById(`horasBloco-${index}`);
+          // Aumentado o tempo limite para garantir o fim da animação de abertura do CSS
+          setTimeout(() => {
+            const elementoHoraAtual = document.getElementById(`hora-atual-card-${index}`);
 
-          if (elementoHoraAtual && containerHoras) {
-            setTimeout(() => {
-              const deslocamentoEsquerda = elementoHoraAtual.offsetLeft - containerHoras.offsetLeft;
-              containerHoras.scrollTo({
-                left: deslocamentoEsquerda,
-                behavior: "smooth"
+            if (elementoHoraAtual) {
+              elementoHoraAtual.scrollIntoView({
+                behavior: "smooth",
+                inline: "start",
+                block: "nearest"
               });
-            }, 50);
-          }
+            }
+          }, 150);
         }
       }
     });
