@@ -54,21 +54,45 @@ function calcularModaNuvens(valores) {
 }
 
 /**
- * Identifica o bloco de 3 horas correspondente à hora atual do Brasil
+ * Identifica o índice do bloco (0, 3, 6, 9...) correspondente à hora atual
  */
-function obterIndiceHoraAtual(horas) {
-  const agora = new Date().toLocaleTimeString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    hour: "2-digit",
-    hour12: false
-  });
-  const horaAtualNum = parseInt(agora, 10);
+function obterIndiceBlocoAtual(horas) {
+  if (!horas || horas.length === 0) return 0;
 
-  // Encontra o bloco de 3h mais próximo/atual
-  return horas.findIndex((hStr) => {
-    const horaBloco = parseInt(hStr.split(':')[0], 10);
-    return horaAtualNum >= horaBloco && horaAtualNum < horaBloco + 3;
+  const horaSpStr = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    hour: "numeric",
+    hour12: false
+  }).format(new Date());
+  
+  const horaAtualNum = parseInt(horaSpStr, 10);
+
+  const horasNumericas = horas.map(hStr => {
+    if (typeof hStr === 'number') return hStr;
+    const match = String(hStr).match(/\d+/);
+    return match ? parseInt(match[0], 10) : 0;
   });
+
+  let menorDiferenca = Infinity;
+  let indiceEncontrado = 0;
+
+  // Itera pelos blocos de 3 em 3 para mapear o bloco correto diretamente
+  for (let i = 0; i < horasNumericas.length; i += 3) {
+    const hBloco = horasNumericas[i];
+    // Se a hora atual está dentro do bloco de 3 horas
+    if (horaAtualNum >= hBloco && horaAtualNum < hBloco + 3) {
+      return i;
+    }
+    
+    // Guardar fallback caso esteja fora do alcance padrão
+    const diff = Math.abs(horaAtualNum - hBloco);
+    if (diff < menorDiferenca) {
+      menorDiferenca = diff;
+      indiceEncontrado = i;
+    }
+  }
+
+  return indiceEncontrado;
 }
 
 /**
@@ -78,13 +102,12 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
   const dh = dadosDia.dadosHorarios;
   if (!dh || !dh.horas) return '';
 
-  // Só marca "Agora" se for o primeiro card (dia atual / index 0)
-  const indiceHoraAtual = cardId === 0 ? obterIndiceHoraAtual(dh.horas) : -1;
+  const indiceBlocoAtual = cardId === 0 ? obterIndiceBlocoAtual(dh.horas) : -1;
 
   let linesHtml = "";
 
   for (let h = 0; h < dh.horas.length; h += 3) {
-    const ehHoraAtual = cardId === 0 && (h === indiceHoraAtual || (indiceHoraAtual === -1 && h === 0));
+    const ehHoraAtual = cardId === 0 && h === indiceBlocoAtual;
     
     const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: black;"' : 'style="font-weight: bolder;"';
     const idHoraAtual = ehHoraAtual ? `id="hora-atual-card-${cardId}"` : '';
@@ -128,7 +151,7 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
     }
     const trovoadaHoraHtml = temTrovoada ? `⚡` : '';
 
-    const horaTextoOriginal = dh.horas[h];
+    const horaTextoOriginal = String(dh.horas[h]);
     const horaExibicao = ehHoraAtual ? "Agora" : `${horaTextoOriginal.split(':')[0]}h`;
 
     linesHtml += `
@@ -206,15 +229,15 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
 
         <div class="infos-dia">
           <div class="textoTemp">
-            <div class="info-valor">🌡️ ${textoTemp}</div>
+            <div class="info-valor">🌡️ Temperatura <br> ${textoTemp}</div>
           </div>
         
           <div class="textoChuva">
-            <div class="info-valor">💧 ${textoChuva}</div>
+            <div class="info-valor">💧 Chuva acumulada <br> ${textoChuva}</div>
           </div>
         
           <div class="textoVento">
-            <div class="info-valor">🍃${textoVento}</div>
+            <div class="info-valor">🍃 Rajadas de vento <br> ${textoVento}</div>
           </div>
         </div>
       </div>
@@ -238,20 +261,25 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
       if (!estaAtivo) {
         card.classList.add("active");
 
-        // Executa apenas no dia atual (cardIndex === 0)
         if (index === 0) {
-          // Aumentado o tempo limite para garantir o fim da animação de abertura do CSS
+          // Aguarda o fim da animação/renderização CSS antes de rolar
           setTimeout(() => {
             const elementoHoraAtual = document.getElementById(`hora-atual-card-${index}`);
+            const containerHoras = document.getElementById(`horasBloco-${index}`);
 
-            if (elementoHoraAtual) {
-              elementoHoraAtual.scrollIntoView({
-                behavior: "smooth",
-                inline: "start",
-                block: "nearest"
+            if (elementoHoraAtual && containerHoras) {
+              const rectElemento = elementoHoraAtual.getBoundingClientRect();
+              const rectContainer = containerHoras.getBoundingClientRect();
+
+              // Calcula o deslocamento exato baseado na posição visual relativa ao viewport
+              const scrollTarget = containerHoras.scrollLeft + (rectElemento.left - rectContainer.left);
+
+              containerHoras.scrollTo({
+                left: scrollTarget - 15,
+                behavior: "smooth"
               });
             }
-          }, 150);
+          }, 300);
         }
       }
     });
