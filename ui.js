@@ -2,6 +2,26 @@ import { obterDiaSemana, formatarData } from './utils.js';
 import { obterDescricaoNuvens, formatarLocalizacao } from './parser.js';
 
 /**
+ * Garante que o estilo para ocultar a barra de rolagem exista no documento
+ */
+function garantirEstiloRolagemOculta() {
+  if (!document.getElementById('estilo-rolagem-oculta')) {
+    const style = document.createElement('style');
+    style.id = 'estilo-rolagem-oculta';
+    style.textContent = `
+      .card-horas-container.rolagem-oculta::-webkit-scrollbar {
+        display: none !important;
+      }
+      .card-horas-container.rolagem-oculta {
+        -ms-overflow-style: none !important;
+        scrollbar-width: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+/**
  * Auxiliares de formatação visual de cores
  */
 function obterCorChuva3h(mm) {
@@ -54,87 +74,6 @@ function calcularModaNuvens(valores) {
 }
 
 /**
- * Lógica para calcular a Visão Geral do Dia (Descrição dominante + Alertas)
- */
-function obterVisaoGeralDia(dadosDia) {
-  const dh = dadosDia.dadosHorarios;
-  if (!dh || !dh.horas || dh.horas.length === 0) return { texto: '', alertasHtml: '' };
-
-  // 1. Extração da descrição de nuvens em cada bloco de 3h
-  const descricoes3h = [];
-  const periodos = []; // Para saber o período do dia (manhã, tarde, noite)
-
-  for (let h = 0; h < dh.horas.length; h += 3) {
-    const fatia = Math.min(3, dh.horas.length - h);
-    const valoresNuvens = [];
-    for (let i = 0; i < fatia; i++) {
-      valoresNuvens.push(dh.nebulosidade?.[h + i] || 0);
-    }
-    const moda = calcularModaNuvens(valoresNuvens);
-    const desc = obterDescricaoNuvens(moda);
-    descricoes3h.push(desc);
-
-    // Mapeamento simples de período baseado no índice/hora
-    const horaNum = parseInt(String(dh.horas[h]).match(/\d+/)?.[0] || h, 10);
-    if (horaNum >= 6 && horaNum < 12) periodos.push({ periodo: 'pela manhã', desc });
-    else if (horaNum >= 12 && horaNum < 18) periodos.push({ periodo: 'à tarde', desc });
-    else periodos.push({ periodo: 'à noite', desc });
-  }
-
-  // 2. Cálculo da moda das descrições textuais
-  const freqMap = {};
-  let maxFreq = 0;
-
-  descricoes3h.forEach(desc => {
-    freqMap[desc] = (freqMap[desc] || 0) + 1;
-    if (freqMap[desc] > maxFreq) maxFreq = freqMap[desc];
-  });
-
-  const empatados = Object.keys(freqMap).filter(desc => freqMap[desc] === maxFreq);
-
-  let textoVisaoGeral = "";
-
-  // Caso 1: Vencedor único sem empates
-  if (empatados.length === 1) {
-    textoVisaoGeral = empatados[0];
-  } 
-  // Caso 2: Empates e combinações customizáveis
-  else {
-    // Exemplo de regra customizada: Verifica se a condição mais severa ocorre em um período específico
-    const tarde = periodos.find(p => p.periodo === 'à tarde');
-    const noite = periodos.find(p => p.periodo === 'à noite');
-    const manha = periodos.find(p => p.periodo === 'pela manhã');
-
-    if (tarde && empatados.includes(tarde.desc)) {
-      textoVisaoGeral = `${tarde.desc} ${tarde.periodo}`;
-    } else if (noite && empatados.includes(noite.desc)) {
-      textoVisaoGeral = `${noite.desc} ${noite.periodo}`;
-    } else if (manha && empatados.includes(manha.desc)) {
-      textoVisaoGeral = `${manha.desc} ${manha.periodo}`;
-    } else {
-      // Fallback padrão se não houver um padrão temporal claro
-      textoVisaoGeral = empatados.join(' / ');
-    }
-  }
-
-  // 3. Verificação de Alertas Globais do Dia (Trovoadas, Ventos, Chuvas)
-  const temTrovoada = dh.trovoadas?.some(t => t === true);
-  const maxChuvaDia = Number(dadosDia.rain_sum_mm) || 0;
-  const maxVentoDia = Number(dadosDia.wind_max_kmh) || 0;
-
-  let alertasHtml = '';
-
-  if (temTrovoada) {
-    alertasHtml += ` <span title="Possibilidade de Trovoadas">⚡</span>`;
-  }
-  
-  return {
-    texto: textoVisaoGeral,
-    alertasHtml
-  };
-}
-
-/**
  * Identifica o índice do bloco (0, 3, 6, 9...) correspondente à hora atual
  */
 function obterIndiceBlocoAtual(horas) {
@@ -171,6 +110,28 @@ function obterIndiceBlocoAtual(horas) {
   }
 
   return indiceEncontrado;
+}
+
+/**
+ * Centraliza o scroll no bloco de hora atual dentro do container
+ */
+function centralizarHoraAtual(indexCard) {
+  setTimeout(() => {
+    const elementoHoraAtual = document.getElementById(`hora-atual-card-${indexCard}`);
+    const containerHoras = document.getElementById(`horasBloco-${indexCard}`);
+
+    if (elementoHoraAtual && containerHoras) {
+      const rectElemento = elementoHoraAtual.getBoundingClientRect();
+      const rectContainer = containerHoras.getBoundingClientRect();
+
+      const scrollTarget = containerHoras.scrollLeft + (rectElemento.left - rectContainer.left);
+
+      containerHoras.scrollTo({
+        left: scrollTarget - 15,
+        behavior: "smooth"
+      });
+    }
+  }, 300);
 }
 
 /**
@@ -275,6 +236,8 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
   const container = document.getElementById("container");
   if (!container) return;
 
+  garantirEstiloRolagemOculta();
+
   container.innerHTML = ""; 
 
   const titulo = document.getElementById("cidade");
@@ -286,8 +249,12 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     card.className = "card";
     card.dataset.index = index;
 
+    // Primeiro card abre ativado por padrão
+    if (index === 0) {
+      card.classList.add("active");
+    }
+
     const diaSemana = obterDiaSemana(d.date);
-    // Adicionado o número do dia (index + 1) antes do dia da semana e data
     const textoData = `(${index + 1}) ${diaSemana}, ${formatarData(d.date)}`;
     const textoTemp = `${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°`;
     
@@ -300,9 +267,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
 
-    // Obtenção da Visão Geral do Dia
-    const visaoGeral = obterVisaoGeralDia(d);
-
     card.innerHTML = `
       <div class="card-header-linha ${classeFimSemana}">
         <div class="dia-data">
@@ -310,10 +274,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
         </div>
 
         <div class="infos-dia">
-          <div class="visao-geral-dia">
-            ${visaoGeral.texto}${visaoGeral.alertasHtml}
-          </div>
-
           <div class="textoTemp">
             <div class="info-valor">🌡️ Temperatura <br> ${textoTemp}</div>
           </div>
@@ -330,13 +290,26 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
       
       <div class="card-content">
         <div class="titulo-periodo-hora">Previsão a cada 3 horas</div>
-        <div id="horasBloco-${index}" class="card-horas-container">
+        <div id="horasBloco-${index}" class="card-horas-container rolagem-oculta">
           ${gerarHtmlDados3Horas(d, index)}
         </div>
         <div class="indicacao-rolagem"> <<< Rolagem lateral >>> </div>
       </div>
     `;
 
+    // Controle do aparecimento da barra de rolagem ao passar e tirar o mouse
+    const containerHoras = card.querySelector(".card-horas-container");
+    if (containerHoras) {
+      containerHoras.addEventListener("mouseenter", () => {
+        containerHoras.classList.remove("rolagem-oculta");
+      });
+
+      containerHoras.addEventListener("mouseleave", () => {
+        containerHoras.classList.add("rolagem-oculta");
+      });
+    }
+
+    // Toggle de expansão do Card ao clicar
     card.addEventListener("click", (e) => {
       if (e.target.closest('.card-content')) return;
 
@@ -348,28 +321,16 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
         card.classList.add("active");
 
         if (index === 0) {
-          setTimeout(() => {
-            const elementoHoraAtual = document.getElementById(`hora-atual-card-${index}`);
-            const containerHoras = document.getElementById(`horasBloco-${index}`);
-
-            if (elementoHoraAtual && containerHoras) {
-              const rectElemento = elementoHoraAtual.getBoundingClientRect();
-              const rectContainer = containerHoras.getBoundingClientRect();
-
-              const scrollTarget = containerHoras.scrollLeft + (rectElemento.left - rectContainer.left);
-
-              containerHoras.scrollTo({
-                left: scrollTarget - 15,
-                behavior: "smooth"
-              });
-            }
-          }, 300);
+          centralizarHoraAtual(index);
         }
       }
     });
 
     container.appendChild(card);
   });
+
+  // Garante a centralização automática no primeiro carregamento
+  centralizarHoraAtual(0);
 
   if (typeof atualizarHistoricoCallback === "function") {
     atualizarHistoricoCallback(cidadeObj._cidadeBruta || { nome: cidadeObj.cidade });
