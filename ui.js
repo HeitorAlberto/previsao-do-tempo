@@ -287,7 +287,8 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     card.dataset.index = index;
 
     const diaSemana = obterDiaSemana(d.date);
-    const textoData = `${diaSemana}, ${formatarData(d.date)}`;
+    // Adicionado o número do dia (index + 1) antes do dia da semana e data
+    const textoData = `(${index + 1}) ${diaSemana}, ${formatarData(d.date)}`;
     const textoTemp = `${Math.round(d.temp_min_c)}° a ${Math.round(d.temp_max_c)}°`;
     
     const acumuladoChuvaDia = Number(d.rain_sum_mm) || 0;
