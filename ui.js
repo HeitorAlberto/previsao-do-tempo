@@ -275,15 +275,15 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
 
         <div class="infos-dia">
           <div class="textoTemp">
-            <div class="info-valor">🌡️ Temperatura <br> ${textoTemp}</div>
+            <div class="info-valor">🌡️ Temperatura <br> <strong>${textoTemp}</strong></div>
           </div>
         
           <div class="textoChuva">
-            <div class="info-valor">💧 Chuva acumulada <br> ${textoChuva}</div>
+            <div class="info-valor">💧 Chuva acumulada <br> <strong>${textoChuva}</strong></div>
           </div>
         
           <div class="textoVento">
-            <div class="info-valor">🍃 Rajadas de vento <br> ${textoVento}</div>
+            <div class="info-valor">🍃 Rajadas de vento <br> <strong>${textoVento}</strong></div>
           </div>
         </div>
       </div>

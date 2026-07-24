@@ -149,6 +149,10 @@ h1 {
     text-align: right;
 }
 
+.info-valor > strong {
+    color: #000000;
+}
+
 .card-header-linha.fim-semana .dia-data {
     color: orangered;
 }
