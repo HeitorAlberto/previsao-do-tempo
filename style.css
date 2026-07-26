@@ -240,6 +240,8 @@ h1 {
 
 .hora {
     width: 100%;
+    background-color: #ebebeb;
+    padding: 2px;
 }
 
 .indicacao-rolagem {
