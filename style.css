@@ -208,14 +208,14 @@ h1 {
 }
 
 .card-horas-container {
-    display: flex;
-    flex-direction: row;   
-    padding-bottom: 20px;
-    width: 100%;             
-    overflow-x: auto;      
-    -webkit-overflow-scrolling: touch;
-    gap: 15px;
-    scroll-padding-left: 15px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  padding-bottom: 20px;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-left: 15px;
+  gap: 35px;
 }
 
 .card-horas-container .horas {
@@ -223,9 +223,6 @@ h1 {
     flex-direction: column;
     gap: 10px;
     flex-shrink: 0;
-    padding: 5px;
-    border: 1px solid lightgray;
-    border-radius: 6px;
 }
 
 .hora-info {
@@ -343,16 +340,6 @@ h1 {
         font-size: 16px;
     }
 
-    .visao-geral-dia {
-        padding: 10px;
-        border: 1px solid lightgray;
-        background-color: lightgray;
-        border-radius: 6px;
-        text-align: center;
-        align-content: center;
-        width: 100%;
-        font-weight: bold;
-    }
 
     .infos-dia {
         display: grid;
@@ -378,10 +365,27 @@ h1 {
         padding: 10px;
     }
 
-    .periodos-bloco {
-        grid-template-columns: 1fr 1fr;
-        padding: 10px;
-        gap: 15px;
+    .card-horas-container {
+        display: grid;
+        grid-template-columns: 1fr;
+        height: 380px;
+        overflow-y: auto;                  
+        overflow-x: hidden;                
+        position: relative;                
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid #cecece;
+        border-radius: 6px;
+    }
+
+
+    .horas {
+        width: 100%;
+        text-align: center;
+    }
+
+    .hora-info {
+        display: flex;
+        flex-wrap: wrap;
     }
 
     .periodo-titulo {

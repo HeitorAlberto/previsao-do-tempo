@@ -120,10 +120,26 @@ function centralizarHoraAtual(indexCard) {
     const elementoHoraAtual = document.getElementById(`hora-atual-card-${indexCard}`);
     const containerHoras = document.getElementById(`horasBloco-${indexCard}`);
 
-    if (elementoHoraAtual && containerHoras) {
+    if (!elementoHoraAtual || !containerHoras) return;
+
+    // Detecta se a tela é mobile (até 480px)
+    const isMobile = window.innerWidth <= 480;
+
+    if (isMobile) {
+      // Rolagem Vertical
+      const elementoTopo = elementoHoraAtual.offsetTop;
+      const containerAltura = containerHoras.clientHeight;
+      const elementoAltura = elementoHoraAtual.clientHeight;
+      const targetScroll = elementoTopo - (containerAltura / 2) + (elementoAltura / 2);
+
+      containerHoras.scrollTo({
+        top: targetScroll,
+        behavior: "smooth"
+      });
+    } else {
+      // Rolagem Horizontal (Desktop)
       const rectElemento = elementoHoraAtual.getBoundingClientRect();
       const rectContainer = containerHoras.getBoundingClientRect();
-
       const scrollTarget = containerHoras.scrollLeft + (rectElemento.left - rectContainer.left);
 
       containerHoras.scrollTo({
@@ -293,7 +309,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
         <div id="horasBloco-${index}" class="card-horas-container rolagem-oculta">
           ${gerarHtmlDados3Horas(d, index)}
         </div>
-        <div class="indicacao-rolagem"> <<< Rolagem lateral >>> </div>
       </div>
     `;
 
