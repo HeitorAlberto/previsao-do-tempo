@@ -1,5 +1,5 @@
 import { obterDiaSemana, formatarData } from './utils.js';
-import { obterDescricaoNuvens, formatarLocalizacao } from './parser.js';
+import { avaliarCondicaoTempo, formatarLocalizacao } from './parser.js';
 
 /**
  * Garante que o estilo para ocultar a barra de rolagem exista no documento
@@ -19,6 +19,26 @@ function garantirEstiloRolagemOculta() {
     `;
     document.head.appendChild(style);
   }
+}
+
+/**
+ * Retorna o caminho do ícone PNG da Meteoblue
+ */
+function obterCaminhoIconeMeteoblue(pictoCode, isNight = false, isDaily = false) {
+  if (pictoCode === undefined || pictoCode === null) return '';
+  
+  const codeFormatted = String(pictoCode).padStart(2, '0');
+  
+  let fileName = '';
+  if (isDaily) {
+    fileName = `${codeFormatted}_iday.png`;
+  } else if (isNight) {
+    fileName = `${codeFormatted}_night.png`;
+  } else {
+    fileName = `${codeFormatted}_day.png`;
+  }
+
+  return `icones/${fileName}`;
 }
 
 /**
@@ -43,34 +63,6 @@ function obterCorTemperatura(temp) {
   if (temp <= 28) return '#000';
   if (temp <= 32) return '#f55600';
   return '#9d1200';
-}
-
-function arredondarParaDezena(valor) {
-  return Math.round((Number(valor) || 0) / 10) * 10;
-}
-
-/**
- * Calcula a moda de um conjunto de valores numéricos de nebulosidade
- */
-function calcularModaNuvens(valores) {
-  if (!valores || valores.length === 0) return 0;
-
-  const valoresFechados = valores.map((v) => arredondarParaDezena(v));
-  const frequencias = {};
-  let maxFrequencia = 0;
-
-  for (const v of valoresFechados) {
-    frequencias[v] = (frequencias[v] || 0) + 1;
-    if (frequencias[v] > maxFrequencia) {
-      maxFrequencia = frequencias[v];
-    }
-  }
-
-  const empatados = Object.keys(frequencias)
-    .filter((v) => frequencias[v] === maxFrequencia)
-    .map(Number);
-
-  return Math.max(...empatados);
 }
 
 /**
@@ -122,11 +114,9 @@ function centralizarHoraAtual(indexCard) {
 
     if (!elementoHoraAtual || !containerHoras) return;
 
-    // Detecta se a tela é mobile (até 480px)
     const isMobile = window.innerWidth <= 480;
 
     if (isMobile) {
-      // Rolagem Vertical
       const elementoTopo = elementoHoraAtual.offsetTop;
       const containerAltura = containerHoras.clientHeight;
       const elementoAltura = elementoHoraAtual.clientHeight;
@@ -137,7 +127,6 @@ function centralizarHoraAtual(indexCard) {
         behavior: "smooth"
       });
     } else {
-      // Rolagem Horizontal (Desktop)
       const rectElemento = elementoHoraAtual.getBoundingClientRect();
       const rectContainer = containerHoras.getBoundingClientRect();
       const scrollTarget = containerHoras.scrollLeft + (rectElemento.left - rectContainer.left);
@@ -158,62 +147,61 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
   if (!dh || !dh.horas) return '';
 
   const indiceBlocoAtual = cardId === 0 ? obterIndiceBlocoAtual(dh.horas) : -1;
-
   let linesHtml = "";
 
   for (let h = 0; h < dh.horas.length; h += 3) {
     const ehHoraAtual = cardId === 0 && h === indiceBlocoAtual;
-    
-    const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: black;"' : 'style="font-weight: bolder;"';
+    const estiloHora = ehHoraAtual ? 'style="font-weight: bolder; color: orangered;"' : 'style="font-weight: bolder;"';
     const idHoraAtual = ehHoraAtual ? `id="hora-atual-card-${cardId}"` : '';
     
     const fatiaHoras = Math.min(3, dh.horas.length - h);
-    
-    const valoresNuvensBloco = [];
-    for (let i = 0; i < fatiaHoras; i++) {
-      valoresNuvensBloco.push(dh.nebulosidade?.[h + i] || 0);
-    }
-    const modaNuvens3h = calcularModaNuvens(valoresNuvensBloco);
-    const descNuvens3h = obterDescricaoNuvens(modaNuvens3h);
 
-    const tempHora = dh.temperaturas?.[h] !== undefined 
-      ? Math.round(dh.temperaturas[h]) 
-      : 0;
-    const corTemp = obterCorTemperatura(tempHora);
-
+    let somaChuva = 0;
+    let minNuvensNoBloco = 100;
+    let temTrovoada = false;
     let maxRajada = 0;
+
     for (let i = 0; i < fatiaHoras; i++) {
+      const valChuva = Number(dh.chuvas?.[h + i]) || 0;
+      const valNuvens = Number(dh.nebulosidade?.[h + i]) || 0;
+      
+      somaChuva += valChuva; // Soma acumulada do bloco de 3 horas
+      
+      if (valNuvens < minNuvensNoBloco) minNuvensNoBloco = valNuvens;
+      if (dh.trovoadas?.[h + i] === true) temTrovoada = true;
+
       const r = dh.rajadas?.[h + i] ? Math.round(dh.rajadas[h + i]) : 0;
       if (r > maxRajada) maxRajada = r;
     }
-    const corVento = obterCorVento(maxRajada);
 
-    let somaChuva = 0;
-    let maxProb = 0;
-    for (let i = 0; i < fatiaHoras; i++) {
-      somaChuva += Number(dh.chuvas?.[h + i]) || 0;
-      const prob = dh.probabilidades?.[h + i] || 0;
-      if (prob > maxProb) maxProb = prob;
-    }
-    const corChuva = obterCorChuva3h(somaChuva);
-
-    let temTrovoada = false;
-    for (let i = 0; i < fatiaHoras; i++) {
-      if (dh.trovoadas?.[h + i] === true) {
-        temTrovoada = true;
-        break;
-      }
-    }
-    const trovoadaHoraHtml = temTrovoada ? `⚡` : '';
+    // Avalia o bloco usando a chuva acumulada e a nebulosidade
+    const condicao3h = avaliarCondicaoTempo(minNuvensNoBloco, somaChuva, temTrovoada);
 
     const horaTextoOriginal = String(dh.horas[h]);
-    const horaExibicao = ehHoraAtual ? "Agora" : `${horaTextoOriginal.split(':')[0]}h`;
+    const matchHora = horaTextoOriginal.match(/\d+/);
+    const horaNum = matchHora ? parseInt(matchHora[0], 10) : 0;
+    
+    // Alternância Noite / Dia (Noite: 18h às 05h)
+    const isNight = horaNum < 6 || horaNum >= 18;
+
+    const srcIcone = obterCaminhoIconeMeteoblue(condicao3h.codigo, isNight, false);
+    const imgIconeHtml = srcIcone 
+      ? `<img src="${srcIcone}" alt="${condicao3h.descricao}" class="icone-tempo-3h" />` 
+      : '';
+
+    const tempHora = dh.temperaturas?.[h] !== undefined ? Math.round(dh.temperaturas[h]) : 0;
+    const corTemp = obterCorTemperatura(tempHora);
+    const corVento = obterCorVento(maxRajada);
+    const corChuva = obterCorChuva3h(somaChuva);
+
+    const horaExibicao = ehHoraAtual ? "Agora" : `${horaNum}h`;
 
     linesHtml += `
       <div class="horas" ${idHoraAtual}>
         <div class="hora" ${estiloHora}>${horaExibicao}</div>
         <div class="hora-info">
-          <div class="nuvens-desc">${descNuvens3h}${trovoadaHoraHtml}</div>
+          ${imgIconeHtml}
+          <div class="nuvens-desc">${condicao3h.descricao}</div>
           <div style="color: ${corTemp}">${tempHora}°C</div>
           <div style="color: ${corChuva};">
             ${somaChuva.toFixed(1)} mm
@@ -265,7 +253,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     card.className = "card";
     card.dataset.index = index;
 
-    // Primeiro card abre ativado por padrão
     if (index === 0) {
       card.classList.add("active");
     }
@@ -283,10 +270,18 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     const ehFimSemana = diaSemana.toLowerCase().includes("sáb") || diaSemana.toLowerCase().includes("dom");
     const classeFimSemana = ehFimSemana ? "fim-semana" : "";
 
+    // Ícone Diário (_iday.png)
+    const pictoCodeDaily = d.pictoCode;
+    const srcIconeDaily = pictoCodeDaily ? obterCaminhoIconeMeteoblue(pictoCodeDaily, false, true) : '';
+    const imgIconeDailyHtml = srcIconeDaily 
+      ? `<img src="${srcIconeDaily}" alt="Clima do dia" class="icone-tempo-diario" style="width: 48px; height: 48px; vertical-align: middle; margin-left: 8px;" />` 
+      : '';
+
     card.innerHTML = `
       <div class="card-header-linha ${classeFimSemana}">
         <div class="dia-data">
           <strong>${textoData}</strong>
+          ${imgIconeDailyHtml}
         </div>
 
         <div class="infos-dia">
@@ -312,7 +307,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
       </div>
     `;
 
-    // Controle do aparecimento da barra de rolagem ao passar e tirar o mouse
     const containerHoras = card.querySelector(".card-horas-container");
     if (containerHoras) {
       containerHoras.addEventListener("mouseenter", () => {
@@ -324,7 +318,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
       });
     }
 
-    // Toggle de expansão do Card ao clicar
     card.addEventListener("click", (e) => {
       if (e.target.closest('.card-content')) return;
 
@@ -344,7 +337,6 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
     container.appendChild(card);
   });
 
-  // Garante a centralização automática no primeiro carregamento
   centralizarHoraAtual(0);
 
   if (typeof atualizarHistoricoCallback === "function") {

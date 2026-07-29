@@ -17,6 +17,14 @@ header {
     padding: 20px 0;
 }
 
+footer {
+    display: grid;
+    gap: 20px;
+    padding: 20px;
+    text-align: center;
+    margin-top: 60px;
+}
+
 h1 {
     text-align: center;
 }
@@ -81,7 +89,7 @@ h1 {
     font-weight: normal;
 }
 
-.info-modelo, #btn-mapas {
+#btn-mapas {
     text-align: center;
     color: #21b45c;
     margin-bottom: 30px;
@@ -240,8 +248,15 @@ h1 {
 
 .hora {
     width: 100%;
-    background-color: #ebebeb;
+    background-color: #000;
+    color: white;
     padding: 2px;
+    text-align: center;
+}
+
+.icone-tempo-3h {
+    border-radius: 8px;
+    width: 60%;
 }
 
 .indicacao-rolagem {
