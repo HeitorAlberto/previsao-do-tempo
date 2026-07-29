@@ -217,7 +217,7 @@ h1 {
 
 .card-horas-container {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(8, 1fr);
   padding-bottom: 20px;
   width: 100%;
   overflow-x: auto;
@@ -236,27 +236,23 @@ h1 {
 .hora-info {
     display: flex;
     flex-direction: column;
+    text-align: center;
     gap: 8px;
-    min-width: 150px; 
     flex-shrink: 0;
 }
 
 .horas {
     font-size: 16px;
-    width: 180px;
 }
 
 .hora {
-    width: 100%;
-    background-color: #000;
-    color: white;
     padding: 2px;
     text-align: center;
 }
 
 .icone-tempo-3h {
     border-radius: 8px;
-    width: 60%;
+    width: 100%;
 }
 
 .indicacao-rolagem {
@@ -275,7 +271,7 @@ h1 {
 }
 
 .nuvens-desc {
-    color: #000000;
+    display: none;
 }
 
 .trovoadas {
@@ -384,7 +380,7 @@ h1 {
 
     .card-horas-container {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
         height: 380px;
         overflow-y: auto;                  
         overflow-x: hidden;                
@@ -396,8 +392,12 @@ h1 {
 
 
     .horas {
-        width: 100%;
         text-align: center;
+    }
+
+    .icone-tempo-3h {
+        width: 70%;
+        align-self: center;
     }
 
     .hora-info {

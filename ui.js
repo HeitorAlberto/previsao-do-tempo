@@ -207,7 +207,7 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
             ${somaChuva.toFixed(1)} mm
           </div>
           <div style="color: ${corVento};">
-            Rajadas: ${maxRajada} km/h
+            ${maxRajada} km/h
           </div>
         </div>
       </div>
