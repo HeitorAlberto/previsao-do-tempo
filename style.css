@@ -375,11 +375,6 @@ h1 {
     .card-horas-container {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        height: 500px;
-        overflow-y: auto;                  
-        overflow-x: hidden;                
-        position: relative;                
-        -webkit-overflow-scrolling: touch;
     }
 
 
@@ -388,7 +383,7 @@ h1 {
     }
 
     .icone-tempo-3h {
-        width: 70%;
+        width: 50%;
         align-self: center;
     }
 

@@ -194,7 +194,7 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
     const corVento = obterCorVento(maxRajada);
     const corChuva = obterCorChuva3h(somaChuva);
 
-    const horaExibicao = ehHoraAtual ? `${horaNum}h (agora)` : `${horaNum}h`;
+    const horaExibicao = ehHoraAtual ? `${horaNum}h` : `${horaNum}h`;
 
     linesHtml += `
       <div class="horas" ${idHoraAtual}>
@@ -294,7 +294,7 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
         
           <div class="textoChuva">
             <div class="info-rotulo">Chuva acumulada</div>
-            <div class="info-valor" style="color: blue">${textoChuva}</div>
+            <div class="info-valor" style="color: #0288D1">${textoChuva}</div>
           </div>
         
           <div class="textoVento">
