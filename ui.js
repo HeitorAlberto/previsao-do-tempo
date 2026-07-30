@@ -45,7 +45,7 @@ function obterCaminhoIconeMeteoblue(pictoCode, isNight = false, isDaily = false)
  * Auxiliares de formatação visual de cores
  */
 function obterCorChuva3h(mm) {
-  if (mm <= 1) return '#000';
+  if (mm == 0) return '#000';
   if (mm <= 5.0) return '#0288D1';
   if (mm <= 15.0) return '#F9A825';
   return '#D32F2F';
@@ -194,7 +194,7 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
     const corVento = obterCorVento(maxRajada);
     const corChuva = obterCorChuva3h(somaChuva);
 
-    const horaExibicao = ehHoraAtual ? "Agora" : `${horaNum}h`;
+    const horaExibicao = ehHoraAtual ? `${horaNum}h (agora)` : `${horaNum}h`;
 
     linesHtml += `
       <div class="horas" ${idHoraAtual}>
@@ -202,12 +202,14 @@ function gerarHtmlDados3Horas(dadosDia, cardId) {
         <div class="hora-info">
           ${imgIconeHtml}
           <div class="nuvens-desc">${condicao3h.descricao}</div>
-          <div style="color: ${corTemp}">${tempHora}°C</div>
+          <div style="color: ${corTemp}">
+            🌡️​${tempHora}°C
+          </div>
           <div style="color: ${corChuva};">
-            ${somaChuva.toFixed(1)} mm
+            💧${somaChuva.toFixed(1)} mm
           </div>
           <div style="color: ${corVento};">
-            ${maxRajada} km/h
+            🍃${maxRajada} km/h
           </div>
         </div>
       </div>
@@ -286,14 +288,17 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
 
         <div class="infos-dia">
           <div class="textoTemp">
+            <div class="info-rotulo">Temperatura</div>
             <div class="info-valor" style="color: red">${textoTemp}</div>
           </div>
         
           <div class="textoChuva">
+            <div class="info-rotulo">Chuva acumulada</div>
             <div class="info-valor" style="color: blue">${textoChuva}</div>
           </div>
         
           <div class="textoVento">
+            <div class="info-rotulo">Rajada de vento máx</div>
             <div class="info-valor" style="color: green">${textoVento}</div>
           </div>
         </div>
