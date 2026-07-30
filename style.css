@@ -162,7 +162,7 @@ h1 {
 }
 
 .card-header-linha.fim-semana .dia-data {
-    color: orangered;
+    color: #eabf00;
 }
 
 .card-content {
@@ -356,16 +356,15 @@ h1 {
 
     .infos-dia {
         display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, 1fr);
         padding: 2px;
         gap: 20px;
     }
 
     .info-valor {
         padding: 10px;
-        border: 1px solid lightgray;
-        border-radius: 6px;
         text-align: center;
+        font-weight: bolder;
     }
 
     .textoTemp, .textoChuva, .textoVento {
@@ -381,13 +380,11 @@ h1 {
     .card-horas-container {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        height: 380px;
+        height: 500px;
         overflow-y: auto;                  
         overflow-x: hidden;                
         position: relative;                
         -webkit-overflow-scrolling: touch;
-        border: 1px solid #cecece;
-        border-radius: 6px;
     }
 
 

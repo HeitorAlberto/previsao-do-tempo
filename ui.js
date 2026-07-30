@@ -45,7 +45,7 @@ function obterCaminhoIconeMeteoblue(pictoCode, isNight = false, isDaily = false)
  * Auxiliares de formatação visual de cores
  */
 function obterCorChuva3h(mm) {
-  if (mm <= 0) return '#000';
+  if (mm <= 1) return '#000';
   if (mm <= 5.0) return '#0288D1';
   if (mm <= 15.0) return '#F9A825';
   return '#D32F2F';
@@ -286,15 +286,15 @@ export function renderizarCidadeUI(cidadeObj, indiceInutilizado, atualizarHistor
 
         <div class="infos-dia">
           <div class="textoTemp">
-            <div class="info-valor">🌡️ Temperatura <br> <strong>${textoTemp}</strong></div>
+            <div class="info-valor" style="color: red">${textoTemp}</div>
           </div>
         
           <div class="textoChuva">
-            <div class="info-valor">💧 Chuva acumulada <br> <strong>${textoChuva}</strong></div>
+            <div class="info-valor" style="color: blue">${textoChuva}</div>
           </div>
         
           <div class="textoVento">
-            <div class="info-valor">🍃 Rajadas de vento <br> <strong>${textoVento}</strong></div>
+            <div class="info-valor" style="color: green">${textoVento}</div>
           </div>
         </div>
       </div>
