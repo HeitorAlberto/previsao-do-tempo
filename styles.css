@@ -105,10 +105,14 @@ h1 {
     border-radius: 8px;
     padding: 10px;
     margin-bottom: 50px;
-    text-align: center;
     gap: 10px;
     width: 92vw;
     justify-self: center;
+}
+
+.history-item {
+    padding: 5px;
+    cursor: pointer;
 }
 
 .current-location {
@@ -150,7 +154,14 @@ h1 {
 }
 
 .toggle-btn {
-    padding: 10px;
+    background-color: white;
+    cursor: pointer;
+    border: none;
+    width: 200px;
+    justify-self: center;
+    border-radius: 8px;
+    font-weight: bolder;
+    font-size: 30px;
 }
 
 
@@ -191,5 +202,6 @@ h1 {
     }
     .blocks-grid {
         grid-template-columns: 1fr 1fr;
+        padding: 30px;
     }
 }

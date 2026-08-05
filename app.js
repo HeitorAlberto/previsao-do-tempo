@@ -46,6 +46,19 @@ const currentLocationDiv = document.getElementById('current-location');
 const historyDiv = document.getElementById('search-history');
 let debounceTimer;
 
+// Esconde imediatamente o container de sugestões
+function hideSuggestions() {
+  suggestionsDiv.hidden = true;
+  suggestionsDiv.style.display = 'none';
+  suggestionsDiv.innerHTML = '';
+}
+
+// Exibe o container de sugestões
+function showSuggestions() {
+  suggestionsDiv.hidden = false;
+  suggestionsDiv.style.display = 'block';
+}
+
 // --- GERENCIAMENTO DE HISTÓRICO ---
 function getHistory() {
   return JSON.parse(localStorage.getItem('weather_history')) || [];
@@ -54,8 +67,10 @@ function getHistory() {
 function saveToHistory(place) {
   let history = getHistory();
   
-  // 1. Remove se já existir (evita duplicatas)
-  history = history.filter(item => item.name !== place.name || item.country !== place.country);
+  // 1. Remove se já existir (evita duplicatas considerando cidade, estado e país)
+  history = history.filter(item => 
+    !(item.name === place.name && item.admin1 === place.admin1 && item.country === place.country)
+  );
   
   // 2. Adiciona o mais recente no topo
   history.unshift(place);
@@ -69,7 +84,7 @@ function saveToHistory(place) {
   renderHistory();
 }
 
-// Renderiza o título "Histórico" e as divs simples das cidades salvas
+// Renderiza o título "Histórico" e as divs simples das cidades salvas (Cidade, Estado, País)
 function renderHistory() {
   const history = getHistory();
   historyDiv.innerHTML = '';
@@ -78,13 +93,16 @@ function renderHistory() {
 
   const titleHeader = document.createElement('h4');
   titleHeader.className = 'history-title';
-  titleHeader.textContent = 'Histórico';
+  titleHeader.textContent = 'Últimas buscas:';
   historyDiv.appendChild(titleHeader);
 
   history.forEach(place => {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'history-item';
-    itemDiv.textContent = `${place.name}`;
+    
+    const formattedText = `${place.name}${place.admin1 ? ', ' + place.admin1 : ''}, ${place.country}`;
+    itemDiv.textContent = formattedText;
+    
     itemDiv.addEventListener('click', () => {
       selectCity(place);
     });
@@ -94,7 +112,9 @@ function renderHistory() {
 
 // Função executada ao selecionar uma cidade
 function selectCity(place) {
-  suggestionsDiv.hidden = true;
+  // Esconde e limpa o elemento de sugestões IMEDIATAMENTE após a busca
+  hideSuggestions();
+  searchInput.value = '';
   
   const formattedLocation = `${place.name}${place.admin1 ? ', ' + place.admin1 : ''}, ${place.country}`;
   currentLocationDiv.style.border = '2px solid black';
@@ -111,7 +131,7 @@ searchInput.addEventListener('input', () => {
   const query = searchInput.value.trim();
   
   if (query.length < 3) {
-    suggestionsDiv.hidden = true;
+    hideSuggestions();
     return;
   }
 
@@ -129,10 +149,13 @@ searchInput.addEventListener('input', () => {
           itemDiv.addEventListener('click', () => selectCity(place));
           suggestionsDiv.appendChild(itemDiv);
         });
-        suggestionsDiv.hidden = false;
+        showSuggestions();
+      } else {
+        hideSuggestions();
       }
     } catch (err) {
       console.error('Erro na geocodificação:', err);
+      hideSuggestions();
     }
   }, 300);
 });
@@ -237,7 +260,7 @@ function renderForecast(hourly) {
             <p>Rajadas de vento max</p> <p>${maxWind} km/h</p>
         </div>
         
-        <button class="toggle-btn" aria-label="Expandir detalhes">Expandir</button>
+        <button class="toggle-btn" aria-label="Expandir detalhes">︾</button>
       </div>
 
       <div class="card-details" hidden>
@@ -260,7 +283,7 @@ function renderForecast(hourly) {
     toggleBtn.addEventListener('click', () => {
       const isHidden = detailsDiv.hidden;
       detailsDiv.hidden = !isHidden;
-      toggleBtn.textContent = isHidden ? 'Retrair' : 'Expandir';
+      toggleBtn.textContent = isHidden ? '︽' : '︾';
     });
 
     container.appendChild(cardDiv);
