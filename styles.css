@@ -1,0 +1,152 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+/* --- NÍVEIS DE CHUVA (INMET) --- */
+.rain-none {
+  color: #333333;
+}
+.rain-very-light {
+  color: black;
+}
+.rain-light {
+  color: black; 
+}
+.rain-moderate {
+  color: #fbc02d;
+}
+.rain-heavy {
+  color: #f57c00;
+}
+.rain-extreme {
+  color: #d32f2f;
+}
+
+/* --- NÍVEIS DE VENTO / ALERTAS (INMET) --- */
+.wind-normal {
+  color: #333333;
+}
+.wind-yellow {
+  color: #fbc02d;
+}
+.wind-orange {
+  color: #f57c00;
+}
+.wind-red {
+  color: #d32f2f;
+}
+
+/* --- INDICADORES GEOMÉTRICOS DE NEBULOSIDADE --- */
+.cloud-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid #333;
+  display: inline-block;
+}
+
+.cloud-dot.filled {
+  background-color: #333;
+}
+
+html {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+
+header {
+    padding: 20px;
+    margin-bottom: 50px;
+}
+
+h1 {
+    text-align: center;
+    color: orange;
+    margin-bottom: 20px;
+}
+
+
+.search-container {
+    justify-self: center;
+    margin-bottom: 50px;
+}
+
+
+.history {
+    display: grid;
+    border: 2px solid black;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 50px;
+    text-align: center;
+    gap: 10px;
+    width: 92vw;
+    justify-self: center;
+}
+
+.current-location {
+    border: 2px solid black;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 50px;
+    text-align: center;
+}
+
+
+main {
+    padding: 0 10px;
+}
+
+
+.daily-card {
+    border: 2px solid black;
+    border-radius: 8px;
+    margin-bottom: 50px;
+}
+
+
+.card-summary {
+    display: grid;
+    gap: 20px;
+    padding: 10px;
+}
+
+.info-day {
+    display: flex;
+    justify-content: space-between;
+}
+
+.toggle-btn {
+    padding: 10px;
+}
+
+
+.blocks-grid {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 20px;
+    padding: 10px;
+}
+
+.block-3h {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.block-time {
+    font-weight: bolder;
+}
+
+
+
+/* Container das 4 bolinhas */
+.cloud-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
