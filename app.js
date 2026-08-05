@@ -34,9 +34,14 @@ function getCloudText(cloudCover) {
   return 'Nublado';
 }
 
+// Verifica se há códigos WMO referentes a trovoadas (95: Trovoadas, 96/99: Trovoadas com granizo)
+function hasThunderstorm(codes) {
+  return codes.some(code => code === 95 || code === 96 || code === 99);
+}
+
 // Elementos do DOM
 const searchInput = document.getElementById('city-search');
-const suggestionsUl = document.getElementById('search-suggestions');
+const suggestionsDiv = document.getElementById('search-suggestions');
 const currentLocationDiv = document.getElementById('current-location');
 const historyDiv = document.getElementById('search-history');
 let debounceTimer;
@@ -64,12 +69,17 @@ function saveToHistory(place) {
   renderHistory();
 }
 
-// Renderiza divs simples com a classe history-item
+// Renderiza o título "Histórico" e as divs simples das cidades salvas
 function renderHistory() {
   const history = getHistory();
   historyDiv.innerHTML = '';
 
   if (history.length === 0) return;
+
+  const titleHeader = document.createElement('h4');
+  titleHeader.className = 'history-title';
+  titleHeader.textContent = 'Histórico';
+  historyDiv.appendChild(titleHeader);
 
   history.forEach(place => {
     const itemDiv = document.createElement('div');
@@ -84,22 +94,24 @@ function renderHistory() {
 
 // Função executada ao selecionar uma cidade
 function selectCity(place) {
-  suggestionsUl.hidden = true;
+  suggestionsDiv.hidden = true;
   
   const formattedLocation = `${place.name}${place.admin1 ? ', ' + place.admin1 : ''}, ${place.country}`;
-  currentLocationDiv.innerHTML = `<div style="justify-self: center">📍 Local atual:</div> <br> <div>${formattedLocation}</div>`;
+  currentLocationDiv.style.border = '2px solid black';
+
+  currentLocationDiv.innerHTML = `<p style="font-weight: bolder">📍 Local atual:</p> <br> <p>${formattedLocation}</p>`;
   
   saveToHistory(place);
   fetchForecast(place.latitude, place.longitude);
 }
 
-// 1. Autocomplete (Open-Meteo Geocoding API)
+// 1. Autocomplete (Open-Meteo Geocoding API) - Renderizado usando DIVs
 searchInput.addEventListener('input', () => {
   clearTimeout(debounceTimer);
   const query = searchInput.value.trim();
   
   if (query.length < 3) {
-    suggestionsUl.hidden = true;
+    suggestionsDiv.hidden = true;
     return;
   }
 
@@ -108,15 +120,16 @@ searchInput.addEventListener('input', () => {
       const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=pt`);
       const data = await res.json();
       
-      suggestionsUl.innerHTML = '';
+      suggestionsDiv.innerHTML = '';
       if (data.results && data.results.length > 0) {
         data.results.forEach(place => {
-          const li = document.createElement('li');
-          li.textContent = `${place.name}${place.admin1 ? ', ' + place.admin1 : ''} - ${place.country}`;
-          li.addEventListener('click', () => selectCity(place));
-          suggestionsUl.appendChild(li);
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'suggestion-item';
+          itemDiv.textContent = `${place.name}${place.admin1 ? ', ' + place.admin1 : ''} - ${place.country}`;
+          itemDiv.addEventListener('click', () => selectCity(place));
+          suggestionsDiv.appendChild(itemDiv);
         });
-        suggestionsUl.hidden = false;
+        suggestionsDiv.hidden = false;
       }
     } catch (err) {
       console.error('Erro na geocodificação:', err);
@@ -124,9 +137,9 @@ searchInput.addEventListener('input', () => {
   }, 300);
 });
 
-// 2. Busca Previsão ECMWF de Alta Resolução (IFS 9km)
+// 2. Busca Previsão ECMWF de Alta Resolução (IFS 9km) com inclusão de weather_code
 async function fetchForecast(lat, lon) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,cloud_cover,wind_gusts_10m&models=ecmwf_ifs025&timezone=auto`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,cloud_cover,wind_gusts_10m,weather_code&models=ecmwf_ifs&timezone=auto`;
   
   try {
     const res = await fetch(url);
@@ -152,7 +165,8 @@ function renderForecast(hourly) {
         temps: [],
         precip: [],
         clouds: [],
-        windGusts: []
+        windGusts: [],
+        weatherCodes: []
       };
     }
     daysMap[dateStr].times.push(timeStr);
@@ -160,6 +174,7 @@ function renderForecast(hourly) {
     daysMap[dateStr].precip.push(hourly.precipitation[i]);
     daysMap[dateStr].clouds.push(hourly.cloud_cover[i]);
     daysMap[dateStr].windGusts.push(hourly.wind_gusts_10m[i]);
+    daysMap[dateStr].weatherCodes.push(hourly.weather_code[i]);
   });
 
   Object.keys(daysMap).forEach(dateKey => {
@@ -180,6 +195,7 @@ function renderForecast(hourly) {
       const sliceClouds = day.clouds.slice(i, i + 3);
       const slicePrecip = day.precip.slice(i, i + 3);
       const sliceWind = day.windGusts.slice(i, i + 3);
+      const sliceCodes = day.weatherCodes.slice(i, i + 3);
       
       const hourLabel = day.times[i].substring(11, 16);
       const avgCloud = sliceClouds.reduce((a, b) => a + b, 0) / (sliceClouds.length || 1);
@@ -188,6 +204,7 @@ function renderForecast(hourly) {
 
       const rainInfo = getRainInfo(sumPrecip);
       const windInfo = getWindInfo(maxWind3h);
+      const isThunder = hasThunderstorm(sliceCodes);
 
       blocks3h.push({
         hour: hourLabel,
@@ -197,7 +214,8 @@ function renderForecast(hourly) {
         rainLabel: rainInfo.label,
         windKmh: Math.round(maxWind3h),
         windClass: windInfo.class,
-        windLabel: windInfo.label
+        windLabel: windInfo.label,
+        isThunder: isThunder
       });
     }
 
@@ -206,7 +224,7 @@ function renderForecast(hourly) {
     
     cardDiv.innerHTML = `
       <div class="card-summary">
-        <h3>${formattedDate}</h3>
+        <h3 class="day-date">${formattedDate}</h3>
         <div class="info-day">
             <p>Temperatura</p> <p>${minTemp}° a ${maxTemp}°</p>
         </div>
@@ -227,7 +245,7 @@ function renderForecast(hourly) {
           ${blocks3h.map(block => `
             <div class="block-3h">
               <span class="block-time">${block.hour}</span>
-              <span class="block-cloud">${block.cloudState}</span>
+              <span class="block-cloud">${block.cloudState} ${block.isThunder ? `<span class="block-thunder">com trovoadas</span>` : ''}</span>
               <span class="block-rain ${block.rainClass}">${block.rainLabel} - ${block.rainMm} mm</span>
               <span class="block-wind ${block.windClass}">${block.windLabel} - ${block.windKmh} km/h</span>
             </div>
