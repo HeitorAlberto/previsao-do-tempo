@@ -129,6 +129,17 @@ h1 {
   cursor: pointer;
 }
 
+.mapas-chuva {
+    margin-bottom: 50px;
+    justify-self: center;
+}
+
+.mapas-chuva > a {
+    text-decoration: none;
+    color: #12882e;
+    font-weight: bolder;
+}
+
 .current-location {
   display: flex;
   flex-direction: column;
