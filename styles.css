@@ -6,64 +6,66 @@
 
 /* --- NÍVEIS DE CHUVA (INMET) --- */
 .rain-none {
+    background-color: #d8f5ff;
   padding: 5px;
   border-radius: 6px;
-  border: 1px solid black;
+  border: 1px solid #d8f5ff;
 }
 .rain-very-light {
   background-color: #d8f5ff;
   padding: 5px;
   border-radius: 6px;
-  border: 1px solid black;
+  border: 1px solid #d8f5ff;
 }
 .rain-light {
   background-color: #3e81fea6;
   padding: 5px;
   border-radius: 6px;
-  border: 1px solid black;
+  border: 1px solid #3e81fea6;
 }
 .rain-moderate {
   background-color: #fbc02d;
   padding: 5px;
   border-radius: 6px;
-  border: 1px solid black;
+  border: 1px solid #fbc02d;
 }
 .rain-heavy {
   background-color: #f57c00;
   padding: 5px;
   border-radius: 6px;
-  border: 1px solid black;
+  border: 1px solid #f57c00;
 }
 .rain-extreme {
   background-color: #d32f2f;
   padding: 5px;
   border-radius: 6px;
-  border: 1px solid black;
+  border: 1px solid #d32f2f;
 }
 
 /* --- NÍVEIS DE VENTO / ALERTAS (INMET) --- */
 .wind-normal {
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid black;
+    background-color: lightgreen;
+    padding: 5px;
+    border-radius: 6px;
+    border: 1px solid lightgreen;
 }
 .wind-yellow {
   background-color: #fbc02d;
   padding: 5px;
   border-radius: 6px;
-  border: 1px solid black;
+  border: 1px solid #fbc02d;
 }
 .wind-orange {
   background-color: #f57c00;
   padding: 5px;
   border-radius: 6px;
-  border: 1px solid black;
+  border: 1px solid #f57c00;;
 }
 .wind-red {
   background-color: #d32f2f;
   padding: 5px;
   border-radius: 6px;
-  border: 1px solid black;
+  border: 1px solid #d32f2f;
 }
 
 html {
@@ -181,25 +183,29 @@ h1 {
 }
 
 .block-3h {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 5px;
   margin-bottom: 20px;
 }
 
 .block-time {
   font-weight: bolder;
-  background-color: black;
-  color: white;
+  align-self: center;
   padding: 5px;
-  border-radius: 6px;
+}
+
+.block-infos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .block-cloud {
   background-color: #eeeeee;
   padding: 5px;
   border-radius: 6px;
-  border: 1px solid black;
+  border: 1px solid #eeeeee;
 }
 
 @media (min-width: 600px) {
