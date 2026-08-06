@@ -1,7 +1,7 @@
 * {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 /* --- NÍVEIS DE CHUVA (INMET) --- */
@@ -16,7 +16,7 @@
   border-radius: 6px;
   border: 1px solid black;
 }
-.rain-light { 
+.rain-light {
   background-color: #3e81fea6;
   padding: 5px;
   border-radius: 6px;
@@ -66,163 +66,148 @@
   border: 1px solid black;
 }
 
-
-
 html {
-    font-family: Arial, Helvetica, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-
-
 header {
-    padding: 20px;
-    margin-bottom: 50px;
+  padding: 20px;
+  margin-bottom: 50px;
 }
 
 h1 {
-    text-align: center;
-    color: orange;
-    margin-bottom: 20px;
+  text-align: center;
+  color: orange;
+  margin-bottom: 20px;
 }
 
-
 .search-container {
-    width: 350px;
-    justify-self: center;
-    margin-bottom: 50px;
+  width: 350px;
+  justify-self: center;
+  margin-bottom: 50px;
 }
 
 .search-container > input {
-    width: 100%;
-    padding: 10px;
-    text-align: center;
-    border: 2px solid black;
-    font-size: 16px;
-    border-radius: 6px;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  border: 2px solid black;
+  font-size: 16px;
+  border-radius: 6px;
 }
 
 #search-suggestions {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .suggestion-item {
-    padding: 10px;
-    border: 1px solid gray;
+  padding: 10px;
+  border: 1px solid gray;
 }
 
 .suggestion-item:hover {
-    background-color: rgb(228, 228, 228);
+  background-color: rgb(228, 228, 228);
 }
 
-
 .history {
-    display: grid;
-    border: 2px solid black;
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 50px;
-    gap: 10px;
-    width: 92vw;
-    justify-self: center;
+  display: grid;
+  border: 2px solid black;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 50px;
+  gap: 10px;
+  width: 92vw;
+  justify-self: center;
 }
 
 .history-item {
-    padding: 5px;
-    cursor: pointer;
+  padding: 5px;
+  cursor: pointer;
 }
 
 .current-location {
-    display: flex;
-    flex-direction: column;
-    align-content: center;
-    border-radius: 8px;
-    margin-bottom: 50px;
-    width: 95%;
-    justify-self: center;
-    text-align: center;
-    padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  border-radius: 8px;
+  margin-bottom: 50px;
+  width: 95%;
+  justify-self: center;
+  text-align: center;
+  padding: 10px;
 }
-
-
 
 .daily-card {
-    border: 2px solid black;
-    border-radius: 8px;
-    margin-bottom: 50px;
-    width: 95%;
-    justify-self: center;
+  border: 2px solid black;
+  border-radius: 8px;
+  margin-bottom: 50px;
+  width: 95%;
+  justify-self: center;
 }
 
-
 .card-summary {
-    display: grid;
-    gap: 20px;
-    padding: 10px;
+  display: grid;
+  gap: 20px;
+  padding: 10px;
 }
 
 .day-date {
-    text-align: center;
+  text-align: center;
 }
 
 .info-day {
-    display: flex;
-    justify-content: space-between;
+  display: flex;
+  justify-content: space-between;
 }
 
 .toggle-btn {
-    background-color: rgb(237, 236, 236);
-    cursor: pointer;
-    border: none;
-    width: 200px;
-    justify-self: center;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 16px;
+  background-color: rgb(237, 236, 236);
+  cursor: pointer;
+  border: none;
+  width: 200px;
+  justify-self: center;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 16px;
 }
 
-
 .blocks-grid {
-    display: grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 20px;
-    padding: 10px;
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 20px;
+  padding: 10px;
 }
 
 .block-3h {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 20px;
 }
 
 .block-time {
-    font-weight: bolder;
-    background-color: black;
-    color: white;
-    padding: 5px;
-    border-radius: 6px;
+  font-weight: bolder;
+  background-color: black;
+  color: white;
+  padding: 5px;
+  border-radius: 6px;
 }
 
 .block-cloud {
-    background-color: #eeeeee;
-    padding: 5px;
-    border-radius: 6px;
-    border: 1px solid black;
+  background-color: #eeeeee;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
 
-
-
-
 @media (min-width: 600px) {
-
-
-    .daily-card, .history, .current-location {
-        max-width: 650px;
-    }
-    .blocks-grid {
-        grid-template-columns: 1fr 1fr;
-        padding: 30px;
-    }
+  .daily-card, .history, .current-location {
+    max-width: 650px;
+  }
+  .blocks-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: 30px;
+  }
 }
