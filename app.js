@@ -1,20 +1,20 @@
 // Configuração dos Limites de Cores e Rótulos do INMET
 // Chuva acumulada em 3 horas (adaptado dos limites horários do INMET)
 const RAIN_INMET_3H = [
-  { max: 0.1,  class: 'rain-none',       label: 'Sem chuva' },
-  { max: 7.5,  class: 'rain-very-light', label: 'Chuviscos' },
-  { max: 15.0, class: 'rain-light',      label: 'Chuva leve' },
-  { max: 30.0, class: 'rain-moderate',   label: 'Chuva moderada' },
-  { max: 60.0, class: 'rain-heavy',      label: 'Chuva forte' },
-  { max: Infinity, class: 'rain-extreme', label: 'Chuva extrema' }
+  { max: 0.1,  class: 'rain-none',       label: '' },
+  { max: 7.5,  class: 'rain-very-light', label: '' },
+  { max: 15.0, class: 'rain-light',      label: '' },
+  { max: 30.0, class: 'rain-moderate',   label: '' },
+  { max: 60.0, class: 'rain-heavy',      label: '' },
+  { max: Infinity, class: 'rain-extreme', label: '' }
 ];
 
 // Ventos (com base nas cores de alerta do INMET)
 const WIND_INMET = [
-  { max: 40, class: 'wind-normal', label: 'Rajadas de vento' },
-  { max: 60, class: 'wind-yellow', label: 'Rajadas moderadas' },
-  { max: 100, class: 'wind-orange', label: 'Rajadas fortes' },
-  { max: Infinity, class: 'wind-red', label: 'Rajadas muito fortes' }
+  { max: 40, class: 'wind-normal', label: '' },
+  { max: 60, class: 'wind-yellow', label: '' },
+  { max: 100, class: 'wind-orange', label: '' },
+  { max: Infinity, class: 'wind-red', label: '' }
 ];
 
 // Utilitários para mapeamento de classes CSS e rótulos
@@ -260,7 +260,7 @@ function renderForecast(hourly) {
             <p>Rajadas de vento max</p> <p>${maxWind} km/h</p>
         </div>
         
-        <button class="toggle-btn" aria-label="Expandir detalhes">︾</button>
+        <button class="toggle-btn" aria-label="Expandir detalhes">Mais infos</button>
       </div>
 
       <div class="card-details" hidden>
@@ -269,8 +269,8 @@ function renderForecast(hourly) {
             <div class="block-3h">
               <span class="block-time">${block.hour}</span>
               <span class="block-cloud">${block.cloudState} ${block.isThunder ? `<span class="block-thunder">com trovoadas</span>` : ''}</span>
-              <span class="block-rain ${block.rainClass}">${block.rainLabel} - ${block.rainMm} mm</span>
-              <span class="block-wind ${block.windClass}">${block.windLabel} - ${block.windKmh} km/h</span>
+              <span class="block-rain ${block.rainClass}">${block.rainLabel} ${block.rainMm} mm</span>
+              <span class="block-wind ${block.windClass}">Rajadas de ${block.windKmh} km/h</span>
             </div>
           `).join('')}
         </div>
@@ -283,7 +283,7 @@ function renderForecast(hourly) {
     toggleBtn.addEventListener('click', () => {
       const isHidden = detailsDiv.hidden;
       detailsDiv.hidden = !isHidden;
-      toggleBtn.textContent = isHidden ? '︽' : '︾';
+      toggleBtn.textContent = isHidden ? 'Esconder infos' : 'Mais infos';
     });
 
     container.appendChild(cardDiv);

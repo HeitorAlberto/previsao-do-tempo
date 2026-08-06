@@ -6,50 +6,67 @@
 
 /* --- NÍVEIS DE CHUVA (INMET) --- */
 .rain-none {
-  color: #333333;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
 .rain-very-light {
-  color: black;
+  background-color: #d8f5ff;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
-.rain-light {
-  color: black; 
+.rain-light { 
+  background-color: #3e81fea6;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
 .rain-moderate {
-  color: #fbc02d;
+  background-color: #fbc02d;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
 .rain-heavy {
-  color: #f57c00;
+  background-color: #f57c00;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
 .rain-extreme {
-  color: #d32f2f;
+  background-color: #d32f2f;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
 
 /* --- NÍVEIS DE VENTO / ALERTAS (INMET) --- */
 .wind-normal {
-  color: #333333;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
 .wind-yellow {
-  color: #fbc02d;
+  background-color: #fbc02d;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
 .wind-orange {
-  color: #f57c00;
+  background-color: #f57c00;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
 .wind-red {
-  color: #d32f2f;
+  background-color: #d32f2f;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid black;
 }
 
-/* --- INDICADORES GEOMÉTRICOS DE NEBULOSIDADE --- */
-.cloud-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid #333;
-  display: inline-block;
-}
 
-.cloud-dot.filled {
-  background-color: #333;
-}
 
 html {
     font-family: Arial, Helvetica, sans-serif;
@@ -77,21 +94,21 @@ h1 {
 
 .search-container > input {
     width: 100%;
-    padding: 5px;
+    padding: 10px;
     text-align: center;
-    margin-bottom: 10px;
     border: 2px solid black;
+    font-size: 16px;
 }
 
 #search-suggestions {
     display: flex;
     flex-direction: column;
-    border: 2px solid black;
     width: 100%;
 }
 
 .suggestion-item {
     padding: 10px;
+    border: 1px solid gray;
 }
 
 .suggestion-item:hover {
@@ -154,14 +171,14 @@ h1 {
 }
 
 .toggle-btn {
-    background-color: white;
+    background-color: rgb(237, 236, 236);
     cursor: pointer;
     border: none;
     width: 200px;
     justify-self: center;
     border-radius: 8px;
-    font-weight: bolder;
-    font-size: 30px;
+    padding: 10px;
+    font-size: 16px;
 }
 
 
@@ -173,24 +190,27 @@ h1 {
 }
 
 .block-3h {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
     margin-bottom: 20px;
 }
 
 .block-time {
     font-weight: bolder;
+    background-color: black;
+    color: white;
+    padding: 5px;
+    border-radius: 6px;
 }
 
-
-
-/* Container das 4 bolinhas */
-.cloud-dots {
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
+.block-cloud {
+    background-color: #eeeeee;
+    padding: 5px;
+    border-radius: 6px;
+    border: 1px solid black;
 }
+
 
 
 
