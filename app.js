@@ -2,11 +2,11 @@
 // Chuva acumulada em 3 horas (adaptado dos limites horários do INMET)
 const RAIN_INMET_3H = [
   { max: 0.1,  class: 'rain-none',       label: '' },
-  { max: 7.5,  class: 'rain-very-light', label: '' },
-  { max: 15.0, class: 'rain-light',      label: '' },
-  { max: 30.0, class: 'rain-moderate',   label: '' },
-  { max: 60.0, class: 'rain-heavy',      label: '' },
-  { max: Infinity, class: 'rain-extreme', label: '' }
+  { max: 7.5,  class: 'rain-very-light', label: '(Garoa)' },
+  { max: 15.0, class: 'rain-light',      label: '(Fraca)' },
+  { max: 30.0, class: 'rain-moderate',   label: '(Moderada)' },
+  { max: 60.0, class: 'rain-heavy',      label: '(Forte)' },
+  { max: Infinity, class: 'rain-extreme', label: '(Extrema)' }
 ];
 
 // Ventos (com base nas cores de alerta do INMET)
@@ -273,7 +273,7 @@ function renderForecast(hourly) {
               
               <div class="block-infos">
                 <span class="block-cloud">${block.cloudState} ${block.isThunder ? `<span class="block-thunder">⚡</span>` : ''}</span>
-                <span class="block-rain ${block.rainClass}">${block.rainLabel} ${block.rainMm} mm</span>
+                <span class="block-rain ${block.rainClass}">${block.rainMm} mm ${block.rainLabel}</span>
                 <span class="block-wind ${block.windClass}">Rajadas de ${block.windKmh} km/h</span>
               </div>
             </div>
