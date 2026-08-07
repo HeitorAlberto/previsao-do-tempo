@@ -195,6 +195,9 @@ h1 {
   grid-template-columns: repeat(1, 1fr);
   gap: 20px;
   padding: 10px;
+  height: 400px;
+  scroll-behavior: smooth;
+  overflow-x: auto;
 }
 
 .block-3h {
