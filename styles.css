@@ -8,69 +8,7 @@
 
 }
 
-/* --- NÍVEIS DE CHUVA (INMET) --- */
-.rain-none {
-    background-color: #d8f5ff;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #d8f5ff;
-}
-.rain-very-light {
-  background-color: #d8f5ff;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #d8f5ff;
-}
-.rain-light {
-  background-color: #3e81fea6;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #3e81fea6;
-}
-.rain-moderate {
-  background-color: #fcff57;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #fcff57;
-}
-.rain-heavy {
-  background-color: #f57c00;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #f57c00;
-}
-.rain-extreme {
-  background-color: #d32f2f;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #d32f2f;
-}
 
-/* --- NÍVEIS DE VENTO / ALERTAS (INMET) --- */
-.wind-normal {
-    background-color: lightgreen;
-    padding: 5px;
-    border-radius: 6px;
-    border: 1px solid lightgreen;
-}
-.wind-yellow {
-  background-color: #fcff57;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #fcff57;
-}
-.wind-orange {
-  background-color: #f57c00;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #f57c00;;
-}
-.wind-red {
-  background-color: #d32f2f;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #d32f2f;
-}
 
 html {
   font-family: Arial, Helvetica, sans-serif;
@@ -200,10 +138,10 @@ h1 {
   overflow-x: auto;
 }
 
-.block-3h {
+.block-1h {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 5px;
+  gap: 15px;
   margin-bottom: 20px;
 }
 
@@ -211,6 +149,9 @@ h1 {
   font-weight: bolder;
   align-self: center;
   padding: 5px;
+  background-color: black;
+  color: white;
+  border-radius: 8px;
 }
 
 .block-infos {
@@ -218,18 +159,9 @@ h1 {
     gap: 10px;
 }
 
-.block-cloud {
-  background-color: #eeeeee;
-  padding: 5px;
-  border-radius: 6px;
-  border: 1px solid #eeeeee;
-}
 
-.block-temp {
-  padding: 5px;
-  border-radius: 6px;
-  
-}
+
+
 
 @media (min-width: 600px) {
   .daily-card, .history, .current-location {

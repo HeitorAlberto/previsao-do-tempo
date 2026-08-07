@@ -1,11 +1,11 @@
 // Configuração dos Limites de Cores e Rótulos do INMET
 // Chuva acumulada por hora (Escala original horária do INMET)
 const RAIN_INMET_1H = [
-  { max: 0.1,  class: 'rain-none',       label: '' },
-  { max: 2.5,  class: 'rain-very-light', label: '(Fraca)' },
-  { max: 10.0, class: 'rain-moderate',   label: '(Moderada)' },
-  { max: 20.0, class: 'rain-heavy',      label: '(Forte)' },
-  { max: Infinity, class: 'rain-extreme', label: '(Extrema)' }
+  { max: 0.1,  class: '',       label: 'Sem chuva' },
+  { max: 2.5,  class: '', label: 'Chuva fraca' },
+  { max: 10.0, class: '',   label: 'Chuva moderada' },
+  { max: 20.0, class: '',      label: 'Chuva fortec' },
+  { max: Infinity, class: '', label: '(Extrema)' }
 ];
 
 // Ventos (com base nas cores de alerta do INMET)
@@ -271,7 +271,7 @@ function renderForecast(hourly) {
               <div class="block-infos">
                 <span class="block-cloud">${block.cloudState} ${block.isThunder ? `<span class="block-thunder">⚡</span>` : ''}</span>
                 <span class="block-temp">${block.temp}°C</span>
-                <span class="block-rain ${block.rainClass}">${block.rainMm} mm ${block.rainLabel}</span>
+                <span class="block-rain ${block.rainClass}">${block.rainLabel} - ${block.rainMm} mm</span>
                 <span class="block-wind ${block.windClass}">Rajadas de ${block.windKmh} km/h</span>
               </div>
             </div>
