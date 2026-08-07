@@ -139,6 +139,7 @@ h1 {
 
 .block-1h {
   display: flex;
+  flex-direction: column;
   gap: 15px;
   margin-bottom: 20px;
 }
@@ -150,8 +151,8 @@ h1 {
 
 .block-infos {
     display: flex;
-    flex-direction: column;
     gap: 20px;
+    flex-wrap: wrap;
 }
 
 .temp {

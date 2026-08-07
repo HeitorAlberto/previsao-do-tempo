@@ -1,10 +1,10 @@
 // Configuração dos Limites de Cores e Rótulos do INMET
 // Chuva acumulada por hora (Escala original horária do INMET)
 const RAIN_INMET_1H = [
-  { max: 0.1,  class: '',       label: 'Sem chuva' },
-  { max: 2.5,  class: '', label: 'Chuva fraca' },
-  { max: 10.0, class: '',   label: 'Chuva moderada' },
-  { max: 20.0, class: '',      label: 'Chuva fortec' },
+  { max: 0.1, class: '', label: 'Sem chuva' },
+  { max: 2.5, class: '', label: 'Chuva fraca' },
+  { max: 10.0, class: '', label: 'Chuva moderada' },
+  { max: 20.0, class: '', label: 'Chuva forte' },
   { max: Infinity, class: '', label: '(Extrema)' }
 ];
 
@@ -179,6 +179,13 @@ function renderForecast(hourly) {
 
   const daysMap = {};
   
+  // Data e hora atual para identificação da hora presente
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+  const currentHourStr = String(now.getHours()).padStart(2, '0');
+
+  let currentBlockElement = null;
+
   hourly.time.forEach((timeStr, i) => {
     const dateStr = timeStr.substring(0, 10);
     if (!daysMap[dateStr]) {
@@ -212,9 +219,17 @@ function renderForecast(hourly) {
     const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
     const formattedDate = `${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${dayNum}/${month}/${year.slice(2)}`;
 
-    const blocks1h = [];
-    for (let i = 0; i < day.times.length; i++) {
-      const hourLabel = day.times[i].substring(11, 16);
+    const isToday = (dateKey === todayStr);
+
+    const cardDiv = document.createElement('article');
+    cardDiv.className = 'daily-card';
+
+    const blocksGrid = document.createElement('div');
+    blocksGrid.className = 'blocks-grid';
+
+    day.times.forEach((timeStr, i) => {
+      const hourLabel = timeStr.substring(11, 16);
+      const hourOnly = hourLabel.substring(0, 2);
       const temp = Math.round(day.temps[i]);
       const cloudVal = day.clouds[i];
       const precipVal = day.precip[i];
@@ -225,23 +240,33 @@ function renderForecast(hourly) {
       const windInfo = getWindInfo(windVal);
       const thunder = isThunderstorm(codeVal);
 
-      blocks1h.push({
-        hour: hourLabel,
-        temp: temp,
-        cloudState: getCloudText(cloudVal),
-        rainMm: precipVal.toFixed(1),
-        rainClass: rainInfo.class,
-        rainLabel: rainInfo.label,
-        windKmh: Math.round(windVal),
-        windClass: windInfo.class,
-        windLabel: windInfo.label,
-        isThunder: thunder
-      });
-    }
+      const isCurrentHour = isToday && (hourOnly === currentHourStr);
 
-    const cardDiv = document.createElement('article');
-    cardDiv.className = 'daily-card';
-    
+      const blockDiv = document.createElement('div');
+      blockDiv.className = `block-1h ${isCurrentHour ? 'current-hour' : ''}`;
+      
+      blockDiv.innerHTML = `
+        <div>
+          <span class="block-time">
+            ${hourLabel} ${isCurrentHour ? '<span class="arrow-indicator">(Agora)</span>' : ''}
+          </span>
+        </div>
+        
+        <div class="block-infos">
+          <span>${getCloudText(cloudVal)} ${thunder ? `<span class="block-thunder">⚡</span>` : ''}</span>
+          <span class="temp">${temp}°C</span>
+          <span class="rain">${rainInfo.label} - ${precipVal.toFixed(1)} mm</span>
+          <span class="wind ${windInfo.class}">Rajadas de ${Math.round(windVal)} km/h</span>
+        </div>
+      `;
+
+      if (isCurrentHour) {
+        currentBlockElement = blockDiv;
+      }
+
+      blocksGrid.appendChild(blockDiv);
+    });
+
     cardDiv.innerHTML = `
       <div class="card-summary">
         <h3 class="day-date">${formattedDate}</h3>
@@ -257,31 +282,16 @@ function renderForecast(hourly) {
             <p>Rajadas de vento max</p> <p>${maxWind} km/h</p>
         </div>
         
-        <button class="toggle-btn" aria-label="Expandir detalhes">Mais infos</button>
+        <button class="toggle-btn" aria-label="Expandir detalhes">${isToday ? 'Esconder infos' : 'Mais infos'}</button>
       </div>
 
-      <div class="card-details" hidden>
-        <div class="blocks-grid">
-          ${blocks1h.map(block => `
-            <div class="block-1h">
-              <div>
-                <span class="block-time">${block.hour}</span>
-              </div>
-              
-              <div class="block-infos">
-                <span>${block.cloudState} ${block.isThunder ? `<span class="block-thunder">⚡</span>` : ''}</span>
-                <span class="temp">${block.temp}°C</span>
-                <span class="rain">${block.rainLabel} - ${block.rainMm}</span>
-                <span class="wind" ${block.windClass}">Rajadas de ${block.windKmh} km/h</span>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </div>
+      <div class="card-details" ${isToday ? '' : 'hidden'}></div>
     `;
 
-    const toggleBtn = cardDiv.querySelector('.toggle-btn');
     const detailsDiv = cardDiv.querySelector('.card-details');
+    detailsDiv.appendChild(blocksGrid);
+
+    const toggleBtn = cardDiv.querySelector('.toggle-btn');
 
     toggleBtn.addEventListener('click', () => {
       const isHidden = detailsDiv.hidden;
@@ -291,6 +301,17 @@ function renderForecast(hourly) {
 
     container.appendChild(cardDiv);
   });
+
+  // Executa o scrollTo centralizando o elemento da hora atual
+  if (currentBlockElement) {
+    setTimeout(() => {
+      currentBlockElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }, 100);
+  }
 }
 
 // Renderiza o histórico salvo ao carregar a aplicação
