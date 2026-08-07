@@ -269,10 +269,10 @@ function renderForecast(hourly) {
               </div>
               
               <div class="block-infos">
-                <span class="block-cloud">${block.cloudState} ${block.isThunder ? `<span class="block-thunder">⚡</span>` : ''}</span>
-                <span class="block-temp">${block.temp}°C</span>
-                <span class="block-rain ${block.rainClass}">${block.rainLabel} - ${block.rainMm} mm</span>
-                <span class="block-wind ${block.windClass}">Rajadas de ${block.windKmh} km/h</span>
+                <span>${block.cloudState} ${block.isThunder ? `<span class="block-thunder">⚡</span>` : ''}</span>
+                <span class="temp">${block.temp}°C</span>
+                <span class="rain">${block.rainLabel} - ${block.rainMm}</span>
+                <span class="wind" ${block.windClass}">Rajadas de ${block.windKmh} km/h</span>
               </div>
             </div>
           `).join('')}

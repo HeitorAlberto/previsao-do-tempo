@@ -131,7 +131,6 @@ h1 {
 .blocks-grid {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
-  gap: 50px;
   padding: 10px;
   height: 400px;
   scroll-behavior: smooth;
@@ -139,8 +138,7 @@ h1 {
 }
 
 .block-1h {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
   gap: 15px;
   margin-bottom: 20px;
 }
@@ -148,15 +146,24 @@ h1 {
 .block-time {
   font-weight: bolder;
   align-self: center;
-  padding: 5px;
-  background-color: black;
-  color: white;
-  border-radius: 8px;
 }
 
 .block-infos {
-    display: grid;
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.temp {
+  color: orangered;
+}
+
+.rain {
+  color: cornflowerblue;
+}
+
+.wind {
+  color: darkseagreen;
 }
 
 
@@ -167,8 +174,16 @@ h1 {
   .daily-card, .history, .current-location {
     max-width: 650px;
   }
+
   .blocks-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     padding: 30px;
+  }
+
+  .block-infos {
+    display: flex;
+    flex-direction: row;
+    gap: 15px;
+    margin-bottom: 20px;
   }
 }
