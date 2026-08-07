@@ -193,7 +193,7 @@ h1 {
 .blocks-grid {
   display: grid;
   grid-template-columns: repeat(1, 1fr);
-  gap: 20px;
+  gap: 50px;
   padding: 10px;
   height: 400px;
   scroll-behavior: smooth;
@@ -223,6 +223,12 @@ h1 {
   padding: 5px;
   border-radius: 6px;
   border: 1px solid #eeeeee;
+}
+
+.block-temp {
+  padding: 5px;
+  border-radius: 6px;
+  
 }
 
 @media (min-width: 600px) {

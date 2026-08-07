@@ -1,11 +1,10 @@
 // Configuração dos Limites de Cores e Rótulos do INMET
-// Chuva acumulada em 3 horas (adaptado dos limites horários do INMET)
-const RAIN_INMET_3H = [
+// Chuva acumulada por hora (Escala original horária do INMET)
+const RAIN_INMET_1H = [
   { max: 0.1,  class: 'rain-none',       label: '' },
-  { max: 7.5,  class: 'rain-very-light', label: '(Garoa)' },
-  { max: 15.0, class: 'rain-light',      label: '(Fraca)' },
-  { max: 30.0, class: 'rain-moderate',   label: '(Moderada)' },
-  { max: 60.0, class: 'rain-heavy',      label: '(Forte)' },
+  { max: 2.5,  class: 'rain-very-light', label: '(Fraca)' },
+  { max: 10.0, class: 'rain-moderate',   label: '(Moderada)' },
+  { max: 20.0, class: 'rain-heavy',      label: '(Forte)' },
   { max: Infinity, class: 'rain-extreme', label: '(Extrema)' }
 ];
 
@@ -18,8 +17,8 @@ const WIND_INMET = [
 ];
 
 // Utilitários para mapeamento de classes CSS e rótulos
-function getRainInfo(mm3h) {
-  return RAIN_INMET_3H.find(rule => mm3h <= rule.max);
+function getRainInfo(mm1h) {
+  return RAIN_INMET_1H.find(rule => mm1h <= rule.max);
 }
 
 function getWindInfo(kmh) {
@@ -34,9 +33,9 @@ function getCloudText(cloudCover) {
   return 'Nublado';
 }
 
-// Verifica se há códigos WMO referentes a trovoadas (95: Trovoadas, 96/99: Trovoadas com granizo)
-function hasThunderstorm(codes) {
-  return codes.some(code => code === 95 || code === 96 || code === 99);
+// Verifica se há código WMO referente a trovoadas (95: Trovoadas, 96/99: Trovoadas com granizo)
+function isThunderstorm(code) {
+  return code === 95 || code === 96 || code === 99;
 }
 
 // Elementos do DOM
@@ -173,7 +172,7 @@ async function fetchForecast(lat, lon) {
   }
 }
 
-// 3. Processamento dos Dados Horários -> Diário e Blocos de 3h
+// 3. Processamento dos Dados Horários -> Diário e Blocos de 1h
 function renderForecast(hourly) {
   const container = document.getElementById('forecast-container');
   container.innerHTML = '';
@@ -213,32 +212,30 @@ function renderForecast(hourly) {
     const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
     const formattedDate = `${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${dayNum}/${month}/${year.slice(2)}`;
 
-    const blocks3h = [];
-    for (let i = 0; i < day.times.length; i += 3) {
-      const sliceClouds = day.clouds.slice(i, i + 3);
-      const slicePrecip = day.precip.slice(i, i + 3);
-      const sliceWind = day.windGusts.slice(i, i + 3);
-      const sliceCodes = day.weatherCodes.slice(i, i + 3);
-      
+    const blocks1h = [];
+    for (let i = 0; i < day.times.length; i++) {
       const hourLabel = day.times[i].substring(11, 16);
-      const avgCloud = sliceClouds.reduce((a, b) => a + b, 0) / (sliceClouds.length || 1);
-      const sumPrecip = slicePrecip.reduce((a, b) => a + b, 0);
-      const maxWind3h = Math.max(...sliceWind);
+      const temp = Math.round(day.temps[i]);
+      const cloudVal = day.clouds[i];
+      const precipVal = day.precip[i];
+      const windVal = day.windGusts[i];
+      const codeVal = day.weatherCodes[i];
 
-      const rainInfo = getRainInfo(sumPrecip);
-      const windInfo = getWindInfo(maxWind3h);
-      const isThunder = hasThunderstorm(sliceCodes);
+      const rainInfo = getRainInfo(precipVal);
+      const windInfo = getWindInfo(windVal);
+      const thunder = isThunderstorm(codeVal);
 
-      blocks3h.push({
+      blocks1h.push({
         hour: hourLabel,
-        cloudState: getCloudText(avgCloud),
-        rainMm: sumPrecip.toFixed(1),
+        temp: temp,
+        cloudState: getCloudText(cloudVal),
+        rainMm: precipVal.toFixed(1),
         rainClass: rainInfo.class,
         rainLabel: rainInfo.label,
-        windKmh: Math.round(maxWind3h),
+        windKmh: Math.round(windVal),
         windClass: windInfo.class,
         windLabel: windInfo.label,
-        isThunder: isThunder
+        isThunder: thunder
       });
     }
 
@@ -265,14 +262,15 @@ function renderForecast(hourly) {
 
       <div class="card-details" hidden>
         <div class="blocks-grid">
-          ${blocks3h.map(block => `
-            <div class="block-3h">
+          ${blocks1h.map(block => `
+            <div class="block-1h">
               <div>
                 <span class="block-time">${block.hour}</span>
               </div>
               
               <div class="block-infos">
                 <span class="block-cloud">${block.cloudState} ${block.isThunder ? `<span class="block-thunder">⚡</span>` : ''}</span>
+                <span class="block-temp">${block.temp}°C</span>
                 <span class="block-rain ${block.rainClass}">${block.rainMm} mm ${block.rainLabel}</span>
                 <span class="block-wind ${block.windClass}">Rajadas de ${block.windKmh} km/h</span>
               </div>
