@@ -5,10 +5,7 @@
   margin: 0;
   box-sizing: border-box;
   font-family: "Nunito", sans-serif;
-
 }
-
-
 
 html {
   font-family: Arial, Helvetica, sans-serif;
@@ -16,7 +13,7 @@ html {
 
 header {
   padding: 20px;
-  margin-bottom: 50px;
+  margin-bottom: 30px;
 }
 
 h1 {
@@ -27,8 +24,10 @@ h1 {
 
 .search-container {
   width: 350px;
+  max-width: 90vw;
   justify-self: center;
-  margin-bottom: 50px;
+  margin-bottom: 30px;
+  position: relative;
 }
 
 .search-container > input {
@@ -44,11 +43,20 @@ h1 {
   display: flex;
   flex-direction: column;
   width: 100%;
+  background-color: white;
+  border: 1px solid gray;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
 }
 
 .suggestion-item {
   padding: 10px;
-  border: 1px solid gray;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
 }
 
 .suggestion-item:hover {
@@ -60,26 +68,36 @@ h1 {
   border: 2px solid black;
   border-radius: 8px;
   padding: 10px;
-  margin-bottom: 50px;
+  margin-bottom: 30px;
   gap: 10px;
-  width: 92vw;
+  width: 95%;
   justify-self: center;
+}
+
+.history-title {
+  font-weight: bold;
 }
 
 .history-item {
   padding: 5px;
   cursor: pointer;
+  border-bottom: 1px dashed #ccc;
+}
+
+.history-item:last-child {
+  border-bottom: none;
 }
 
 .mapas-chuva {
-    margin-bottom: 50px;
-    justify-self: center;
+  margin-bottom: 30px;
+  text-align: center;
+  justify-self: center;
 }
 
 .mapas-chuva > a {
-    text-decoration: none;
-    color: #12882e;
-    font-weight: bolder;
+  text-decoration: none;
+  color: #12882e;
+  font-weight: bolder;
 }
 
 .current-location {
@@ -87,7 +105,7 @@ h1 {
   flex-direction: column;
   align-content: center;
   border-radius: 8px;
-  margin-bottom: 50px;
+  margin-bottom: 30px;
   width: 95%;
   justify-self: center;
   text-align: center;
@@ -97,15 +115,16 @@ h1 {
 .daily-card {
   border: 2px solid black;
   border-radius: 8px;
-  margin-bottom: 50px;
+  margin-bottom: 30px;
   width: 95%;
   justify-self: center;
+  overflow: hidden;
 }
 
 .card-summary {
   display: grid;
-  gap: 20px;
-  padding: 10px;
+  gap: 15px;
+  padding: 15px;
 }
 
 .day-date {
@@ -120,71 +139,58 @@ h1 {
 .toggle-btn {
   background-color: rgb(237, 236, 236);
   cursor: pointer;
-  border: none;
+  border: 1px solid #ccc;
   width: 200px;
   justify-self: center;
   border-radius: 8px;
   padding: 10px;
   font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.2s;
 }
 
-.blocks-grid {
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  padding: 10px;
-  height: 400px;
-  scroll-behavior: smooth;
+.toggle-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.card-details {
+  padding: 10px 15px 20px 15px;
+  background-color: #fafafa;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Container de cada seção de gráfico */
+.chart-box {
+  margin-top: 15px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.chart-title {
+  margin: 0 0 10px 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+/* Área de rolagem horizontal */
+.chart-scroll-container {
+  width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Rolagem suave em iOS */
 }
 
-.block-1h {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-bottom: 20px;
+/* Largura estendida para manter leitura limpa das 24 horas no celular */
+.chart-scroll-inner {
+  min-width: 1100px;
+  height: 200px;
+  position: relative;
 }
-
-.block-time {
-  font-weight: bolder;
-  align-self: center;
-}
-
-.block-infos {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.temp {
-  color: orangered;
-}
-
-.rain {
-  color: cornflowerblue;
-}
-
-.wind {
-  color: darkseagreen;
-}
-
-
-
-
 
 @media (min-width: 600px) {
   .daily-card, .history, .current-location {
     max-width: 650px;
-  }
-
-  .blocks-grid {
-    grid-template-columns: 1fr;
-    padding: 30px;
-  }
-
-  .block-infos {
-    display: flex;
-    flex-direction: row;
-    gap: 15px;
-    margin-bottom: 20px;
   }
 }

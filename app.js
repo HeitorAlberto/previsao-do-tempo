@@ -1,5 +1,16 @@
+// Registra o plugin do Chart.js com segurança após o carregamento do DOM
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
+    Chart.register(ChartDataLabels);
+  } else {
+    console.error('O Chart.js ou o plugin DataLabels não foram carregados.');
+  }
+
+  // Inicializa a exibição do histórico salvo
+  renderHistory();
+});
+
 // Configuração dos Limites de Cores e Rótulos do INMET
-// Chuva acumulada por hora (Escala original horária do INMET)
 const RAIN_INMET_1H = [
   { max: 0.1, class: '', label: 'Sem chuva' },
   { max: 2.5, class: '', label: 'Chuva fraca' },
@@ -8,7 +19,6 @@ const RAIN_INMET_1H = [
   { max: Infinity, class: '', label: '(Extrema)' }
 ];
 
-// Ventos (com base nas cores de alerta do INMET)
 const WIND_INMET = [
   { max: 40, class: 'wind-normal', label: '' },
   { max: 60, class: 'wind-yellow', label: '' },
@@ -16,7 +26,6 @@ const WIND_INMET = [
   { max: Infinity, class: 'wind-red', label: '' }
 ];
 
-// Utilitários para mapeamento de classes CSS e rótulos
 function getRainInfo(mm1h) {
   return RAIN_INMET_1H.find(rule => mm1h <= rule.max);
 }
@@ -25,7 +34,6 @@ function getWindInfo(kmh) {
   return WIND_INMET.find(rule => kmh <= rule.max);
 }
 
-// Retorna apenas o texto descritivo da nebulosidade
 function getCloudText(cloudCover) {
   if (cloudCover <= 25) return 'Poucas nuvens';
   if (cloudCover <= 50) return 'Nuvens esparsas';
@@ -33,7 +41,6 @@ function getCloudText(cloudCover) {
   return 'Nublado';
 }
 
-// Verifica se há código WMO referente a trovoadas (95: Trovoadas, 96/99: Trovoadas com granizo)
 function isThunderstorm(code) {
   return code === 95 || code === 96 || code === 99;
 }
@@ -45,14 +52,12 @@ const currentLocationDiv = document.getElementById('current-location');
 const historyDiv = document.getElementById('search-history');
 let debounceTimer;
 
-// Esconde imediatamente o container de sugestões
 function hideSuggestions() {
   suggestionsDiv.hidden = true;
   suggestionsDiv.style.display = 'none';
   suggestionsDiv.innerHTML = '';
 }
 
-// Exibe o container de sugestões
 function showSuggestions() {
   suggestionsDiv.hidden = false;
   suggestionsDiv.style.display = 'block';
@@ -65,29 +70,19 @@ function getHistory() {
 
 function saveToHistory(place) {
   let history = getHistory();
-  
-  // 1. Remove se já existir (evita duplicatas considerando cidade, estado e país)
   history = history.filter(item => 
     !(item.name === place.name && item.admin1 === place.admin1 && item.country === place.country)
   );
-  
-  // 2. Adiciona o mais recente no topo
   history.unshift(place);
-  
-  // 3. Limita a no máximo 3 locais
-  if (history.length > 3) {
-    history = history.slice(0, 3);
-  }
-  
+  if (history.length > 3) history = history.slice(0, 3);
   localStorage.setItem('weather_history', JSON.stringify(history));
   renderHistory();
 }
 
-// Renderiza o título "Histórico" e as divs simples das cidades salvas (Cidade, Estado, País)
 function renderHistory() {
+  if (!historyDiv) return;
   const history = getHistory();
   historyDiv.innerHTML = '';
-
   if (history.length === 0) return;
 
   const titleHeader = document.createElement('h4');
@@ -98,71 +93,61 @@ function renderHistory() {
   history.forEach(place => {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'history-item';
-    
     const formattedText = `${place.name}${place.admin1 ? ', ' + place.admin1 : ''}, ${place.country}`;
     itemDiv.textContent = formattedText;
-    
-    itemDiv.addEventListener('click', () => {
-      selectCity(place);
-    });
+    itemDiv.addEventListener('click', () => selectCity(place));
     historyDiv.appendChild(itemDiv);
   });
 }
 
-// Função executada ao selecionar uma cidade
 function selectCity(place) {
-  // Esconde e limpa o elemento de sugestões IMEDIATAMENTE após a busca
   hideSuggestions();
   searchInput.value = '';
-  
   const formattedLocation = `${place.name}${place.admin1 ? ', ' + place.admin1 : ''}, ${place.country}`;
   currentLocationDiv.style.border = '2px solid black';
-
   currentLocationDiv.innerHTML = `<p style="font-weight: bolder">📍 Local atual:</p> <br> <p>${formattedLocation}</p>`;
-  
   saveToHistory(place);
   fetchForecast(place.latitude, place.longitude);
 }
 
-// 1. Autocomplete (Open-Meteo Geocoding API) - Renderizado usando DIVs
-searchInput.addEventListener('input', () => {
-  clearTimeout(debounceTimer);
-  const query = searchInput.value.trim();
-  
-  if (query.length < 3) {
-    hideSuggestions();
-    return;
-  }
+// Autocomplete
+if (searchInput) {
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const query = searchInput.value.trim();
+    if (query.length < 3) {
+      hideSuggestions();
+      return;
+    }
 
-  debounceTimer = setTimeout(async () => {
-    try {
-      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=pt`);
-      const data = await res.json();
-      
-      suggestionsDiv.innerHTML = '';
-      if (data.results && data.results.length > 0) {
-        data.results.forEach(place => {
-          const itemDiv = document.createElement('div');
-          itemDiv.className = 'suggestion-item';
-          itemDiv.textContent = `${place.name}${place.admin1 ? ', ' + place.admin1 : ''} - ${place.country}`;
-          itemDiv.addEventListener('click', () => selectCity(place));
-          suggestionsDiv.appendChild(itemDiv);
-        });
-        showSuggestions();
-      } else {
+    debounceTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=pt`);
+        const data = await res.json();
+        suggestionsDiv.innerHTML = '';
+        if (data.results && data.results.length > 0) {
+          data.results.forEach(place => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'suggestion-item';
+            itemDiv.textContent = `${place.name}${place.admin1 ? ', ' + place.admin1 : ''} - ${place.country}`;
+            itemDiv.addEventListener('click', () => selectCity(place));
+            suggestionsDiv.appendChild(itemDiv);
+          });
+          showSuggestions();
+        } else {
+          hideSuggestions();
+        }
+      } catch (err) {
+        console.error('Erro na geocodificação:', err);
         hideSuggestions();
       }
-    } catch (err) {
-      console.error('Erro na geocodificação:', err);
-      hideSuggestions();
-    }
-  }, 300);
-});
+    }, 300);
+  });
+}
 
-// 2. Busca Previsão ECMWF de Alta Resolução (IFS 9km) com inclusão de weather_code
+// Fetch Previsão (Modelo ECMWF)
 async function fetchForecast(lat, lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,cloud_cover,wind_gusts_10m,weather_code&models=ecmwf_ifs&timezone=auto`;
-  
   try {
     const res = await fetch(url);
     const data = await res.json();
@@ -172,19 +157,77 @@ async function fetchForecast(lat, lon) {
   }
 }
 
-// 3. Processamento dos Dados Horários -> Diário e Blocos de 1h
+// --- CRIADOR DE GRÁFICOS ---
+function createChart(canvas, labels, datasetConfig, unitSymbol, globalMin, globalMax) {
+  new Chart(canvas, {
+    type: datasetConfig.type,
+    data: {
+      labels: labels,
+      datasets: [{
+        label: datasetConfig.label,
+        data: datasetConfig.data,
+        borderColor: datasetConfig.borderColor,
+        backgroundColor: datasetConfig.backgroundColor,
+        fill: datasetConfig.fill || false,
+        borderWidth: 3,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: {
+        padding: { top: 25, bottom: 10 }
+      },
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          display: true,
+          align: 'top',
+          anchor: 'end',
+          offset: 4,
+          font: { weight: 'bold', size: 13 },
+          color: '#222',
+          formatter: (value) => {
+            if (value === 0 && unitSymbol === 'mm') return ''; // Oculta o texto para 0 mm
+            return `${Math.round(value)}${unitSymbol}`;
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            autoSkip: false,
+            font: { size: 13, weight: 'bold' }
+          }
+        },
+        y: {
+          display: false, // Oculta o eixo Y lateral
+          min: globalMin !== undefined ? globalMin : undefined,
+          max: globalMax !== undefined ? globalMax : undefined
+        }
+      }
+    }
+  });
+}
+
+// Renderização Principal
 function renderForecast(hourly) {
   const container = document.getElementById('forecast-container');
+  if (!container) return;
   container.innerHTML = '';
 
   const daysMap = {};
-  
-  // Data e hora atual para identificação da hora presente
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
-  const currentHourStr = String(now.getHours()).padStart(2, '0');
+  const currentHour = now.getHours();
 
-  let currentBlockElement = null;
+  // Escala de temperatura fixa para proporcionalidade gráfica entre os dias
+  const globalMinTemp = Math.floor(Math.min(...hourly.temperature_2m)) - 3;
+  const globalMaxTemp = Math.ceil(Math.max(...hourly.temperature_2m)) + 3;
 
   hourly.time.forEach((timeStr, i) => {
     const dateStr = timeStr.substring(0, 10);
@@ -208,111 +251,123 @@ function renderForecast(hourly) {
 
   Object.keys(daysMap).forEach(dateKey => {
     const day = daysMap[dateKey];
-    
     const minTemp = Math.round(Math.min(...day.temps));
     const maxTemp = Math.round(Math.max(...day.temps));
     const totalRain = day.precip.reduce((a, b) => a + b, 0).toFixed(1);
     const maxWind = Math.round(Math.max(...day.windGusts));
-    
+
     const [year, month, dayNum] = dateKey.split('-');
     const dateObj = new Date(year, month - 1, dayNum);
     const dayName = dateObj.toLocaleDateString('pt-BR', { weekday: 'long' });
-    const formattedDate = `${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${dayNum}/${month}/${year.slice(2)}`;
-
+    let formattedDate = `${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${dayNum}/${month}/${year.slice(2)}`;
+    
     const isToday = (dateKey === todayStr);
+    if (isToday) {
+      formattedDate += ' (Hoje)';
+    }
 
     const cardDiv = document.createElement('article');
     cardDiv.className = 'daily-card';
 
-    const blocksGrid = document.createElement('div');
-    blocksGrid.className = 'blocks-grid';
-
-    day.times.forEach((timeStr, i) => {
-      const hourLabel = timeStr.substring(11, 16);
-      const hourOnly = hourLabel.substring(0, 2);
-      const temp = Math.round(day.temps[i]);
-      const cloudVal = day.clouds[i];
-      const precipVal = day.precip[i];
-      const windVal = day.windGusts[i];
-      const codeVal = day.weatherCodes[i];
-
-      const rainInfo = getRainInfo(precipVal);
-      const windInfo = getWindInfo(windVal);
-      const thunder = isThunderstorm(codeVal);
-
-      const isCurrentHour = isToday && (hourOnly === currentHourStr);
-
-      const blockDiv = document.createElement('div');
-      blockDiv.className = `block-1h ${isCurrentHour ? 'current-hour' : ''}`;
-      
-      blockDiv.innerHTML = `
-        <div>
-          <span class="block-time">
-            ${hourLabel} ${isCurrentHour ? '<span class="arrow-indicator">(Agora)</span>' : ''}
-          </span>
-        </div>
-        
-        <div class="block-infos">
-          <span>${getCloudText(cloudVal)} ${thunder ? `<span class="block-thunder">⚡</span>` : ''}</span>
-          <span class="temp">${temp}°C</span>
-          <span class="rain">${rainInfo.label} - ${precipVal.toFixed(1)} mm</span>
-          <span class="wind ${windInfo.class}">Rajadas de ${Math.round(windVal)} km/h</span>
-        </div>
-      `;
-
-      if (isCurrentHour) {
-        currentBlockElement = blockDiv;
-      }
-
-      blocksGrid.appendChild(blockDiv);
-    });
-
     cardDiv.innerHTML = `
       <div class="card-summary">
         <h3 class="day-date">${formattedDate}</h3>
-        <div class="info-day">
-            <p>Temperatura</p> <p>${minTemp}° a ${maxTemp}°</p>
-        </div>
-
-        <div class="info-day">
-            <p>Chuva acumulada</p> <p>${totalRain} mm</p>
-        </div>
-
-        <div class="info-day">
-            <p>Rajadas de vento max</p> <p>${maxWind} km/h</p>
-        </div>
-        
-        <button class="toggle-btn" aria-label="Expandir detalhes">${isToday ? 'Esconder infos' : 'Mais infos'}</button>
+        <div class="info-day"><p>Temperatura</p> <p>${minTemp}° a ${maxTemp}°C</p></div>
+        <div class="info-day"><p>Chuva acumulada</p> <p>${totalRain} mm</p></div>
+        <div class="info-day"><p>Rajadas de vento max</p> <p>${maxWind} km/h</p></div>
+        <button class="toggle-btn" aria-label="Expandir detalhes">${isToday ? 'Esconder gráficos' : 'Ver gráficos'}</button>
       </div>
+      <div class="card-details" ${isToday ? '' : 'hidden'}>
+        
+        <div class="chart-box">
+          <h4 class="chart-title">🌡️ Temperatura (°C)</h4>
+          <div class="chart-scroll-container">
+            <div class="chart-scroll-inner">
+              <canvas class="canvas-temp"></canvas>
+            </div>
+          </div>
+        </div>
 
-      <div class="card-details" ${isToday ? '' : 'hidden'}></div>
+        <div class="chart-box">
+          <h4 class="chart-title">🌧️ Chuva (mm/h)</h4>
+          <div class="chart-scroll-container">
+            <div class="chart-scroll-inner">
+              <canvas class="canvas-rain"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-box">
+          <h4 class="chart-title">💨 Rajadas de Vento (km/h)</h4>
+          <div class="chart-scroll-container">
+            <div class="chart-scroll-inner">
+              <canvas class="canvas-wind"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
     `;
 
     const detailsDiv = cardDiv.querySelector('.card-details');
-    detailsDiv.appendChild(blocksGrid);
+    const hoursLabels = day.times.map(t => t.substring(11, 13) + 'h');
+
+    // Inicialização do Gráfico de Temperatura
+    createChart(
+      detailsDiv.querySelector('.canvas-temp'),
+      hoursLabels,
+      { type: 'line', label: 'Temperatura', data: day.temps, borderColor: '#e65100', backgroundColor: '#ffb74d' },
+      '°',
+      globalMinTemp,
+      globalMaxTemp
+    );
+
+    // Inicialização do Gráfico de Chuva
+    createChart(
+      detailsDiv.querySelector('.canvas-rain'),
+      hoursLabels,
+      { type: 'bar', label: 'Chuva', data: day.precip, borderColor: '#1976d2', backgroundColor: 'rgba(25, 118, 210, 0.7)' },
+      'mm'
+    );
+
+    // Inicialização do Gráfico de Vento
+    createChart(
+      detailsDiv.querySelector('.canvas-wind'),
+      hoursLabels,
+      { type: 'line', label: 'Vento', data: day.windGusts, borderColor: '#455a64', backgroundColor: 'rgba(69, 90, 100, 0.15)', fill: true },
+      ' km/h'
+    );
+
+    // Centraliza a rolagem na hora atual do dispositivo
+    const centerCurrentHour = () => {
+      if (!isToday) return;
+      const scrollContainers = detailsDiv.querySelectorAll('.chart-scroll-container');
+      
+      scrollContainers.forEach(container => {
+        const inner = container.querySelector('.chart-scroll-inner');
+        const totalWidth = inner.offsetWidth;
+        const hourWidth = totalWidth / 24;
+        
+        const targetScroll = (currentHour * hourWidth) - (container.offsetWidth / 2) + (hourWidth / 2);
+        container.scrollLeft = Math.max(0, targetScroll);
+      });
+    };
+
+    if (isToday) {
+      setTimeout(centerCurrentHour, 150);
+    }
 
     const toggleBtn = cardDiv.querySelector('.toggle-btn');
-
     toggleBtn.addEventListener('click', () => {
       const isHidden = detailsDiv.hidden;
       detailsDiv.hidden = !isHidden;
-      toggleBtn.textContent = isHidden ? 'Esconder infos' : 'Mais infos';
+      toggleBtn.textContent = isHidden ? 'Esconder gráficos' : 'Ver gráficos';
+      
+      if (!isHidden && isToday) {
+        setTimeout(centerCurrentHour, 100);
+      }
     });
 
     container.appendChild(cardDiv);
   });
-
-  // Executa o scrollTo centralizando o elemento da hora atual
-  if (currentBlockElement) {
-    setTimeout(() => {
-      currentBlockElement.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-        inline: 'center'
-      });
-    }, 100);
-  }
 }
-
-// Renderiza o histórico salvo ao carregar a aplicação
-renderHistory();

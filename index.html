@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Previsão do Tempo - ECMWF</title>
   <link rel="stylesheet" href="styles.css">
+
+  <!-- 1º Carrega a biblioteca principal do Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- 2º Carrega o plugin do DataLabels (depende do Chart.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </head>
 <body>
 
@@ -14,7 +20,6 @@
       <input type="text" id="city-search" placeholder="Buscar cidade..." autocomplete="off">
       <div id="search-suggestions" hidden></div>
     </div>
-    
   </header>
 
   <div class="history" id="search-history"></div>
@@ -31,6 +36,8 @@
     </section>
   </main>
 
+  <!-- 3º Carrega a lógica da sua aplicação por último -->
   <script src="app.js"></script>
+  
 </body>
 </html>
