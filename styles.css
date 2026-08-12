@@ -1,0 +1,349 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Open Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f0f4f8;
+  color: #333;
+  padding: 20px;
+}
+
+#title {
+  text-align: center;
+  padding: 20px;
+  font-size: 20px;
+}
+
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Busca e Histórico */
+.search-section {
+  position: relative; /* Necessário para alinhar a lista de sugestões */
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+#search-form {
+  display: flex;
+  gap: 10px;
+}
+
+#city-input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+button {
+  padding: 10px;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #0052a3;
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Autocomplete */
+.autocomplete-items {
+  position: absolute;
+  border: 1px solid #d4d4d4;
+  border-bottom: none;
+  border-top: none;
+  z-index: 99;
+  top: 100%;
+  left: 20px;
+  right: 20px;
+  background-color: #fff;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-item {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #d4d4d4;
+}
+
+.autocomplete-item:hover {
+  background-color: #e9ecef;
+}
+
+.history-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.history-item {
+  background: #e9ecef;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.history-item:hover {
+  background: #dee2e6;
+}
+
+/* Info da Localização */
+.location-info {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #1a252f;
+}
+
+/* Navegação por Dia - Desktop */
+.day-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+#current-day-label {
+  font-size: 18px;
+  font-weight: bold;
+  color: #0066cc;
+}
+
+/* Cards Diários */
+.forecast-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.day-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.day-header {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #0066cc;
+  border-bottom: 2px solid #f0f4f8;
+  padding-bottom: 10px;
+}
+
+/* Módulos com Acordeão e Rolagem Horizontal */
+.metric-box {
+  margin-bottom: 20px;
+}
+
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+  margin-bottom: 10px;
+}
+
+.metric-header:hover {
+  background: #e9ecef;
+}
+
+.metric-header h4 {
+  font-size: 18px;
+  color: #1a252f;
+  font-weight: bold;
+  margin-bottom: 0 !important;
+}
+
+/* Agrupamento da Badge de Resumo + Seta Indicadora */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.summary-badge {
+  font-size: 18px;
+  font-weight: bold;
+  color: orange;
+  border-radius: 6px;
+}
+
+/* Estilo e Animação da Seta */
+.toggle-icon {
+  font-size: 12px;
+  color: #666;
+  transition: transform 0.3s ease;
+}
+
+/* Rotação de 180° quando expandido */
+.metric-header.expanded .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.scroll-wrapper {
+  overflow-x: auto;
+  width: 100%;
+  padding-bottom: 10px;
+  -webkit-overflow-scrolling: touch; /* Suavidade no iOS */
+}
+
+.chart-container {
+  min-width: 1000px; /* Expansão horizontal preservada para gráfico não esmagar */
+  height: 240px;
+  position: relative;
+}
+
+.legend {
+  font-size: 14px;
+  color: #444;
+  margin-top: 10px;
+  background: #f8f9fa;
+  padding: 10px 14px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.legend-items {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.total-accumulated {
+  font-weight: bold;
+  color: #0052a3;
+  margin-left: auto;
+}
+
+footer {
+  text-align: center;
+  padding: 60px 0;
+}
+
+/* ==========================================
+   REGRAS DE ADAPTAÇÃO PARA MOBILE (< 768px)
+   ========================================== */
+
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+
+  .search-section {
+    padding: 15px;
+  }
+
+  #search-form {
+    flex-direction: column;
+  }
+
+  #city-input, 
+  .search-section button {
+    width: 100%;
+  }
+
+  .autocomplete-items {
+    left: 15px;
+    right: 15px;
+  }
+
+  .location-info {
+    font-size: 18px;
+  }
+
+  /* Navegação por Dia organizada em 2 Linhas via Grid */
+  .day-nav {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .div-buttons {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+    font-size: 10px;
+  }
+
+  .day-card {
+    padding: 12px;
+  }
+
+  /* Cabeçalho Acordeão para Mobile */
+  .metric-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .metric-header h4 {
+    font-size: 16px;
+  }
+
+  .header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .summary-badge {
+    font-size: 15px;
+  }
+
+  /* Legendas no Mobile */
+  .legend {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .legend-items {
+    gap: 10px;
+    flex-direction: column;
+  }
+
+  .total-accumulated {
+    margin-left: 0;
+  }
+}

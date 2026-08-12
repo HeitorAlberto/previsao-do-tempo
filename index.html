@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Previsão do Tempo - Open-Meteo</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Plugin para exibir os valores numéricos no gráfico -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
+</head>
+<body>
+
+  <h1 id="title">Previsão do tempo</h1>
+
+  <div class="container">
+    <header class="search-section">
+      <form id="search-form">
+        <input type="text" id="city-input" placeholder="Digite o nome da cidade..." required autocomplete="off">
+        <button type="submit">Buscar</button>
+      </form>
+
+      <!-- Histórico de buscas (até 3 cidades) -->
+      <div id="history-container" class="history-container"></div>
+    </header>
+
+    <!-- Localização selecionada -->
+    <section id="location-info" class="location-info"></section>
+
+    <!-- Controles de Navegação de Dias -->
+    <div id="day-nav" class="day-nav" style="display: none;">
+      <button id="prev-day-btn" onclick="changeDay(-1)"> ◀ </button>
+      <span id="current-day-label"></span>
+      <button id="next-day-btn" onclick="changeDay(1)"> ▶ </button>
+    </div>
+
+    <!-- Exibição do Dia Selecionado -->
+    <main id="forecast-container" class="forecast-container"></main>
+  </div>
+
+  <footer>
+    <p>Dados fornecidos por ECMWF / Open-Meteo API</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
