@@ -99,27 +99,90 @@ function toggleModuleContent(headerElement) {
 }
 
 // ==========================================
-// 2. MÓDULOS DOS GRÁFICOS (COM ACORDEÃO E SETA)
+// ALGORITMO DE DIAGNÓSTICO DE NEBULOSIDADE
 // ==========================================
 
-// Div 1: Nebulosidade (Linha cinza, valores arredondados sem % no gráfico, Média Diurna no badge)
-function createCloudCoverModule(labels, cloudValues, dayTimes) {
-  // Arredonda cada valor de porcentagem para a dezena mais próxima (10, 20, 30... 100)
-  const roundedValues = cloudValues.map(v => Math.round(v / 10) * 10);
-
-  // Média Diurna: considera apenas as horas entre 06h e 18h
-  const daytimeValues = [];
+function getCloudDiagnosis(dayTimes, roundedValues) {
+  // Filtrar os dados apenas do período diurno (06h às 18h)
+  const daytimeIndexes = [];
   dayTimes.forEach((timeStr, index) => {
     const hour = new Date(timeStr).getHours();
     if (hour >= 6 && hour <= 18) {
-      daytimeValues.push(roundedValues[index]);
+      daytimeIndexes.push(index);
     }
   });
 
-  // Se houver dados diurnos, calcula a média deles; caso contrário, usa a média de 24h
-  const targetValues = daytimeValues.length > 0 ? daytimeValues : roundedValues;
-  const total = targetValues.reduce((acc, curr) => acc + curr, 0);
-  const avgDaytimeCloudiness = Math.round((total / targetValues.length) / 10) * 10;
+  const targetIndexes = daytimeIndexes.length > 0 
+    ? daytimeIndexes 
+    : roundedValues.map((_, i) => i);
+    
+  const daytimeValues = targetIndexes.map(i => roundedValues[i]);
+
+  // Métricas base
+  const total = daytimeValues.reduce((acc, curr) => acc + curr, 0);
+  const avg = Math.round(total / daytimeValues.length);
+  const min = Math.min(...daytimeValues);
+  const max = Math.max(...daytimeValues);
+  const diff = max - min;
+
+  // Divisão do dia em blocos: Manhã (06h-11h) e Tarde (12h-18h)
+  const morningValues = [];
+  const afternoonValues = [];
+
+  targetIndexes.forEach(i => {
+    const hour = new Date(dayTimes[i]).getHours();
+    if (hour < 12) {
+      morningValues.push(roundedValues[i]);
+    } else {
+      afternoonValues.push(roundedValues[i]);
+    }
+  });
+
+  const avgMorning = morningValues.length > 0 
+    ? morningValues.reduce((a, b) => a + b, 0) / morningValues.length 
+    : avg;
+  const avgAfternoon = afternoonValues.length > 0 
+    ? afternoonValues.reduce((a, b) => a + b, 0) / afternoonValues.length 
+    : avg;
+
+  const trendDelta = avgAfternoon - avgMorning;
+
+  // 1. ESTADOS ESTÁVEIS (Baixa variação durante o dia)
+  if (diff <= 30) {
+    if (avg <= 15) return "Céu Limpo";
+    if (avg <= 35) return "Pouca nebulosidade";
+    if (avg <= 65) return "Parcialmente Nublado";
+    if (avg <= 85) return "Muitas nuvens";
+    return "Nublado";
+  }
+
+  // 2. VARIAÇÕES E TENDÊNCIAS (Transições durante o dia)
+  if (trendDelta >= 35) {
+    if (avgMorning <= 25) return "Sol de manhã, fechando à tarde";
+    if (avgMorning <= 50) return "Aumento gradual de nebulosidade";
+    return "Céu encobrindo à tarde";
+  }
+
+  if (trendDelta <= -35) {
+    if (avgAfternoon <= 25) return "Nuvens diminuindo à tarde";
+    if (avgAfternoon <= 50) return "Nuvens diminuindo à tarde";
+    return "Nuvens diminuindo à tarde";
+  }
+
+  if (avg <= 40) return "Sol com nuvens esparsas";
+  if (avg <= 70) return "Sol e nebulosidade variável";
+  
+  return "Muitas nuvens com aberturas";
+}
+
+// ==========================================
+// 2. MÓDULOS DOS GRÁFICOS (COM ACORDEÃO E SETA)
+// ==========================================
+
+// Div 1: Nebulosidade (Com descrição inteligente no badge)
+function createCloudCoverModule(labels, cloudValues, dayTimes) {
+  const roundedValues = cloudValues.map(v => Math.round(v / 10) * 10);
+  const cloudDiagnosis = getCloudDiagnosis(dayTimes, roundedValues);
 
   const box = document.createElement('div');
   box.className = 'metric-box';
@@ -127,7 +190,7 @@ function createCloudCoverModule(labels, cloudValues, dayTimes) {
     <div class="metric-header" onclick="toggleModuleContent(this)">
       <h4>Nebulosidade (%)</h4>
       <div class="header-right">
-        <span class="summary-badge">Média Diurna: ${avgDaytimeCloudiness}%</span>
+        <span class="summary-badge">${cloudDiagnosis}</span>
         <span class="toggle-icon">▼</span>
       </div>
     </div>
@@ -162,7 +225,7 @@ function createCloudCoverModule(labels, cloudValues, dayTimes) {
           ...options.plugins,
           datalabels: {
             ...options.plugins.datalabels,
-            formatter: (val) => val // Exibe apenas o número, sem %
+            formatter: (val) => val
           }
         },
         scales: {
@@ -242,7 +305,7 @@ function createPrecipitationModule(labels, precipValues, dayTimes) {
     <div class="metric-header" onclick="toggleModuleContent(this)">
       <h4>Precipitação (mm)</h4>
       <div class="header-right">
-        <span class="summary-badge">Acumulado: ${total24h} mm</span>
+        <span class="summary-badge">${total24h} mm</span>
         <span class="toggle-icon">▼</span>
       </div>
     </div>

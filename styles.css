@@ -200,7 +200,7 @@ button:disabled {
 .summary-badge {
   font-size: 18px;
   font-weight: bold;
-  color: orange;
+  color: rgb(67, 89, 255);
   border-radius: 6px;
 }
 
