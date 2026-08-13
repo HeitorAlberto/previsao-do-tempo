@@ -4,8 +4,7 @@ if (typeof ChartDataLabels !== 'undefined') {
 }
 
 // Configurar a fonte global para todos os gráficos do Chart.js
-Chart.defaults.font.family = "'Google Sans', sans-serif";
-
+Chart.defaults.font.family = "'Open Sans', 'Segoe UI', Tahoma, sans-serif";
 
 // Elementos do DOM
 const searchForm = document.getElementById('search-form');
@@ -118,7 +117,7 @@ function getCommonOptions(dayTimes) {
   };
 }
 
-// Funções para controle do acordeão (Abrir/Fechar com suporte a auto-scroll)
+// Controle do Acordeão (Abrir/Fechar com auto-scroll para hora atual)
 function toggleModuleContent(headerElement) {
   const content = headerElement.nextElementSibling;
   const isHidden = content.style.display === 'none';
@@ -138,10 +137,11 @@ function toggleModuleContent(headerElement) {
 }
 
 // ==========================================
-// ALGORITMO DE DIAGNÓSTICO DE NEBULOSIDADE
+// ALGORITMO INTELIGENTE DE DIAGNÓSTICO
 // ==========================================
 
 function getCloudDiagnosis(dayTimes, roundedValues) {
+  // 1. Filtrar apenas o período diurno (06h às 18h)
   const daytimeIndexes = [];
   dayTimes.forEach((timeStr, index) => {
     const hour = new Date(timeStr).getHours();
@@ -156,57 +156,77 @@ function getCloudDiagnosis(dayTimes, roundedValues) {
     
   const daytimeValues = targetIndexes.map(i => roundedValues[i]);
 
-  const total = daytimeValues.reduce((acc, curr) => acc + curr, 0);
+  // HELPER: Verifica se uma faixa de valores se mantém por N horas consecutivas (Padrão: 3h)
+  function hasPersistentBlock(values, minThreshold, maxThreshold, minHours = 3) {
+    let count = 0;
+    for (let val of values) {
+      if (val >= minThreshold && val <= maxThreshold) {
+        count++;
+        if (count >= minHours) return true;
+      } else {
+        count = 0; // Quebra a sequência se sair da faixa
+      }
+    }
+    return false;
+  }
+
+  // Métricas gerais
+  const total = daytimeValues.reduce((a, b) => a + b, 0);
   const avg = Math.round(total / daytimeValues.length);
   const min = Math.min(...daytimeValues);
   const max = Math.max(...daytimeValues);
   const diff = max - min;
 
-  const morningValues = [];
-  const afternoonValues = [];
+  // Divisão em blocos: Manhã (06h-11h) e Tarde (12h-18h)
+  const morningVals = [];
+  const afternoonVals = [];
 
   targetIndexes.forEach(i => {
     const hour = new Date(dayTimes[i]).getHours();
-    if (hour < 12) {
-      morningValues.push(roundedValues[i]);
-    } else {
-      afternoonValues.push(roundedValues[i]);
-    }
+    if (hour < 12) morningVals.push(roundedValues[i]);
+    else afternoonVals.push(roundedValues[i]);
   });
 
-  const avgMorning = morningValues.length > 0 
-    ? morningValues.reduce((a, b) => a + b, 0) / morningValues.length 
-    : avg;
-  const avgAfternoon = afternoonValues.length > 0 
-    ? afternoonValues.reduce((a, b) => a + b, 0) / afternoonValues.length 
-    : avg;
-
+  const avgMorning = morningVals.length > 0 ? morningVals.reduce((a,b)=>a+b,0)/morningVals.length : avg;
+  const avgAfternoon = afternoonVals.length > 0 ? afternoonVals.reduce((a,b)=>a+b,0)/afternoonVals.length : avg;
   const trendDelta = avgAfternoon - avgMorning;
 
-  if (diff <= 30) {
-    if (avg <= 15) return "Céu Limpo";
-    if (avg <= 35) return "Pouca nebulosidade";
-    if (avg <= 65) return "Parcialmente Nublado";
-    if (avg <= 85) return "Muitas nuvens";
-    return "Nublado";
-  }
+  // 1. PERSISTÊNCIA PROLONGADA (Céu limpo longo ou nublado longo)
+  const isConstantlyClear = hasPersistentBlock(daytimeValues, 0, 20, 5);     // 5h contínuas de céu limpo
+  const isConstantlyOvercast = hasPersistentBlock(daytimeValues, 80, 100, 5); // 5h contínuas de céu fechado
 
+  if (isConstantlyClear && max <= 30) return "Predomínio de céu aberto";
+  if (isConstantlyOvercast && min >= 70) return "Dia totalmente nublado";
+
+  // 2. MUDANÇAS INTENSAS DE TENDÊNCIA (Manhã x Tarde)
   if (trendDelta >= 35) {
-    if (avgMorning <= 25) return "Sol de manhã, fechando à tarde";
-    if (avgMorning <= 50) return "Aumento gradual de nebulosidade";
-    return "Céu encobrindo à tarde";
+    if (avgMorning <= 30) return "Sol de manhã, fechando à tarde";
+    return "Aumento de nebulosidade à tarde";
   }
 
   if (trendDelta <= -35) {
-    if (avgAfternoon <= 25) return "Nuvens diminuindo à tarde";
-    if (avgAfternoon <= 50) return "Nuvens diminuindo à tarde";
-    return "Nuvens diminuindo à tarde";
+    if (avgAfternoon <= 30) return "Nuvens de manhã, limpando à tarde";
+    return "Aberturas de sol à tarde";
   }
 
-  if (avg <= 40) return "Sol com nuvens esparsas";
-  if (avg <= 70) return "Sol e nebulosidade variável";
-  
-  return "Muitas nuvens com aberturas";
+  // 3. ANÁLISE DE BLOCOS ALTERNADOS (Janela de 3 horas)
+  if (diff >= 40) {
+    const hasClearSpells = hasPersistentBlock(daytimeValues, 0, 30, 3);
+    const hasCloudySpells = hasPersistentBlock(daytimeValues, 70, 100, 3);
+
+    if (hasClearSpells && hasCloudySpells) {
+      return "Sol intercalado com momentos nublados";
+    }
+    return "Nebulosidade bastante variável";
+  }
+
+  // 4. ESTADOS ESTÁVEIS POR MÉDIA
+  if (avg <= 20) return "Céu Aberto";
+  if (avg <= 45) return "Pouca Nebulosidade";
+  if (avg <= 70) return "Parcialmente Nublado";
+  if (avg <= 85) return "Muitas Nuvens";
+
+  return "Predomínio de Nuvens";
 }
 
 // ==========================================
@@ -355,7 +375,7 @@ function createPrecipitationModule(labels, precipValues, dayTimes) {
         <div class="legend-items">
           <span><b style="color:#a0c4ff">■</b> Fraca</span>
           <span><b style="color:#0052a3">■</b> Moderada</span>
-          <span><b style="color:#6b21a8">■</b> Forte</span>
+          <span><b style="color:#ad51f9">■</b> Forte</span>
         </div>
       </div>
     </div>
@@ -364,7 +384,7 @@ function createPrecipitationModule(labels, precipValues, dayTimes) {
   const barColors = precipValues.map(v => {
     if (v <= 2.5) return '#a0c4ff';
     if (v < 10) return '#0052a3';
-    return '#6b21a8';
+    return '#ad51f9';
   });
 
   requestAnimationFrame(() => {

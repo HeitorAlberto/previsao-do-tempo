@@ -50,7 +50,7 @@ body {
 
 button {
   padding: 10px;
-  background-color: #0066cc;
+  background-color: rgb(67, 89, 255);
   color: white;
   border: none;
   border-radius: 6px;
@@ -58,9 +58,6 @@ button {
   font-weight: bold;
 }
 
-button:hover {
-  background-color: #0052a3;
-}
 
 button:disabled {
   background-color: #ccc;
@@ -136,7 +133,7 @@ button:disabled {
 #current-day-label {
   font-size: 18px;
   font-weight: bold;
-  color: #0066cc;
+  color: rgb(67, 89, 255);
 }
 
 /* Cards Diários */
@@ -178,10 +175,6 @@ button:disabled {
   user-select: none;
   transition: background-color 0.2s;
   margin-bottom: 10px;
-}
-
-.metric-header:hover {
-  background-color: #f1f3f5;
 }
 
 .metric-header h4 {
