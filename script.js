@@ -137,97 +137,43 @@ function toggleModuleContent(headerElement) {
 }
 
 // ==========================================
-// ALGORITMO INTELIGENTE DE DIAGNÓSTICO
+// ALGORITMO INTELIGENTE DE DIAGNÓSTICO (SIMPLIFICADO)
 // ==========================================
 
 function getCloudDiagnosis(dayTimes, roundedValues) {
-  // 1. Filtrar apenas o período diurno (06h às 18h)
-  const daytimeIndexes = [];
+  const daytimeValues = [];
+  
   dayTimes.forEach((timeStr, index) => {
     const hour = new Date(timeStr).getHours();
     if (hour >= 6 && hour <= 18) {
-      daytimeIndexes.push(index);
+      daytimeValues.push(roundedValues[index]);
     }
   });
 
-  const targetIndexes = daytimeIndexes.length > 0 
-    ? daytimeIndexes 
-    : roundedValues.map((_, i) => i);
-    
-  const daytimeValues = targetIndexes.map(i => roundedValues[i]);
+  const targetValues = daytimeValues.length > 0 ? daytimeValues : roundedValues;
 
-  // HELPER: Verifica se uma faixa de valores se mantém por N horas consecutivas (Padrão: 3h)
-  function hasPersistentBlock(values, minThreshold, maxThreshold, minHours = 3) {
-    let count = 0;
-    for (let val of values) {
-      if (val >= minThreshold && val <= maxThreshold) {
-        count++;
-        if (count >= minHours) return true;
-      } else {
-        count = 0; // Quebra a sequência se sair da faixa
-      }
-    }
-    return false;
+  const min = Math.min(...targetValues);
+  const max = Math.max(...targetValues);
+  const total = targetValues.reduce((a, b) => a + b, 0);
+  const avg = Math.round(total / targetValues.length);
+
+  // 1. Regra de consistência para "Pouca nebulosidade"
+  // Só é pouca nebulosidade se a média for baixa E o pico máximo não for muito alto
+  if (avg <= 30 && max <= 50) {
+    return "Pouca nebulosidade";
   }
 
-  // Métricas gerais
-  const total = daytimeValues.reduce((a, b) => a + b, 0);
-  const avg = Math.round(total / daytimeValues.length);
-  const min = Math.min(...daytimeValues);
-  const max = Math.max(...daytimeValues);
-  const diff = max - min;
-
-  // Divisão em blocos: Manhã (06h-11h) e Tarde (12h-18h)
-  const morningVals = [];
-  const afternoonVals = [];
-
-  targetIndexes.forEach(i => {
-    const hour = new Date(dayTimes[i]).getHours();
-    if (hour < 12) morningVals.push(roundedValues[i]);
-    else afternoonVals.push(roundedValues[i]);
-  });
-
-  const avgMorning = morningVals.length > 0 ? morningVals.reduce((a,b)=>a+b,0)/morningVals.length : avg;
-  const avgAfternoon = afternoonVals.length > 0 ? afternoonVals.reduce((a,b)=>a+b,0)/afternoonVals.length : avg;
-  const trendDelta = avgAfternoon - avgMorning;
-
-  // 1. PERSISTÊNCIA PROLONGADA (Céu limpo longo ou nublado longo)
-  const isConstantlyClear = hasPersistentBlock(daytimeValues, 0, 20, 5);     // 5h contínuas de céu limpo
-  const isConstantlyOvercast = hasPersistentBlock(daytimeValues, 80, 100, 5); // 5h contínuas de céu fechado
-
-  if (isConstantlyClear && max <= 30) return "Predomínio de céu aberto";
-  if (isConstantlyOvercast && min >= 70) return "Dia totalmente nublado";
-
-  // 2. MUDANÇAS INTENSAS DE TENDÊNCIA (Manhã x Tarde)
-  if (trendDelta >= 35) {
-    if (avgMorning <= 30) return "Sol de manhã, fechando à tarde";
-    return "Aumento de nebulosidade à tarde";
+  // 2. Regra de consistência para "Nublado"
+  // Só é totalmente nublado se a média for alta E o dia não tiver tido grandes aberturas de sol
+  if (avg >= 70 && min >= 40) {
+    return "Nublado";
   }
 
-  if (trendDelta <= -35) {
-    if (avgAfternoon <= 30) return "Nuvens de manhã, limpando à tarde";
-    return "Aberturas de sol à tarde";
-  }
-
-  // 3. ANÁLISE DE BLOCOS ALTERNADOS (Janela de 3 horas)
-  if (diff >= 40) {
-    const hasClearSpells = hasPersistentBlock(daytimeValues, 0, 30, 3);
-    const hasCloudySpells = hasPersistentBlock(daytimeValues, 70, 100, 3);
-
-    if (hasClearSpells && hasCloudySpells) {
-      return "Sol intercalado com momentos nublados";
-    }
-    return "Nebulosidade bastante variável";
-  }
-
-  // 4. ESTADOS ESTÁVEIS POR MÉDIA
-  if (avg <= 20) return "Céu Aberto";
-  if (avg <= 45) return "Pouca Nebulosidade";
-  if (avg <= 70) return "Parcialmente Nublado";
-  if (avg <= 85) return "Muitas Nuvens";
-
-  return "Predomínio de Nuvens";
+  // 3. Todo o resto (dias instáveis, transições ou com variação grande) cai aqui
+  return "Parcialmente nublado";
 }
+
+
 
 // ==========================================
 // 2. MÓDULOS DOS GRÁFICOS
