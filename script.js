@@ -4,7 +4,8 @@ if (typeof ChartDataLabels !== 'undefined') {
 }
 
 // Configurar a fonte global para todos os gráficos do Chart.js
-Chart.defaults.font.family = "'Open Sans', 'Segoe UI', Tahoma, sans-serif";
+Chart.defaults.font.family = "'Google Sans', sans-serif";
+
 
 // Elementos do DOM
 const searchForm = document.getElementById('search-form');
@@ -34,7 +35,7 @@ let debounceTimer = null;
 renderHistory();
 
 // ==========================================
-// 1. HELPER PARA IDENTIFICAR A HORA ATUAL
+// 1. HELPER PARA IDENTIFICAR E CENTRALIZAR A HORA ATUAL
 // ==========================================
 
 function getHourStyles(dayTimes) {
@@ -54,6 +55,33 @@ function getHourStyles(dayTimes) {
   });
 
   return { fontColors, fontWeights };
+}
+
+// Função para centralizar a hora atual no container de scroll
+function centerCurrentHour(canvasElement, dayTimes) {
+  if (!forecastData || forecastData.utc_offset_seconds === undefined) return;
+
+  const now = new Date(Date.now() + forecastData.utc_offset_seconds * 1000);
+  const currentISO = now.toISOString().slice(0, 13);
+
+  const currentIndex = dayTimes.findIndex(timeStr => timeStr.startsWith(currentISO));
+  if (currentIndex === -1) return;
+
+  const scrollWrapper = canvasElement.closest('.scroll-wrapper');
+  if (!scrollWrapper) return;
+
+  const totalItems = dayTimes.length;
+  const wrapperWidth = scrollWrapper.clientWidth;
+  const canvasWidth = canvasElement.clientWidth || scrollWrapper.scrollWidth;
+
+  const itemWidth = canvasWidth / totalItems;
+  const itemCenterPos = (currentIndex * itemWidth) + (itemWidth / 2);
+  const targetScrollLeft = itemCenterPos - (wrapperWidth / 2);
+
+  scrollWrapper.scrollTo({
+    left: targetScrollLeft,
+    behavior: 'smooth'
+  });
 }
 
 function getCommonOptions(dayTimes) {
@@ -90,12 +118,23 @@ function getCommonOptions(dayTimes) {
   };
 }
 
-// Funções para controle do acordeão (Abrir/Fechar)
+// Funções para controle do acordeão (Abrir/Fechar com suporte a auto-scroll)
 function toggleModuleContent(headerElement) {
   const content = headerElement.nextElementSibling;
   const isHidden = content.style.display === 'none';
   content.style.display = isHidden ? 'block' : 'none';
   headerElement.classList.toggle('expanded', isHidden);
+
+  if (isHidden) {
+    requestAnimationFrame(() => {
+      const canvas = content.querySelector('canvas');
+      if (canvas && forecastData) {
+        const startIndex = currentDayIndex * 24;
+        const dayTimes = forecastData.time.slice(startIndex, startIndex + 24);
+        centerCurrentHour(canvas, dayTimes);
+      }
+    });
+  }
 }
 
 // ==========================================
@@ -103,7 +142,6 @@ function toggleModuleContent(headerElement) {
 // ==========================================
 
 function getCloudDiagnosis(dayTimes, roundedValues) {
-  // Filtrar os dados apenas do período diurno (06h às 18h)
   const daytimeIndexes = [];
   dayTimes.forEach((timeStr, index) => {
     const hour = new Date(timeStr).getHours();
@@ -118,14 +156,12 @@ function getCloudDiagnosis(dayTimes, roundedValues) {
     
   const daytimeValues = targetIndexes.map(i => roundedValues[i]);
 
-  // Métricas base
   const total = daytimeValues.reduce((acc, curr) => acc + curr, 0);
   const avg = Math.round(total / daytimeValues.length);
   const min = Math.min(...daytimeValues);
   const max = Math.max(...daytimeValues);
   const diff = max - min;
 
-  // Divisão do dia em blocos: Manhã (06h-11h) e Tarde (12h-18h)
   const morningValues = [];
   const afternoonValues = [];
 
@@ -147,7 +183,6 @@ function getCloudDiagnosis(dayTimes, roundedValues) {
 
   const trendDelta = avgAfternoon - avgMorning;
 
-  // 1. ESTADOS ESTÁVEIS (Baixa variação durante o dia)
   if (diff <= 30) {
     if (avg <= 15) return "Céu Limpo";
     if (avg <= 35) return "Pouca nebulosidade";
@@ -156,7 +191,6 @@ function getCloudDiagnosis(dayTimes, roundedValues) {
     return "Nublado";
   }
 
-  // 2. VARIAÇÕES E TENDÊNCIAS (Transições durante o dia)
   if (trendDelta >= 35) {
     if (avgMorning <= 25) return "Sol de manhã, fechando à tarde";
     if (avgMorning <= 50) return "Aumento gradual de nebulosidade";
@@ -176,10 +210,10 @@ function getCloudDiagnosis(dayTimes, roundedValues) {
 }
 
 // ==========================================
-// 2. MÓDULOS DOS GRÁFICOS (COM ACORDEÃO E SETA)
+// 2. MÓDULOS DOS GRÁFICOS
 // ==========================================
 
-// Div 1: Nebulosidade (Com descrição inteligente no badge)
+// Div 1: Nebulosidade
 function createCloudCoverModule(labels, cloudValues, dayTimes) {
   const roundedValues = cloudValues.map(v => Math.round(v / 10) * 10);
   const cloudDiagnosis = getCloudDiagnosis(dayTimes, roundedValues);
@@ -234,6 +268,8 @@ function createCloudCoverModule(labels, cloudValues, dayTimes) {
         }
       }
     });
+
+    centerCurrentHour(canvas, dayTimes);
   });
 
   return box;
@@ -290,6 +326,8 @@ function createTemperatureModule(labels, tempValues, dayTimes) {
         }
       }
     });
+
+    centerCurrentHour(canvas, dayTimes);
   });
 
   return box;
@@ -353,6 +391,8 @@ function createPrecipitationModule(labels, precipValues, dayTimes) {
         }
       }
     });
+
+    centerCurrentHour(canvas, dayTimes);
   });
 
   return box;
@@ -409,6 +449,8 @@ function createGustsModule(labels, gustValues, dayTimes) {
         }
       }
     });
+
+    centerCurrentHour(canvas, dayTimes);
   });
 
   return box;
