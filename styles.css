@@ -283,6 +283,11 @@ footer {
     right: 15px;
   }
 
+  .history-container {
+    flex-direction: column;
+
+  }
+  
   .location-info {
     font-size: 18px;
   }
