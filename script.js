@@ -1,11 +1,3 @@
-// Registrar o plugin de datalabels no Chart.js
-if (typeof ChartDataLabels !== 'undefined') {
-  Chart.register(ChartDataLabels);
-}
-
-// Configurar a fonte global para todos os gráficos do Chart.js
-Chart.defaults.font.family = "'Open Sans', 'Segoe UI', Tahoma, sans-serif";
-
 // Elementos do DOM
 const searchForm = document.getElementById('search-form');
 const cityInput = document.getElementById('city-input');
@@ -33,30 +25,11 @@ let debounceTimer = null;
 // Carrega o histórico salvo no localStorage ao iniciar
 renderHistory();
 
-function getHourStyles(dayTimes) {
-  const now = forecastData && forecastData.utc_offset_seconds !== undefined
-    ? new Date(Date.now() + forecastData.utc_offset_seconds * 1000)
-    : new Date();
-
-  const currentISO = now.toISOString().slice(0, 13); // "YYYY-MM-DDTHH"
-
-  const fontColors = [];
-  const fontWeights = [];
-
-  dayTimes.forEach(timeStr => {
-    const isCurrent = timeStr.startsWith(currentISO);
-    fontColors.push(isCurrent ? '#e63946' : '#555555');
-    fontWeights.push(isCurrent ? 'bold' : 'normal');
-  });
-
-  return { fontColors, fontWeights };
-}
-
 function centerCurrentHour(wrapperElement, dayTimes) {
   if (!forecastData || forecastData.utc_offset_seconds === undefined) return;
 
   const now = new Date(Date.now() + forecastData.utc_offset_seconds * 1000);
-  const currentISO = now.toISOString().slice(0, 13);
+  const currentISO = now.toISOString().slice(0, 13); // "YYYY-MM-DDTHH"
 
   const currentIndex = dayTimes.findIndex(timeStr => timeStr.startsWith(currentISO));
   if (currentIndex === -1) return;
@@ -76,7 +49,7 @@ function centerCurrentHour(wrapperElement, dayTimes) {
 }
 
 // ==========================================
-// SUPORTE A ARRASTE (DRAG NO DESKTOP E TOUCH NO MOBILE)
+// SUPORTE A ARRASTE (DRAG NO DESKTOP)
 // ==========================================
 
 function enableDragToScroll(wrapper) {
@@ -84,7 +57,7 @@ function enableDragToScroll(wrapper) {
   let startX;
   let scrollLeft;
 
-  // Mouse Events (Desktop Drag)
+  // Eventos de Mouse EXCLUSIVAMENTE para Desktop
   wrapper.addEventListener('mousedown', (e) => {
     isDown = true;
     wrapper.classList.add('active');
@@ -106,24 +79,9 @@ function enableDragToScroll(wrapper) {
     if (!isDown) return;
     e.preventDefault();
     const x = e.pageX - wrapper.offsetLeft;
-    const walk = (x - startX) * 1.5; // Velocidade do arraste
+    const walk = (x - startX) * 1.5;
     wrapper.scrollLeft = scrollLeft - walk;
   });
-
-  // Touch Events (Mobile Drag Optimization)
-  let touchStartX = 0;
-  let touchScrollLeft = 0;
-
-  wrapper.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].pageX - wrapper.offsetLeft;
-    touchScrollLeft = wrapper.scrollLeft;
-  }, { passive: true });
-
-  wrapper.addEventListener('touchmove', (e) => {
-    const x = e.touches[0].pageX - wrapper.offsetLeft;
-    const walk = (x - touchStartX) * 1;
-    wrapper.scrollLeft = touchScrollLeft - walk;
-  }, { passive: true });
 }
 
 // ==========================================
@@ -168,7 +126,7 @@ function getCloudDiagnosis(dayTimes, roundedValues) {
 }
 
 // ==========================================
-// MÚLTIPLOS CANVAS NO MESMO CONTAINER DE SCROLL
+// TABELA CLIMÁTICA SCROLLÁVEL
 // ==========================================
 
 function createStackedChartModule(labels, dayClouds, dayTemp, dayPrecip, dayGusts, dayTimes, weatherCodes) {
@@ -181,200 +139,79 @@ function createStackedChartModule(labels, dayClouds, dayTemp, dayPrecip, dayGust
   const totalPrecip = dayPrecip.reduce((acc, curr) => acc + curr, 0).toFixed(1);
   const maxGust = Math.round(Math.max(...dayGusts));
 
+  const now = forecastData && forecastData.utc_offset_seconds !== undefined
+    ? new Date(Date.now() + forecastData.utc_offset_seconds * 1000)
+    : new Date();
+  const currentISO = now.toISOString().slice(0, 13);
+
   const box = document.createElement('div');
   box.className = 'metric-box';
+
+  let cloudCells = '';
+  let tempCells = '';
+  let precipCells = '';
+  let gustCells = '';
+  let hourCells = '';
+
+  dayTimes.forEach((timeStr, index) => {
+    const hourLabel = labels[index];
+    const isCurrent = timeStr.startsWith(currentISO);
+    const highlightClass = isCurrent ? ' current-hour' : '';
+
+    const hasThunderstorm = weatherCodes && thunderstormCodes.includes(weatherCodes[index]);
+    const cloudValue = hasThunderstorm ? `${roundedClouds[index]}%⚡` : `${roundedClouds[index]}%`;
+
+    const precipVal = dayPrecip[index];
+
+    cloudCells += `<td class="row-cloud${highlightClass}">${cloudValue}</td>`;
+    tempCells += `<td class="row-temp${highlightClass}">${Math.round(dayTemp[index])}°C</td>`;
+    precipCells += `<td class="row-precip${highlightClass}">${precipVal} mm</td>`;
+    gustCells += `<td class="row-gust${highlightClass}">${Math.round(dayGusts[index])} Km/h</td>`;
+    hourCells += `<th class="row-hour${highlightClass}">${hourLabel}</th>`;
+  });
+
   box.innerHTML = `
     <div class="metric-header">
-      <h4>Previsão do Dia</h4>
       <div class="header-right">
         <span class="summary-badge">
           ${cloudDiagnosis.text}
           <img src="${cloudDiagnosis.icon}" alt="${cloudDiagnosis.text}" class="badge-icon">
         </span>
         <span class="summary-badge">Temp: ${minTemp}° a ${maxTemp}°C</span>
-        <span class="summary-badge">Chuva: ${totalPrecip} mm</span>
+        <span class="summary-badge">Acumulado de chuva: ${totalPrecip} mm</span>
         <span class="summary-badge">Rajada Máx: ${maxGust} km/h</span>
       </div>
     </div>
     <div class="metric-content">
       <div class="scroll-wrapper">
-        <div class="chart-container">
-          <div class="canvas-item"><canvas id="chart-clouds"></canvas></div>
-          <div class="canvas-item"><canvas id="chart-temp"></canvas></div>
-          <div class="canvas-item"><canvas id="chart-precip"></canvas></div>
-          <div class="canvas-item"><canvas id="chart-gusts"></canvas></div>
-        </div>
+        <table class="weather-table">
+          <tbody>
+            <tr class="tr-cloud">
+              ${cloudCells}
+            </tr>
+            <tr class="tr-temp">
+              ${tempCells}
+            </tr>
+            <tr class="tr-precip">
+              ${precipCells}
+            </tr>
+            <tr class="tr-gust">
+              ${gustCells}
+            </tr>
+            <tr class="tr-hour">
+              ${hourCells}
+            </tr>
+          </tbody>
+        </table>
       </div>
       <div class="rain-legend">
-        <p>Poucas nuvens até 35% - Parcialmente nublado até 75% - Nublado acima de 75%</p>
-        <p>chuva leve até 2.5 mm/h - chuva moderada até 10 mm/h - chuva forte acima de 10 mm/h</p>
+        <p><span class="dot dot-cloud"></span> Nebulosidade: Poucas nuvens (≤35%) - Parcialmente nublado (≤75%) - Nublado (>75%)</p>
+        <p><span class="dot dot-precip"></span> Precipitação: Leve (≤2.5 mm/h) - Moderada (≤10 mm/h) - Forte (>10 mm/h)</p>
       </div>
-
     </div>
   `;
 
-  const barColors = dayPrecip.map(v => {
-    if (v <= 2.5) return '#a0c4ff';
-    if (v < 10) return '#0052a3';
-    return '#ad51f9';
-  });
-
-  const tempMinVal = Math.floor(minTemp - 2);
-  const tempMaxVal = Math.ceil(maxTemp + 3);
-  const gustMaxVal = Math.ceil(maxGust * 1.2);
-
   requestAnimationFrame(() => {
-    const { fontColors, fontWeights } = getHourStyles(dayTimes);
-
-    // Opções base garantindo que o eixo X (horas) fique VISÍVEL em todos os gráficos
-    const createBaseOptions = () => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      events: [], // Desativa eventos do Chart.js para não interferir no arraste da div pai
-      layout: { padding: { top: 20, bottom: 5, left: 10, right: 10 } },
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: false },
-        datalabels: { font: { weight: 'bold', size: 11 } }
-      },
-      scales: {
-        x: {
-          display: true, // Exibe o eixo com as horas em TODOS
-          grid: { display: false },
-          ticks: {
-            font: (context) => ({
-              size: 13,
-              weight: fontWeights[context.index] || 'normal'
-            }),
-            color: (context) => fontColors[context.index] || '#555555'
-          }
-        },
-        y: { display: false }
-      }
-    });
-
-    // 1. Gráfico de Nebulosidade
-    const canvasClouds = document.getElementById('chart-clouds');
-    if (canvasClouds) {
-      const opts = createBaseOptions();
-      opts.scales.y.min = 0;
-      opts.scales.y.max = 120;
-      new Chart(canvasClouds, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Nebulosidade (%)',
-            data: roundedClouds,
-            borderColor: '#888888',
-            backgroundColor: 'rgba(136, 136, 136, 0.15)',
-            borderWidth: 2,
-            pointRadius: 3,
-            tension: 0.3,
-            fill: true,
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              color: '#444444',
-              formatter: (val, ctx) => {
-                const index = ctx.dataIndex;
-                const hasThunderstorm = weatherCodes && thunderstormCodes.includes(weatherCodes[index]);
-                return hasThunderstorm ? `${val}%⚡` : `${val}%`;
-              }
-            }
-          }]
-        },
-        options: opts
-      });
-    }
-
-    // 2. Gráfico de Temperatura
-    const canvasTemp = document.getElementById('chart-temp');
-    if (canvasTemp) {
-      const opts = createBaseOptions();
-      opts.scales.y.min = tempMinVal;
-      opts.scales.y.max = tempMaxVal;
-      new Chart(canvasTemp, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Temperatura (°C)',
-            data: dayTemp,
-            borderColor: '#ff7f0e',
-            backgroundColor: 'rgba(255, 127, 14, 0.15)',
-            borderWidth: 3,
-            pointRadius: 4,
-            tension: 0.3,
-            fill: true,
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              color: '#d95f02',
-              formatter: (val) => `${Math.round(val)}°`
-            }
-          }]
-        },
-        options: opts
-      });
-    }
-
-    // 3. Gráfico de Chuva / Precipitação
-    const canvasPrecip = document.getElementById('chart-precip');
-    if (canvasPrecip) {
-      const opts = createBaseOptions();
-      opts.scales.y.min = 0;
-      new Chart(canvasPrecip, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Precipitação (mm)',
-            data: dayPrecip,
-            backgroundColor: barColors,
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              color: '#0052a3',
-              formatter: (val) => val > 0 ? `${val}` : ''
-            }
-          }]
-        },
-        options: opts
-      });
-    }
-
-    // 4. Gráfico de Ventos / Rajadas
-    const canvasGusts = document.getElementById('chart-gusts');
-    if (canvasGusts) {
-      const opts = createBaseOptions();
-      opts.scales.y.min = 0;
-      opts.scales.y.max = gustMaxVal;
-      new Chart(canvasGusts, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Rajadas de Vento (km/h)',
-            data: dayGusts,
-            borderColor: '#1e8449',
-            backgroundColor: 'rgba(30, 132, 73, 0.15)',
-            borderWidth: 2,
-            pointRadius: 3,
-            tension: 0.2,
-            fill: true,
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              color: '#1e8449',
-              formatter: (val) => `${Math.round(val)}`
-            }
-          }]
-        },
-        options: opts
-      });
-    }
-
     const scrollWrapper = box.querySelector('.scroll-wrapper');
     if (scrollWrapper) {
       enableDragToScroll(scrollWrapper);
@@ -386,7 +223,7 @@ function createStackedChartModule(labels, dayClouds, dayTemp, dayPrecip, dayGust
 }
 
 // ==========================================
-// RENDERIZAÇÃO E DEMAIS MÉTODOS
+// RENDERIZAÇÃO E NAVEGAÇÃO
 // ==========================================
 
 function formatDate(dateString, dayIndex) {
@@ -398,7 +235,6 @@ function formatDate(dateString, dayIndex) {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const yy = String(date.getFullYear()).slice(-2);
 
-  // Exemplo de retorno: "(1) Segunda-feira, 25/04/26"
   return `(${dayIndex + 1}) ${diaSemana}, ${dd}/${mm}/${yy}`;
 }
 
@@ -418,7 +254,6 @@ function renderSelectedDay() {
   const dayGusts = forecastData.wind_gusts_10m.slice(startIndex, endIndex);
   const dayWeatherCodes = forecastData.weathercode ? forecastData.weathercode.slice(startIndex, endIndex) : [];
 
-  // Passando o currentDayIndex para formatar o número do dia
   const formattedDate = formatDate(dayTimes[0], currentDayIndex);
   document.getElementById('current-day-label').textContent = formattedDate;
 

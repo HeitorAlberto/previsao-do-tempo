@@ -155,7 +155,6 @@ button:disabled {
 }
 
 .metric-header {
-  display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
@@ -174,14 +173,17 @@ button:disabled {
 }
 
 .header-right {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  justify-self: center;
+  align-self: center;
 }
 
 .summary-badge {
-  font-size: 13px;
+  font-size: 16px;
   font-weight: bold;
   color: rgb(67, 89, 255);
   background: #f0f4f8;
@@ -198,50 +200,133 @@ button:disabled {
   margin-left: 6px;
 }
 
-/* Elemento pai que segura a rolagem com cursores apropriados para drag */
+/* ==========================================
+   TABELA CLIMÁTICA COM SCROLL LATERAL
+   ========================================== */
+
 .scroll-wrapper {
   overflow-x: auto;
+  overflow-y: hidden;
   width: 100%;
-  padding-bottom: 10px;
+  padding-bottom: 5px;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  touch-action: pan-x pan-y;
+  touch-action: pan-x;
   cursor: grab;
   user-select: none;
 }
 
+.scroll-wrapper::-webkit-scrollbar {
+  display: none;
+}
+
 .scroll-wrapper.active {
   cursor: grabbing;
-  scroll-behavior: auto;
 }
 
-/* Container interno com flexbox vertical e GAP de 30px */
-.chart-container {
-  min-width: 1400px;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
-}
-
-.canvas-item {
+.weather-table {
   width: 100%;
-  height: 160px; /* Aumentado para acomodar o eixo das horas em cada gráfico */
-  position: relative;
-  pointer-events: none; /* Garante que os eventos do mouse caiam no scroll-wrapper pai */
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: center;
+  font-size: 13px;
+  min-width: 1100px;
 }
 
+.weather-table th, 
+.weather-table td {
+  padding: 10px 20px;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Coluna fixa à esquerda */
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  text-align: left;
+  font-weight: bold;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+/* CORES SUAVES POR LINHA */
+
+/* 1. Nuvens (Cinza Suave) */
+.tr-cloud .sticky-col,
+.row-cloud {
+  background-color: #f4f5f7;
+  color: #4a5568;
+}
+
+/* 2. Temperatura (Laranja Suave) */
+.tr-temp .sticky-col,
+.row-temp {
+  background-color: #fff4ec;
+  color: #c05621;
+  font-weight: 600;
+}
+
+/* 3. Chuva (Azul Suave) */
+.tr-precip .sticky-col,
+.row-precip {
+  background-color: #ebf8ff;
+  color: #2b6cb0;
+  font-weight: 600;
+}
+
+/* 4. Vento (Verde Suave) */
+.tr-gust .sticky-col,
+.row-gust {
+  background-color: #f0fff4;
+  color: #276749;
+}
+
+/* 5. Horas (Neutro) */
+.tr-hour .sticky-col,
+.row-hour {
+  background-color: black;
+  color: white;
+  font-weight: bold;
+  border-bottom: none;
+}
+
+/* Destaque da Hora Atual */
+.current-hour {
+  border: 1px solid black;
+}
+
+/* LEGENDA DE CORES ABAIXO DA TABELA */
 .rain-legend {
+  margin-top: 15px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  font-size: 11px;
-  text-align: center;
-  justify-content: center;
-  color: #666;
-  font-weight: bold;
-  padding: 8px 10px 0 10px;
+  gap: 6px;
+  font-size: 12px;
+  color: #555;
+  background: #fafafa;
+  padding: 10px 14px;
+  border-radius: 8px;
 }
+
+.rain-legend p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.dot-cloud { background-color: #a0aec0; }
+.dot-precip { background-color: #3182ce; }
 
 footer {
   text-align: center;
@@ -309,14 +394,5 @@ footer {
   .summary-badge {
     font-size: 12px;
     padding: 3px 8px;
-  }
-
-  .chart-container {
-    min-width: 1600px;
-    gap: 30px;
-  }
-
-  .canvas-item {
-    height: 150px;
   }
 }
