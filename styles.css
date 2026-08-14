@@ -218,7 +218,7 @@ button:disabled {
 }
 
 .chart-container {
-  min-width: 1000px;
+  min-width: 1600px;
   height: 135px;
   position: relative;
 }
@@ -351,9 +351,9 @@ footer {
     margin-left: 2px;
   }
 
-  /* Largura otimizada para visualização mobile mantendo o scroll responsivo */
+  
   .chart-container {
-    min-width: 800px;
+    min-width: 1600px;
   }
 
   /* Legendas no Mobile */
