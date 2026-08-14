@@ -30,12 +30,78 @@ let forecastData = null;
 let currentDayIndex = 0;
 let debounceTimer = null;
 
+// Flag para evitar loops infinitos de scroll
+let isSyncingScroll = false;
+
 // Carrega o histórico salvo no localStorage ao iniciar
 renderHistory();
 
 // ==========================================
-// 1. HELPER PARA IDENTIFICAR E CENTRALIZAR A HORA ATUAL
+// 1. HELPER PARA SCROLL SINCRONIZADO E ARRASTE COM A MÃOZINHA
 // ==========================================
+
+function setupSynchronizedScroll() {
+  const wrappers = document.querySelectorAll('.scroll-wrapper');
+
+  wrappers.forEach(wrapper => {
+    // Aplica o cursor de mãozinha via estilo inline
+    wrapper.style.cursor = 'grab';
+    wrapper.style.userSelect = 'none';
+
+    // Sincronização de Scroll
+    wrapper.removeEventListener('scroll', handleScroll);
+    wrapper.addEventListener('scroll', handleScroll);
+
+    // Lógica de Arraste com a Mãozinha (Drag to Scroll)
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+
+    wrapper.addEventListener('mousedown', (e) => {
+      isDown = true;
+      wrapper.style.cursor = 'grabbing';
+      startX = e.pageX - wrapper.offsetLeft;
+      scrollLeft = wrapper.scrollLeft;
+    });
+
+    wrapper.addEventListener('mouseleave', () => {
+      isDown = false;
+      wrapper.style.cursor = 'grab';
+    });
+
+    wrapper.addEventListener('mouseup', () => {
+      isDown = false;
+      wrapper.style.cursor = 'grab';
+    });
+
+    wrapper.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - wrapper.offsetLeft;
+      const walk = (x - startX) * 1.5; // Multiplicador de velocidade do arraste
+      wrapper.scrollLeft = scrollLeft - walk;
+    });
+  });
+}
+
+function handleScroll(e) {
+  if (isSyncingScroll) return;
+
+  isSyncingScroll = true;
+  const target = e.target;
+  const scrollLeft = target.scrollLeft;
+
+  const wrappers = document.querySelectorAll('.scroll-wrapper');
+  wrappers.forEach(w => {
+    if (w !== target) {
+      w.scrollLeft = scrollLeft;
+    }
+  });
+
+  requestAnimationFrame(() => {
+    isSyncingScroll = false;
+  });
+}
 
 function getHourStyles(dayTimes) {
   const now = forecastData && forecastData.utc_offset_seconds !== undefined
@@ -77,9 +143,12 @@ function centerCurrentHour(canvasElement, dayTimes) {
   const itemCenterPos = (currentIndex * itemWidth) + (itemWidth / 2);
   const targetScrollLeft = itemCenterPos - (wrapperWidth / 2);
 
-  scrollWrapper.scrollTo({
-    left: targetScrollLeft,
-    behavior: 'smooth'
+  const wrappers = document.querySelectorAll('.scroll-wrapper');
+  wrappers.forEach(w => {
+    w.scrollTo({
+      left: targetScrollLeft,
+      behavior: 'smooth'
+    });
   });
 }
 
@@ -94,6 +163,7 @@ function getCommonOptions(dayTimes) {
     },
     plugins: {
       legend: { display: false },
+      tooltip: { enabled: false }, // Tooltips removidos de todos os gráficos
       datalabels: {
         anchor: 'end',
         align: 'top',
@@ -117,27 +187,8 @@ function getCommonOptions(dayTimes) {
   };
 }
 
-// Controle do Acordeão (Abrir/Fechar com auto-scroll para hora atual)
-function toggleModuleContent(headerElement) {
-  const content = headerElement.nextElementSibling;
-  const isHidden = content.style.display === 'none';
-  content.style.display = isHidden ? 'block' : 'none';
-  headerElement.classList.toggle('expanded', isHidden);
-
-  if (isHidden) {
-    requestAnimationFrame(() => {
-      const canvas = content.querySelector('canvas');
-      if (canvas && forecastData) {
-        const startIndex = currentDayIndex * 24;
-        const dayTimes = forecastData.time.slice(startIndex, startIndex + 24);
-        centerCurrentHour(canvas, dayTimes);
-      }
-    });
-  }
-}
-
 // ==========================================
-// ALGORITMO INTELIGENTE DE DIAGNÓSTICO (SIMPLIFICADO)
+// ALGORITMO INTELIGENTE DE DIAGNÓSTICO
 // ==========================================
 
 function getCloudDiagnosis(dayTimes, roundedValues) {
@@ -157,46 +208,58 @@ function getCloudDiagnosis(dayTimes, roundedValues) {
   const total = targetValues.reduce((a, b) => a + b, 0);
   const avg = Math.round(total / targetValues.length);
 
-  // 1. Regra de consistência para "Pouca nebulosidade"
-  // Só é pouca nebulosidade se a média for baixa E o pico máximo não for muito alto
   if (avg <= 30 && max <= 50) {
-    return "Pouca nebulosidade";
+    return {
+      text: "Pouca nebulosidade",
+      icon: "icons/pouca-nebulosidade.png"
+    };
   }
 
-  // 2. Regra de consistência para "Nublado"
-  // Só é totalmente nublado se a média for alta E o dia não tiver tido grandes aberturas de sol
   if (avg >= 70 && min >= 40) {
-    return "Nublado";
+    return {
+      text: "Nublado",
+      icon: "icons/nublado.png"
+    };
   }
 
-  // 3. Todo o resto (dias instáveis, transições ou com variação grande) cai aqui
-  return "Parcialmente nublado";
+  return {
+    text: "Parcialmente nublado",
+    icon: "icons/parcialmente-nublado.png"
+  };
 }
-
-
 
 // ==========================================
 // 2. MÓDULOS DOS GRÁFICOS
 // ==========================================
 
 // Div 1: Nebulosidade
-function createCloudCoverModule(labels, cloudValues, dayTimes) {
+function createCloudCoverModule(labels, cloudValues, dayTimes, weatherCodes) {
   const roundedValues = cloudValues.map(v => Math.round(v / 10) * 10);
   const cloudDiagnosis = getCloudDiagnosis(dayTimes, roundedValues);
+
+  // Códigos Open-Meteo para Trovoada: 95 (Trovoada), 96 e 99 (Trovoada com granizo)
+  const thunderstormCodes = [95, 96, 99];
 
   const box = document.createElement('div');
   box.className = 'metric-box';
   box.innerHTML = `
-    <div class="metric-header" onclick="toggleModuleContent(this)">
+    <div class="metric-header">
       <h4>Nebulosidade (%)</h4>
       <div class="header-right">
-        <span class="summary-badge">${cloudDiagnosis}</span>
-        <span class="toggle-icon">▼</span>
+        <span class="summary-badge">
+          ${cloudDiagnosis.text}
+          <img src="${cloudDiagnosis.icon}" alt="${cloudDiagnosis.text}" class="badge-icon">
+        </span>
       </div>
     </div>
-    <div class="metric-content" style="display: none;">
+    <div class="metric-content">
       <div class="scroll-wrapper">
         <div class="chart-container"><canvas id="cloud-chart"></canvas></div>
+      </div>
+      <div class="rain-legend">
+        <p>Poucas nuvens até 35%</p>
+        <p>Parcialmente nublado até 75%</p>
+        <p>Nublado acima de 75%</p>
       </div>
     </div>
   `;
@@ -225,7 +288,11 @@ function createCloudCoverModule(labels, cloudValues, dayTimes) {
           ...options.plugins,
           datalabels: {
             ...options.plugins.datalabels,
-            formatter: (val) => val
+            formatter: (val, context) => {
+              const index = context.dataIndex;
+              const hasThunderstorm = weatherCodes && thunderstormCodes.includes(weatherCodes[index]);
+              return hasThunderstorm ? `${val}⚡` : `${val}`;
+            }
           }
         },
         scales: {
@@ -249,14 +316,13 @@ function createTemperatureModule(labels, tempValues, dayTimes) {
   const box = document.createElement('div');
   box.className = 'metric-box';
   box.innerHTML = `
-    <div class="metric-header" onclick="toggleModuleContent(this)">
+    <div class="metric-header">
       <h4>Temperatura (°C)</h4>
       <div class="header-right">
         <span class="summary-badge">${minTemp}° a ${maxTemp}°</span>
-        <span class="toggle-icon">▼</span>
       </div>
     </div>
-    <div class="metric-content" style="display: none;">
+    <div class="metric-content">
       <div class="scroll-wrapper">
         <div class="chart-container"><canvas id="temp-chart"></canvas></div>
       </div>
@@ -292,8 +358,6 @@ function createTemperatureModule(labels, tempValues, dayTimes) {
         }
       }
     });
-
-    centerCurrentHour(canvas, dayTimes);
   });
 
   return box;
@@ -306,14 +370,13 @@ function createPrecipitationModule(labels, precipValues, dayTimes) {
   const box = document.createElement('div');
   box.className = 'metric-box';
   box.innerHTML = `
-    <div class="metric-header" onclick="toggleModuleContent(this)">
+    <div class="metric-header">
       <h4>Precipitação (mm)</h4>
       <div class="header-right">
         <span class="summary-badge">${total24h} mm</span>
-        <span class="toggle-icon">▼</span>
       </div>
     </div>
-    <div class="metric-content" style="display: none;">
+    <div class="metric-content">
       <div class="scroll-wrapper">
         <div class="chart-container"><canvas id="precip-chart"></canvas></div>
       </div>
@@ -347,9 +410,6 @@ function createPrecipitationModule(labels, precipValues, dayTimes) {
         ...options,
         plugins: {
           ...options.plugins,
-          tooltip: {
-            callbacks: { label: (context) => `${context.raw} mm` }
-          },
           datalabels: {
             ...options.plugins.datalabels,
             formatter: (val) => val > 0 ? val : ''
@@ -357,8 +417,6 @@ function createPrecipitationModule(labels, precipValues, dayTimes) {
         }
       }
     });
-
-    centerCurrentHour(canvas, dayTimes);
   });
 
   return box;
@@ -371,14 +429,13 @@ function createGustsModule(labels, gustValues, dayTimes) {
   const box = document.createElement('div');
   box.className = 'metric-box';
   box.innerHTML = `
-    <div class="metric-header" onclick="toggleModuleContent(this)">
+    <div class="metric-header">
       <h4>Rajadas de Vento (km/h)</h4>
       <div class="header-right">
         <span class="summary-badge">Máx: ${maxGust} km/h</span>
-        <span class="toggle-icon">▼</span>
       </div>
     </div>
-    <div class="metric-content" style="display: none;">
+    <div class="metric-content">
       <div class="scroll-wrapper">
         <div class="chart-container"><canvas id="gust-chart"></canvas></div>
       </div>
@@ -415,8 +472,6 @@ function createGustsModule(labels, gustValues, dayTimes) {
         }
       }
     });
-
-    centerCurrentHour(canvas, dayTimes);
   });
 
   return box;
@@ -452,6 +507,7 @@ function renderSelectedDay() {
   const dayTemp = forecastData.temperature_2m.slice(startIndex, endIndex);
   const dayPrecip = forecastData.precipitation.slice(startIndex, endIndex);
   const dayGusts = forecastData.wind_gusts_10m.slice(startIndex, endIndex);
+  const dayWeatherCodes = forecastData.weathercode ? forecastData.weathercode.slice(startIndex, endIndex) : [];
 
   const formattedDate = formatDate(dayTimes[0]);
   document.getElementById('current-day-label').textContent = formattedDate;
@@ -461,12 +517,16 @@ function renderSelectedDay() {
 
   const hourLabels = dayTimes.map(t => new Date(t).getHours() + 'h');
 
-  dayCard.appendChild(createCloudCoverModule(hourLabels, dayClouds, dayTimes));
+  dayCard.appendChild(createCloudCoverModule(hourLabels, dayClouds, dayTimes, dayWeatherCodes));
   dayCard.appendChild(createTemperatureModule(hourLabels, dayTemp, dayTimes));
   dayCard.appendChild(createPrecipitationModule(hourLabels, dayPrecip, dayTimes));
   dayCard.appendChild(createGustsModule(hourLabels, dayGusts, dayTimes));
 
   forecastContainer.appendChild(dayCard);
+
+  requestAnimationFrame(() => {
+    setupSynchronizedScroll();
+  });
 }
 
 function changeDay(delta) {
@@ -542,9 +602,9 @@ searchForm.addEventListener('submit', (e) => {
   }
 });
 
-function updateHistory(cityName) {
-  searchHistory = searchHistory.filter(item => item.toLowerCase() !== cityName.toLowerCase());
-  searchHistory.unshift(cityName);
+function updateHistory(fullLocationName) {
+  searchHistory = searchHistory.filter(item => item.toLowerCase() !== fullLocationName.toLowerCase());
+  searchHistory.unshift(fullLocationName);
   if (searchHistory.length > 3) {
     searchHistory.pop();
   }
@@ -554,11 +614,11 @@ function updateHistory(cityName) {
 
 function renderHistory() {
   historyContainer.innerHTML = '';
-  searchHistory.forEach(city => {
+  searchHistory.forEach(fullLocationName => {
     const item = document.createElement('div');
     item.className = 'history-item';
-    item.textContent = city;
-    item.onclick = () => fetchCityCoordinates(city);
+    item.textContent = fullLocationName;
+    item.onclick = () => fetchCityCoordinates(fullLocationName);
     historyContainer.appendChild(item);
   });
 }
@@ -568,14 +628,18 @@ function selectLocation(location) {
   const state = location.admin1 || '';
   const country = location.country || '';
 
-  locationInfo.textContent = `${name}${state ? ', ' + state : ''} - ${country}`;
-  updateHistory(name);
+  const fullLocationName = `${name}${state ? ', ' + state : ''} - ${country}`;
+
+  locationInfo.textContent = fullLocationName;
+  updateHistory(fullLocationName);
   fetchForecast(location.latitude, location.longitude);
 }
 
 async function fetchCityCoordinates(cityName) {
   try {
-    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=pt&format=json`;
+    const cleanCityName = cityName.split(',')[0].split('-')[0].trim();
+
+    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleanCityName)}&count=1&language=pt&format=json`;
     const response = await fetch(geoUrl);
     const data = await response.json();
 
@@ -592,7 +656,8 @@ async function fetchCityCoordinates(cityName) {
 
 async function fetchForecast(lat, lon) {
   try {
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,temperature_2m,precipitation,wind_gusts_10m&forecast_days=10&timezone=auto&models=ecmwf_ifs`;
+    // Adicionado weathercode na lista de parâmetros hourly
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,temperature_2m,precipitation,wind_gusts_10m,weathercode&forecast_days=10&timezone=auto&models=ecmwf_ifs`;
     const response = await fetch(weatherUrl);
     const data = await response.json();
 

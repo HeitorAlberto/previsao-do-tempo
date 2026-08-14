@@ -159,21 +159,20 @@ button:disabled {
   padding-bottom: 10px;
 }
 
-/* Módulos com Acordeão e Rolagem Horizontal */
+
 .metric-box {
-  margin-bottom: 20px;
+  margin-bottom: 15px;
+  border: 2px solid #f2f2f2;
+  border-radius: 12px;
 }
 
 .metric-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8f9fa;
   padding: 12px 16px;
   border-radius: 8px;
-  cursor: pointer;
   user-select: none;
-  transition: background-color 0.2s;
   margin-bottom: 10px;
 }
 
@@ -196,19 +195,17 @@ button:disabled {
   font-weight: bold;
   color: rgb(67, 89, 255);
   border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
 }
 
-/* Estilo e Animação da Seta */
-.toggle-icon {
-  font-size: 12px;
-  color: #666;
-  transition: transform 0.3s ease;
+.summary-badge .badge-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  margin-left: 10px;
 }
 
-/* Rotação de 180° quando expandido */
-.metric-header.expanded .toggle-icon {
-  transform: rotate(180deg);
-}
 
 /* Container de rolagem e centralização do gráfico */
 .scroll-wrapper {
@@ -217,26 +214,42 @@ button:disabled {
   padding-bottom: 10px;
   -webkit-overflow-scrolling: touch; /* Suavidade de scroll no iOS */
   scroll-behavior: smooth;
+  scrollbar-width: none;
 }
 
 .chart-container {
-  min-width: 1000px; /* Garante que as 24h tenham espaço sem espremer */
-  height: 240px;
+  min-width: 1000px;
+  height: 135px;
   position: relative;
 }
 
 .legend {
   font-size: 14px;
   color: #444;
-  margin-top: 10px;
-  background: #f8f9fa;
-  padding: 10px 14px;
   border-radius: 6px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   flex-wrap: wrap;
   gap: 15px;
+  padding: 10px;
+
+}
+
+.rain-legend {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  font-size: 10px;
+  text-align: center;
+  justify-content: center;
+  color: #333;
+  font-weight: bolder;
+  padding: 5px 10px;
+}
+
+.rain-legend > p {
+  text-align: left;
 }
 
 .legend-items {
@@ -330,6 +343,12 @@ footer {
 
   .summary-badge {
     font-size: 15px;
+  }
+
+  .summary-badge > .badge-icon {
+    height: 20px;
+    width: 20px;
+    margin-left: 2px;
   }
 
   /* Largura otimizada para visualização mobile mantendo o scroll responsivo */
