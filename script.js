@@ -37,75 +37,85 @@ let isSyncingScroll = false;
 renderHistory();
 
 // ==========================================
-// 1. HELPER PARA SCROLL SINCRONIZADO E ARRASTE UNIFICADO
+// 1. SCROLL SINCRONIZADO
+//    TOUCH = SCROLL NATIVO
+//    MOUSE = DRAG
 // ==========================================
 
 function setupSynchronizedScroll() {
   const wrappers = document.querySelectorAll('.scroll-wrapper');
 
   wrappers.forEach(wrapper => {
-    // Permite que o touch nativo controle o scroll X e Y no mobile sem interferência do JS
-    wrapper.style.touchAction = 'pan-x pan-y';
     wrapper.style.cursor = 'grab';
     wrapper.style.userSelect = 'none';
 
-    // Sincronização passiva de alta performance via scroll nativo
+    // Permite ao navegador controlar normalmente o toque.
+    wrapper.style.touchAction = 'pan-x pan-y';
+
+    // Sincronização pelo scroll nativo
     wrapper.removeEventListener('scroll', handleScroll);
     wrapper.addEventListener('scroll', handleScroll, { passive: true });
 
-    // Lógica de Arraste APENAS para Mouse (evita conflitos no touch/mobile)
-    let isDown = false;
+    let isDragging = false;
     let startX = 0;
-    let scrollLeft = 0;
+    let startScrollLeft = 0;
 
-    wrapper.addEventListener('mousedown', (e) => {
-      if (e.button !== 0) return; // Apenas botão esquerdo
+    wrapper.addEventListener('pointerdown', (e) => {
+      // No celular/tablet, deixa o navegador cuidar do gesto.
+      if (e.pointerType !== 'mouse') return;
 
-      isDown = true;
+      // Ignora botão direito
+      if (e.button !== 0) return;
+
+      isDragging = true;
+      startX = e.clientX;
+      startScrollLeft = wrapper.scrollLeft;
+
       wrapper.style.cursor = 'grabbing';
-      startX = e.pageX - wrapper.offsetLeft;
-      scrollLeft = wrapper.scrollLeft;
+
+      wrapper.setPointerCapture(e.pointerId);
     });
 
-    wrapper.addEventListener('mouseleave', () => {
-      isDown = false;
+    wrapper.addEventListener('pointermove', (e) => {
+      // Drag somente com mouse
+      if (!isDragging || e.pointerType !== 'mouse') return;
+
+      const distance = e.clientX - startX;
+
+      wrapper.scrollLeft = startScrollLeft - distance;
+    });
+
+    const stopDragging = (e) => {
+      if (!isDragging) return;
+
+      isDragging = false;
       wrapper.style.cursor = 'grab';
-    });
 
-    wrapper.addEventListener('mouseup', () => {
-      isDown = false;
-      wrapper.style.cursor = 'grab';
-    });
+      if (wrapper.hasPointerCapture(e.pointerId)) {
+        wrapper.releasePointerCapture(e.pointerId);
+      }
+    };
 
-    wrapper.addEventListener('mousemove', (e) => {
-      if (!isDown) return;
-      e.preventDefault();
-
-      const x = e.pageX - wrapper.offsetLeft;
-      const walk = (x - startX) * 1.5; // Velocidade do arraste
-
-      // Atualização otimizada para o frame da tela
-      requestAnimationFrame(() => {
-        wrappers.forEach(w => {
-          w.scrollLeft = scrollLeft - walk;
-        });
-      });
-    });
+    wrapper.addEventListener('pointerup', stopDragging);
+    wrapper.addEventListener('pointercancel', stopDragging);
   });
 }
-
 
 function handleScroll(e) {
   if (isSyncingScroll) return;
 
-  isSyncingScroll = true;
   const target = e.target;
   const scrollLeft = target.scrollLeft;
-
   const wrappers = document.querySelectorAll('.scroll-wrapper');
-  wrappers.forEach(w => {
-    if (w !== target) {
-      w.scrollLeft = scrollLeft;
+
+  isSyncingScroll = true;
+
+  wrappers.forEach(wrapper => {
+    if (
+      wrapper !== target &&
+      Math.abs(wrapper.scrollLeft - scrollLeft) > 0.5
+    ) {
+      wrapper.scrollLeft = scrollLeft;
     }
   });
 
@@ -113,6 +123,7 @@ function handleScroll(e) {
     isSyncingScroll = false;
   });
 }
+
 
 function getHourStyles(dayTimes) {
   const now = forecastData && forecastData.utc_offset_seconds !== undefined
