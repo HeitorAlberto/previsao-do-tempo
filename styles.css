@@ -215,10 +215,11 @@ button:disabled {
   -webkit-overflow-scrolling: touch; /* Suavidade de scroll no iOS */
   scroll-behavior: smooth;
   scrollbar-width: none;
+  touch-action: pan-y;
 }
 
 .chart-container {
-  min-width: 1600px;
+  min-width: 1400px;
   height: 135px;
   position: relative;
 }

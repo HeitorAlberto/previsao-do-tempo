@@ -37,50 +37,68 @@ let isSyncingScroll = false;
 renderHistory();
 
 // ==========================================
-// 1. HELPER PARA SCROLL SINCRONIZADO E ARRASTE COM A MÃOZINHA
+// 1. HELPER PARA SCROLL SINCRONIZADO E ARRASTE UNIFICADO (MOUSE + TOUCH)
 // ==========================================
 
 function setupSynchronizedScroll() {
   const wrappers = document.querySelectorAll('.scroll-wrapper');
 
   wrappers.forEach(wrapper => {
-    // Aplica o cursor de mãozinha via estilo inline
+    // Estilos para facilitar a navegação por arraste
     wrapper.style.cursor = 'grab';
     wrapper.style.userSelect = 'none';
+    wrapper.style.touchAction = 'pan-y'; // Permite scroll vertical da página, mas entrega o horizontal ao JS
 
-    // Sincronização de Scroll
+    // Sincronização via evento de scroll nativo
     wrapper.removeEventListener('scroll', handleScroll);
     wrapper.addEventListener('scroll', handleScroll);
 
-    // Lógica de Arraste com a Mãozinha (Drag to Scroll)
+    // Lógica de Arraste via Pointer Events (Alta Performance no Mobile/Desktop)
     let isDown = false;
-    let startX;
-    let scrollLeft;
+    let startX = 0;
+    let scrollLeft = 0;
 
-    wrapper.addEventListener('mousedown', (e) => {
+    wrapper.addEventListener('pointerdown', (e) => {
+      // Ignora se for o botão direito do mouse
+      if (e.button && e.button !== 0) return;
+
       isDown = true;
       wrapper.style.cursor = 'grabbing';
-      startX = e.pageX - wrapper.offsetLeft;
+      
+      // Guarda a posição inicial
+      startX = e.clientX;
       scrollLeft = wrapper.scrollLeft;
+
+      // Trava os eventos de ponteiro neste elemento mesmo se o dedo/mouse sair dele
+      wrapper.setPointerCapture(e.pointerId);
     });
 
-    wrapper.addEventListener('mouseleave', () => {
-      isDown = false;
-      wrapper.style.cursor = 'grab';
-    });
-
-    wrapper.addEventListener('mouseup', () => {
-      isDown = false;
-      wrapper.style.cursor = 'grab';
-    });
-
-    wrapper.addEventListener('mousemove', (e) => {
+    wrapper.addEventListener('pointermove', (e) => {
       if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - wrapper.offsetLeft;
-      const walk = (x - startX) * 1.5; // Multiplicador de velocidade do arraste
-      wrapper.scrollLeft = scrollLeft - walk;
+
+      // Deslocamento atual
+      const x = e.clientX;
+      const walk = (x - startX) * 1.5; // Multiplicador de velocidade
+
+      // Sincroniza TODOS os wrappers diretamente no frame de movimento
+      wrappers.forEach(w => {
+        w.scrollLeft = scrollLeft - walk;
+      });
     });
+
+    const stopDragging = (e) => {
+      if (!isDown) return;
+      isDown = false;
+      wrapper.style.cursor = 'grab';
+      
+      if (wrapper.hasPointerCapture(e.pointerId)) {
+        wrapper.releasePointerCapture(e.pointerId);
+      }
+    };
+
+    // Soltar o clique/toque ou cancelar
+    wrapper.addEventListener('pointerup', stopDragging);
+    wrapper.addEventListener('pointercancel', stopDragging);
   });
 }
 
@@ -656,7 +674,6 @@ async function fetchCityCoordinates(cityName) {
 
 async function fetchForecast(lat, lon) {
   try {
-    // Adicionado weathercode na lista de parâmetros hourly
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,temperature_2m,precipitation,wind_gusts_10m,weathercode&forecast_days=10&timezone=auto&models=ecmwf_ifs`;
     const response = await fetch(weatherUrl);
     const data = await response.json();
