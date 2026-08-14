@@ -5,7 +5,6 @@
   margin: 0;
   padding: 0;
   font-family: "Google Sans", sans-serif;
-
 }
 
 body {
@@ -21,7 +20,7 @@ body {
 }
 
 .container {
-  max-width: 700px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
@@ -49,7 +48,7 @@ body {
 }
 
 button {
-  padding: 10px;
+  padding: 10px 16px;
   background-color: rgb(67, 89, 255);
   color: white;
   border: none;
@@ -57,7 +56,6 @@ button {
   cursor: pointer;
   font-weight: bold;
 }
-
 
 button:disabled {
   background-color: #ccc;
@@ -99,7 +97,7 @@ button:disabled {
 .history-item {
   background: #e9ecef;
   padding: 6px 12px;
-  border-radius: 15px;
+  border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
   transition: background 0.2s;
@@ -118,7 +116,7 @@ button:disabled {
   color: #1a252f;
 }
 
-/* Navegação por Dia - Desktop */
+/* Navegação por Dia */
 .day-nav {
   display: flex;
   justify-content: space-between;
@@ -149,31 +147,23 @@ button:disabled {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.day-header {
-  text-align: center;
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #0066cc;
-  border-bottom: 2px solid #f0f4f8;
-  padding-bottom: 10px;
-}
-
-
 .metric-box {
   margin-bottom: 15px;
   border: 2px solid #f2f2f2;
   border-radius: 12px;
+  padding: 10px;
 }
 
 .metric-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 8px 12px;
   border-radius: 8px;
   user-select: none;
   margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .metric-header h4 {
@@ -183,95 +173,83 @@ button:disabled {
   margin-bottom: 0 !important;
 }
 
-/* Agrupamento da Badge de Resumo + Seta Indicadora */
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .summary-badge {
-  font-size: 18px;
+  font-size: 13px;
   font-weight: bold;
   color: rgb(67, 89, 255);
+  background: #f0f4f8;
+  padding: 4px 10px;
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
 }
 
 .summary-badge .badge-icon {
-  width: 40px;
-  height: 40px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
-  margin-left: 10px;
+  margin-left: 6px;
 }
 
-
-/* Container de rolagem e centralização do gráfico */
+/* Elemento pai que segura a rolagem com cursores apropriados para drag */
 .scroll-wrapper {
   overflow-x: auto;
   width: 100%;
   padding-bottom: 10px;
-  -webkit-overflow-scrolling: touch; /* Suavidade de scroll no iOS */
+  -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   scrollbar-width: none;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
+  cursor: grab;
+  user-select: none;
 }
 
+.scroll-wrapper.active {
+  cursor: grabbing;
+  scroll-behavior: auto;
+}
+
+/* Container interno com flexbox vertical e GAP de 30px */
 .chart-container {
   min-width: 1400px;
-  height: 135px;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
 }
 
-.legend {
-  font-size: 14px;
-  color: #444;
-  border-radius: 6px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
-  padding: 10px;
-
+.canvas-item {
+  width: 100%;
+  height: 160px; /* Aumentado para acomodar o eixo das horas em cada gráfico */
+  position: relative;
+  pointer-events: none; /* Garante que os eventos do mouse caiam no scroll-wrapper pai */
 }
 
 .rain-legend {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 10px;
-  font-size: 10px;
+  font-size: 11px;
   text-align: center;
   justify-content: center;
-  color: #333;
-  font-weight: bolder;
-  padding: 5px 10px;
-}
-
-.rain-legend > p {
-  text-align: left;
-}
-
-.legend-items {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.total-accumulated {
+  color: #666;
   font-weight: bold;
-  color: #0052a3;
-  margin-left: auto;
+  padding: 8px 10px 0 10px;
 }
 
 footer {
   text-align: center;
-  padding: 60px 0;
+  padding: 40px 0;
 }
 
 /* ==========================================
-   REGRAS DE ADAPTAÇÃO PARA MOBILE (< 768px)
+   MOBILE (< 768px)
    ========================================== */
 
 @media (max-width: 768px) {
@@ -298,39 +276,25 @@ footer {
   }
 
   .history-container {
-    flex-direction: column;
-
+    flex-direction: row;
   }
   
   .location-info {
     font-size: 18px;
   }
 
-  /* Navegação por Dia organizada em 2 Linhas via Grid */
   .day-nav {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 12px;
-    padding: 14px 16px;
-  }
-
-  .div-buttons {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 5px;
-    font-size: 10px;
-  }
-
-  .day-card {
+    gap: 10px;
     padding: 12px;
   }
 
-  /* Cabeçalho Acordeão para Mobile */
+  .day-card {
+    padding: 10px;
+  }
+
   .metric-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    padding: 10px 12px;
   }
 
   .metric-header h4 {
@@ -339,37 +303,20 @@ footer {
 
   .header-right {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .summary-badge {
-    font-size: 15px;
+    font-size: 12px;
+    padding: 3px 8px;
   }
 
-  .summary-badge > .badge-icon {
-    height: 20px;
-    width: 20px;
-    margin-left: 2px;
-  }
-
-  
   .chart-container {
     min-width: 1600px;
+    gap: 30px;
   }
 
-  /* Legendas no Mobile */
-  .legend {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-
-  .legend-items {
-    gap: 10px;
-    flex-direction: column;
-  }
-
-  .total-accumulated {
-    margin-left: 0;
+  .canvas-item {
+    height: 150px;
   }
 }

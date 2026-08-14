@@ -30,100 +30,8 @@ let forecastData = null;
 let currentDayIndex = 0;
 let debounceTimer = null;
 
-// Flag para evitar loops infinitos de scroll
-let isSyncingScroll = false;
-
 // Carrega o histórico salvo no localStorage ao iniciar
 renderHistory();
-
-// ==========================================
-// 1. SCROLL SINCRONIZADO
-//    TOUCH = SCROLL NATIVO
-//    MOUSE = DRAG
-// ==========================================
-
-function setupSynchronizedScroll() {
-  const wrappers = document.querySelectorAll('.scroll-wrapper');
-
-  wrappers.forEach(wrapper => {
-    wrapper.style.cursor = 'grab';
-    wrapper.style.userSelect = 'none';
-
-    // Permite ao navegador controlar normalmente o toque.
-    wrapper.style.touchAction = 'pan-x pan-y';
-
-    // Sincronização pelo scroll nativo
-    wrapper.removeEventListener('scroll', handleScroll);
-    wrapper.addEventListener('scroll', handleScroll, { passive: true });
-
-    let isDragging = false;
-    let startX = 0;
-    let startScrollLeft = 0;
-
-    wrapper.addEventListener('pointerdown', (e) => {
-      // No celular/tablet, deixa o navegador cuidar do gesto.
-      if (e.pointerType !== 'mouse') return;
-
-      // Ignora botão direito
-      if (e.button !== 0) return;
-
-      isDragging = true;
-      startX = e.clientX;
-      startScrollLeft = wrapper.scrollLeft;
-
-      wrapper.style.cursor = 'grabbing';
-
-      wrapper.setPointerCapture(e.pointerId);
-    });
-
-    wrapper.addEventListener('pointermove', (e) => {
-      // Drag somente com mouse
-      if (!isDragging || e.pointerType !== 'mouse') return;
-
-      const distance = e.clientX - startX;
-
-      wrapper.scrollLeft = startScrollLeft - distance;
-    });
-
-    const stopDragging = (e) => {
-      if (!isDragging) return;
-
-      isDragging = false;
-      wrapper.style.cursor = 'grab';
-
-      if (wrapper.hasPointerCapture(e.pointerId)) {
-        wrapper.releasePointerCapture(e.pointerId);
-      }
-    };
-
-    wrapper.addEventListener('pointerup', stopDragging);
-    wrapper.addEventListener('pointercancel', stopDragging);
-  });
-}
-
-function handleScroll(e) {
-  if (isSyncingScroll) return;
-
-  const target = e.target;
-  const scrollLeft = target.scrollLeft;
-  const wrappers = document.querySelectorAll('.scroll-wrapper');
-
-  isSyncingScroll = true;
-
-  wrappers.forEach(wrapper => {
-    if (
-      wrapper !== target &&
-      Math.abs(wrapper.scrollLeft - scrollLeft) > 0.5
-    ) {
-      wrapper.scrollLeft = scrollLeft;
-    }
-  });
-
-  requestAnimationFrame(() => {
-    isSyncingScroll = false;
-  });
-}
-
 
 function getHourStyles(dayTimes) {
   const now = forecastData && forecastData.utc_offset_seconds !== undefined
@@ -144,8 +52,7 @@ function getHourStyles(dayTimes) {
   return { fontColors, fontWeights };
 }
 
-// Função para centralizar a hora atual no container de scroll
-function centerCurrentHour(canvasElement, dayTimes) {
+function centerCurrentHour(wrapperElement, dayTimes) {
   if (!forecastData || forecastData.utc_offset_seconds === undefined) return;
 
   const now = new Date(Date.now() + forecastData.utc_offset_seconds * 1000);
@@ -154,59 +61,69 @@ function centerCurrentHour(canvasElement, dayTimes) {
   const currentIndex = dayTimes.findIndex(timeStr => timeStr.startsWith(currentISO));
   if (currentIndex === -1) return;
 
-  const scrollWrapper = canvasElement.closest('.scroll-wrapper');
-  if (!scrollWrapper) return;
-
   const totalItems = dayTimes.length;
-  const wrapperWidth = scrollWrapper.clientWidth;
-  const canvasWidth = canvasElement.clientWidth || scrollWrapper.scrollWidth;
+  const wrapperWidth = wrapperElement.clientWidth;
+  const contentWidth = wrapperElement.scrollWidth;
 
-  const itemWidth = canvasWidth / totalItems;
+  const itemWidth = contentWidth / totalItems;
   const itemCenterPos = (currentIndex * itemWidth) + (itemWidth / 2);
   const targetScrollLeft = itemCenterPos - (wrapperWidth / 2);
 
-  const wrappers = document.querySelectorAll('.scroll-wrapper');
-  wrappers.forEach(w => {
-    w.scrollTo({
-      left: targetScrollLeft,
-      behavior: 'smooth'
-    });
+  wrapperElement.scrollTo({
+    left: targetScrollLeft,
+    behavior: 'smooth'
   });
 }
 
-function getCommonOptions(dayTimes) {
-  const { fontColors, fontWeights } = getHourStyles(dayTimes);
+// ==========================================
+// SUPORTE A ARRASTE (DRAG NO DESKTOP E TOUCH NO MOBILE)
+// ==========================================
 
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: {
-      padding: { top: 28, bottom: 10 }
-    },
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: false }, // Tooltips removidos de todos os gráficos
-      datalabels: {
-        anchor: 'end',
-        align: 'top',
-        font: { weight: 'bold', size: 13 },
-        color: '#222'
-      }
-    },
-    scales: {
-      y: { display: false },
-      x: { 
-        grid: { display: false },
-        ticks: {
-          font: (context) => ({
-            size: 14,
-            weight: fontWeights[context.index] || 'normal'
-          }),
-          color: (context) => fontColors[context.index] || '#555555'
-        }
-      }
-    }
-  };
+function enableDragToScroll(wrapper) {
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  // Mouse Events (Desktop Drag)
+  wrapper.addEventListener('mousedown', (e) => {
+    isDown = true;
+    wrapper.classList.add('active');
+    startX = e.pageX - wrapper.offsetLeft;
+    scrollLeft = wrapper.scrollLeft;
+  });
+
+  wrapper.addEventListener('mouseleave', () => {
+    isDown = false;
+    wrapper.classList.remove('active');
+  });
+
+  wrapper.addEventListener('mouseup', () => {
+    isDown = false;
+    wrapper.classList.remove('active');
+  });
+
+  wrapper.addEventListener('mousemove', (e) => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - wrapper.offsetLeft;
+    const walk = (x - startX) * 1.5; // Velocidade do arraste
+    wrapper.scrollLeft = scrollLeft - walk;
+  });
+
+  // Touch Events (Mobile Drag Optimization)
+  let touchStartX = 0;
+  let touchScrollLeft = 0;
+
+  wrapper.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].pageX - wrapper.offsetLeft;
+    touchScrollLeft = wrapper.scrollLeft;
+  }, { passive: true });
+
+  wrapper.addEventListener('touchmove', (e) => {
+    const x = e.touches[0].pageX - wrapper.offsetLeft;
+    const walk = (x - touchStartX) * 1;
+    wrapper.scrollLeft = touchScrollLeft - walk;
+  }, { passive: true });
 }
 
 // ==========================================
@@ -251,259 +168,228 @@ function getCloudDiagnosis(dayTimes, roundedValues) {
 }
 
 // ==========================================
-// 2. MÓDULOS DOS GRÁFICOS
+// MÚLTIPLOS CANVAS NO MESMO CONTAINER DE SCROLL
 // ==========================================
 
-// Div 1: Nebulosidade
-function createCloudCoverModule(labels, cloudValues, dayTimes, weatherCodes) {
-  const roundedValues = cloudValues.map(v => Math.round(v / 10) * 10);
-  const cloudDiagnosis = getCloudDiagnosis(dayTimes, roundedValues);
-
-  // Códigos Open-Meteo para Trovoada: 95 (Trovoada), 96 e 99 (Trovoada com granizo)
+function createStackedChartModule(labels, dayClouds, dayTemp, dayPrecip, dayGusts, dayTimes, weatherCodes) {
+  const roundedClouds = dayClouds.map(v => Math.round(v / 10) * 10);
+  const cloudDiagnosis = getCloudDiagnosis(dayTimes, roundedClouds);
   const thunderstormCodes = [95, 96, 99];
+
+  const minTemp = Math.round(Math.min(...dayTemp));
+  const maxTemp = Math.round(Math.max(...dayTemp));
+  const totalPrecip = dayPrecip.reduce((acc, curr) => acc + curr, 0).toFixed(1);
+  const maxGust = Math.round(Math.max(...dayGusts));
 
   const box = document.createElement('div');
   box.className = 'metric-box';
   box.innerHTML = `
     <div class="metric-header">
-      <h4>Nebulosidade (%)</h4>
+      <h4>Previsão do Dia</h4>
       <div class="header-right">
         <span class="summary-badge">
           ${cloudDiagnosis.text}
           <img src="${cloudDiagnosis.icon}" alt="${cloudDiagnosis.text}" class="badge-icon">
         </span>
+        <span class="summary-badge">Temp: ${minTemp}° a ${maxTemp}°C</span>
+        <span class="summary-badge">Chuva: ${totalPrecip} mm</span>
+        <span class="summary-badge">Rajada Máx: ${maxGust} km/h</span>
       </div>
     </div>
     <div class="metric-content">
       <div class="scroll-wrapper">
-        <div class="chart-container"><canvas id="cloud-chart"></canvas></div>
-      </div>
-      <div class="rain-legend">
-        <p>Poucas nuvens até 35%</p>
-        <p>Parcialmente nublado até 75%</p>
-        <p>Nublado acima de 75%</p>
-      </div>
-    </div>
-  `;
-
-  requestAnimationFrame(() => {
-    const canvas = document.getElementById('cloud-chart');
-    if (!canvas) return;
-    const options = getCommonOptions(dayTimes);
-    new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: roundedValues,
-          borderColor: '#888888',
-          backgroundColor: 'rgba(136, 136, 136, 0.15)',
-          borderWidth: 3,
-          pointRadius: 4,
-          tension: 0.3,
-          fill: true
-        }]
-      },
-      options: {
-        ...options,
-        plugins: {
-          ...options.plugins,
-          datalabels: {
-            ...options.plugins.datalabels,
-            formatter: (val, context) => {
-              const index = context.dataIndex;
-              const hasThunderstorm = weatherCodes && thunderstormCodes.includes(weatherCodes[index]);
-              return hasThunderstorm ? `${val}⚡` : `${val}`;
-            }
-          }
-        },
-        scales: {
-          ...options.scales,
-          y: { display: false, min: 0, max: 110 }
-        }
-      }
-    });
-
-    centerCurrentHour(canvas, dayTimes);
-  });
-
-  return box;
-}
-
-// Div 2: Temperatura
-function createTemperatureModule(labels, tempValues, dayTimes) {
-  const minTemp = Math.round(Math.min(...tempValues));
-  const maxTemp = Math.round(Math.max(...tempValues));
-
-  const box = document.createElement('div');
-  box.className = 'metric-box';
-  box.innerHTML = `
-    <div class="metric-header">
-      <h4>Temperatura (°C)</h4>
-      <div class="header-right">
-        <span class="summary-badge">${minTemp}° a ${maxTemp}°</span>
-      </div>
-    </div>
-    <div class="metric-content">
-      <div class="scroll-wrapper">
-        <div class="chart-container"><canvas id="temp-chart"></canvas></div>
-      </div>
-    </div>
-  `;
-
-  requestAnimationFrame(() => {
-    const canvas = document.getElementById('temp-chart');
-    if (!canvas) return;
-    const options = getCommonOptions(dayTimes);
-    new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: tempValues,
-          borderColor: '#ff7f0e',
-          backgroundColor: 'rgba(255, 127, 14, 0.15)',
-          borderWidth: 3,
-          pointRadius: 4,
-          tension: 0.3,
-          fill: true
-        }]
-      },
-      options: {
-        ...options,
-        plugins: {
-          ...options.plugins,
-          datalabels: {
-            ...options.plugins.datalabels,
-            formatter: (val) => `${Math.round(val)}°`
-          }
-        }
-      }
-    });
-  });
-
-  return box;
-}
-
-// Div 3: Precipitação
-function createPrecipitationModule(labels, precipValues, dayTimes) {
-  const total24h = precipValues.reduce((acc, curr) => acc + curr, 0).toFixed(1);
-
-  const box = document.createElement('div');
-  box.className = 'metric-box';
-  box.innerHTML = `
-    <div class="metric-header">
-      <h4>Precipitação (mm)</h4>
-      <div class="header-right">
-        <span class="summary-badge">${total24h} mm</span>
-      </div>
-    </div>
-    <div class="metric-content">
-      <div class="scroll-wrapper">
-        <div class="chart-container"><canvas id="precip-chart"></canvas></div>
-      </div>
-      <div class="legend">
-        <div class="legend-items">
-          <span><b style="color:#a0c4ff">■</b> Fraca</span>
-          <span><b style="color:#0052a3">■</b> Moderada</span>
-          <span><b style="color:#ad51f9">■</b> Forte</span>
+        <div class="chart-container">
+          <div class="canvas-item"><canvas id="chart-clouds"></canvas></div>
+          <div class="canvas-item"><canvas id="chart-temp"></canvas></div>
+          <div class="canvas-item"><canvas id="chart-precip"></canvas></div>
+          <div class="canvas-item"><canvas id="chart-gusts"></canvas></div>
         </div>
       </div>
+      <div class="rain-legend">
+        <p>Poucas nuvens até 35% - Parcialmente nublado até 75% - Nublado acima de 75%</p>
+        <p>chuva leve até 2.5 mm/h - chuva moderada até 10 mm/h - chuva forte acima de 10 mm/h</p>
+      </div>
+
     </div>
   `;
 
-  const barColors = precipValues.map(v => {
+  const barColors = dayPrecip.map(v => {
     if (v <= 2.5) return '#a0c4ff';
     if (v < 10) return '#0052a3';
     return '#ad51f9';
   });
 
-  requestAnimationFrame(() => {
-    const canvas = document.getElementById('precip-chart');
-    if (!canvas) return;
-    const options = getCommonOptions(dayTimes);
-    new Chart(canvas, {
-      type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{ data: precipValues, backgroundColor: barColors }]
-      },
-      options: {
-        ...options,
-        plugins: {
-          ...options.plugins,
-          datalabels: {
-            ...options.plugins.datalabels,
-            formatter: (val) => val > 0 ? val : ''
-          }
-        }
-      }
-    });
-  });
-
-  return box;
-}
-
-// Div 4: Rajadas de Vento
-function createGustsModule(labels, gustValues, dayTimes) {
-  const maxGust = Math.round(Math.max(...gustValues));
-
-  const box = document.createElement('div');
-  box.className = 'metric-box';
-  box.innerHTML = `
-    <div class="metric-header">
-      <h4>Rajadas de Vento (km/h)</h4>
-      <div class="header-right">
-        <span class="summary-badge">Máx: ${maxGust} km/h</span>
-      </div>
-    </div>
-    <div class="metric-content">
-      <div class="scroll-wrapper">
-        <div class="chart-container"><canvas id="gust-chart"></canvas></div>
-      </div>
-    </div>
-  `;
+  const tempMinVal = Math.floor(minTemp - 2);
+  const tempMaxVal = Math.ceil(maxTemp + 3);
+  const gustMaxVal = Math.ceil(maxGust * 1.2);
 
   requestAnimationFrame(() => {
-    const canvas = document.getElementById('gust-chart');
-    if (!canvas) return;
-    const options = getCommonOptions(dayTimes);
-    new Chart(canvas, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Rajadas',
-          data: gustValues,
-          borderColor: '#1e8449',
-          backgroundColor: 'rgba(30, 132, 73, 0.15)',
-          borderWidth: 3,
-          pointRadius: 4,
-          tension: 0.2,
-          fill: true
-        }]
+    const { fontColors, fontWeights } = getHourStyles(dayTimes);
+
+    // Opções base garantindo que o eixo X (horas) fique VISÍVEL em todos os gráficos
+    const createBaseOptions = () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      events: [], // Desativa eventos do Chart.js para não interferir no arraste da div pai
+      layout: { padding: { top: 20, bottom: 5, left: 10, right: 10 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+        datalabels: { font: { weight: 'bold', size: 11 } }
       },
-      options: {
-        ...options,
-        plugins: {
-          ...options.plugins,
-          datalabels: {
-            ...options.plugins.datalabels,
-            formatter: (val) => `${Math.round(val)}`
+      scales: {
+        x: {
+          display: true, // Exibe o eixo com as horas em TODOS
+          grid: { display: false },
+          ticks: {
+            font: (context) => ({
+              size: 13,
+              weight: fontWeights[context.index] || 'normal'
+            }),
+            color: (context) => fontColors[context.index] || '#555555'
           }
-        }
+        },
+        y: { display: false }
       }
     });
+
+    // 1. Gráfico de Nebulosidade
+    const canvasClouds = document.getElementById('chart-clouds');
+    if (canvasClouds) {
+      const opts = createBaseOptions();
+      opts.scales.y.min = 0;
+      opts.scales.y.max = 120;
+      new Chart(canvasClouds, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Nebulosidade (%)',
+            data: roundedClouds,
+            borderColor: '#888888',
+            backgroundColor: 'rgba(136, 136, 136, 0.15)',
+            borderWidth: 2,
+            pointRadius: 3,
+            tension: 0.3,
+            fill: true,
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#444444',
+              formatter: (val, ctx) => {
+                const index = ctx.dataIndex;
+                const hasThunderstorm = weatherCodes && thunderstormCodes.includes(weatherCodes[index]);
+                return hasThunderstorm ? `${val}%⚡` : `${val}%`;
+              }
+            }
+          }]
+        },
+        options: opts
+      });
+    }
+
+    // 2. Gráfico de Temperatura
+    const canvasTemp = document.getElementById('chart-temp');
+    if (canvasTemp) {
+      const opts = createBaseOptions();
+      opts.scales.y.min = tempMinVal;
+      opts.scales.y.max = tempMaxVal;
+      new Chart(canvasTemp, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Temperatura (°C)',
+            data: dayTemp,
+            borderColor: '#ff7f0e',
+            backgroundColor: 'rgba(255, 127, 14, 0.15)',
+            borderWidth: 3,
+            pointRadius: 4,
+            tension: 0.3,
+            fill: true,
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#d95f02',
+              formatter: (val) => `${Math.round(val)}°`
+            }
+          }]
+        },
+        options: opts
+      });
+    }
+
+    // 3. Gráfico de Chuva / Precipitação
+    const canvasPrecip = document.getElementById('chart-precip');
+    if (canvasPrecip) {
+      const opts = createBaseOptions();
+      opts.scales.y.min = 0;
+      new Chart(canvasPrecip, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Precipitação (mm)',
+            data: dayPrecip,
+            backgroundColor: barColors,
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#0052a3',
+              formatter: (val) => val > 0 ? `${val}` : ''
+            }
+          }]
+        },
+        options: opts
+      });
+    }
+
+    // 4. Gráfico de Ventos / Rajadas
+    const canvasGusts = document.getElementById('chart-gusts');
+    if (canvasGusts) {
+      const opts = createBaseOptions();
+      opts.scales.y.min = 0;
+      opts.scales.y.max = gustMaxVal;
+      new Chart(canvasGusts, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Rajadas de Vento (km/h)',
+            data: dayGusts,
+            borderColor: '#1e8449',
+            backgroundColor: 'rgba(30, 132, 73, 0.15)',
+            borderWidth: 2,
+            pointRadius: 3,
+            tension: 0.2,
+            fill: true,
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#1e8449',
+              formatter: (val) => `${Math.round(val)}`
+            }
+          }]
+        },
+        options: opts
+      });
+    }
+
+    const scrollWrapper = box.querySelector('.scroll-wrapper');
+    if (scrollWrapper) {
+      enableDragToScroll(scrollWrapper);
+      centerCurrentHour(scrollWrapper, dayTimes);
+    }
   });
 
   return box;
 }
 
 // ==========================================
-// 3. RENDERIZAÇÃO DA PÁGINA
+// RENDERIZAÇÃO E DEMAIS MÉTODOS
 // ==========================================
 
-function formatDate(dateString) {
+function formatDate(dateString, dayIndex) {
   const date = new Date(dateString);
   const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
   const diaSemana = diasSemana[date.getDay()];
@@ -512,7 +398,8 @@ function formatDate(dateString) {
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const yy = String(date.getFullYear()).slice(-2);
 
-  return `${diaSemana}, ${dd}/${mm}/${yy}`;
+  // Exemplo de retorno: "(1) Segunda-feira, 25/04/26"
+  return `(${dayIndex + 1}) ${diaSemana}, ${dd}/${mm}/${yy}`;
 }
 
 function renderSelectedDay() {
@@ -531,7 +418,8 @@ function renderSelectedDay() {
   const dayGusts = forecastData.wind_gusts_10m.slice(startIndex, endIndex);
   const dayWeatherCodes = forecastData.weathercode ? forecastData.weathercode.slice(startIndex, endIndex) : [];
 
-  const formattedDate = formatDate(dayTimes[0]);
+  // Passando o currentDayIndex para formatar o número do dia
+  const formattedDate = formatDate(dayTimes[0], currentDayIndex);
   document.getElementById('current-day-label').textContent = formattedDate;
 
   const dayCard = document.createElement('div');
@@ -539,16 +427,19 @@ function renderSelectedDay() {
 
   const hourLabels = dayTimes.map(t => new Date(t).getHours() + 'h');
 
-  dayCard.appendChild(createCloudCoverModule(hourLabels, dayClouds, dayTimes, dayWeatherCodes));
-  dayCard.appendChild(createTemperatureModule(hourLabels, dayTemp, dayTimes));
-  dayCard.appendChild(createPrecipitationModule(hourLabels, dayPrecip, dayTimes));
-  dayCard.appendChild(createGustsModule(hourLabels, dayGusts, dayTimes));
+  dayCard.appendChild(
+    createStackedChartModule(
+      hourLabels,
+      dayClouds,
+      dayTemp,
+      dayPrecip,
+      dayGusts,
+      dayTimes,
+      dayWeatherCodes
+    )
+  );
 
   forecastContainer.appendChild(dayCard);
-
-  requestAnimationFrame(() => {
-    setupSynchronizedScroll();
-  });
 }
 
 function changeDay(delta) {
@@ -557,10 +448,6 @@ function changeDay(delta) {
   if (currentDayIndex > 9) currentDayIndex = 9;
   renderSelectedDay();
 }
-
-// ==========================================
-// 4. API & NAVEGAÇÃO DE BUSCA
-// ==========================================
 
 cityInput.addEventListener('input', (e) => {
   const query = e.target.value.trim();
