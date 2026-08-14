@@ -37,70 +37,63 @@ let isSyncingScroll = false;
 renderHistory();
 
 // ==========================================
-// 1. HELPER PARA SCROLL SINCRONIZADO E ARRASTE UNIFICADO (MOUSE + TOUCH)
+// 1. HELPER PARA SCROLL SINCRONIZADO E ARRASTE UNIFICADO
 // ==========================================
 
 function setupSynchronizedScroll() {
   const wrappers = document.querySelectorAll('.scroll-wrapper');
 
   wrappers.forEach(wrapper => {
-    // Estilos para facilitar a navegação por arraste
+    // Permite que o touch nativo controle o scroll X e Y no mobile sem interferência do JS
+    wrapper.style.touchAction = 'pan-x pan-y';
     wrapper.style.cursor = 'grab';
     wrapper.style.userSelect = 'none';
-    wrapper.style.touchAction = 'pan-y'; // Permite scroll vertical da página, mas entrega o horizontal ao JS
 
-    // Sincronização via evento de scroll nativo
+    // Sincronização passiva de alta performance via scroll nativo
     wrapper.removeEventListener('scroll', handleScroll);
-    wrapper.addEventListener('scroll', handleScroll);
+    wrapper.addEventListener('scroll', handleScroll, { passive: true });
 
-    // Lógica de Arraste via Pointer Events (Alta Performance no Mobile/Desktop)
+    // Lógica de Arraste APENAS para Mouse (evita conflitos no touch/mobile)
     let isDown = false;
     let startX = 0;
     let scrollLeft = 0;
 
-    wrapper.addEventListener('pointerdown', (e) => {
-      // Ignora se for o botão direito do mouse
-      if (e.button && e.button !== 0) return;
+    wrapper.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return; // Apenas botão esquerdo
 
       isDown = true;
       wrapper.style.cursor = 'grabbing';
-      
-      // Guarda a posição inicial
-      startX = e.clientX;
+      startX = e.pageX - wrapper.offsetLeft;
       scrollLeft = wrapper.scrollLeft;
-
-      // Trava os eventos de ponteiro neste elemento mesmo se o dedo/mouse sair dele
-      wrapper.setPointerCapture(e.pointerId);
     });
 
-    wrapper.addEventListener('pointermove', (e) => {
-      if (!isDown) return;
-
-      // Deslocamento atual
-      const x = e.clientX;
-      const walk = (x - startX) * 1.5; // Multiplicador de velocidade
-
-      // Sincroniza TODOS os wrappers diretamente no frame de movimento
-      wrappers.forEach(w => {
-        w.scrollLeft = scrollLeft - walk;
-      });
-    });
-
-    const stopDragging = (e) => {
-      if (!isDown) return;
+    wrapper.addEventListener('mouseleave', () => {
       isDown = false;
       wrapper.style.cursor = 'grab';
-      
-      if (wrapper.hasPointerCapture(e.pointerId)) {
-        wrapper.releasePointerCapture(e.pointerId);
-      }
-    };
+    });
 
-    // Soltar o clique/toque ou cancelar
-    wrapper.addEventListener('pointerup', stopDragging);
-    wrapper.addEventListener('pointercancel', stopDragging);
+    wrapper.addEventListener('mouseup', () => {
+      isDown = false;
+      wrapper.style.cursor = 'grab';
+    });
+
+    wrapper.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+
+      const x = e.pageX - wrapper.offsetLeft;
+      const walk = (x - startX) * 1.5; // Velocidade do arraste
+
+      // Atualização otimizada para o frame da tela
+      requestAnimationFrame(() => {
+        wrappers.forEach(w => {
+          w.scrollLeft = scrollLeft - walk;
+        });
+      });
+    });
   });
 }
+
 
 function handleScroll(e) {
   if (isSyncingScroll) return;
