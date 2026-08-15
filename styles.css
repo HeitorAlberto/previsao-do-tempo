@@ -147,20 +147,13 @@ button:disabled {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.metric-box {
-  margin-bottom: 15px;
-  border: 2px solid #f2f2f2;
-  border-radius: 12px;
-  padding: 10px;
-}
-
 .metric-header {
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
   border-radius: 8px;
   user-select: none;
-  margin-bottom: 10px;
+  margin-bottom: 40px;
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -185,7 +178,6 @@ button:disabled {
 .summary-badge {
   font-size: 16px;
   font-weight: bold;
-  color: rgb(67, 89, 255);
   background: #f0f4f8;
   padding: 4px 10px;
   border-radius: 6px;
@@ -236,7 +228,6 @@ button:disabled {
 .weather-table td {
   padding: 10px 20px;
   white-space: nowrap;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* Coluna fixa à esquerda */
@@ -286,20 +277,18 @@ button:disabled {
 /* 5. Horas (Neutro) */
 .tr-hour .sticky-col,
 .row-hour {
-  background-color: black;
-  color: white;
   font-weight: bold;
   border-bottom: none;
 }
 
 /* Destaque da Hora Atual */
 .current-hour {
-  border: 1px solid black;
+  background-color: #f7ecd0;
 }
 
 /* LEGENDA DE CORES ABAIXO DA TABELA */
 .rain-legend {
-  margin-top: 15px;
+  margin-top: 40px;
   display: flex;
   flex-direction: column;
   gap: 20px;
