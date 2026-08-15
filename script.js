@@ -25,6 +25,10 @@ let debounceTimer = null;
 // Carrega o histórico salvo no localStorage ao iniciar
 renderHistory();
 
+// ==========================================
+// CENTRALIZAÇÃO DA HORA ATUAL
+// ==========================================
+
 function centerCurrentHour(wrapperElement, dayTimes) {
   if (!forecastData || forecastData.utc_offset_seconds === undefined) return;
 
@@ -57,7 +61,6 @@ function enableDragToScroll(wrapper) {
   let startX;
   let scrollLeft;
 
-  // Eventos de Mouse EXCLUSIVAMENTE para Desktop
   wrapper.addEventListener('mousedown', (e) => {
     isDown = true;
     wrapper.classList.add('active');
@@ -85,15 +88,63 @@ function enableDragToScroll(wrapper) {
 }
 
 // ==========================================
-// ALGORITMO INTELIGENTE DE DIAGNÓSTICO
+// LÓGICA DE ÍCONES DINÂMICA (NASCER E PÔR DO SOL EXATOS)
 // ==========================================
 
-function getCloudDiagnosis(dayTimes, roundedValues) {
+function getCloudIconCode(cloudCover, timeStr, weatherCode, sunriseISO, sunsetISO) {
+  let isDay = false;
+
+  if (sunriseISO && sunsetISO) {
+    // Compara o formato "YYYY-MM-DDTHH:MM" em string para evitar erros de fuso horário
+    const currentFormatted = timeStr.slice(0, 16);
+    const sunriseFormatted = sunriseISO.slice(0, 16);
+    const sunsetFormatted = sunsetISO.slice(0, 16);
+
+    isDay = currentFormatted >= sunriseFormatted && currentFormatted < sunsetFormatted;
+  } else {
+    // Fallback caso não haja dados de sol
+    const hour = parseInt(timeStr.slice(11, 13), 10);
+    isDay = hour >= 6 && hour < 18;
+  }
+
+  const period = isDay ? 'd' : 'n';
+  const isThunderstorm = [95, 96, 99].includes(weatherCode);
+
+  let level = 1;
+  if (cloudCover <= 25) level = 1;
+  else if (cloudCover <= 50) level = 2;
+  else if (cloudCover <= 75) level = 3;
+  else level = 4;
+
+  if (isThunderstorm && level < 2) {
+    level = 2;
+  }
+
+  const stormSuffix = isThunderstorm ? '_t' : '';
+  return `${level}${period}${stormSuffix}`;
+}
+
+// ==========================================
+// DIAGNÓSTICO GERAL DE NUVENS (COM SOL DINÂMICO)
+// ==========================================
+
+function getCloudDiagnosis(dayTimes, roundedValues, sunriseISO, sunsetISO) {
   const daytimeValues = [];
-  
+
   dayTimes.forEach((timeStr, index) => {
-    const hour = new Date(timeStr).getHours();
-    if (hour >= 6 && hour <= 18) {
+    let isDay = false;
+    if (sunriseISO && sunsetISO) {
+      const currentFormatted = timeStr.slice(0, 16);
+      const sunriseFormatted = sunriseISO.slice(0, 16);
+      const sunsetFormatted = sunsetISO.slice(0, 16);
+
+      isDay = currentFormatted >= sunriseFormatted && currentFormatted < sunsetFormatted;
+    } else {
+      const hour = parseInt(timeStr.slice(11, 13), 10);
+      isDay = hour >= 6 && hour < 18;
+    }
+
+    if (isDay) {
       daytimeValues.push(roundedValues[index]);
     }
   });
@@ -108,20 +159,20 @@ function getCloudDiagnosis(dayTimes, roundedValues) {
   if (avg <= 30 && max <= 50) {
     return {
       text: "Pouca nebulosidade",
-      icon: "icons/pouca-nebulosidade.png"
+      icon: "icons/1d.png"
     };
   }
 
   if (avg >= 70 && min >= 40) {
     return {
       text: "Nublado",
-      icon: "icons/nublado.png"
+      icon: "icons/4d.png"
     };
   }
 
   return {
     text: "Parcialmente nublado",
-    icon: "icons/parcialmente-nublado.png"
+    icon: "icons/2d.png"
   };
 }
 
@@ -129,10 +180,9 @@ function getCloudDiagnosis(dayTimes, roundedValues) {
 // TABELA CLIMÁTICA SCROLLÁVEL
 // ==========================================
 
-function createStackedChartModule(labels, dayClouds, dayTemp, dayPrecip, dayGusts, dayTimes, weatherCodes) {
+function createStackedChartModule(labels, dayClouds, dayTemp, dayPrecip, dayGusts, dayTimes, weatherCodes, sunriseISO, sunsetISO) {
   const roundedClouds = dayClouds.map(v => Math.round(v / 10) * 10);
-  const cloudDiagnosis = getCloudDiagnosis(dayTimes, roundedClouds);
-  const thunderstormCodes = [95, 96, 99];
+  const cloudDiagnosis = getCloudDiagnosis(dayTimes, roundedClouds, sunriseISO, sunsetISO);
 
   const minTemp = Math.round(Math.min(...dayTemp));
   const maxTemp = Math.round(Math.max(...dayTemp));
@@ -147,66 +197,70 @@ function createStackedChartModule(labels, dayClouds, dayTemp, dayPrecip, dayGust
   const box = document.createElement('div');
   box.className = 'metric-box';
 
-  let cloudCells = '';
-  let tempCells = '';
-  let precipCells = '';
-  let gustCells = '';
-  let hourCells = '';
+  let tablesHTML = '';
 
-  dayTimes.forEach((timeStr, index) => {
-    const hourLabel = labels[index];
-    const isCurrent = timeStr.startsWith(currentISO);
-    const highlightClass = isCurrent ? ' current-hour' : '';
+  for (let block = 0; block < 4; block++) {
+    const startIdx = block * 6;
+    const endIdx = startIdx + 6;
 
-    const hasThunderstorm = weatherCodes && thunderstormCodes.includes(weatherCodes[index]);
-    const cloudValue = hasThunderstorm ? `${roundedClouds[index]}%⚡` : `${roundedClouds[index]}%`;
+    let cloudCells = '';
+    let tempCells = '';
+    let precipCells = '';
+    let gustCells = '';
+    let hourCells = '';
 
-    const precipVal = dayPrecip[index];
+    for (let i = startIdx; i < endIdx; i++) {
+      const hourLabel = labels[i];
+      const timeStr = dayTimes[i];
+      const isCurrent = timeStr.startsWith(currentISO);
+      const highlightClass = isCurrent ? ' current-hour' : '';
 
-    cloudCells += `<td class="row-cloud${highlightClass}">${cloudValue}</td>`;
-    tempCells += `<td class="row-temp${highlightClass}">${Math.round(dayTemp[index])}°C</td>`;
-    precipCells += `<td class="row-precip${highlightClass}">${precipVal} mm</td>`;
-    gustCells += `<td class="row-gust${highlightClass}">${Math.round(dayGusts[index])} Km/h</td>`;
-    hourCells += `<th class="row-hour${highlightClass}">${hourLabel}</th>`;
-  });
+      const iconCode = getCloudIconCode(dayClouds[i], timeStr, weatherCodes[i], sunriseISO, sunsetISO);
+
+      cloudCells += `<td class="row-cloud${highlightClass}"><img src="icons/${iconCode}.png" alt="${iconCode}" class="weather-icon-inline" title="${iconCode}"></td>`;
+      tempCells += `<td class="row-temp${highlightClass}">${Math.round(dayTemp[i])}°C</td>`;
+      precipCells += `<td class="row-precip${highlightClass}">${dayPrecip[i]} mm</td>`;
+      gustCells += `<td class="row-gust${highlightClass}">${Math.round(dayGusts[i])} Km/h</td>`;
+      hourCells += `<th class="row-hour${highlightClass}">${hourLabel}</th>`;
+    }
+
+    const blockStartHour = String(startIdx).padStart(2, '0');
+    const blockEndHour = String(endIdx - 1).padStart(2, '0');
+
+    tablesHTML += `
+      <div class="block-6h">
+        <table class="weather-table">
+          <tbody>
+            <tr class="tr-cloud">${cloudCells}</tr>
+            <tr class="tr-temp">${tempCells}</tr>
+            <tr class="tr-precip">${precipCells}</tr>
+            <tr class="tr-gust">${gustCells}</tr>
+            <tr class="tr-hour">${hourCells}</tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
 
   box.innerHTML = `
     <div class="metric-header">
       <div class="header-right">
         <span class="summary-badge">
           ${cloudDiagnosis.text}
-          <img src="${cloudDiagnosis.icon}" alt="${cloudDiagnosis.text}" class="badge-icon">
         </span>
-        <span class="summary-badge">Temp: ${minTemp}° a ${maxTemp}°C</span>
+        <span class="summary-badge">Temp: ${minTemp}° a ${maxTemp}°</span>
         <span class="summary-badge">Acumulado de chuva: ${totalPrecip} mm</span>
         <span class="summary-badge">Rajada Máx: ${maxGust} km/h</span>
       </div>
     </div>
     <div class="metric-content">
       <div class="scroll-wrapper">
-        <table class="weather-table">
-          <tbody>
-            <tr class="tr-cloud">
-              ${cloudCells}
-            </tr>
-            <tr class="tr-temp">
-              ${tempCells}
-            </tr>
-            <tr class="tr-precip">
-              ${precipCells}
-            </tr>
-            <tr class="tr-gust">
-              ${gustCells}
-            </tr>
-            <tr class="tr-hour">
-              ${hourCells}
-            </tr>
-          </tbody>
-        </table>
+        <div class="blocks-container">
+          ${tablesHTML}
+        </div>
       </div>
       <div class="rain-legend">
-        <p><span class="dot dot-cloud"></span> Nebulosidade: Poucas nuvens (≤35%) - Parcialmente nublado (≤75%) - Nublado (>75%)</p>
-        <p><span class="dot dot-precip"></span> Precipitação: Leve (≤2.5 mm/h) - Moderada (≤10 mm/h) - Forte (>10 mm/h)</p>
+        <p> - Chuva leve  até 2.5 mm/h <br> - Chuva moderada até 10 mm/h <br> - Chuva forte acima de 10 mm/h</p>
       </div>
     </div>
   `;
@@ -254,6 +308,9 @@ function renderSelectedDay() {
   const dayGusts = forecastData.wind_gusts_10m.slice(startIndex, endIndex);
   const dayWeatherCodes = forecastData.weathercode ? forecastData.weathercode.slice(startIndex, endIndex) : [];
 
+  const sunriseISO = forecastData.daily && forecastData.daily.sunrise ? forecastData.daily.sunrise[currentDayIndex] : null;
+  const sunsetISO = forecastData.daily && forecastData.daily.sunset ? forecastData.daily.sunset[currentDayIndex] : null;
+
   const formattedDate = formatDate(dayTimes[0], currentDayIndex);
   document.getElementById('current-day-label').textContent = formattedDate;
 
@@ -270,7 +327,9 @@ function renderSelectedDay() {
       dayPrecip,
       dayGusts,
       dayTimes,
-      dayWeatherCodes
+      dayWeatherCodes,
+      sunriseISO,
+      sunsetISO
     )
   );
 
@@ -400,11 +459,12 @@ async function fetchCityCoordinates(cityName) {
 
 async function fetchForecast(lat, lon) {
   try {
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,temperature_2m,precipitation,wind_gusts_10m,weathercode&forecast_days=10&timezone=auto&models=ecmwf_ifs`;
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=cloud_cover,temperature_2m,precipitation,wind_gusts_10m,weathercode&daily=sunrise,sunset&forecast_days=10&timezone=auto&models=ecmwf_ifs`;
     const response = await fetch(weatherUrl);
     const data = await response.json();
 
     forecastData = data.hourly;
+    forecastData.daily = data.daily;
     forecastData.utc_offset_seconds = data.utc_offset_seconds;
     currentDayIndex = 0;
     dayNav.style.display = 'flex';
