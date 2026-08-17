@@ -8,7 +8,6 @@ const dayNav = document.getElementById('day-nav');
 const prevDayBtn = document.getElementById('prev-day-btn');
 const nextDayBtn = document.getElementById('next-day-btn');
 
-// Elemento do Autocomplete
 let autocompleteList = document.getElementById('autocomplete-list');
 if (!autocompleteList && cityInput) {
   autocompleteList = document.createElement('div');
@@ -22,38 +21,10 @@ let forecastData = null;
 let currentDayIndex = 0;
 let debounceTimer = null;
 
-// Carrega o histórico salvo no localStorage ao iniciar
 renderHistory();
 
 // ==========================================
-// CENTRALIZAÇÃO DA HORA ATUAL
-// ==========================================
-
-function centerCurrentHour(wrapperElement, dayTimes) {
-  if (!forecastData || forecastData.utc_offset_seconds === undefined) return;
-
-  const now = new Date(Date.now() + forecastData.utc_offset_seconds * 1000);
-  const currentISO = now.toISOString().slice(0, 13); // "YYYY-MM-DDTHH"
-
-  const currentIndex = dayTimes.findIndex(timeStr => timeStr.startsWith(currentISO));
-  if (currentIndex === -1) return;
-
-  const totalItems = dayTimes.length;
-  const wrapperWidth = wrapperElement.clientWidth;
-  const contentWidth = wrapperElement.scrollWidth;
-
-  const itemWidth = contentWidth / totalItems;
-  const itemCenterPos = (currentIndex * itemWidth) + (itemWidth / 2);
-  const targetScrollLeft = itemCenterPos - (wrapperWidth / 2);
-
-  wrapperElement.scrollTo({
-    left: targetScrollLeft,
-    behavior: 'smooth'
-  });
-}
-
-// ==========================================
-// SUPORTE A ARRASTE (DRAG NO DESKTOP)
+// SUPORTE A ARRASTE (DRAG)
 // ==========================================
 
 function enableDragToScroll(wrapper) {
@@ -88,209 +59,92 @@ function enableDragToScroll(wrapper) {
 }
 
 // ==========================================
-// LÓGICA DE ÍCONES DINÂMICA (NASCER E PÔR DO SOL EXATOS)
+// CENTRALIZAÇÃO DO BLOCO DA HORA ATUAL
 // ==========================================
 
-function getCloudIconCode(cloudCover, timeStr, weatherCode, sunriseISO, sunsetISO) {
-  let isDay = false;
+function centerCurrentHourBlock(scrollWrapper, activeBlock) {
+  if (!scrollWrapper || !activeBlock) return;
 
-  if (sunriseISO && sunsetISO) {
-    // Compara o formato "YYYY-MM-DDTHH:MM" em string para evitar erros de fuso horário
-    const currentFormatted = timeStr.slice(0, 16);
-    const sunriseFormatted = sunriseISO.slice(0, 16);
-    const sunsetFormatted = sunsetISO.slice(0, 16);
+  const wrapperWidth = scrollWrapper.clientWidth;
+  const blockLeft = activeBlock.offsetLeft;
+  const blockWidth = activeBlock.clientWidth;
 
-    isDay = currentFormatted >= sunriseFormatted && currentFormatted < sunsetFormatted;
-  } else {
-    // Fallback caso não haja dados de sol
-    const hour = parseInt(timeStr.slice(11, 13), 10);
-    isDay = hour >= 6 && hour < 18;
-  }
+  const targetScroll = blockLeft - (wrapperWidth / 2) + (blockWidth / 2);
 
-  const period = isDay ? 'd' : 'n';
-  const isThunderstorm = [95, 96, 99].includes(weatherCode);
-
-  let level = 1;
-  if (cloudCover <= 25) level = 1;
-  else if (cloudCover <= 50) level = 2;
-  else if (cloudCover <= 75) level = 3;
-  else level = 4;
-
-  if (isThunderstorm && level < 2) {
-    level = 2;
-  }
-
-  const stormSuffix = isThunderstorm ? '_t' : '';
-  return `${level}${period}${stormSuffix}`;
-}
-
-// ==========================================
-// DIAGNÓSTICO GERAL DE NUVENS (COM SOL DINÂMICO)
-// ==========================================
-
-function getCloudDiagnosis(dayTimes, roundedValues, sunriseISO, sunsetISO) {
-  const daytimeValues = [];
-
-  dayTimes.forEach((timeStr, index) => {
-    let isDay = false;
-    if (sunriseISO && sunsetISO) {
-      const currentFormatted = timeStr.slice(0, 16);
-      const sunriseFormatted = sunriseISO.slice(0, 16);
-      const sunsetFormatted = sunsetISO.slice(0, 16);
-
-      isDay = currentFormatted >= sunriseFormatted && currentFormatted < sunsetFormatted;
-    } else {
-      const hour = parseInt(timeStr.slice(11, 13), 10);
-      isDay = hour >= 6 && hour < 18;
-    }
-
-    if (isDay) {
-      daytimeValues.push(roundedValues[index]);
-    }
+  scrollWrapper.scrollTo({
+    left: targetScroll,
+    behavior: 'smooth'
   });
-
-  const targetValues = daytimeValues.length > 0 ? daytimeValues : roundedValues;
-
-  const min = Math.min(...targetValues);
-  const max = Math.max(...targetValues);
-  const total = targetValues.reduce((a, b) => a + b, 0);
-  const avg = Math.round(total / targetValues.length);
-
-  if (avg <= 30 && max <= 50) {
-    return {
-      text: "Pouca nebulosidade",
-      icon: "icons/1d.png"
-    };
-  }
-
-  if (avg >= 70 && min >= 40) {
-    return {
-      text: "Nublado",
-      icon: "icons/4d.png"
-    };
-  }
-
-  return {
-    text: "Parcialmente nublado",
-    icon: "icons/2d.png"
-  };
 }
 
 // ==========================================
-// TABELA CLIMÁTICA SCROLLÁVEL
+// CÁLCULO DE ÍCONES E RESUMO DO DIA
 // ==========================================
 
-function createStackedChartModule(labels, dayClouds, dayTemp, dayPrecip, dayGusts, dayTimes, weatherCodes, sunriseISO, sunsetISO) {
-  const roundedClouds = dayClouds.map(v => Math.round(v / 10) * 10);
-  const cloudDiagnosis = getCloudDiagnosis(dayTimes, roundedClouds, sunriseISO, sunsetISO);
+function getDaySummary(dayClouds, dayTemp, dayPrecip, dayGusts) {
+  const maxCloud = Math.max(...dayClouds);
+  const totalCloud = dayClouds.reduce((a, b) => a + b, 0);
+  const avgCloud = Math.round(totalCloud / dayClouds.length);
 
   const minTemp = Math.round(Math.min(...dayTemp));
   const maxTemp = Math.round(Math.max(...dayTemp));
-  const totalPrecip = dayPrecip.reduce((acc, curr) => acc + curr, 0).toFixed(1);
+  const totalPrecip = dayPrecip.reduce((a, b) => a + b, 0).toFixed(1);
   const maxGust = Math.round(Math.max(...dayGusts));
 
-  const now = forecastData && forecastData.utc_offset_seconds !== undefined
-    ? new Date(Date.now() + forecastData.utc_offset_seconds * 1000)
-    : new Date();
-  const currentISO = now.toISOString().slice(0, 13);
+  let diagnosisText = "Parcialmente nublado";
+  let iconLevel = 2;
 
-  const box = document.createElement('div');
-  box.className = 'metric-box';
-
-  let tablesHTML = '';
-
-  for (let block = 0; block < 4; block++) {
-    const startIdx = block * 6;
-    const endIdx = startIdx + 6;
-
-    let cloudCells = '';
-    let tempCells = '';
-    let precipCells = '';
-    let gustCells = '';
-    let hourCells = '';
-
-    for (let i = startIdx; i < endIdx; i++) {
-      const hourLabel = labels[i];
-      const timeStr = dayTimes[i];
-      const isCurrent = timeStr.startsWith(currentISO);
-      const highlightClass = isCurrent ? ' current-hour' : '';
-
-      const iconCode = getCloudIconCode(dayClouds[i], timeStr, weatherCodes[i], sunriseISO, sunsetISO);
-
-      cloudCells += `<td class="row-cloud${highlightClass}"><img src="icons/${iconCode}.png" alt="${iconCode}" class="weather-icon-inline" title="${iconCode}"></td>`;
-      tempCells += `<td class="row-temp${highlightClass}">${Math.round(dayTemp[i])}°C</td>`;
-      precipCells += `<td class="row-precip${highlightClass}">${dayPrecip[i]} mm</td>`;
-      gustCells += `<td class="row-gust${highlightClass}">${Math.round(dayGusts[i])} Km/h</td>`;
-      hourCells += `<th class="row-hour${highlightClass}">${hourLabel}</th>`;
-    }
-
-    const blockStartHour = String(startIdx).padStart(2, '0');
-    const blockEndHour = String(endIdx - 1).padStart(2, '0');
-
-    tablesHTML += `
-      <div class="block-6h">
-        <table class="weather-table">
-          <tbody>
-            <tr class="tr-cloud">${cloudCells}</tr>
-            <tr class="tr-temp">${tempCells}</tr>
-            <tr class="tr-precip">${precipCells}</tr>
-            <tr class="tr-gust">${gustCells}</tr>
-            <tr class="tr-hour">${hourCells}</tr>
-          </tbody>
-        </table>
-      </div>
-    `;
+  // Combinação segura de Médias e Picos
+  if (avgCloud <= 20 && maxCloud <= 40) {
+    diagnosisText = "Pouca nebulosidade";
+    iconLevel = 1;
+  } else if (avgCloud <= 50 && maxCloud <= 70) {
+    diagnosisText = "Parcialmente nublado";
+    iconLevel = 2;
+  } else if (avgCloud <= 75 || maxCloud >= 85) {
+    diagnosisText = "Muitas nuvens, aberturas pontuais";
+    iconLevel = 3;
+  } else {
+    diagnosisText = "Nublado";
+    iconLevel = 4;
   }
 
-  box.innerHTML = `
-    <div class="metric-header">
-      <div class="header-right">
-        <span class="summary-badge">
-          ${cloudDiagnosis.text}
-        </span>
-        <span class="summary-badge">Temp: ${minTemp}° a ${maxTemp}°</span>
-        <span class="summary-badge">Acumulado de chuva: ${totalPrecip} mm</span>
-        <span class="summary-badge">Rajada Máx: ${maxGust} km/h</span>
-      </div>
-    </div>
-    <div class="metric-content">
-      <div class="scroll-wrapper">
-        <div class="blocks-container">
-          ${tablesHTML}
-        </div>
-      </div>
-      <div class="rain-legend">
-        <p> - Chuva leve  até 2.5 mm/h <br> - Chuva moderada até 10 mm/h <br> - Chuva forte acima de 10 mm/h</p>
-      </div>
-    </div>
-  `;
+  return {
+    text: diagnosisText,
+    icon: `icons/${iconLevel}d.png`,
+    minTemp,
+    maxTemp,
+    totalPrecip,
+    maxGust
+  };
+}
 
-  requestAnimationFrame(() => {
-    const scrollWrapper = box.querySelector('.scroll-wrapper');
-    if (scrollWrapper) {
-      enableDragToScroll(scrollWrapper);
-      centerCurrentHour(scrollWrapper, dayTimes);
-    }
-  });
+function get3hBlockIcon(avgCloud, maxCloudDay, hasThunderstorm, isDaytime) {
+  const period = isDaytime ? 'd' : 'n';
 
-  return box;
+  // REGRA EXCLUSIVA PARA TROVOADAS (Apenas níveis 3 e 4)
+  if (hasThunderstorm) {
+    const stormLevel = avgCloud >= 75 ? 4 : 3;
+    return `${stormLevel}${period}_t`;
+  }
+
+  // Lógica padrão para dias sem trovoada
+  let level = 1;
+  if (maxCloudDay <= 50) {
+    level = avgCloud <= 25 ? 1 : 2;
+  } else {
+    if (avgCloud <= 25) level = 1;
+    else if (avgCloud <= 50) level = 2;
+    else if (avgCloud <= 75) level = 3;
+    else level = 4;
+  }
+
+  return `${level}${period}`;
 }
 
 // ==========================================
-// RENDERIZAÇÃO E NAVEGAÇÃO
+// RENDERIZAÇÃO DO CARD DIA
 // ==========================================
-
-function formatDate(dateString, dayIndex) {
-  const date = new Date(dateString);
-  const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-  const diaSemana = diasSemana[date.getDay()];
-  
-  const dd = String(date.getDate()).padStart(2, '0');
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const yy = String(date.getFullYear()).slice(-2);
-
-  return `(${dayIndex + 1}) ${diaSemana}, ${dd}/${mm}/${yy}`;
-}
 
 function renderSelectedDay() {
   forecastContainer.innerHTML = '';
@@ -306,34 +160,133 @@ function renderSelectedDay() {
   const dayTemp = forecastData.temperature_2m.slice(startIndex, endIndex);
   const dayPrecip = forecastData.precipitation.slice(startIndex, endIndex);
   const dayGusts = forecastData.wind_gusts_10m.slice(startIndex, endIndex);
-  const dayWeatherCodes = forecastData.weathercode ? forecastData.weathercode.slice(startIndex, endIndex) : [];
+  const dayCodes = forecastData.weathercode ? forecastData.weathercode.slice(startIndex, endIndex) : [];
 
-  const sunriseISO = forecastData.daily && forecastData.daily.sunrise ? forecastData.daily.sunrise[currentDayIndex] : null;
-  const sunsetISO = forecastData.daily && forecastData.daily.sunset ? forecastData.daily.sunset[currentDayIndex] : null;
+  const maxCloudDay = Math.max(...dayClouds);
+  const summary = getDaySummary(dayClouds, dayTemp, dayPrecip, dayGusts);
 
   const formattedDate = formatDate(dayTimes[0], currentDayIndex);
   document.getElementById('current-day-label').textContent = formattedDate;
 
+  // Verificação da Hora Atual para destaque
+  const now = forecastData.utc_offset_seconds !== undefined
+    ? new Date(Date.now() + forecastData.utc_offset_seconds * 1000)
+    : new Date();
+  const currentISO = now.toISOString().slice(0, 13);
+  const currentHour = now.getUTCHours();
+
   const dayCard = document.createElement('div');
   dayCard.className = 'day-card';
 
-  const hourLabels = dayTimes.map(t => new Date(t).getHours() + 'h');
+  // 1. Bloco RESUMO-DIA
+  const summaryHTML = `
+    <div class="resumo-dia">
+      <div class="resumo-main">
+        <img src="${summary.icon}" alt="Ícone Clima" class="resumo-icon">
+        <div class="resumo-textos">
+          <h3>${summary.text}</h3>
+          <span class="resumo-temp-range">${summary.minTemp}° a ${summary.maxTemp}°</span>
+        </div>
+      </div>
+      <div class="resumo-badges">
+        <span class="badge">💧 <strong>${summary.totalPrecip} mm</strong></span>
+        <span class="badge">🍃 <strong>${summary.maxGust} km/h</strong></span>
+      </div>
+    </div>
+  `;
 
-  dayCard.appendChild(
-    createStackedChartModule(
-      hourLabels,
-      dayClouds,
-      dayTemp,
-      dayPrecip,
-      dayGusts,
-      dayTimes,
-      dayWeatherCodes,
-      sunriseISO,
-      sunsetISO
-    )
-  );
+  // 2. Bloco DADOS-HORA (A cada 3 horas = 8 blocos de 3h)
+  let blocksHTML = '';
+
+  for (let b = 0; b < 8; b++) {
+    const hStart = b * 3;
+    const hEnd = hStart + 3;
+
+    const blockTimes = dayTimes.slice(hStart, hEnd);
+    const blockClouds = dayClouds.slice(hStart, hEnd);
+    const blockTemps = dayTemp.slice(hStart, hEnd);
+    const blockPrecip = dayPrecip.slice(hStart, hEnd);
+    const blockGusts = dayGusts.slice(hStart, hEnd);
+    const blockCodes = dayCodes.slice(hStart, hEnd);
+
+    // Identifica se este bloco de 3h contém a hora atual
+    const isCurrentDay = blockTimes[0].startsWith(currentISO.slice(0, 10));
+    const isCurrentBlock = isCurrentDay && (currentHour >= hStart && currentHour < hEnd);
+    const currentBlockClass = isCurrentBlock ? ' current-hour-block' : '';
+
+    // Cálculos do bloco de 3h
+    const avgCloud = Math.round(blockClouds.reduce((a, b) => a + b, 0) / 3);
+    const totalPrecip3h = blockPrecip.reduce((a, b) => a + b, 0).toFixed(1);
+    const maxGust3h = Math.round(Math.max(...blockGusts));
+    const hasThunderstorm = blockCodes.some(code => [95, 96, 99].includes(code));
+
+    // Mantém estritamente a ordem cronológica das 3 horas
+    const chronologicalTemps = blockTemps.map(t => Math.round(t));
+
+    // Período do dia
+    const startHour = parseInt(blockTimes[0].slice(11, 13), 10);
+    const isDaytime = startHour >= 6 && startHour < 18;
+    const iconCode = get3hBlockIcon(avgCloud, maxCloudDay, hasThunderstorm, isDaytime);
+
+    const labelIntervalo = `${String(hStart).padStart(2, '0')}h - ${String(hEnd).padStart(2, '0')}h`;
+
+    blocksHTML += `
+      <div class="bloco-3h${currentBlockClass}">
+        <div class="bloco-hora-header">${labelIntervalo}</div>
+        <img src="icons/${iconCode}.png" class="bloco-icon" alt="Clima">
+        
+        <div class="bloco-metrica temps-ordem">
+          <span class="metrica-label">Temp (ordem):</span>
+          <span class="metrica-valor">${chronologicalTemps.join('° - ')}°C</span>
+        </div>
+
+        <div class="bloco-metrica">
+          <span class="metrica-label">Chuva acumulada:</span>
+          <span class="metrica-valor ${totalPrecip3h > 0 ? 'com-chuva' : ''}">${totalPrecip3h} mm</span>
+        </div>
+
+        <div class="bloco-metrica">
+          <span class="metrica-label">Rajadas Vento</span>
+          <span class="metrica-valor">${maxGust3h} km/h</span>
+        </div>
+      </div>
+    `;
+  }
+
+  dayCard.innerHTML = `
+    ${summaryHTML}
+    <div class="dados-hora-wrapper scroll-wrapper">
+      <div class="dados-hora-container">
+        ${blocksHTML}
+      </div>
+    </div>
+  `;
 
   forecastContainer.appendChild(dayCard);
+
+  requestAnimationFrame(() => {
+    const scrollWrapper = dayCard.querySelector('.scroll-wrapper');
+    const activeBlock = dayCard.querySelector('.current-hour-block');
+
+    if (scrollWrapper) {
+      enableDragToScroll(scrollWrapper);
+      if (activeBlock) {
+        centerCurrentHourBlock(scrollWrapper, activeBlock);
+      }
+    }
+  });
+}
+
+function formatDate(dateString, dayIndex) {
+  const date = new Date(dateString);
+  const diasSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+  const diaSemana = diasSemana[date.getDay()];
+  
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yy = String(date.getFullYear()).slice(-2);
+
+  return `(${dayIndex + 1}) ${diaSemana}, ${dd}/${mm}/${yy}`;
 }
 
 function changeDay(delta) {
