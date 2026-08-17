@@ -58,7 +58,7 @@
       font-weight: bold;
       margin-bottom: 5px;
     }
-    .coords {
+    .coords,.data-source {
       font-size: 14px;
       color: #666;
       margin-bottom: 15px;
@@ -95,6 +95,7 @@
   <div id="weather-card" class="card" style="display: none;">
     <div id="location-name" class="location-header"></div>
     <div id="location-coords" class="coords"></div>
+    <div class="data-source">Fonte dos dados: Google weathernext2 / Open-meteo API</div>
 
     <h3>Previsão Diária</h3>
     <table id="forecast-table">
@@ -171,11 +172,11 @@
 
     function getCloudDescription(percentage) {
       if (percentage === null || percentage === undefined) return '-';
-      if (percentage <= 10) return "Céu limpo";
-      if (percentage <= 30) return "Poucas nuvens";
-      if (percentage <= 60) return "Parcialmente nublado";
-      if (percentage <= 85) return "Muitas nuvens, aberturas isoladas";
-      return "Nublado";
+      if (percentage <= 10) return "(1) Céu limpo";
+      if (percentage <= 30) return "(2) Poucas nuvens";
+      if (percentage <= 60) return "(3) Parcialmente nublado";
+      if (percentage <= 85) return "(4) Muitas nuvens";
+      return "(5) Nublado";
     }
 
     // Retorna a data formatada e se é fim de semana
