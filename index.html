@@ -172,11 +172,11 @@
 
     function getCloudDescription(percentage) {
       if (percentage === null || percentage === undefined) return '-';
-      if (percentage <= 10) return "(1) Céu limpo";
-      if (percentage <= 30) return "(2) Poucas nuvens";
-      if (percentage <= 60) return "(3) Parcialmente nublado";
-      if (percentage <= 85) return "(4) Muitas nuvens";
-      return "(5) Nublado";
+      if (percentage <= 10) return "1. Céu limpo";
+      if (percentage <= 30) return "2. Poucas nuvens";
+      if (percentage <= 60) return "3. Parcialmente nublado";
+      if (percentage <= 85) return "4. Muitas nuvens";
+      return "5. Nublado";
     }
 
     // Retorna a data formatada e se é fim de semana
