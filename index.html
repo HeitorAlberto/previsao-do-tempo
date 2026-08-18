@@ -9,16 +9,33 @@
     
     body {
       font-family: "Google Sans", sans-serif;
-      max-width: 800px;
       margin: 20px auto;
       padding: 0 15px;
       background-color: #f4f6f8;
       color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Força orientação horizontal em celulares na vertical */
+    @media (max-width: 768px) and (orientation: portrait) {
+      body {
+        transform: rotate(90deg);
+        transform-origin: left top;
+        width: 100vh;
+        height: 100vw;
+        position: absolute;
+        top: 0;
+        left: 100%;
+        overflow-x: hidden;
+      }
     }
     
     .search-container {
       position: relative;
       margin-bottom: 20px;
+      box-sizing: border-box;
     }
     
     input[type="text"] {
@@ -53,12 +70,16 @@
       background-color: #eee;
     }
     
+    /* Card pai ajustado ao conteúdo */
     .card {
       background: #fff;
-      padding: 15px;
+      padding: 20px;
       border-radius: 6px;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       margin-bottom: 20px;
+      width: fit-content;
+      max-width: 100%;
+      box-sizing: border-box;
     }
     
     .location-header {
@@ -75,206 +96,79 @@
 
     .table-responsive {
       width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
     }
 
     table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
+      border-collapse: collapse;
       margin-top: 10px;
-      table-layout: auto;
+      white-space: nowrap;
     }
     
     th, td {
-      border-right: 1px solid #ddd;
-      border-bottom: 1px solid #ddd;
-      padding: 10px 8px;
+      border: 1px solid #ddd;
+      padding: 10px 14px;
       font-size: 14px;
-      white-space: nowrap;
-    }
-
-    thead tr th {
-      border-top: 1px solid #ddd;
-      text-align: left !important;
-    }
-
-    th:first-child, td:first-child {
-      border-left: 1px solid #ddd;
       text-align: left !important;
     }
     
     th {
       background-color: #f0f0f0;
-      text-align: left;
+      font-weight: bold;
     }
 
-    /* Trava a 1ª Coluna (Data) da Tabela Principal */
-    #forecast-table th:nth-child(1),
-    #forecast-table td:nth-child(1) {
-      position: sticky;
-      left: 0;
-      z-index: 2;
-      background-color: #fff;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.08);
-      width: 1%;
-      text-align: center;
-    }
-
-    #forecast-table th:nth-child(1) {
-      background-color: #f0f0f0;
-      z-index: 3;
-    }
-
-    /* Cor de fim de semana para a linha toda */
+    /* Cores das linhas */
     tr.weekend {
       background-color: #fefae8;
     }
 
-    /* Força o fundo amarelado especificamente na célula travada da Data */
-    #forecast-table tr.weekend td:nth-child(1) {
-      background-color: #fefae8 !important;
+    tr.clickable-row {
+      cursor: pointer;
+      transition: background-color 0.2s;
     }
 
     tr.clickable-row:hover {
       background-color: #eef4fc;
     }
 
-    #forecast-table tr.clickable-row:hover td:nth-child(1) {
-      background-color: #eef4fc !important;
+    tr.active-row {
+      background-color: #e2edfc !important;
     }
 
-    /* Ajustes das colunas da Tabela Principal */
-    #forecast-table th:nth-child(3), #forecast-table td:nth-child(3),
-    #forecast-table th:nth-child(4), #forecast-table td:nth-child(4),
-    #forecast-table th:nth-child(5), #forecast-table td:nth-child(5) {
-      width: 1%;
-      text-align: center;
-    }
-
-    #forecast-table th:nth-child(2), #forecast-table td:nth-child(2) {
-      text-align: left;
-      white-space: normal;
-      min-width: 140px;
-    }
-    
-    tr.clickable-row {
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    /* --- ESTILOS DO MODAL --- */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 2000;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.2s ease, visibility 0.2s ease;
-    }
-
-    .modal-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .modal-container {
-      background-color: #fff;
-      width: 90%;
-      max-width: 700px;
-      max-height: 85vh;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      animation: modalSlide 0.2s ease-out;
-    }
-
-    @keyframes modalSlide {
-      from { transform: translateY(20px); }
-      to { transform: translateY(0); }
-    }
-
-    .modal-header {
-      padding: 15px 20px;
+    /* Estilos da Linha do Accordion */
+    tr.accordion-row > td {
+      padding: 0;
       background-color: #f8fafc;
-      border-bottom: 1px solid #ddd;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      border-top: none;
     }
 
-    .modal-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin: 0;
+    .accordion-content {
+      padding: 12px 15px;
+      background-color: #f8fafc;
     }
 
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 24px;
-      font-weight: bold;
-      color: #666;
-      cursor: pointer;
-      line-height: 1;
-      padding: 0 5px;
-    }
-
-    .modal-close:hover {
-      color: #000;
-    }
-
-    .modal-body {
-      padding: 15px 20px;
-      overflow-y: auto;
-    }
-
-    /* Tabela Interna do Modal */
     .hourly-table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      margin-top: 5px;
-    }
-
-    .hourly-table th, 
-    .hourly-table td {
-      text-align: center;
-      white-space: nowrap;
-      width: 1%;
-    }
-
-    .hourly-table th:nth-child(2),
-    .hourly-table td:nth-child(2) {
-      text-align: left;
-      white-space: normal;
-      min-width: 130px;
-    }
-
-    /* Trava a 1ª Coluna (Horário) da Tabela do Modal */
-    .hourly-table th:nth-child(1),
-    .hourly-table td:nth-child(1) {
-      position: sticky;
-      left: 0;
-      z-index: 2;
+      border-collapse: collapse;
       background-color: #fff;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.08);
-      font-weight: bold;
     }
 
-    .hourly-table th:nth-child(1) {
-      background-color: #f0f0f0;
-      z-index: 3;
+    .hourly-table th {
+      background-color: #eaeef3;
+      font-size: 13px;
+    }
+
+    .hourly-table td {
+      font-size: 13px;
+      padding: 8px 10px;
+      text-align: left !important;
+    }
+
+    /* Destaque para a hora atual */
+    tr.current-hour {
+      outline: 2px solid #1a73e8;
+      outline-offset: -1px;
+      background-color: #e8f0fe !important;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -282,7 +176,7 @@
 
   <h1>Previsão do Tempo</h1>
 
-  <div class="search-container">
+  <div id="search-box-container" class="search-container">
     <input type="text" id="city-input" placeholder="Digite o nome da cidade..." autocomplete="off">
     <div id="suggestions" class="suggestions" style="display: none;"></div>
   </div>
@@ -292,7 +186,7 @@
     <div id="location-coords" class="coords"></div>
     <div class="data-source">Fonte dos dados: ECMWF HRES 9km / Open-Meteo API</div>
 
-    <h3>Previsão Diária <small style="font-size: 12px; font-weight: normal; color: #666;">(Clique em uma linha para detalhes)</small></h3>
+    <h3>Previsão Diária <small style="font-size: 12px; font-weight: normal; color: #666;">(Clique em uma linha para alternar os detalhes)</small></h3>
     
     <div class="table-responsive">
       <table id="forecast-table">
@@ -310,32 +204,6 @@
     </div>
   </div>
 
-  <!-- Estrutura do Modal -->
-  <div id="hourly-modal" class="modal-overlay">
-    <div class="modal-container">
-      <div class="modal-header">
-        <h4 id="modal-date-title" class="modal-title">Previsão Horária</h4>
-        <button id="modal-close-btn" class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="table-responsive">
-          <table class="hourly-table">
-            <thead>
-              <tr>
-                <th>Horário</th>
-                <th>Condição</th>
-                <th>Temp (°C)</th>
-                <th>Chuva (mm)</th>
-                <th>Ventos (km/h)</th>
-              </tr>
-            </thead>
-            <tbody id="modal-hourly-tbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
     const defaultLocation = {
       name: "São Miguel dos Campos",
@@ -347,17 +215,19 @@
 
     const input = document.getElementById('city-input');
     const suggestionsBox = document.getElementById('suggestions');
-    const modal = document.getElementById('hourly-modal');
-    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const searchContainer = document.getElementById('search-box-container');
+    const weatherCard = document.getElementById('weather-card');
 
-    modalCloseBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
-
-    function closeModal() {
-      modal.classList.remove('active');
+    function syncSearchWidth() {
+      if (weatherCard.style.display !== 'none') {
+        const cardWidth = weatherCard.offsetWidth;
+        if (cardWidth > 0) {
+          searchContainer.style.width = `${cardWidth}px`;
+        }
+      }
     }
+
+    window.addEventListener('resize', syncSearchWidth);
 
     fetchWeather(defaultLocation.lat, defaultLocation.lon, defaultLocation.name, defaultLocation.admin1, defaultLocation.country);
 
@@ -439,11 +309,30 @@
       };
     }
 
-    function openHourlyModal(dateStr, formattedDate, hourlyData) {
-      document.getElementById('modal-date-title').textContent = `Previsão Horária - ${formattedDate}`;
-      const tbody = document.getElementById('modal-hourly-tbody');
-      tbody.innerHTML = '';
+    function toggleAccordion(parentRow, dateStr, hourlyData) {
+      const nextElement = parentRow.nextElementSibling;
+      const isAlreadyOpen = nextElement && nextElement.classList.contains('accordion-row');
 
+      document.querySelectorAll('.accordion-row').forEach(row => row.remove());
+      document.querySelectorAll('.clickable-row').forEach(row => row.classList.remove('active-row'));
+
+      if (isAlreadyOpen) {
+        return;
+      }
+
+      parentRow.classList.add('active-row');
+
+      const accordionRow = document.createElement('tr');
+      accordionRow.classList.add('accordion-row');
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+      const currentDate = String(now.getDate()).padStart(2, '0');
+      const todayStr = `${currentYear}-${currentMonth}-${currentDate}`;
+      const currentHourVal = now.getHours();
+
+      let hourlyRowsHtml = '';
       if (hourlyData && hourlyData.time) {
         hourlyData.time.forEach((hTime, hIdx) => {
           if (hTime.startsWith(dateStr)) {
@@ -462,25 +351,51 @@
               }
               const hRainFormatted = Math.round(rain3h * 10) / 10;
 
-              const tr = document.createElement('tr');
-              tr.innerHTML = `
-                <td>${hourFormatted}</td>
-                <td>${hCloud}</td>
-                <td>${hTemp}</td>
-                <td>${hRainFormatted}</td>
-                <td>${hWind}</td>
+              const isToday = dateStr === todayStr;
+              const isCurrentHourWindow = isToday && (currentHourVal >= hour && currentHourVal < hour + 3);
+              const hourRowClass = isCurrentHourWindow ? 'class="current-hour"' : '';
+
+              hourlyRowsHtml += `
+                <tr ${hourRowClass}>
+                  <td>${hourFormatted}</td>
+                  <td>${hCloud}</td>
+                  <td>${hTemp}</td>
+                  <td>${hRainFormatted}</td>
+                  <td>${hWind}</td>
+                </tr>
               `;
-              tbody.appendChild(tr);
             }
           }
         });
       }
 
-      modal.classList.add('active');
+      accordionRow.innerHTML = `
+        <td colspan="5">
+          <div class="accordion-content">
+            <table class="hourly-table">
+              <thead>
+                <tr>
+                  <th>Horário</th>
+                  <th>Condição</th>
+                  <th>Temp (°C)</th>
+                  <th>Chuva (mm)</th>
+                  <th>Ventos (km/h)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${hourlyRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </td>
+      `;
+
+      parentRow.after(accordionRow);
+      syncSearchWidth();
     }
 
     function renderData(data, city, state, country, lat, lon) {
-      document.getElementById('weather-card').style.display = 'block';
+      weatherCard.style.display = 'block';
       
       const estadoStr = state ? `, ${state}` : '';
       const paisStr = country ? `, ${country}` : '';
@@ -508,8 +423,6 @@
 
         const condicao = getCloudDescription(daily.cloud_cover_mean[i], daily.weather_code ? daily.weather_code[i] : null);
         const dateInfo = formatDateInfo(dateStr);
-
-        // Número do dia de 1 a 10 baseado no índice
         const dayIndex = i + 1;
 
         const row = document.createElement('tr');
@@ -527,11 +440,13 @@
         `;
 
         row.addEventListener('click', () => {
-          openHourlyModal(dateStr, dateInfo.formatted, hourly);
+          toggleAccordion(row, dateStr, hourly);
         });
 
         tbody.appendChild(row);
       });
+
+      syncSearchWidth();
     }
   </script>
 </body>
