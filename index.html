@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Previsão do Tempo - Ensemble</title>
+  <title>Previsão do Tempo</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
     body {
@@ -77,9 +77,33 @@
     th {
       background-color: #f0f0f0;
     }
+    tr.clickable-row {
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    tr.clickable-row:hover {
+      background-color: #eef4fc;
+    }
     /* Estilo para destacar os fins de semana */
     tr.weekend {
       background-color: #fefae8;
+    }
+    /* Subtabela de detalhes de 3h em 3h */
+    tr.detail-row {
+      display: none;
+      background-color: #f9fbfd;
+    }
+    tr.detail-row.open {
+      display: table-row;
+    }
+    .hourly-table {
+      margin: 10px auto;
+      width: 95%;
+      font-size: 13px;
+      background: #fff;
+    }
+    .hourly-table th {
+      background-color: #e2e8f0;
     }
   </style>
 </head>
@@ -95,17 +119,17 @@
   <div id="weather-card" class="card" style="display: none;">
     <div id="location-name" class="location-header"></div>
     <div id="location-coords" class="coords"></div>
-    <div class="data-source">Fonte dos dados: Google weathernext2 / Open-meteo API</div>
+    <div class="data-source">Fonte dos dados: ECMWF HRES 9km / Open-Meteo API</div>
 
-    <h3>Previsão Diária</h3>
+    <h3>Previsão Diária <small style="font-size: 12px; font-weight: normal; color: #666;">(Detalhes ao clicar nas linhas)</small></h3>
     <table id="forecast-table">
       <thead>
         <tr>
           <th>Data</th>
           <th>Condição</th>
           <th>Temperatura (°C)</th>
-          <th>Vento Max (km/h)</th>
           <th>Chuva (mm)</th>
+          <th>Vento Max (km/h)</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -159,7 +183,7 @@
     });
 
     async function fetchWeather(lat, lon, city, state, country) {
-      const url = `https://ensemble-api.open-meteo.com/v1/ensemble?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,precipitation_sum&models=google_weathernext2_ensemble&timezone=auto&forecast_days=16`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,weather_code&models=ecmwf_ifs&timezone=auto&forecast_days=14`;
       
       try {
         const response = await fetch(url);
@@ -170,21 +194,29 @@
       }
     }
 
-    function getCloudDescription(percentage) {
-      if (percentage === null || percentage === undefined) return '-';
-      if (percentage <= 10) return "1. Céu limpo";
-      if (percentage <= 30) return "2. Poucas nuvens";
-      if (percentage <= 60) return "3. Parcialmente nublado";
-      if (percentage <= 85) return "4. Muitas nuvens";
-      return "5. Nublado";
+    function getCloudDescription(percentage, code) {
+      let text = "-";
+      if (percentage !== null && percentage !== undefined) {
+        if (percentage <= 10) text = "1. Céu limpo";
+        else if (percentage <= 30) text = "2. Poucas nuvens";
+        else if (percentage <= 60) text = "3. Parcialmente nublado";
+        else if (percentage <= 85) text = "4. Muitas nuvens";
+        else text = "5. Nublado";
+      }
+
+      // Códigos WMO para Trovoada: 95 (Leve/Moderada), 96 e 99 (Com granizo)
+      if (code === 95 || code === 96 || code === 99) {
+        text += " ⚡";
+      }
+
+      return text;
     }
 
-    // Retorna a data formatada e se é fim de semana
     function formatDateInfo(dateString) {
       const parts = dateString.split('-');
       const date = new Date(parts[0], parts[1] - 1, parts[2]);
       
-      const dayOfWeekNum = date.getDay(); // 0 = Domingo, 6 = Sábado
+      const dayOfWeekNum = date.getDay();
       const isWeekend = dayOfWeekNum === 0 || dayOfWeekNum === 6;
       
       const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'short' });
@@ -206,37 +238,104 @@
       document.getElementById('location-coords').textContent = `Latitude: ${lat} | Longitude: ${lon}`;
 
       const daily = data.daily;
+      const hourly = data.hourly;
       const tbody = document.querySelector('#forecast-table tbody');
       tbody.innerHTML = '';
 
-      daily.time.forEach((date, i) => {
+      daily.time.forEach((dateStr, i) => {
         const minVal = daily.temperature_2m_min[i];
         const maxVal = daily.temperature_2m_max[i];
+        const windVal = daily.wind_speed_10m_max[i];
 
         const tempMin = minVal !== null && minVal !== undefined ? Math.round(minVal) : null;
         const tempMax = maxVal !== null && maxVal !== undefined ? Math.round(maxVal) : null;
+        const windMax = windVal !== null && windVal !== undefined ? Math.round(windVal) : '-';
 
         let tempStr = '-';
         if (tempMin !== null && tempMax !== null) {
           tempStr = `${tempMin} a ${tempMax}`;
         }
 
-        const condicao = getCloudDescription(daily.cloud_cover_mean[i]);
-        const dateInfo = formatDateInfo(date);
+        const condicao = getCloudDescription(daily.cloud_cover_mean[i], daily.weather_code ? daily.weather_code[i] : null);
+        const dateInfo = formatDateInfo(dateStr);
 
+        // Linha Principal
         const row = document.createElement('tr');
+        row.classList.add('clickable-row');
         if (dateInfo.isWeekend) {
           row.classList.add('weekend');
         }
 
         row.innerHTML = `
-          <td>${dateInfo.formatted}</td>
+          <td><strong>${dateInfo.formatted}</strong></td>
           <td>${condicao}</td>
           <td>${tempStr}</td>
-          <td>${daily.wind_speed_10m_max[i] ?? '-'}</td>
           <td>${daily.precipitation_sum[i] ?? '-'}</td>
+          <td>${windMax}</td>
         `;
+
+        // Linha de Detalhes (Oculta por padrão)
+        const detailRow = document.createElement('tr');
+        detailRow.classList.add('detail-row');
+
+        // Filtra os horários do dia de 3h em 3h e acumula a chuva do bloco de 3 horas
+        let hourlyRows = '';
+        if (hourly && hourly.time) {
+          hourly.time.forEach((hTime, hIdx) => {
+            if (hTime.startsWith(dateStr)) {
+              const hour = new Date(hTime).getHours();
+              if (hour % 3 === 0) {
+                const hourFormatted = `${String(hour).padStart(2, '0')}:00`;
+                const hTemp = hourly.temperature_2m[hIdx] !== undefined ? Math.round(hourly.temperature_2m[hIdx]) : '-';
+                const hCloud = getCloudDescription(hourly.cloud_cover[hIdx], hourly.weather_code ? hourly.weather_code[hIdx] : null);
+
+                // Acumula a precipitação das 3 horas do bloco (hora atual + 2 seguintes)
+                let rain3h = 0;
+                for (let offset = 0; offset < 3; offset++) {
+                  if (hourly.precipitation[hIdx + offset] !== undefined) {
+                    rain3h += hourly.precipitation[hIdx + offset];
+                  }
+                }
+                const hRainFormatted = Math.round(rain3h * 10) / 10;
+
+                hourlyRows += `
+                  <tr>
+                    <td>${hourFormatted}</td>
+                    <td>${hCloud}</td>
+                    <td>${hTemp} °C</td>
+                    <td>${hRainFormatted} mm</td>
+                  </tr>
+                `;
+              }
+            }
+          });
+        }
+
+        detailRow.innerHTML = `
+          <td colspan="5">
+            <table class="hourly-table">
+              <thead>
+                <tr>
+                  <th>Horário</th>
+                  <th>Condição</th>
+                  <th>Temperatura</th>
+                  <th>Chuva (3h)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${hourlyRows}
+              </tbody>
+            </table>
+          </td>
+        `;
+
+        // Evento de clique para expandir/recolher
+        row.addEventListener('click', () => {
+          detailRow.classList.toggle('open');
+        });
+
         tbody.appendChild(row);
+        tbody.appendChild(detailRow);
       });
     }
   </script>
