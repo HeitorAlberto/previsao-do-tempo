@@ -105,7 +105,6 @@
       box-sizing: border-box;
     }
     
-    /* Centraliza os cabeçalhos e células da coluna de Condição (2ª coluna) na tabela principal */
     th:nth-child(2),
     td:nth-child(2) {
       text-align: center !important;
@@ -127,7 +126,6 @@
       transition: background-color 0.2s;
     }
 
-    /* Cor de fundo para a linha geral que está sendo detalhada */
     tr.clickable-row.active-row {
       background-color: #e0e8f5 !important;
     }
@@ -143,6 +141,31 @@
       background-color: #f8fafc;
     }
 
+    .hourly-tabs {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      justify-self: center;
+    }
+
+    .hourly-tabs .tab-btn {
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: "Google Sans", sans-serif;
+      font-weight: 500;
+      transition: background-color 0.2s, color 0.2s;
+      background-color: #e2e8f0;
+      color: #333;
+    }
+
+    .hourly-tabs .tab-btn:hover {
+      opacity: 0.85;
+    }
+
     .hourly-table {
       width: 100%;
       border-collapse: collapse;
@@ -156,23 +179,16 @@
       text-align: left !important;
     }
 
-    /* Centraliza explicitamente a 2ª coluna da tabela horária */
     .hourly-table td:nth-child(2) {
       text-align: center !important;
       vertical-align: middle !important;
     }
 
-    /* Borda divisória aplicada a cada 6 horas */
-    .hourly-table tr.border-section td {
-      border-bottom: 3px solid #94a3b8;
-    }
-
     tr.current-hour {
       outline-offset: -1px;
-      background-color: #e8f0fe !important;
+      background-color: #f1f1f1 !important;
     }
 
-    /* Contêiner dos ícones */
     .weather-icon-container {
       display: inline-flex;
       align-items: center;
@@ -181,7 +197,6 @@
       vertical-align: middle;
     }
 
-    /* Ajuste individual das imagens para remoção do desvio de linha de base */
     .weather-icon {
       width: 22px;
       height: 22px;
@@ -395,64 +410,92 @@
       const todayStr = `${currentYear}-${currentMonth}-${currentDate}`;
       const currentHourVal = now.getHours();
 
-      let hourlyRowsHtml = '';
-      if (hourlyData && hourlyData.time) {
-        hourlyData.time.forEach((hTime, hIdx) => {
-          if (hTime.startsWith(dateStr)) {
-            const hour = new Date(hTime).getHours();
-            const hourFormatted = `${String(hour).padStart(2, '0')}h`;
-            const hTemp = hourlyData.temperature_2m[hIdx] !== undefined ? Math.round(hourlyData.temperature_2m[hIdx]) : '-';
-            
-            const hCloud = getCloudDescription(
-              hourlyData.cloud_cover[hIdx], 
-              hourlyData.weather_code ? hourlyData.weather_code[hIdx] : null,
-              hour
-            );
-            
-            const hRain = hourlyData.precipitation[hIdx] !== undefined ? Math.round(hourlyData.precipitation[hIdx] * 10) / 10 : 0;
-
-            const hWindSpeed = hourlyData.wind_speed_10m ? hourlyData.wind_speed_10m[hIdx] : null;
-            const hWindGusts = hourlyData.wind_gusts_10m ? hourlyData.wind_gusts_10m[hIdx] : null;
-            const hWindStr = formatWind(hWindSpeed, hWindGusts);
-
-            const isToday = dateStr === todayStr;
-            const isCurrentHour = isToday && currentHourVal === hour;
-            
-            const isEvery6Hours = (hour + 1) % 6 === 0;
-
-            let rowClasses = [];
-            if (isCurrentHour) rowClasses.push('current-hour');
-            if (isEvery6Hours) rowClasses.push('border-section');
-
-            const classAttr = rowClasses.length > 0 ? `class="${rowClasses.join(' ')}"` : '';
-
-            hourlyRowsHtml += `
-              <tr ${classAttr}>
-                <td><strong>${hourFormatted}</strong></td>
-                <td>${hCloud}</td>
-                <td>${hTemp}</td>
-                <td>${hRain}</td>
-                <td>${hWindStr}</td>
-              </tr>
-            `;
-          }
-        });
+      let defaultBlock = 0;
+      if (dateStr === todayStr) {
+        defaultBlock = Math.floor(currentHourVal / 6) * 6;
       }
 
       accordionRow.innerHTML = `
         <td colspan="5">
           <div class="accordion-content">
+            
             <table class="hourly-table">
-              <tbody>
-                ${hourlyRowsHtml}
-              </tbody>
+              <tbody id="hourly-body-${dateStr}"></tbody>
             </table>
+            <div class="hourly-tabs">
+              <button type="button" class="tab-btn" data-block="0">00h</button>
+              <button type="button" class="tab-btn" data-block="6">06h</button>
+              <button type="button" class="tab-btn" data-block="12">12h</button>
+              <button type="button" class="tab-btn" data-block="18">18h</button>
+            </div>
           </div>
         </td>
       `;
 
       parentRow.after(accordionRow);
-      alignHourlyColumns(parentRow, accordionRow);
+
+      function renderHourlyBlock(startHour) {
+        const tbody = accordionRow.querySelector(`#hourly-body-${dateStr}`);
+        tbody.innerHTML = '';
+
+        if (hourlyData && hourlyData.time) {
+          hourlyData.time.forEach((hTime, hIdx) => {
+            if (hTime.startsWith(dateStr)) {
+              const hour = new Date(hTime).getHours();
+
+              if (hour >= startHour && hour < startHour + 6) {
+                const hourFormatted = `${String(hour).padStart(2, '0')}h`;
+                const hTemp = hourlyData.temperature_2m[hIdx] !== undefined ? Math.round(hourlyData.temperature_2m[hIdx]) : '-';
+                const hCloud = getCloudDescription(
+                  hourlyData.cloud_cover[hIdx], 
+                  hourlyData.weather_code ? hourlyData.weather_code[hIdx] : null,
+                  hour
+                );
+                const hRain = hourlyData.precipitation[hIdx] !== undefined ? Math.round(hourlyData.precipitation[hIdx] * 10) / 10 : 0;
+                const hWindSpeed = hourlyData.wind_speed_10m ? hourlyData.wind_speed_10m[hIdx] : null;
+                const hWindGusts = hourlyData.wind_gusts_10m ? hourlyData.wind_gusts_10m[hIdx] : null;
+                const hWindStr = formatWind(hWindSpeed, hWindGusts);
+
+                const isToday = dateStr === todayStr;
+                const isCurrentHour = isToday && currentHourVal === hour;
+                const classAttr = isCurrentHour ? 'class="current-hour"' : '';
+
+                tbody.innerHTML += `
+                  <tr ${classAttr}>
+                    <td><strong>${hourFormatted}</strong></td>
+                    <td>${hCloud}</td>
+                    <td>${hTemp}</td>
+                    <td>${hRain}</td>
+                    <td>${hWindStr}</td>
+                  </tr>
+                `;
+              }
+            }
+          });
+        }
+
+        accordionRow.querySelectorAll('.tab-btn').forEach(btn => {
+          if (parseInt(btn.dataset.block, 10) === startHour) {
+            btn.style.backgroundColor = '#000';
+            btn.style.color = '#fff';
+          } else {
+            btn.style.backgroundColor = '#e2e8f0';
+            btn.style.color = '#333';
+          }
+        });
+
+        alignHourlyColumns(parentRow, accordionRow);
+      }
+
+      accordionRow.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const block = parseInt(btn.dataset.block, 10);
+          renderHourlyBlock(block);
+        });
+      });
+
+      renderHourlyBlock(defaultBlock);
       syncSearchWidth();
     }
 
