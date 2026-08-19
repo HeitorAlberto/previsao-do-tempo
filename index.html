@@ -31,6 +31,7 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       box-sizing: border-box;
+      font-family: "Google Sans", sans-serif;
     }
     
     .suggestions {
@@ -50,13 +51,13 @@
     .suggestion-item {
       padding: 10px;
       cursor: pointer;
+      font-family: "Google Sans", sans-serif;
     }
     
     .suggestion-item:hover {
       background-color: #eee;
     }
     
-    /* Card pai ajustado ao conteúdo */
     .card {
       background: #fff;
       padding: 20px;
@@ -93,9 +94,17 @@
     
     th, td {
       border: 1px solid #ddd;
-      padding: 10px 14px;
+      padding: 5px 14px;
       font-size: 14px;
       text-align: left !important;
+      vertical-align: middle;
+    }
+    
+    /* Centraliza os cabeçalhos e células da coluna de Condição (2ª coluna) na tabela principal */
+    th:nth-child(2),
+    td:nth-child(2) {
+      text-align: center !important;
+      vertical-align: middle !important;
     }
     
     th {
@@ -104,7 +113,6 @@
       font-weight: bold;
     }
 
-    /* Cores das linhas */
     tr.weekend {
       background-color: #fefae8;
     }
@@ -114,7 +122,6 @@
       transition: background-color 0.2s;
     }
 
-    /* Estilos da Linha do Accordion */
     tr.accordion-row > td {
       padding: 0;
       background-color: #f8fafc;
@@ -138,14 +145,43 @@
 
     .hourly-table td {
       font-size: 13px;
-      padding: 8px 10px;
+      padding: 5px 10px;
       text-align: left !important;
     }
 
-    /* Destaque para a hora atual */
+    /* Centraliza explicitamente a 2ª coluna da tabela horária */
+    .hourly-table th:nth-child(2),
+    .hourly-table td:nth-child(2) {
+      text-align: center !important;
+      vertical-align: middle !important;
+    }
+
+    /* Borda divisória aplicada a cada 6 horas */
+    .hourly-table tr.border-section td {
+      border-bottom: 3px solid #94a3b8;
+    }
+
     tr.current-hour {
       outline-offset: -1px;
       background-color: #e8f0fe !important;
+    }
+
+    /* Contêiner dos ícones */
+    .weather-icon-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0px;
+      vertical-align: middle;
+    }
+
+    /* Ajuste individual das imagens para remoção do desvio de linha de base */
+    .weather-icon {
+      width: 22px;
+      height: 22px;
+      display: block;
+      margin: 0 auto;
+      object-fit: contain;
     }
   </style>
 </head>
@@ -241,7 +277,7 @@
     });
 
     async function fetchWeather(lat, lon, city, state, country) {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,wind_speed_10m,weather_code&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,wind_speed_10m,wind_gusts_10m,weather_code&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
       
       try {
         const response = await fetch(url);
@@ -252,21 +288,44 @@
       }
     }
 
-    function getCloudDescription(percentage, code) {
-      let text = "-";
-      if (percentage !== null && percentage !== undefined) {
-        if (percentage <= 10) text = "1. Céu limpo";
-        else if (percentage <= 30) text = "2. Poucas nuvens";
-        else if (percentage <= 60) text = "3. Parcialmente nublado";
-        else if (percentage <= 85) text = "4. Muitas nuvens";
-        else text = "5. Nublado";
+    function getCloudDescription(percentage, code, hour = null) {
+      if (percentage === null || percentage === undefined) {
+        return "-";
       }
 
-      if (code === 95 || code === 96 || code === 99) {
-        text += " ⚡";
+      const isNight = hour !== null && (hour >= 18 || hour < 6);
+      const period = isNight ? 'n' : 'd';
+
+      let num = 1;
+      let label = "Céu limpo";
+
+      if (percentage <= 10) {
+        num = 1;
+        label = "Céu limpo";
+      } else if (percentage <= 30) {
+        num = 2;
+        label = "Poucas nuvens";
+      } else if (percentage <= 60) {
+        num = 3;
+        label = "Parcialmente nublado";
+      } else if (percentage <= 85) {
+        num = 4;
+        label = "Muitas nuvens";
+      } else {
+        num = 5;
+        label = "Nublado";
       }
 
-      return text;
+      const iconName = `${num}${period}.png`;
+      let cloudImg = `<img src="icones/${iconName}" class="weather-icon" alt="${label}" title="${label}">`;
+
+      const isThunderstorm = (code === 95 || code === 96 || code === 99);
+      if (isThunderstorm) {
+        const stormImg = `<img src="icones/trovoada.png" class="weather-icon" alt="Trovoada" title="Trovoada">`;
+        return `<div class="weather-icon-container">${cloudImg}${stormImg}</div>`;
+      }
+
+      return `<div class="weather-icon-container">${cloudImg}</div>`;
     }
 
     function formatDateInfo(dateString) {
@@ -284,6 +343,14 @@
         formatted: `${dayOfWeek}, ${day}/${month}`,
         isWeekend: isWeekend
       };
+    }
+
+    function formatWind(speed, gusts) {
+      const speedVal = (speed !== null && speed !== undefined) ? Math.round(speed) : '-';
+      const gustVal = (gusts !== null && gusts !== undefined) ? Math.round(gusts) : '-';
+      
+      if (speedVal === '-' && gustVal === '-') return '-';
+      return `${speedVal} a ${gustVal}`;
     }
 
     function toggleAccordion(parentRow, dateStr, hourlyData) {
@@ -314,34 +381,41 @@
         hourlyData.time.forEach((hTime, hIdx) => {
           if (hTime.startsWith(dateStr)) {
             const hour = new Date(hTime).getHours();
-            if (hour % 3 === 0) {
-              const hourFormatted = `${String(hour).padStart(2, '0')}:00`;
-              const hTemp = hourlyData.temperature_2m[hIdx] !== undefined ? Math.round(hourlyData.temperature_2m[hIdx]) : '-';
-              const hCloud = getCloudDescription(hourlyData.cloud_cover[hIdx], hourlyData.weather_code ? hourlyData.weather_code[hIdx] : null);
-              const hWind = hourlyData.wind_speed_10m[hIdx] !== undefined ? Math.round(hourlyData.wind_speed_10m[hIdx]) : '-';
+            const hourFormatted = `${String(hour).padStart(2, '0')}:00`;
+            const hTemp = hourlyData.temperature_2m[hIdx] !== undefined ? Math.round(hourlyData.temperature_2m[hIdx]) : '-';
+            
+            const hCloud = getCloudDescription(
+              hourlyData.cloud_cover[hIdx], 
+              hourlyData.weather_code ? hourlyData.weather_code[hIdx] : null,
+              hour
+            );
+            
+            const hRain = hourlyData.precipitation[hIdx] !== undefined ? Math.round(hourlyData.precipitation[hIdx] * 10) / 10 : 0;
 
-              let rain3h = 0;
-              for (let offset = 0; offset < 3; offset++) {
-                if (hourlyData.precipitation[hIdx + offset] !== undefined) {
-                  rain3h += hourlyData.precipitation[hIdx + offset];
-                }
-              }
-              const hRainFormatted = Math.round(rain3h * 10) / 10;
+            const hWindSpeed = hourlyData.wind_speed_10m ? hourlyData.wind_speed_10m[hIdx] : null;
+            const hWindGusts = hourlyData.wind_gusts_10m ? hourlyData.wind_gusts_10m[hIdx] : null;
+            const hWindStr = formatWind(hWindSpeed, hWindGusts);
 
-              const isToday = dateStr === todayStr;
-              const isCurrentHourWindow = isToday && (currentHourVal >= hour && currentHourVal < hour + 3);
-              const hourRowClass = isCurrentHourWindow ? 'class="current-hour"' : '';
+            const isToday = dateStr === todayStr;
+            const isCurrentHour = isToday && currentHourVal === hour;
+            
+            const isEvery6Hours = (hour + 1) % 6 === 0;
 
-              hourlyRowsHtml += `
-                <tr ${hourRowClass}>
-                  <td>${hourFormatted}</td>
-                  <td>${hCloud}</td>
-                  <td>${hTemp}</td>
-                  <td>${hRainFormatted}</td>
-                  <td>${hWind}</td>
-                </tr>
-              `;
-            }
+            let rowClasses = [];
+            if (isCurrentHour) rowClasses.push('current-hour');
+            if (isEvery6Hours) rowClasses.push('border-section');
+
+            const classAttr = rowClasses.length > 0 ? `class="${rowClasses.join(' ')}"` : '';
+
+            hourlyRowsHtml += `
+              <tr ${classAttr}>
+                <td>${hourFormatted}</td>
+                <td>${hCloud}</td>
+                <td>${hTemp}</td>
+                <td>${hRain}</td>
+                <td>${hWindStr}</td>
+              </tr>
+            `;
           }
         });
       }
@@ -387,16 +461,18 @@
       daily.time.forEach((dateStr, i) => {
         const minVal = daily.temperature_2m_min[i];
         const maxVal = daily.temperature_2m_max[i];
-        const windVal = daily.wind_speed_10m_max[i];
 
         const tempMin = minVal !== null && minVal !== undefined ? Math.round(minVal) : null;
         const tempMax = maxVal !== null && maxVal !== undefined ? Math.round(maxVal) : null;
-        const windMax = windVal !== null && windVal !== undefined ? Math.round(windVal) : '-';
 
         let tempStr = '-';
         if (tempMin !== null && tempMax !== null) {
           tempStr = `${tempMin} a ${tempMax}`;
         }
+
+        const windSpeedMax = daily.wind_speed_10m_max ? daily.wind_speed_10m_max[i] : null;
+        const windGustsMax = daily.wind_gusts_10m_max ? daily.wind_gusts_10m_max[i] : null;
+        const windStr = formatWind(windSpeedMax, windGustsMax);
 
         const condicao = getCloudDescription(daily.cloud_cover_mean[i], daily.weather_code ? daily.weather_code[i] : null);
         const dateInfo = formatDateInfo(dateStr);
@@ -413,7 +489,7 @@
           <td>${condicao}</td>
           <td>${tempStr}</td>
           <td>${daily.precipitation_sum[i] ?? '-'}</td>
-          <td>${windMax}</td>
+          <td>${windStr}</td>
         `;
 
         row.addEventListener('click', () => {
