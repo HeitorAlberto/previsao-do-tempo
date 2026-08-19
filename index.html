@@ -22,6 +22,8 @@
       position: relative;
       margin-bottom: 20px;
       box-sizing: border-box;
+      width: 100%;
+      max-width: 650px;
     }
     
     input[type="text"] {
@@ -84,20 +86,23 @@
     .table-responsive {
       width: 100%;
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     table {
       border-collapse: collapse;
       margin-top: 10px;
       white-space: nowrap;
+      width: 100%;
     }
     
     th, td {
       border: 1px solid #ddd;
-      padding: 5px 14px;
+      padding: 8px 14px;
       font-size: 14px;
       text-align: left !important;
       vertical-align: middle;
+      box-sizing: border-box;
     }
     
     /* Centraliza os cabeçalhos e células da coluna de Condição (2ª coluna) na tabela principal */
@@ -122,6 +127,11 @@
       transition: background-color 0.2s;
     }
 
+    /* Cor de fundo para a linha geral que está sendo detalhada */
+    tr.clickable-row.active-row {
+      background-color: #e0e8f5 !important;
+    }
+
     tr.accordion-row > td {
       padding: 0;
       background-color: #f8fafc;
@@ -129,7 +139,7 @@
     }
 
     .accordion-content {
-      padding: 12px 15px;
+      padding: 10px;
       background-color: #f8fafc;
     }
 
@@ -137,20 +147,16 @@
       width: 100%;
       border-collapse: collapse;
       background-color: #fff;
-    }
-
-    .hourly-table th {
-      font-size: 13px;
+      margin-top: 0;
     }
 
     .hourly-table td {
       font-size: 13px;
-      padding: 5px 10px;
+      padding: 8px 14px;
       text-align: left !important;
     }
 
     /* Centraliza explicitamente a 2ª coluna da tabela horária */
-    .hourly-table th:nth-child(2),
     .hourly-table td:nth-child(2) {
       text-align: center !important;
       vertical-align: middle !important;
@@ -353,6 +359,19 @@
       return `${speedVal} a ${gustVal}`;
     }
 
+    function alignHourlyColumns(parentRow, accordionRow) {
+      const mainCells = parentRow.children;
+      const firstHourlyRow = accordionRow.querySelector('.hourly-table tbody tr');
+      if (firstHourlyRow && mainCells.length === firstHourlyRow.children.length) {
+        const hourlyCells = firstHourlyRow.children;
+        for (let i = 0; i < mainCells.length; i++) {
+          const width = mainCells[i].getBoundingClientRect().width;
+          mainCells[i].style.width = `${width}px`;
+          hourlyCells[i].style.width = `${width}px`;
+        }
+      }
+    }
+
     function toggleAccordion(parentRow, dateStr, hourlyData) {
       const nextElement = parentRow.nextElementSibling;
       const isAlreadyOpen = nextElement && nextElement.classList.contains('accordion-row');
@@ -381,7 +400,7 @@
         hourlyData.time.forEach((hTime, hIdx) => {
           if (hTime.startsWith(dateStr)) {
             const hour = new Date(hTime).getHours();
-            const hourFormatted = `${String(hour).padStart(2, '0')}:00`;
+            const hourFormatted = `${String(hour).padStart(2, '0')}h`;
             const hTemp = hourlyData.temperature_2m[hIdx] !== undefined ? Math.round(hourlyData.temperature_2m[hIdx]) : '-';
             
             const hCloud = getCloudDescription(
@@ -409,7 +428,7 @@
 
             hourlyRowsHtml += `
               <tr ${classAttr}>
-                <td>${hourFormatted}</td>
+                <td><strong>${hourFormatted}</strong></td>
                 <td>${hCloud}</td>
                 <td>${hTemp}</td>
                 <td>${hRain}</td>
@@ -424,15 +443,6 @@
         <td colspan="5">
           <div class="accordion-content">
             <table class="hourly-table">
-              <thead>
-                <tr>
-                  <th>Horário</th>
-                  <th>Condição</th>
-                  <th>Temp (°C)</th>
-                  <th>Chuva (mm)</th>
-                  <th>Ventos (km/h)</th>
-                </tr>
-              </thead>
               <tbody>
                 ${hourlyRowsHtml}
               </tbody>
@@ -442,6 +452,7 @@
       `;
 
       parentRow.after(accordionRow);
+      alignHourlyColumns(parentRow, accordionRow);
       syncSearchWidth();
     }
 
