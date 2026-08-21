@@ -137,7 +137,7 @@
     }
 
     .accordion-content {
-      padding-bottom: 10px;
+      padding: 10px;
       background-color: #f8fafc;
     }
 
@@ -298,7 +298,7 @@
     });
 
     async function fetchWeather(lat, lon, city, state, country) {
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,wind_speed_10m,wind_gusts_10m,weather_code&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,wind_speed_10m,wind_gusts_10m,weather_code,is_day&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
       
       try {
         const response = await fetch(url);
@@ -309,13 +309,12 @@
       }
     }
 
-    function getCloudDescription(percentage, code, hour = null) {
+    function getCloudDescription(percentage, code, isDayValue) {
       if (percentage === null || percentage === undefined) {
         return "-";
       }
 
-      const isNight = hour !== null && (hour >= 18 || hour < 6);
-      const period = isNight ? 'n' : 'd';
+      const period = (isDayValue === 0) ? 'n' : 'd';
 
       let num = 1;
       let label = "Céu limpo";
@@ -341,6 +340,78 @@
       let cloudImg = `<img src="icones/${iconName}" class="weather-icon" alt="${label}" title="${label}">`;
 
       const isThunderstorm = (code === 95 || code === 96 || code === 99);
+      if (isThunderstorm) {
+        const stormImg = `<img src="icones/trovoada.png" class="weather-icon" alt="Trovoada" title="Trovoada">`;
+        return `<div class="weather-icon-container">${cloudImg}${stormImg}</div>`;
+      }
+
+      return `<div class="weather-icon-container">${cloudImg}</div>`;
+    }
+
+    function getDailyCloudDescription(hourlyData, dateStr, dailyWeatherCode) {
+      if (!hourlyData || !hourlyData.time) return `<div class="weather-icon-container"><img src="icones/1d.png" class="weather-icon" alt="Céu limpo" title="Céu limpo"></div>`;
+
+      let c1 = 0, c2 = 0, c3 = 0, c4 = 0, c5 = 0;
+
+      hourlyData.time.forEach((hTime, hIdx) => {
+        if (hTime.startsWith(dateStr)) {
+          const isDayTime = hourlyData.is_day ? hourlyData.is_day[hIdx] === 1 : true;
+          
+          if (isDayTime) {
+            const percentage = hourlyData.cloud_cover[hIdx];
+            if (percentage !== null && percentage !== undefined) {
+              if (percentage <= 10) c1++;
+              else if (percentage <= 30) c2++;
+              else if (percentage <= 60) c3++;
+              else if (percentage <= 85) c4++;
+              else c5++;
+            }
+          }
+        }
+      });
+
+      const heavyClouds = c4 + c5;
+      const lightOrClear = c1 + c2 + c3;
+      const totalDayHours = heavyClouds + lightOrClear;
+
+      let selectedNum = 1;
+      let label = "Céu limpo";
+
+      if (totalDayHours > 0) {
+        const heavyRatio = heavyClouds / totalDayHours;
+
+        if (heavyRatio >= 0.55) {
+          // Domínio do segundo grupo (> 55% do dia)
+          if (c4 >= 2 && c4 > c5) {
+            selectedNum = 4;
+            label = "Muitas nuvens";
+          } else {
+            selectedNum = 5;
+            label = "Nublado";
+          }
+        } else if (heavyRatio <= 0.35) {
+          // Domínio do primeiro grupo (> 65% do dia)
+          if (c1 > (c2 + c3)) {
+            selectedNum = 1;
+            label = "Céu limpo";
+          } else if (c3 >= 3) {
+            selectedNum = 3;
+            label = "Parcialmente nublado";
+          } else {
+            selectedNum = 2;
+            label = "Poucas nuvens";
+          }
+        } else {
+          // Zona Mista / Equilíbrio (Pende para o 4d - Muitas nuvens)
+          selectedNum = 4;
+          label = "Muitas nuvens";
+        }
+      }
+
+      const iconName = `${selectedNum}d.png`;
+      let cloudImg = `<img src="icones/${iconName}" class="weather-icon" alt="${label}" title="${label}">`;
+
+      const isThunderstorm = (dailyWeatherCode === 95 || dailyWeatherCode === 96 || dailyWeatherCode === 99);
       if (isThunderstorm) {
         const stormImg = `<img src="icones/trovoada.png" class="weather-icon" alt="Trovoada" title="Trovoada">`;
         return `<div class="weather-icon-container">${cloudImg}${stormImg}</div>`;
@@ -418,7 +489,6 @@
       accordionRow.innerHTML = `
         <td colspan="5">
           <div class="accordion-content">
-            
             <table class="hourly-table">
               <tbody id="hourly-body-${dateStr}"></tbody>
             </table>
@@ -449,7 +519,7 @@
                 const hCloud = getCloudDescription(
                   hourlyData.cloud_cover[hIdx], 
                   hourlyData.weather_code ? hourlyData.weather_code[hIdx] : null,
-                  hour
+                  hourlyData.is_day ? hourlyData.is_day[hIdx] : 1
                 );
                 const hRain = hourlyData.precipitation[hIdx] !== undefined ? Math.round(hourlyData.precipitation[hIdx] * 10) / 10 : 0;
                 const hWindSpeed = hourlyData.wind_speed_10m ? hourlyData.wind_speed_10m[hIdx] : null;
@@ -528,7 +598,7 @@
         const windGustsMax = daily.wind_gusts_10m_max ? daily.wind_gusts_10m_max[i] : null;
         const windStr = formatWind(windSpeedMax, windGustsMax);
 
-        const condicao = getCloudDescription(daily.cloud_cover_mean[i], daily.weather_code ? daily.weather_code[i] : null);
+        const condicao = getDailyCloudDescription(hourly, dateStr, daily.weather_code ? daily.weather_code[i] : null);
         const dateInfo = formatDateInfo(dateStr);
         const dayIndex = i + 1;
 
