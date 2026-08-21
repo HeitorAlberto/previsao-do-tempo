@@ -87,6 +87,7 @@
       width: 100%;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      padding-bottom: 15px;
     }
 
     table {
@@ -211,6 +212,33 @@
       display: block;
       margin: 0 auto;
       object-fit: contain;
+    }
+    @media (max-width: 500px){
+      body {
+        padding: 0;
+      }
+
+      .search-container {
+          display: grid;
+          justify-content: center;
+      }
+
+      #city-input {
+        width: 300px;
+      }
+
+      .card {
+        padding: 15px 0;
+      }
+
+      #location-name, #location-coords, .data-source {
+        padding: 0 10px;
+      }
+
+      .card h3 {
+        padding-left: 10px;
+      }
+      
     }
   </style>
 </head>
