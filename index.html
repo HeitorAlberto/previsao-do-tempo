@@ -532,7 +532,7 @@
 
                 tbody.innerHTML += `
                   <tr ${classAttr}>
-                    <td><strong>${hourFormatted}</strong></td>
+                    <td>${hourFormatted}</td>
                     <td>${hCloud}</td>
                     <td>${hTemp}</td>
                     <td>${hRain}</td>
@@ -609,7 +609,7 @@
         }
 
         row.innerHTML = `
-          <td><strong>(${dayIndex}) ${dateInfo.formatted}</strong></td>
+          <td>${dayIndex} - ${dateInfo.formatted}</td>
           <td>${condicao}</td>
           <td>${tempStr}</td>
           <td>${daily.precipitation_sum[i] ?? '-'}</td>
