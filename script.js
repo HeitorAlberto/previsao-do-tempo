@@ -56,15 +56,48 @@ input.addEventListener('input', async () => {
   }
 });
 
+// Função para gerar uma chave única baseada na latitude e longitude
+function getCacheKey(lat, lon) {
+  return `weather_cache_${lat.toFixed(2)}_${lon.toFixed(2)}`;
+}
+
 async function fetchWeather(lat, lon, city, state, country) {
+  const cacheKey = getCacheKey(lat, lon);
+  const cachedData = localStorage.getItem(cacheKey);
+  const cachedTime = localStorage.getItem(`${cacheKey}_time`);
+
+  const now = new Date().getTime();
+  const TWELVE_HOURS_IN_MS = 12 * 60 * 60 * 1000; // Validade exata de 12 horas
+
+  // Verifica se o cache existe e ainda está dentro da validade de 12 horas
+  if (cachedData && cachedTime && (now - parseInt(cachedTime, 10) < TWELVE_HOURS_IN_MS)) {
+    console.log("Usando dados do cache local (localStorage)...");
+    const data = JSON.parse(cachedData);
+    renderData(data, city, state, country, lat, lon);
+    return;
+  }
+
+  // Se expirou ou não existe, busca dados novos na API
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,wind_speed_10m,wind_gusts_10m,weather_code,is_day&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
   
   try {
     const response = await fetch(url);
     const data = await response.json();
+
+    // Salva o novo JSON e o horário atual no localStorage
+    localStorage.setItem(cacheKey, JSON.stringify(data));
+    localStorage.setItem(`${cacheKey}_time`, now.toString());
+
     renderData(data, city, state, country, lat, lon);
   } catch (error) {
-    alert('Erro ao carregar os dados de previsão do tempo.');
+    // Plano de contingência: se a API falhar, usa o cache antigo caso ele exista
+    if (cachedData) {
+      console.warn("Erro na API. Usando cache expirado como contingência.");
+      const data = JSON.parse(cachedData);
+      renderData(data, city, state, country, lat, lon);
+    } else {
+      alert('Erro ao carregar os dados de previsão do tempo.');
+    }
   }
 }
 
@@ -288,8 +321,8 @@ function toggleAccordion(parentRow, dateStr, hourlyData, isMobile = false) {
                 <tr ${classAttr}>
                   <td>${hourFormatted}</td>
                   <td>${hCloud}</td>
-                  <td>${hTemp}°C</td>
-                  <td>${hRain}mm</td>
+                  <td>${hTemp}°</td>
+                  <td>${hRain}</td>
                   <td>${hWindStr}</td>
                 </tr>
               `;
@@ -323,7 +356,6 @@ function toggleAccordion(parentRow, dateStr, hourlyData, isMobile = false) {
     return;
   }
 
-  // Lógica Desktop (Tabela original)
   const nextElement = parentRow.nextElementSibling;
   const isAlreadyOpen = nextElement && nextElement.classList.contains('accordion-row');
 
@@ -448,11 +480,9 @@ function renderData(data, city, state, country, lat, lon) {
   const daily = data.daily;
   const hourly = data.hourly;
   
-  // Renderiza Tabela (Desktop)
   const tbody = document.querySelector('#forecast-table tbody');
   tbody.innerHTML = '';
 
-  // Renderiza Cards (Mobile)
   const mobileContainer = document.getElementById('mobile-forecast-container');
   mobileContainer.innerHTML = '';
 
@@ -476,7 +506,6 @@ function renderData(data, city, state, country, lat, lon) {
     const dateInfo = formatDateInfo(dateStr);
     const dayIndex = i + 1;
 
-    // Linha Desktop
     const row = document.createElement('tr');
     row.classList.add('clickable-row');
     if (dateInfo.isWeekend) row.classList.add('weekend');
@@ -485,8 +514,8 @@ function renderData(data, city, state, country, lat, lon) {
       <td>${dayIndex} - ${dateInfo.formatted}</td>
       <td>${condicao}</td>
       <td>${tempStr}</td>
-      <td>${daily.precipitation_sum[i] ?? '-'} mm</td>
-      <td>${windStr} km/h</td>
+      <td>${daily.precipitation_sum[i] ?? '-'}</td>
+      <td>${windStr}</td>
     `;
 
     row.addEventListener('click', () => {
@@ -494,7 +523,6 @@ function renderData(data, city, state, country, lat, lon) {
     });
     tbody.appendChild(row);
 
-    // Card Mobile
     const cardDiv = document.createElement('div');
     cardDiv.classList.add('mobile-day-card');
     if (dateInfo.isWeekend) cardDiv.classList.add('weekend');
