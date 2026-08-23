@@ -61,38 +61,53 @@ function getCacheKey(lat, lon) {
   return `weather_cache_${lat.toFixed(2)}_${lon.toFixed(2)}`;
 }
 
+// Retorna o timestamp exato do marco de 00h ou 12h mais recente
+function getLatestCutoffTime() {
+  const now = new Date();
+  const cutoff = new Date(now);
+  const currentHour = now.getHours();
+
+  if (currentHour >= 12) {
+    cutoff.setHours(12, 0, 0, 0);
+  } else {
+    cutoff.setHours(0, 0, 0, 0);
+  }
+
+  return cutoff.getTime();
+}
+
 async function fetchWeather(lat, lon, city, state, country) {
   const cacheKey = getCacheKey(lat, lon);
   const cachedData = localStorage.getItem(cacheKey);
   const cachedTime = localStorage.getItem(`${cacheKey}_time`);
 
-  const now = new Date().getTime();
-  const TWELVE_HOURS_IN_MS = 12 * 60 * 60 * 1000; // Validade exata de 12 horas
+  const latestCutoff = getLatestCutoffTime();
+  const savedTime = cachedTime ? parseInt(cachedTime, 10) : 0;
 
-  // Verifica se o cache existe e ainda está dentro da validade de 12 horas
-  if (cachedData && cachedTime && (now - parseInt(cachedTime, 10) < TWELVE_HOURS_IN_MS)) {
-    console.log("Usando dados do cache local (localStorage)...");
+  // O cache é válido se ele existe e foi salvo DEPOIS da última linha de corte (00h ou 12h)
+  if (cachedData && savedTime >= latestCutoff) {
+    console.log("Usando dados do cache sincronizado com o período...");
     const data = JSON.parse(cachedData);
     renderData(data, city, state, country, lat, lon);
     return;
   }
 
-  // Se expirou ou não existe, busca dados novos na API
+  // Se o cache é anterior ao último corte (ou não existe), busca dados novos na API
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,wind_speed_10m,wind_gusts_10m,weather_code,is_day&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
   
   try {
     const response = await fetch(url);
     const data = await response.json();
 
-    // Salva o novo JSON e o horário atual no localStorage
+    // Salva o novo JSON e o horário exato da requisição
     localStorage.setItem(cacheKey, JSON.stringify(data));
-    localStorage.setItem(`${cacheKey}_time`, now.toString());
+    localStorage.setItem(`${cacheKey}_time`, new Date().getTime().toString());
 
     renderData(data, city, state, country, lat, lon);
   } catch (error) {
-    // Plano de contingência: se a API falhar, usa o cache antigo caso ele exista
+    // Plano de contingência: se a API falhar, usa o cache antigo se ele existir
     if (cachedData) {
-      console.warn("Erro na API. Usando cache expirado como contingência.");
+      console.warn("Erro na API. Usando cache desatualizado como contingência.");
       const data = JSON.parse(cachedData);
       renderData(data, city, state, country, lat, lon);
     } else {
@@ -321,8 +336,8 @@ function toggleAccordion(parentRow, dateStr, hourlyData, isMobile = false) {
                 <tr ${classAttr}>
                   <td>${hourFormatted}</td>
                   <td>${hCloud}</td>
-                  <td>${hTemp}°</td>
-                  <td>${hRain}</td>
+                  <td>${hTemp}°C</td>
+                  <td>${hRain}mm</td>
                   <td>${hWindStr}</td>
                 </tr>
               `;
@@ -514,8 +529,8 @@ function renderData(data, city, state, country, lat, lon) {
       <td>${dayIndex} - ${dateInfo.formatted}</td>
       <td>${condicao}</td>
       <td>${tempStr}</td>
-      <td>${daily.precipitation_sum[i] ?? '-'}</td>
-      <td>${windStr}</td>
+      <td>${daily.precipitation_sum[i] ?? '-'} mm</td>
+      <td>${windStr} km/h</td>
     `;
 
     row.addEventListener('click', () => {
