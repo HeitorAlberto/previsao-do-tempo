@@ -82,7 +82,7 @@
       width: 100%;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 15px;
+      padding-bottom: 5px;
     }
 
     table {
@@ -140,6 +140,7 @@
       display: flex;
       gap: 8px;
       margin-top: 10px;
+      margin-bottom: 10px;
       flex-wrap: wrap;
       justify-content: center;
     }
@@ -168,95 +169,33 @@
       margin-bottom: 10px;
       font-family: "Google Sans", sans-serif;
       width: 250px;
+      justify-self: center;
     }
 
-    .hourly-table {
+    .hourly-forecast-table {
       width: 100%;
       border-collapse: collapse;
       background-color: #fff;
       margin-top: 0;
     }
 
-    .hourly-table td {
+    .hourly-forecast-table td {
       font-size: 13px;
       padding: 8px 14px;
       text-align: left !important;
     }
 
-    .hourly-table td:nth-child(2) {
+    .hourly-forecast-table td:nth-child(2) {
       text-align: center !important;
       vertical-align: middle !important;
     }
 
-    tr.current-hour {
-      outline-offset: -1px;
+    tr.current-hour-row {
       background-color: #f1f1f1 !important;
     }
 
-    .weather-icon-container {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0px;
-      vertical-align: middle;
-    }
-
-    .weather-icon {
-      width: 22px;
-      height: 22px;
-      display: block;
-      margin: 0 auto;
-      object-fit: contain;
-    }
-
-    /* Estilos Mobile (Cards) */
-    .mobile-view {
-      display: none;
-    }
-
-    .mobile-day-card {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      padding: 12px;
-      cursor: pointer;
-    }
-
-    .mobile-day-card.weekend {
-      background-color: #fefae8;
-    }
-
-    .mobile-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: start;
-      font-weight: bold;
-      font-size: 15px;
-    }
-
-    .mobile-card-body {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 8px;
-      font-size: 14px;
-      color: #555;
-    }
-
-    .mobile-accordion {
-      margin-top: 10px;
-      border-top: 1px solid #eee;
-      padding-top: 10px;
-    }
-
-    @media (max-width: 768px) {
-      .desktop-view {
-        display: none;
-      }
-      .mobile-view {
-        display: block;
-      }
+    #long-term-rain-summary {
+      justify-self: left;
     }
   </style>
 </head>
@@ -274,11 +213,10 @@
     <div id="location-coords" class="coords"></div>
     <div class="data-source">Fonte dos dados: ECMWF HRES 9km / Open-Meteo API</div>
 
-
     <h3>Previsão Diária <small style="font-size: 12px; font-weight: normal; color: #666;">(Toque/clique para ver detalhes)</small></h3>
     
-    <!-- Visão Desktop (Tabela) -->
-    <div class="table-responsive desktop-view">
+    <!-- Tabela Principal (Responsiva com barra de rolagem horizontal) -->
+    <div class="table-responsive">
       <table id="forecast-table">
         <thead>
           <tr>
@@ -292,9 +230,6 @@
         <tbody></tbody>
       </table>
     </div>
-
-    <!-- Visão Mobile (Cards) -->
-    <div id="mobile-forecast-container" class="mobile-view"></div>
 
     <div id="long-term-rain-summary" class="period-rain-summary"></div>
   </div>
