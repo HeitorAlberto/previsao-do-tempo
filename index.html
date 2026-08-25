@@ -82,7 +82,6 @@
       width: 100%;
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 5px;
     }
 
     table {
@@ -165,10 +164,8 @@
     .period-rain-summary {
       font-size: 13px;
       color: #555;
-      margin-top: 10px;
       margin-bottom: 10px;
       font-family: "Google Sans", sans-serif;
-      width: 250px;
       justify-self: center;
     }
 
@@ -177,6 +174,11 @@
       border-collapse: collapse;
       background-color: #fff;
       margin-top: 0;
+    }
+
+    .hourly-forecast-table th {
+      background-color: #ddd;
+      color: gray;
     }
 
     .hourly-forecast-table td {
@@ -196,6 +198,7 @@
 
     #long-term-rain-summary {
       justify-self: left;
+      padding-top: 20px;
     }
   </style>
 </head>

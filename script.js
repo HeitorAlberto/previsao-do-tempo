@@ -316,26 +316,19 @@ function toggleAccordion(parentRow, dateStr, hourlyData) {
   accordionRow.innerHTML = `
     <td colspan="5">
       <div class="accordion-content">
-        <div class="hourly-tabs">
+        
+        <div class="table-responsive">
+          <table class="hourly-forecast-table">
+            <tbody id="hourly-tbody-${dateStr}">
+            </tbody>
+          </table>
+
+          <div class="hourly-tabs">
           <button type="button" class="tab-btn" data-block="0">00h - 06h</button>
           <button type="button" class="tab-btn" data-block="6">06h - 12h</button>
           <button type="button" class="tab-btn" data-block="12">12h - 18h</button>
           <button type="button" class="tab-btn" data-block="18">18h - 24h</button>
         </div>
-        <div class="table-responsive">
-          <table class="hourly-forecast-table">
-            <thead>
-              <tr>
-                <th>Horário</th>
-                <th>Condição</th>
-                <th>Temperatura</th>
-                <th>Chuva</th>
-                <th>Vento (km/h)</th>
-              </tr>
-            </thead>
-            <tbody id="hourly-tbody-${dateStr}">
-            </tbody>
-          </table>
         </div>
         <div id="period-rain-${dateStr}" class="period-rain-summary" style="margin-top: 10px; font-weight: bold;"></div>
       </div>
@@ -380,7 +373,7 @@ function toggleAccordion(parentRow, dateStr, hourlyData) {
               <td>${hCloudText}</td>
               <td>${hTemp}°C</td>
               <td>${hRain} mm</td>
-              <td>${hWindStr}</td>
+              <td>${hWindStr} km/h</td>
             `;
             tbodyHourly.appendChild(tr);
           }
