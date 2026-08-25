@@ -166,11 +166,17 @@ function updateRainSummaryUI(r15, r30, r46) {
   const container = document.getElementById('long-term-rain-summary');
   if (!container) return;
 
+  const diff30 = Math.round((r30.sum - r15.sum) * 10) / 10;
+  const diff46 = Math.round((r46.sum - r30.sum) * 10) / 10;
+
+  const diff30Str = diff30 >= 0 ? `+${diff30} mm` : `${diff30} mm`;
+  const diff46Str = diff46 >= 0 ? `+${diff46} mm` : `${diff46} mm`;
+
   container.innerHTML = `
     <strong>Chuva acumulada:</strong><br><br>
     15 dias (até ${r15.endDate}): ${r15.sum} mm<br><br>
-    30 dias (até ${r30.endDate}): ${r30.sum} mm<br><br>
-    46 dias (até ${r46.endDate}): ${r46.sum} mm
+    30 dias (até ${r30.endDate}): ${r30.sum} mm (${diff30Str})<br><br>
+    46 dias (até ${r46.endDate}): ${r46.sum} mm (${diff46Str})
   `;
 }
 
