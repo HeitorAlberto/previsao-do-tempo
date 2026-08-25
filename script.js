@@ -89,10 +89,11 @@ async function fetchWeather(lat, lon, city, state, country) {
     console.log("Usando dados do cache sincronizado com o período...");
     const data = JSON.parse(cachedData);
     renderData(data, city, state, country, lat, lon);
+    fetchLongTermRain(lat, lon); // Atualiza os acumulados estendidos
     return;
   }
 
-  // Se o cache é anterior ao último corte (ou não existe), busca dados novos na API
+  // Se o cache é anterior ao último corte (ou não existe), busca dados novos na API principal (10 dias)
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,wind_speed_10m,wind_gusts_10m,weather_code,is_day&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
   
   try {
@@ -104,16 +105,88 @@ async function fetchWeather(lat, lon, city, state, country) {
     localStorage.setItem(`${cacheKey}_time`, new Date().getTime().toString());
 
     renderData(data, city, state, country, lat, lon);
+    fetchLongTermRain(lat, lon); // Busca acumulados de longo prazo em paralelo
   } catch (error) {
     // Plano de contingência: se a API falhar, usa o cache antigo se ele existir
     if (cachedData) {
       console.warn("Erro na API. Usando cache desatualizado como contingência.");
       const data = JSON.parse(cachedData);
       renderData(data, city, state, country, lat, lon);
+      fetchLongTermRain(lat, lon);
     } else {
       alert('Erro ao carregar os dados de previsão do tempo.');
     }
   }
+}
+
+// Função dedicada para buscar acumulados de 15, 30 e 46 dias usando o modelo sub-sazonal (EC46)
+async function fetchLongTermRain(lat, lon) {
+  const seasonalUrl = `https://seasonal-api.open-meteo.com/v1/seasonal?latitude=${lat}&longitude=${lon}&daily=precipitation_sum&models=ecmwf_ec46&timezone=auto`;
+
+  try {
+    const response = await fetch(seasonalUrl);
+    const data = await response.json();
+    
+    if (data && data.daily && data.daily.precipitation_sum && data.daily.time) {
+      const timeArr = data.daily.time;
+      const precip = data.daily.precipitation_sum;
+      
+      const rain15 = calculateRainAccumulatedWithDate(timeArr, precip, 15);
+      const rain30 = calculateRainAccumulatedWithDate(timeArr, precip, 30);
+      const rain46 = calculateRainAccumulatedWithDate(timeArr, precip, 46);
+
+      updateRainSummaryUI(rain15, rain30, rain46);
+    }
+  } catch (error) {
+    console.warn("Não foi possível carregar os acumulados de longo prazo.", error);
+  }
+}
+
+function calculateRainAccumulatedWithDate(timeArray, precipitationArray, days) {
+  if (!precipitationArray || precipitationArray.length === 0) return { sum: 0, endDate: '-' };
+  
+  let sum = 0;
+  const limit = Math.min(precipitationArray.length, days);
+  
+  for (let i = 0; i < limit; i++) {
+    const val = precipitationArray[i];
+    if (val !== null && val !== undefined) {
+      sum += val;
+    }
+  }
+  
+  let formattedDate = '-';
+  if (timeArray && timeArray[limit - 1]) {
+    const parts = timeArray[limit - 1].split('-');
+    if (parts.length === 3) {
+      formattedDate = `${parts[2]}/${parts[1]}`;
+    }
+  }
+  
+  return {
+    sum: Math.round(sum * 10) / 10,
+    endDate: formattedDate
+  };
+}
+
+function updateRainSummaryUI(r15, r30, r46) {
+  let container = document.getElementById('long-term-rain-summary');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'long-term-rain-summary';
+    container.className = 'period-rain-summary'; // Reaproveita o estilo simplista existente
+    
+    const forecastTable = document.getElementById('forecast-table');
+    if (forecastTable) {
+      forecastTable.after(container);
+    }
+  }
+  
+  container.innerHTML = `
+    15 dias (até ${r15.endDate}): ${r15.sum} mm<br><br>
+    30 dias (até ${r30.endDate}): ${r30.sum} mm<br><br>
+    46 dias (até ${r46.endDate}): ${r46.sum} mm
+  `;
 }
 
 function getCloudDescription(percentage, code, isDayValue) {
