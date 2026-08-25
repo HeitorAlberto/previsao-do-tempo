@@ -56,12 +56,10 @@ input.addEventListener('input', async () => {
   }
 });
 
-// Função para gerar uma chave única baseada na latitude e longitude
 function getCacheKey(lat, lon) {
   return `weather_cache_${lat.toFixed(2)}_${lon.toFixed(2)}`;
 }
 
-// Retorna o timestamp exato do marco de 00h ou 12h mais recente
 function getLatestCutoffTime() {
   const now = new Date();
   const cutoff = new Date(now);
@@ -84,30 +82,26 @@ async function fetchWeather(lat, lon, city, state, country) {
   const latestCutoff = getLatestCutoffTime();
   const savedTime = cachedTime ? parseInt(cachedTime, 10) : 0;
 
-  // O cache é válido se ele existe e foi salvo DEPOIS da última linha de corte (00h ou 12h)
   if (cachedData && savedTime >= latestCutoff) {
     console.log("Usando dados do cache sincronizado com o período...");
     const data = JSON.parse(cachedData);
     renderData(data, city, state, country, lat, lon);
-    fetchLongTermRain(lat, lon); // Atualiza os acumulados estendidos
+    fetchLongTermRain(lat, lon);
     return;
   }
 
-  // Se o cache é anterior ao último corte (ou não existe), busca dados novos na API principal (10 dias)
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,wind_speed_10m,wind_gusts_10m,weather_code,is_day&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
   
   try {
     const response = await fetch(url);
     const data = await response.json();
 
-    // Salva o novo JSON e o horário exato da requisição
     localStorage.setItem(cacheKey, JSON.stringify(data));
     localStorage.setItem(`${cacheKey}_time`, new Date().getTime().toString());
 
     renderData(data, city, state, country, lat, lon);
-    fetchLongTermRain(lat, lon); // Busca acumulados de longo prazo em paralelo
+    fetchLongTermRain(lat, lon);
   } catch (error) {
-    // Plano de contingência: se a API falhar, usa o cache antigo se ele existir
     if (cachedData) {
       console.warn("Erro na API. Usando cache desatualizado como contingência.");
       const data = JSON.parse(cachedData);
@@ -119,7 +113,6 @@ async function fetchWeather(lat, lon, city, state, country) {
   }
 }
 
-// Função dedicada para buscar acumulados de 15, 30 e 46 dias usando o modelo sub-sazonal (EC46)
 async function fetchLongTermRain(lat, lon) {
   const seasonalUrl = `https://seasonal-api.open-meteo.com/v1/seasonal?latitude=${lat}&longitude=${lon}&daily=precipitation_sum&models=ecmwf_ec46&timezone=auto`;
 
@@ -170,19 +163,11 @@ function calculateRainAccumulatedWithDate(timeArray, precipitationArray, days) {
 }
 
 function updateRainSummaryUI(r15, r30, r46) {
-  let container = document.getElementById('long-term-rain-summary');
-  if (!container) {
-    container = document.createElement('div');
-    container.id = 'long-term-rain-summary';
-    container.className = 'period-rain-summary'; // Reaproveita o estilo simplista existente
-    
-    const forecastTable = document.getElementById('forecast-table');
-    if (forecastTable) {
-      forecastTable.after(container);
-    }
-  }
-  
+  const container = document.getElementById('long-term-rain-summary');
+  if (!container) return;
+
   container.innerHTML = `
+    <strong>Chuva acumulada:</strong><br><br>
     15 dias (até ${r15.endDate}): ${r15.sum} mm<br><br>
     30 dias (até ${r30.endDate}): ${r30.sum} mm<br><br>
     46 dias (até ${r46.endDate}): ${r46.sum} mm
