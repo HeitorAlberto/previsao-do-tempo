@@ -199,7 +199,7 @@ function getCloudDescriptionText(percentage, code) {
 
   const isThunderstorm = (code === 95 || code === 96 || code === 99);
   if (isThunderstorm) {
-    return `${label} ⚡`;
+    return `${label} com trovoadas⚡`;
   }
 
   return label;
@@ -257,7 +257,7 @@ function getDailyCloudDescription(hourlyData, dateStr, dailyWeatherCode) {
 
   const isThunderstorm = (dailyWeatherCode === 95 || dailyWeatherCode === 96 || dailyWeatherCode === 99);
   if (isThunderstorm) {
-    return `${label} ⚡`;
+    return `${label} com trovoadas⚡`;
   }
 
   return label;
@@ -288,18 +288,18 @@ function formatWind(speed, gusts) {
   return `${speedVal} a ${gustVal}`;
 }
 
-function toggleAccordion(parentRow, dateStr, hourlyData) {
-  const nextElement = parentRow.nextElementSibling;
-  const isAlreadyOpen = nextElement && nextElement.classList.contains('accordion-row');
+function toggleAccordion(parentCard, dateStr, hourlyData) {
+  const nextElement = parentCard.nextElementSibling;
+  const isAlreadyOpen = nextElement && nextElement.classList.contains('accordion-card');
 
-  document.querySelectorAll('.accordion-row').forEach(row => row.remove());
-  document.querySelectorAll('.clickable-row').forEach(row => row.classList.remove('active-row'));
+  document.querySelectorAll('.accordion-card').forEach(card => card.remove());
+  document.querySelectorAll('.day-card').forEach(card => card.classList.remove('active-card'));
 
   if (isAlreadyOpen) return;
 
-  parentRow.classList.add('active-row');
-  const accordionRow = document.createElement('tr');
-  accordionRow.classList.add('accordion-row');
+  parentCard.classList.add('active-card');
+  const accordionCard = document.createElement('div');
+  accordionCard.classList.add('accordion-card');
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -313,33 +313,24 @@ function toggleAccordion(parentRow, dateStr, hourlyData) {
     defaultBlock = Math.floor(currentHourVal / 6) * 6;
   }
 
-  accordionRow.innerHTML = `
-    <td colspan="5">
-      <div class="accordion-content">
-        
-        <div class="table-responsive">
-          <table class="hourly-forecast-table">
-            <tbody id="hourly-tbody-${dateStr}">
-            </tbody>
-          </table>
-
-          <div class="hourly-tabs">
-          <button type="button" class="tab-btn" data-block="0">00h - 06h</button>
-          <button type="button" class="tab-btn" data-block="6">06h - 12h</button>
-          <button type="button" class="tab-btn" data-block="12">12h - 18h</button>
-          <button type="button" class="tab-btn" data-block="18">18h - 24h</button>
-        </div>
-        </div>
-        <div id="period-rain-${dateStr}" class="period-rain-summary" style="margin-top: 10px; font-weight: bold;"></div>
+  accordionCard.innerHTML = `
+    <div class="accordion-content">
+      <div id="hourly-container-${dateStr}" class="hourly-container"></div>
+      <div class="hourly-tabs">
+        <button type="button" class="tab-btn" data-block="0">00h</button>
+        <button type="button" class="tab-btn" data-block="6">06h</button>
+        <button type="button" class="tab-btn" data-block="12">12h</button>
+        <button type="button" class="tab-btn" data-block="18">18h</button>
       </div>
-    </td>
+      <div id="period-rain-${dateStr}" class="period-rain-summary" style="margin-top: 10px; font-weight: bold;"></div>
+    </div>
   `;
 
-  parentRow.after(accordionRow);
+  parentCard.after(accordionCard);
 
   function renderHourlyBlock(startHour) {
-    const tbodyHourly = accordionRow.querySelector(`#hourly-tbody-${dateStr}`);
-    tbodyHourly.innerHTML = '';
+    const containerHourly = accordionCard.querySelector(`#hourly-container-${dateStr}`);
+    containerHourly.innerHTML = '';
     let periodRainSum = 0;
 
     if (hourlyData && hourlyData.time) {
@@ -363,28 +354,28 @@ function toggleAccordion(parentRow, dateStr, hourlyData) {
 
             const isToday = dateStr === todayStr;
             const isCurrentHour = isToday && currentHourVal === hour;
-            const trClass = isCurrentHour ? 'current-hour-row' : '';
+            const cardClass = isCurrentHour ? 'hourly-item current-hour' : 'hourly-item';
 
-            const tr = document.createElement('tr');
-            if (trClass) tr.className = trClass;
+            const card = document.createElement('div');
+            card.className = cardClass;
 
-            tr.innerHTML = `
-              <td>${hourFormatted}</td>
-              <td>${hCloudText}</td>
-              <td>${hTemp}°C</td>
-              <td>${hRain} mm</td>
-              <td>${hWindStr} km/h</td>
+            card.innerHTML = `
+              <div class="hourly-hour">${hourFormatted}</div>
+              <div class="hourly-condition">${hCloudText}</div>
+              <div class="hourly-temp"><div>Temperatura</div><div><strong>${hTemp}°C</strong></div></div>
+              <div class="hourly-rain"><div>Chuva</div><div><strong>${hRain} mm</strong></div></div>
+              <div class="hourly-wind"><div>Ventos</div><div><strong>${hWindStr} km/h</strong></div></div>
             `;
-            tbodyHourly.appendChild(tr);
+            containerHourly.appendChild(card);
           }
         }
       });
     }
 
     const roundedPeriodRain = Math.round(periodRainSum * 10) / 10;
-    accordionRow.querySelector(`#period-rain-${dateStr}`).textContent = `Chuva total no período: ${roundedPeriodRain} mm`;
+    accordionCard.querySelector(`#period-rain-${dateStr}`).textContent = `Chuva total no período: ${roundedPeriodRain} mm`;
 
-    accordionRow.querySelectorAll('.tab-btn').forEach(btn => {
+    accordionCard.querySelectorAll('.tab-btn').forEach(btn => {
       if (parseInt(btn.dataset.block, 10) === startHour) {
         btn.style.backgroundColor = '#000';
         btn.style.color = '#fff';
@@ -395,7 +386,7 @@ function toggleAccordion(parentRow, dateStr, hourlyData) {
     });
   }
 
-  accordionRow.querySelectorAll('.tab-btn').forEach(btn => {
+  accordionCard.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       renderHourlyBlock(parseInt(btn.dataset.block, 10));
@@ -417,8 +408,8 @@ function renderData(data, city, state, country, lat, lon) {
   const daily = data.daily;
   const hourly = data.hourly;
   
-  const tbody = document.querySelector('#forecast-table tbody');
-  tbody.innerHTML = '';
+  const forecastContainer = document.getElementById('forecast-container');
+  forecastContainer.innerHTML = '';
 
   daily.time.forEach((dateStr, i) => {
     const minVal = daily.temperature_2m_min[i];
@@ -429,7 +420,7 @@ function renderData(data, city, state, country, lat, lon) {
 
     let tempStr = '-';
     if (tempMin !== null && tempMax !== null) {
-      tempStr = `${tempMin} a ${tempMax}`;
+      tempStr = `${tempMin}° a ${tempMax}°`;
     }
 
     const windSpeedMax = daily.wind_speed_10m_max ? daily.wind_speed_10m_max[i] : null;
@@ -439,23 +430,24 @@ function renderData(data, city, state, country, lat, lon) {
     const condicao = getDailyCloudDescription(hourly, dateStr, daily.weather_code ? daily.weather_code[i] : null);
     const dateInfo = formatDateInfo(dateStr);
     const dayIndex = i + 1;
+    const precipSum = daily.precipitation_sum[i] ?? '-';
 
-    const row = document.createElement('tr');
-    row.classList.add('clickable-row');
-    if (dateInfo.isWeekend) row.classList.add('weekend');
+    const card = document.createElement('div');
+    card.classList.add('day-card');
+    if (dateInfo.isWeekend) card.classList.add('weekend');
 
-    row.innerHTML = `
-      <td>${dayIndex} - ${dateInfo.formatted}</td>
-      <td>${condicao}</td>
-      <td>${tempStr}</td>
-      <td>${daily.precipitation_sum[i] ?? '-'} mm</td>
-      <td>${windStr} km/h</td>
+    card.innerHTML = `
+      <div class="card-date">${dayIndex} - ${dateInfo.formatted}</div>
+      <div class="card-condition">${condicao}</div>
+      <div class="card-temp"><div>Temperatura</div><div><strong>${tempStr}</strong></div></div>
+      <div class="card-rain"><div>Chuva</div><div><strong>${precipSum} mm</strong></div></div>
+      <div class="card-wind"><div>Ventos</div><div><strong>${windStr} km/h</strong></div></div>
     `;
 
-    row.addEventListener('click', () => {
-      toggleAccordion(row, dateStr, hourly);
+    card.addEventListener('click', () => {
+      toggleAccordion(card, dateStr, hourly);
     });
-    tbody.appendChild(row);
+    forecastContainer.appendChild(card);
   });
 
   syncSearchWidth();
