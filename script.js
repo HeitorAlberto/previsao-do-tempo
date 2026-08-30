@@ -178,33 +178,6 @@ function updateRainSummaryUI(r15, r30, r46) {
   `;
 }
 
-function getCloudDescriptionText(percentage, code) {
-  if (percentage === null || percentage === undefined) {
-    return "-";
-  }
-
-  let label = "Céu limpo";
-
-  if (percentage <= 10) {
-    label = "Céu limpo";
-  } else if (percentage <= 30) {
-    label = "Poucas nuvens";
-  } else if (percentage <= 60) {
-    label = "Parcialmente nublado";
-  } else if (percentage <= 85) {
-    label = "Muitas nuvens";
-  } else {
-    label = "Nublado";
-  }
-
-  const isThunderstorm = (code === 95 || code === 96 || code === 99);
-  if (isThunderstorm) {
-    return `${label} com trovoadas⚡`;
-  }
-
-  return label;
-}
-
 function getDailyCloudDescription(hourlyData, dateStr, dailyWeatherCode) {
   if (!hourlyData || !hourlyData.time) return "Céu limpo";
 
@@ -263,6 +236,66 @@ function getDailyCloudDescription(hourlyData, dateStr, dailyWeatherCode) {
   return label;
 }
 
+function getBlockCloudDescription(hourlyData, dateStr, startHour, endHour) {
+  if (!hourlyData || !hourlyData.cloud_cover) return "-";
+
+  const categoriesOrder = [
+    "Céu limpo",
+    "Poucas nuvens",
+    "Parcialmente nublado",
+    "Muitas nuvens",
+    "Nublado"
+  ];
+
+  const counts = {
+    "Céu limpo": 0,
+    "Poucas nuvens": 0,
+    "Parcialmente nublado": 0,
+    "Muitas nuvens": 0,
+    "Nublado": 0
+  };
+
+  let hasThunderstorm = false;
+
+  hourlyData.time.forEach((hTime, hIdx) => {
+    if (hTime.startsWith(dateStr)) {
+      const hour = new Date(hTime).getHours();
+      if (hour >= startHour && hour < endHour) {
+        const percentage = hourlyData.cloud_cover[hIdx];
+        const code = hourlyData.weather_code ? hourlyData.weather_code[hIdx] : null;
+
+        if (code === 95 || code === 96 || code === 99) {
+          hasThunderstorm = true;
+        }
+
+        if (percentage !== null && percentage !== undefined) {
+          if (percentage <= 10) counts["Céu limpo"]++;
+          else if (percentage <= 30) counts["Poucas nuvens"]++;
+          else if (percentage <= 60) counts["Parcialmente nublado"]++;
+          else if (percentage <= 85) counts["Muitas nuvens"]++;
+          else counts["Nublado"]++;
+        }
+      }
+    }
+  });
+
+  let dominantLabel = "Céu limpo";
+  let maxCount = -1;
+
+  categoriesOrder.forEach(label => {
+    if (counts[label] >= maxCount && counts[label] > 0) {
+      maxCount = counts[label];
+      dominantLabel = label;
+    }
+  });
+
+  if (hasThunderstorm) {
+    return `${dominantLabel} com trovoadas⚡`;
+  }
+
+  return dominantLabel;
+}
+
 function formatDateInfo(dateString) {
   const parts = dateString.split('-');
   const date = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -308,92 +341,87 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
   const todayStr = `${currentYear}-${currentMonth}-${currentDate}`;
   const currentHourVal = now.getHours();
 
-  let defaultBlock = 0;
-  if (dateStr === todayStr) {
-    defaultBlock = Math.floor(currentHourVal / 6) * 6;
-  }
-
   accordionCard.innerHTML = `
     <div class="accordion-content">
       <div id="hourly-container-${dateStr}" class="hourly-container"></div>
-      <div class="hourly-tabs">
-        <button type="button" class="tab-btn" data-block="0">00h</button>
-        <button type="button" class="tab-btn" data-block="6">06h</button>
-        <button type="button" class="tab-btn" data-block="12">12h</button>
-        <button type="button" class="tab-btn" data-block="18">18h</button>
-      </div>
-      <div id="period-rain-${dateStr}" class="period-rain-summary" style="margin-top: 10px; font-weight: bold;"></div>
     </div>
   `;
 
   parentCard.after(accordionCard);
 
-  function renderHourlyBlock(startHour) {
-    const containerHourly = accordionCard.querySelector(`#hourly-container-${dateStr}`);
-    containerHourly.innerHTML = '';
-    let periodRainSum = 0;
+  const containerHourly = accordionCard.querySelector(`#hourly-container-${dateStr}`);
+  const blocks = [
+    { start: 0, end: 6, label: "00h - 06h" },
+    { start: 6, end: 12, label: "06h - 12h" },
+    { start: 12, end: 18, label: "12h - 18h" },
+    { start: 18, end: 24, label: "18h - 24h" }
+  ];
+
+  blocks.forEach(block => {
+    let temps = [];
+    let rains = [];
+    let winds = [];
+    let gusts = [];
 
     if (hourlyData && hourlyData.time) {
       hourlyData.time.forEach((hTime, hIdx) => {
         if (hTime.startsWith(dateStr)) {
           const hour = new Date(hTime).getHours();
-          if (hour >= startHour && hour < startHour + 6) {
-            const hRainVal = hourlyData.precipitation[hIdx] !== undefined ? hourlyData.precipitation[hIdx] : 0;
-            periodRainSum += hRainVal;
-
-            const hourFormatted = `${String(hour).padStart(2, '0')}h`;
-            const hTemp = hourlyData.temperature_2m[hIdx] !== undefined ? Math.round(hourlyData.temperature_2m[hIdx]) : '-';
-            const hCloudText = getCloudDescriptionText(
-              hourlyData.cloud_cover[hIdx], 
-              hourlyData.weather_code ? hourlyData.weather_code[hIdx] : null
-            );
-            const hRain = Math.round(hRainVal * 10) / 10;
-            const hWindSpeed = hourlyData.wind_speed_10m ? hourlyData.wind_speed_10m[hIdx] : null;
-            const hWindGusts = hourlyData.wind_gusts_10m ? hourlyData.wind_gusts_10m[hIdx] : null;
-            const hWindStr = formatWind(hWindSpeed, hWindGusts);
-
-            const isToday = dateStr === todayStr;
-            const isCurrentHour = isToday && currentHourVal === hour;
-            const cardClass = isCurrentHour ? 'hourly-item current-hour' : 'hourly-item';
-
-            const card = document.createElement('div');
-            card.className = cardClass;
-
-            card.innerHTML = `
-              <div class="hourly-hour">${hourFormatted}</div>
-              <div class="hourly-condition">${hCloudText}</div>
-              <div class="hourly-temp"><div>Temperatura</div><div><strong>${hTemp}°C</strong></div></div>
-              <div class="hourly-rain"><div>Chuva</div><div><strong>${hRain} mm</strong></div></div>
-              <div class="hourly-wind"><div>Ventos</div><div><strong>${hWindStr} km/h</strong></div></div>
-            `;
-            containerHourly.appendChild(card);
+          if (hour >= block.start && hour < block.end) {
+            if (hourlyData.temperature_2m && hourlyData.temperature_2m[hIdx] !== undefined) {
+              temps.push(hourlyData.temperature_2m[hIdx]);
+            }
+            if (hourlyData.precipitation && hourlyData.precipitation[hIdx] !== undefined) {
+              rains.push(hourlyData.precipitation[hIdx]);
+            }
+            if (hourlyData.wind_speed_10m && hourlyData.wind_speed_10m[hIdx] !== undefined) {
+              winds.push(hourlyData.wind_speed_10m[hIdx]);
+            }
+            if (hourlyData.wind_gusts_10m && hourlyData.wind_gusts_10m[hIdx] !== undefined) {
+              gusts.push(hourlyData.wind_gusts_10m[hIdx]);
+            }
           }
         }
       });
     }
 
-    const roundedPeriodRain = Math.round(periodRainSum * 10) / 10;
-    accordionCard.querySelector(`#period-rain-${dateStr}`).textContent = `Chuva total no período: ${roundedPeriodRain} mm`;
+    const firstTemp = temps.length > 0 ? Math.round(temps[0]) : null;
+    const lastTemp = temps.length > 0 ? Math.round(temps[temps.length - 1]) : null;
 
-    accordionCard.querySelectorAll('.tab-btn').forEach(btn => {
-      if (parseInt(btn.dataset.block, 10) === startHour) {
-        btn.style.backgroundColor = '#000';
-        btn.style.color = '#fff';
+    let tempStr = '-';
+    if (firstTemp !== null && lastTemp !== null) {
+      if (firstTemp === lastTemp) {
+        tempStr = `${firstTemp}°`;
       } else {
-        btn.style.backgroundColor = '#e2e8f0';
-        btn.style.color = '#333';
+        tempStr = `${firstTemp}° a ${lastTemp}°`;
       }
-    });
-  }
+    }
 
-  accordionCard.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      renderHourlyBlock(parseInt(btn.dataset.block, 10));
-    });
+    const totalRain = rains.length > 0 ? Math.round(rains.reduce((acc, val) => acc + val, 0) * 10) / 10 : 0;
+
+    const minWind = winds.length > 0 ? Math.min(...winds) : null;
+    const maxGust = gusts.length > 0 ? Math.max(...gusts) : null;
+    const windStr = formatWind(minWind, maxGust);
+
+    const cloudText = getBlockCloudDescription(hourlyData, dateStr, block.start, block.end);
+
+    const isToday = dateStr === todayStr;
+    const isCurrentBlock = isToday && currentHourVal >= block.start && currentHourVal < block.end;
+    const cardClass = isCurrentBlock ? 'hourly-item current-hour' : 'hourly-item';
+
+    const card = document.createElement('div');
+    card.className = cardClass;
+
+    card.innerHTML = `
+      <div class="hourly-hour">${block.label}</div>
+      <div class="hourly-condition">${cloudText}</div>
+      <div class="hourly-temp"><div>Temperatura</div><div><strong>${tempStr}</strong></div></div>
+      <div class="hourly-rain"><div>Chuva</div><div><strong>${totalRain} mm</strong></div></div>
+      <div class="hourly-wind"><div>Ventos</div><div><strong>${windStr} km/h</strong></div></div>
+    `;
+    containerHourly.appendChild(card);
   });
 
-  renderHourlyBlock(defaultBlock);
   syncSearchWidth();
 }
 
