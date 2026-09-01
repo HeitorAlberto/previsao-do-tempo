@@ -179,61 +179,86 @@ function updateRainSummaryUI(r15, r30, r46) {
 }
 
 function getDailyCloudDescription(hourlyData, dateStr, dailyWeatherCode) {
-  if (!hourlyData || !hourlyData.time) return "Céu limpo";
+  if (!hourlyData || !hourlyData.time || !hourlyData.cloud_cover) return "Céu limpo";
 
-  let c1 = 0, c2 = 0, c3 = 0, c4 = 0, c5 = 0;
+  function getPeriodCondition(startHour, endHour) {
+    const counts = {
+      "Céu limpo": 0,
+      "Poucas nuvens": 0,
+      "Parcialmente nublado": 0,
+      "Muitas nuvens": 0,
+      "Nublado": 0
+    };
 
-  hourlyData.time.forEach((hTime, hIdx) => {
-    if (hTime.startsWith(dateStr)) {
-      const isDayTime = hourlyData.is_day ? hourlyData.is_day[hIdx] === 1 : true;
-      
-      if (isDayTime) {
-        const percentage = hourlyData.cloud_cover[hIdx];
-        if (percentage !== null && percentage !== undefined) {
-          if (percentage <= 10) c1++;
-          else if (percentage <= 30) c2++;
-          else if (percentage <= 60) c3++;
-          else if (percentage <= 85) c4++;
-          else c5++;
+    hourlyData.time.forEach((hTime, hIdx) => {
+      if (hTime.startsWith(dateStr)) {
+        const hour = new Date(hTime).getHours();
+        if (hour >= startHour && hour < endHour) {
+          const percentage = hourlyData.cloud_cover[hIdx];
+          if (percentage !== null && percentage !== undefined) {
+            if (percentage <= 10) counts["Céu limpo"]++;
+            else if (percentage <= 30) counts["Poucas nuvens"]++;
+            else if (percentage <= 60) counts["Parcialmente nublado"]++;
+            else if (percentage <= 85) counts["Muitas nuvens"]++;
+            else counts["Nublado"]++;
+          }
         }
       }
-    }
-  });
+    });
 
-  const heavyClouds = c4 + c5;
-  const lightOrClear = c1 + c2 + c3;
-  const totalDayHours = heavyClouds + lightOrClear;
+    const categoriesOrder = [
+      "Céu limpo",
+      "Poucas nuvens",
+      "Parcialmente nublado",
+      "Muitas nuvens",
+      "Nublado"
+    ];
 
-  let label = "Céu limpo";
+    let dominant = "Céu limpo";
+    let maxCount = -1;
 
-  if (totalDayHours > 0) {
-    const heavyRatio = heavyClouds / totalDayHours;
-
-    if (heavyRatio >= 0.55) {
-      if (c4 >= 2 && c4 > c5) {
-        label = "Muitas nuvens";
-      } else {
-        label = "Nublado";
+    categoriesOrder.forEach(label => {
+      if (counts[label] >= maxCount && counts[label] > 0) {
+        maxCount = counts[label];
+        dominant = label;
       }
-    } else if (heavyRatio <= 0.35) {
-      if (c1 > (c2 + c3)) {
-        label = "Céu limpo";
-      } else if (c3 >= 3) {
-        label = "Parcialmente nublado";
-      } else {
-        label = "Poucas nuvens";
-      }
+    });
+
+    return dominant;
+  }
+
+  const morningCond = getPeriodCondition(6, 12);
+  const afternoonCond = getPeriodCondition(12, 18);
+
+  let finalLabel = "";
+
+  if (morningCond === afternoonCond) {
+    finalLabel = morningCond;
+  } else {
+    const weightMap = {
+      "Nublado": 5,
+      "Muitas nuvens": 4,
+      "Parcialmente nublado": 3,
+      "Poucas nuvens": 2,
+      "Céu limpo": 1
+    };
+
+    const morningWeight = weightMap[morningCond] || 1;
+    const afternoonWeight = weightMap[afternoonCond] || 1;
+
+    if (Math.abs(morningWeight - afternoonWeight) >= 3) {
+      finalLabel = "Parcialmente nublado";
     } else {
-      label = "Muitas nuvens";
+      finalLabel = morningWeight > afternoonWeight ? morningCond : afternoonCond;
     }
   }
 
   const isThunderstorm = (dailyWeatherCode === 95 || dailyWeatherCode === 96 || dailyWeatherCode === 99);
   if (isThunderstorm) {
-    return `${label} com trovoadas⚡`;
+    return `${finalLabel} com trovoadas⚡`;
   }
 
-  return label;
+  return finalLabel;
 }
 
 function getBlockCloudDescription(hourlyData, dateStr, startHour, endHour) {
@@ -303,7 +328,7 @@ function formatDateInfo(dateString) {
   const dayOfWeekNum = date.getDay();
   const isWeekend = dayOfWeekNum === 0 || dayOfWeekNum === 6;
   
-  const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'short' });
+  const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'long' });
   const day = parts[2];
   const month = parts[1];
   
@@ -313,12 +338,37 @@ function formatDateInfo(dateString) {
   };
 }
 
-function formatWind(speed, gusts) {
-  const speedVal = (speed !== null && speed !== undefined) ? Math.round(speed) : '-';
-  const gustVal = (gusts !== null && gusts !== undefined) ? Math.round(gusts) : '-';
-  
-  if (speedVal === '-' && gustVal === '-') return '-';
-  return `${speedVal} a ${gustVal}`;
+function formatRangeValue(arr) {
+  if (!arr || arr.length === 0) return '-';
+  const min = Math.round(Math.min(...arr));
+  const max = Math.round(Math.max(...arr));
+  if (min === max) {
+    return `${min}`;
+  }
+  return `${min} a ${max}`;
+}
+
+function getHourlyMetricsForDate(hourlyData, dateStr) {
+  let winds = [];
+  let gusts = [];
+
+  if (hourlyData && hourlyData.time) {
+    hourlyData.time.forEach((hTime, hIdx) => {
+      if (hTime.startsWith(dateStr)) {
+        if (hourlyData.wind_speed_10m && hourlyData.wind_speed_10m[hIdx] !== undefined) {
+          winds.push(hourlyData.wind_speed_10m[hIdx]);
+        }
+        if (hourlyData.wind_gusts_10m && hourlyData.wind_gusts_10m[hIdx] !== undefined) {
+          gusts.push(hourlyData.wind_gusts_10m[hIdx]);
+        }
+      }
+    });
+  }
+
+  return {
+    windStr: formatRangeValue(winds),
+    gustStr: formatRangeValue(gusts)
+  };
 }
 
 function toggleAccordion(parentCard, dateStr, hourlyData) {
@@ -351,10 +401,10 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
 
   const containerHourly = accordionCard.querySelector(`#hourly-container-${dateStr}`);
   const blocks = [
-    { start: 0, end: 6, label: "00h - 06h" },
-    { start: 6, end: 12, label: "06h - 12h" },
-    { start: 12, end: 18, label: "12h - 18h" },
-    { start: 18, end: 24, label: "18h - 24h" }
+    { start: 0, end: 6, label: "00h até 06h" },
+    { start: 6, end: 12, label: "06h até 12h" },
+    { start: 12, end: 18, label: "12h até 18h" },
+    { start: 18, end: 24, label: "18h até 24h" }
   ];
 
   blocks.forEach(block => {
@@ -399,9 +449,8 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
 
     const totalRain = rains.length > 0 ? Math.round(rains.reduce((acc, val) => acc + val, 0) * 10) / 10 : 0;
 
-    const minWind = winds.length > 0 ? Math.min(...winds) : null;
-    const maxGust = gusts.length > 0 ? Math.max(...gusts) : null;
-    const windStr = formatWind(minWind, maxGust);
+    const windStr = formatRangeValue(winds);
+    const gustStr = formatRangeValue(gusts);
 
     const cloudText = getBlockCloudDescription(hourlyData, dateStr, block.start, block.end);
 
@@ -418,6 +467,7 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
       <div class="hourly-temp"><div>Temperatura</div><div><strong>${tempStr}</strong></div></div>
       <div class="hourly-rain"><div>Chuva</div><div><strong>${totalRain} mm</strong></div></div>
       <div class="hourly-wind"><div>Ventos</div><div><strong>${windStr} km/h</strong></div></div>
+      <div class="hourly-gust"><div>Rajadas de vento</div><div><strong>${gustStr} km/h</strong></div></div>
     `;
     containerHourly.appendChild(card);
   });
@@ -451,9 +501,7 @@ function renderData(data, city, state, country, lat, lon) {
       tempStr = `${tempMin}° a ${tempMax}°`;
     }
 
-    const windSpeedMax = daily.wind_speed_10m_max ? daily.wind_speed_10m_max[i] : null;
-    const windGustsMax = daily.wind_gusts_10m_max ? daily.wind_gusts_10m_max[i] : null;
-    const windStr = formatWind(windSpeedMax, windGustsMax);
+    const { windStr, gustStr } = getHourlyMetricsForDate(hourly, dateStr);
 
     const condicao = getDailyCloudDescription(hourly, dateStr, daily.weather_code ? daily.weather_code[i] : null);
     const dateInfo = formatDateInfo(dateStr);
@@ -465,11 +513,12 @@ function renderData(data, city, state, country, lat, lon) {
     if (dateInfo.isWeekend) card.classList.add('weekend');
 
     card.innerHTML = `
-      <div class="card-date">${dayIndex} - ${dateInfo.formatted}</div>
+      <div class="card-date">(${dayIndex}) ${dateInfo.formatted}</div>
       <div class="card-condition">${condicao}</div>
       <div class="card-temp"><div>Temperatura</div><div><strong>${tempStr}</strong></div></div>
       <div class="card-rain"><div>Chuva</div><div><strong>${precipSum} mm</strong></div></div>
-      <div class="card-wind"><div>Ventos</div><div><strong>${windStr} km/h</strong></div></div>
+      <div class="card-wind"><div>Ventos</div><div><strong>${windStr} Km/h</strong></div></div>
+      <div class="card-gust"><div>Rajadas de vento</div><div><strong>${gustStr} Km/h</strong></div></div>
     `;
 
     card.addEventListener('click', () => {
