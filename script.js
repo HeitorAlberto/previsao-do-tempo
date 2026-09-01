@@ -89,7 +89,7 @@ async function fetchWeather(lat, lon, city, state, country) {
     return;
   }
 
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_speed_10m_max,wind_gusts_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,wind_speed_10m,wind_gusts_10m,weather_code,is_day&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_min,temperature_2m_max,cloud_cover_mean,wind_gusts_10m_max,precipitation_sum,weather_code&hourly=temperature_2m,cloud_cover,precipitation,wind_gusts_10m,weather_code,is_day&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
   
   try {
     const response = await fetch(url);
@@ -328,7 +328,7 @@ function formatDateInfo(dateString) {
   const dayOfWeekNum = date.getDay();
   const isWeekend = dayOfWeekNum === 0 || dayOfWeekNum === 6;
   
-  const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+  const dayOfWeek = date.toLocaleDateString('pt-BR', { weekday: 'short' });
   const day = parts[2];
   const month = parts[1];
   
@@ -345,19 +345,15 @@ function formatRangeValue(arr) {
   if (min === max) {
     return `${min}`;
   }
-  return `${min} a ${max}`;
+  return `${max}`;
 }
 
 function getHourlyMetricsForDate(hourlyData, dateStr) {
-  let winds = [];
   let gusts = [];
 
   if (hourlyData && hourlyData.time) {
     hourlyData.time.forEach((hTime, hIdx) => {
       if (hTime.startsWith(dateStr)) {
-        if (hourlyData.wind_speed_10m && hourlyData.wind_speed_10m[hIdx] !== undefined) {
-          winds.push(hourlyData.wind_speed_10m[hIdx]);
-        }
         if (hourlyData.wind_gusts_10m && hourlyData.wind_gusts_10m[hIdx] !== undefined) {
           gusts.push(hourlyData.wind_gusts_10m[hIdx]);
         }
@@ -366,7 +362,6 @@ function getHourlyMetricsForDate(hourlyData, dateStr) {
   }
 
   return {
-    windStr: formatRangeValue(winds),
     gustStr: formatRangeValue(gusts)
   };
 }
@@ -410,7 +405,6 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
   blocks.forEach(block => {
     let temps = [];
     let rains = [];
-    let winds = [];
     let gusts = [];
 
     if (hourlyData && hourlyData.time) {
@@ -423,9 +417,6 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
             }
             if (hourlyData.precipitation && hourlyData.precipitation[hIdx] !== undefined) {
               rains.push(hourlyData.precipitation[hIdx]);
-            }
-            if (hourlyData.wind_speed_10m && hourlyData.wind_speed_10m[hIdx] !== undefined) {
-              winds.push(hourlyData.wind_speed_10m[hIdx]);
             }
             if (hourlyData.wind_gusts_10m && hourlyData.wind_gusts_10m[hIdx] !== undefined) {
               gusts.push(hourlyData.wind_gusts_10m[hIdx]);
@@ -448,10 +439,7 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
     }
 
     const totalRain = rains.length > 0 ? Math.round(rains.reduce((acc, val) => acc + val, 0) * 10) / 10 : 0;
-
-    const windStr = formatRangeValue(winds);
     const gustStr = formatRangeValue(gusts);
-
     const cloudText = getBlockCloudDescription(hourlyData, dateStr, block.start, block.end);
 
     const isToday = dateStr === todayStr;
@@ -462,12 +450,10 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
     card.className = cardClass;
 
     card.innerHTML = `
-      <div class="hourly-hour">${block.label}</div>
-      <div class="hourly-condition">${cloudText}</div>
+      <div class="hourly-hour"><div>${block.label}</div><div class="hourly-condition">${cloudText}</div></div>
       <div class="hourly-temp"><div>Temperatura</div><div><strong>${tempStr}</strong></div></div>
       <div class="hourly-rain"><div>Chuva</div><div><strong>${totalRain} mm</strong></div></div>
-      <div class="hourly-wind"><div>Ventos</div><div><strong>${windStr} km/h</strong></div></div>
-      <div class="hourly-gust"><div>Rajadas de vento</div><div><strong>${gustStr} km/h</strong></div></div>
+      <div class="hourly-gust"><div>Rajadas de vento</div><div><strong>${gustStr} Km/h</strong></div></div>
     `;
     containerHourly.appendChild(card);
   });
@@ -501,7 +487,7 @@ function renderData(data, city, state, country, lat, lon) {
       tempStr = `${tempMin}° a ${tempMax}°`;
     }
 
-    const { windStr, gustStr } = getHourlyMetricsForDate(hourly, dateStr);
+    const { gustStr } = getHourlyMetricsForDate(hourly, dateStr);
 
     const condicao = getDailyCloudDescription(hourly, dateStr, daily.weather_code ? daily.weather_code[i] : null);
     const dateInfo = formatDateInfo(dateStr);
@@ -513,11 +499,9 @@ function renderData(data, city, state, country, lat, lon) {
     if (dateInfo.isWeekend) card.classList.add('weekend');
 
     card.innerHTML = `
-      <div class="card-date">(${dayIndex}) ${dateInfo.formatted}</div>
-      <div class="card-condition">${condicao}</div>
+      <div class="card-date"><div>(${dayIndex}) ${dateInfo.formatted}</div><div class="card-condition">${condicao}</div></div>
       <div class="card-temp"><div>Temperatura</div><div><strong>${tempStr}</strong></div></div>
       <div class="card-rain"><div>Chuva</div><div><strong>${precipSum} mm</strong></div></div>
-      <div class="card-wind"><div>Ventos</div><div><strong>${windStr} Km/h</strong></div></div>
       <div class="card-gust"><div>Rajadas de vento</div><div><strong>${gustStr} Km/h</strong></div></div>
     `;
 
