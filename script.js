@@ -74,6 +74,52 @@ function getLatestCutoffTime() {
   return cutoff.getTime();
 }
 
+function parseHourFromISO(isoString) {
+  if (!isoString) return 0;
+  const timePart = isoString.split('T')[1];
+  if (!timePart) return 0;
+  return parseInt(timePart.split(':')[0], 10);
+}
+
+// Classificação adaptada para considerar o acumulado do dia no bloco de 6h
+function getRainCategoryBlock(rainsArray, dailyPrecipSum) {
+  if (!rainsArray || rainsArray.length === 0) {
+    return { label: "0 mm", text: "0 mm" };
+  }
+
+  const totalRain = Math.round(rainsArray.reduce((acc, val) => acc + val, 0) * 10) / 10;
+  const maxHourlyRain = Math.max(...rainsArray);
+  const hourlyAverage = totalRain / 6;
+
+
+  if (dailyPrecipSum < 1.0 && totalRain < 1.0) {
+    return { label: "0 mm", text: "0 mm" };
+  }
+
+  // Se no bloco não choveu nada
+  if (totalRain === 0) {
+    return { label: "0 mm", text: "0 mm" };
+  }
+
+  // Garoa / Chuvisco leve no bloco (entre 0.1mm e 2.9mm)
+  if (totalRain < 3.0) {
+    return { label: "Garoa isolada", text: `Garoa isolada (${totalRain} mm)` };
+  }
+
+  // Chuva Forte
+  if (maxHourlyRain >= 10.0 || hourlyAverage > 5.0) {
+    return { label: "Forte", text: `Forte (${totalRain} mm)` };
+  }
+
+  // Chuva Moderada
+  if (maxHourlyRain >= 5.0 || hourlyAverage > 2.0) {
+    return { label: "Moderada", text: `Moderada (${totalRain} mm)` };
+  }
+
+  // Chuva Fraca
+  return { label: "Fraca", text: `Fraca (${totalRain} mm)` };
+}
+
 async function fetchWeather(lat, lon, city, state, country) {
   const cacheKey = getCacheKey(lat, lon);
   const cachedData = localStorage.getItem(cacheKey);
@@ -192,7 +238,7 @@ function getDailyCloudDescription(hourlyData, dateStr, dailyWeatherCode) {
 
     hourlyData.time.forEach((hTime, hIdx) => {
       if (hTime.startsWith(dateStr)) {
-        const hour = new Date(hTime).getHours();
+        const hour = parseHourFromISO(hTime);
         if (hour >= startHour && hour < endHour) {
           const percentage = hourlyData.cloud_cover[hIdx];
           if (percentage !== null && percentage !== undefined) {
@@ -284,7 +330,7 @@ function getBlockCloudDescription(hourlyData, dateStr, startHour, endHour) {
 
   hourlyData.time.forEach((hTime, hIdx) => {
     if (hTime.startsWith(dateStr)) {
-      const hour = new Date(hTime).getHours();
+      const hour = parseHourFromISO(hTime);
       if (hour >= startHour && hour < endHour) {
         const percentage = hourlyData.cloud_cover[hIdx];
         const code = hourlyData.weather_code ? hourlyData.weather_code[hIdx] : null;
@@ -366,7 +412,7 @@ function getHourlyMetricsForDate(hourlyData, dateStr) {
   };
 }
 
-function toggleAccordion(parentCard, dateStr, hourlyData) {
+function toggleAccordion(parentCard, dateStr, hourlyData, dailyPrecipSum) {
   const nextElement = parentCard.nextElementSibling;
   const isAlreadyOpen = nextElement && nextElement.classList.contains('accordion-card');
 
@@ -396,10 +442,10 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
 
   const containerHourly = accordionCard.querySelector(`#hourly-container-${dateStr}`);
   const blocks = [
-    { start: 0, end: 6, label: "00h até 06h" },
-    { start: 6, end: 12, label: "06h até 12h" },
-    { start: 12, end: 18, label: "12h até 18h" },
-    { start: 18, end: 24, label: "18h até 24h" }
+    { start: 0, end: 6, label: "Madrugada" },
+    { start: 6, end: 12, label: "Manhã" },
+    { start: 12, end: 18, label: "Tarde" },
+    { start: 18, end: 24, label: "Noite" }
   ];
 
   blocks.forEach(block => {
@@ -410,7 +456,7 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
     if (hourlyData && hourlyData.time) {
       hourlyData.time.forEach((hTime, hIdx) => {
         if (hTime.startsWith(dateStr)) {
-          const hour = new Date(hTime).getHours();
+          const hour = parseHourFromISO(hTime);
           if (hour >= block.start && hour < block.end) {
             if (hourlyData.temperature_2m && hourlyData.temperature_2m[hIdx] !== undefined) {
               temps.push(hourlyData.temperature_2m[hIdx]);
@@ -438,7 +484,8 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
       }
     }
 
-    const totalRain = rains.length > 0 ? Math.round(rains.reduce((acc, val) => acc + val, 0) * 10) / 10 : 0;
+    // Repassa a precipitação diária acumulada para não ocultar valores do bloco
+    const rainBlockInfo = getRainCategoryBlock(rains, dailyPrecipSum);
     const gustStr = formatRangeValue(gusts);
     const cloudText = getBlockCloudDescription(hourlyData, dateStr, block.start, block.end);
 
@@ -452,7 +499,7 @@ function toggleAccordion(parentCard, dateStr, hourlyData) {
     card.innerHTML = `
       <div class="hourly-hour"><div>${block.label}</div><div class="hourly-condition">${cloudText}</div></div>
       <div class="hourly-temp"><div>Temperatura</div><div><strong>${tempStr}</strong></div></div>
-      <div class="hourly-rain"><div>Chuva</div><div><strong>${totalRain} mm</strong></div></div>
+      <div class="hourly-rain"><div>Chuva</div><div><strong>${rainBlockInfo.text}</strong></div></div>
       <div class="hourly-gust"><div>Rajadas de vento</div><div><strong>${gustStr} Km/h</strong></div></div>
     `;
     containerHourly.appendChild(card);
@@ -488,11 +535,13 @@ function renderData(data, city, state, country, lat, lon) {
     }
 
     const { gustStr } = getHourlyMetricsForDate(hourly, dateStr);
-
     const condicao = getDailyCloudDescription(hourly, dateStr, daily.weather_code ? daily.weather_code[i] : null);
     const dateInfo = formatDateInfo(dateStr);
     const dayIndex = i + 1;
-    const precipSum = daily.precipitation_sum[i] ?? '-';
+    
+    const rawPrecip = daily.precipitation_sum ? daily.precipitation_sum[i] : 0;
+    const precipVal = rawPrecip !== null && rawPrecip !== undefined ? Math.round(rawPrecip * 10) / 10 : 0;
+    const rainDailyValue = precipVal >= 1.0 ? `${precipVal} mm` : '0 mm';
 
     const card = document.createElement('div');
     card.classList.add('day-card');
@@ -501,12 +550,12 @@ function renderData(data, city, state, country, lat, lon) {
     card.innerHTML = `
       <div class="card-date"><div>(${dayIndex}) ${dateInfo.formatted}</div><div class="card-condition">${condicao}</div></div>
       <div class="card-temp"><div>Temperatura</div><div><strong>${tempStr}</strong></div></div>
-      <div class="card-rain"><div>Chuva</div><div><strong>${precipSum} mm</strong></div></div>
+      <div class="card-rain"><div>Chuva acumulada</div><div><strong>${rainDailyValue}</strong></div></div>
       <div class="card-gust"><div>Rajadas de vento</div><div><strong>${gustStr} Km/h</strong></div></div>
     `;
 
     card.addEventListener('click', () => {
-      toggleAccordion(card, dateStr, hourly);
+      toggleAccordion(card, dateStr, hourly, precipVal);
     });
     forecastContainer.appendChild(card);
   });
