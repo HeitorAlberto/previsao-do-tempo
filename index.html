@@ -1,270 +1,823 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Previsão do Tempo</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel ECMWF Ensemble - Visão Unificada</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
 
-    * {
-      padding: 0;
-      margin: 0;
-      box-sizing: border-box;
-    }
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Open Sans', 'Google Sans', sans-serif;
+        }
 
-    body {
-      font-family: "Google Sans", sans-serif;
-      margin: 15px auto;
-      padding: 0 10px;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background-color: #f8fafc;
-    }
+        body {
+            background-color: #f4f6f9;
+            color: #1f1f1f;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    h1 {
-      margin-bottom: 15px;
-      font-size: 24px;
-    }
+        header {
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
 
-    .search-container {
-      position: relative;
-      margin-bottom: 15px;
-      width: 100%;
-      max-width: 400px;
-    }
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+            color: #1a73e8;
+        }
 
-    #city-input {
-      width: 100%;
-      padding: 10px 14px;
-      font-size: 15px;
-      border: 2px solid #cbd5e1;
-      border-radius: 8px;
-      outline: none;
-      transition: border-color 0.2s;
-      font-family: "Google Sans", sans-serif;
-    }
+        .search-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
 
-    #city-input:focus {
-      border-color: #0f172a;
-    }
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 1rem;
+            border: 1px solid #dadce0;
+            border-radius: 24px;
+            outline: none;
+            box-shadow: 0 1px 6px rgba(32,33,36,0.1);
+            transition: all 0.2s;
+        }
 
-    .suggestions {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 2px solid #cbd5e1;
-      border-top: none;
-      border-radius: 0 0 8px 8px;
-      z-index: 10;
-      max-height: 200px;
-      overflow-y: auto;
-    }
+        .search-input:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 1px 6px rgba(26,115,232,0.3);
+        }
 
-    .suggestion-item {
-      padding: 10px 14px;
-      cursor: pointer;
-      font-size: 14px;
-      font-family: "Google Sans", sans-serif;
-    }
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            margin-top: 4px;
+            list-style: none;
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+        }
 
-    .suggestion-item:hover {
-      background-color: #f1f5f9;
-    }
+        .suggestions-list li {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f3f4;
+            text-align: left;
+        }
 
-    .card {
-      width: 100%;
-      max-width: 400px;
-      background: white;
-      padding: 14px;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-    }
+        .suggestions-list li:hover {
+            background-color: #f1f3f4;
+        }
 
-    .location-header {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 2px;
-    }
+        .selected-city-display {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto 16px auto;
+            padding: 12px 16px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: center;
+            color: #202124;
+        }
 
-    .coords {
-      font-size: 12px;
-      color: #64748b;
-      margin-bottom: 6px;
-    }
+        .cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+            max-width: 1000px;
+        }
 
-    .data-source {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-bottom: 14px;
-    }
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
 
-    h3 {
-      margin-bottom: 10px;
-      font-size: 15px;
-    }
+        .card-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #3c4043;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #e8eaed;
+            padding-bottom: 8px;
+        }
 
-    /* Cards Diários e de Horas Compactos */
-    .day-card {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      border: 2px solid #e2e8f0;
-      padding: 8px 12px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      cursor: pointer;
-      background: #fff;
-      transition: all 0.2s ease;
-    }
+        .card-body {
+            display: flex;
+            gap: 16px;
+            align-items: stretch;
+        }
 
-    .day-card:hover {
-      border-color: #cbd5e1;
-    }
+        .base-metrics-container {
+            flex: 0 0 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-    .day-card.active-card {
-      border-color: #0f172a;
-      background-color: #f8fafc;
-    }
+        .base-metric-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 8px;
+            user-select: none;
+        }
 
-    .day-card.weekend > .card-date {
-      color: goldenrod;
-    }
+        .base-metric-box.temp { background-color: #ffe0b2; color: #e65100; }
+        .base-metric-box.precip { background-color: #bbdefb; color: #0d47a1; }
+        .base-metric-box.wind { background-color: #c8e6c9; color: #1b5e20; }
 
-    .card-date {
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-      font-size: 14px;
-      color: #0f172a;
-      border-bottom: 1px solid #f1f5f9;
-      padding-bottom: 4px;
-    }
+        /* Estilo interativo para os cards de métrica (Apenas primeiros 5 dias) */
+        .base-metric-box.clickable {
+            cursor: pointer;
+            transition: filter 0.15s ease, transform 0.1s ease;
+        }
 
-    .card-condition {
-      font-weight: bolder;
-      color: white;
-      font-size: 12px;
-      background-color: #475569;
-      padding: 3px 8px;
-      border-radius: 5px;
-    }
+        .base-metric-box.clickable:hover {
+            filter: brightness(0.95);
+            transform: translateY(-1px);
+        }
 
-    .card-temp, .card-rain, .card-wind, .card-gust, 
-    .hourly-condition, .hourly-temp, .hourly-rain, .hourly-wind, .hourly-gust {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      font-size: 13px;
-    }
+        .base-metric-box.clickable:active {
+            transform: translateY(0);
+        }
 
-    .current-hour > .hourly-hour {
-      color: goldenrod;
-    }
+        .metric-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
 
-    .hourly-condition {
-      font-weight: bolder;
-      color: white;
-      font-size: 12px;
-      background-color: #475569;
-      padding: 3px 8px;
-      border-radius: 5px;
-    }
+        .metric-value {
+            font-size: 1rem;
+            font-weight: 700;
+        }
 
-    /* Accordion (Detalhes por hora) */
-    .accordion-card {
-      margin-top: -4px;
-      margin-bottom: 10px;
-      padding: 10px;
-      border: 3px dashed #f5f5f5;
-      border-radius: 8px;
-    }
+        .card-footer-notice {
+            margin-top: 10px;
+            padding-top: 6px;
+            border-top: 1px dashed #e8eaed;
+            font-size: 0.725rem;
+            color: #70757a;
+            text-align: center;
+        }
 
-    .hourly-container {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      margin-bottom: 10px;
-    }
+        .ensemble-insights-container {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #e8eaed;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            justify-content: flex-start;
+        }
 
-    .hourly-item {
-      display: flex;
-      flex-direction: column;
-      border: 2px solid #f5f5f5;
-      border-radius: 8px;
-      gap: 10px;
-      margin-bottom: 0;
-      cursor: default;
-      padding: 8px 12px;
-    }
+        .ensemble-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #5f6368;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px dashed #dadce0;
+        }
 
-    .hourly-hour {
-      display: flex;
-      justify-content: space-between;
-      font-weight: bold;
-      font-size: 13px;
-      color: #0f172a;
-      border-radius: 8px;
-    }
+        .info-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #1a73e8;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: bold;
+            font-style: italic;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
 
-    .hourly-tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 8px;
-    }
+        .info-btn:hover {
+            background-color: #1557b0;
+        }
 
-    .tab-btn {
-      flex: 1;
-      border: 1px solid #cbd5e1;
-      background-color: white;
-      padding: 6px 2px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      font-family: "Google Sans", sans-serif;
-    }
+        .insights-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
 
-    .tab-btn:hover {
-      background-color: #f1f5f9;
-    }
+        .insight-item {
+            font-size: 0.85rem;
+            color: #3c4043;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1.4;
+        }
 
-    .period-rain-summary {
-      font-size: 12px;
-      color: #334155;
-      background: #e2e8f0;
-      padding: 8px 10px;
-      border-radius: 6px;
-      margin-top: 8px;
-    }
-  </style>
+        .insight-badge {
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .insight-badge.temp { background-color: #ffe0b2; color: #e65100; }
+        .insight-badge.precip { background-color: #e3f2fd; color: #1565c0; }
+        .insight-badge.wind { background-color: #e8f5e9; color: #2e7d32; }
+
+        .no-insights {
+            font-size: 0.85rem;
+            color: #70757a;
+            font-style: italic;
+        }
+
+        /* Modal Genérico */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            width: 90%;
+            max-width: 480px;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .modal-header {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a73e8;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            color: #70757a;
+            cursor: pointer;
+        }
+
+        .modal-body p {
+            font-size: 0.9rem;
+            color: #3c4043;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .modal-body ul {
+            font-size: 0.85rem;
+            color: #3c4043;
+            margin-left: 18px;
+            line-height: 1.4;
+        }
+
+        /* Tabela dos Modais de Detalhamento */
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .detail-table th, .detail-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e8eaed;
+            font-size: 0.85rem;
+        }
+
+        .detail-table th {
+            background-color: #f1f3f4;
+            color: #3c4043;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .card-body {
+                flex-direction: column;
+            }
+
+            .base-metrics-container {
+                flex: 1 1 100%;
+            }
+        }
+    </style>
 </head>
 <body>
 
-  <h1>Previsão do Tempo</h1>
+    <header>
+        <h1>Previsão do tempo - 15 dias</h1>
+        <div class="search-container">
+            <input type="text" id="city-search" class="search-input" placeholder="Buscar cidade..." autocomplete="off">
+            <ul id="suggestions" class="suggestions-list"></ul>
+        </div>
+    </header>
 
-  <div id="search-box-container" class="search-container">
-    <input type="text" id="city-input" placeholder="Digite o nome da cidade..." autocomplete="off">
-    <div id="suggestions" class="suggestions" style="display: none;"></div>
-  </div>
+    <main style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <div id="city-display" class="selected-city-display">São Paulo, Brasil</div>
+        <div>Modelo ECMWF Ensemble</div>
+        <div style="margin-bottom: 20px;">Fonte dos dados: open-meteo API</div>
+        <div id="cards-container" class="cards-container"></div>
+    </main>
 
-  <div id="weather-card" class="card" style="display: none;">
-    <div id="location-name" class="location-header"></div>
-    <div id="location-coords" class="coords"></div>
-    <div class="data-source">Fonte dos dados: ECMWF HRES 9km / Open-Meteo API</div>
+    <!-- Modal Explicativo do Ensemble -->
+    <div id="info-modal" class="modal-overlay" onclick="closeModal(event, 'info-modal')">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span>O que é a Visão Ensemble?</span>
+                <button class="close-btn" onclick="closeModal(event, 'info-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>O <strong>Ensemble ECMWF</strong> executa <strong>51 simulações meteorológicas em paralelo</strong>, variando levemente as condições iniciais para medir incertezas na previsão do tempo.</p>
+                <p>Nossos alertas destacam cenários em que há convergência significativa entre os membros:</p>
+                <ul>
+                    <li><strong>Proporções:</strong> mostram quantos membros (ex: 35/51) preveem um determinado evento.</li>
+                    <li><strong>Limiares de Risco:</strong> identificam a probabilidade de chuvas expressivas, ventos fortes ou extremos térmicos.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 
-    <h3>Previsão Diária <small style="font-size: 12px; font-weight: normal; color: #666;">(Toque/clique para ver detalhes)</small></h3>
-    
-    <div id="forecast-container"></div>
+    <!-- Modal Genérico para Detalhamento 6h -->
+    <div id="detail-modal" class="modal-overlay" onclick="closeModal(event, 'detail-modal')">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span id="detail-modal-title">Detalhamento a cada 6h</span>
+                <button class="close-btn" onclick="closeModal(event, 'detail-modal')">&times;</button>
+            </div>
+            <div class="modal-body" id="detail-modal-body">
+            </div>
+        </div>
+    </div>
 
-    <div id="long-term-rain-summary" class="period-rain-summary"></div>
-  </div>
+    <script>
+        let weatherData = null;
+        let currentCoords = { lat: -23.5475, lon: -46.6361, name: "São Paulo, Brasil" };
 
-  <script src="script.js"></script>
+        const searchInput = document.getElementById('city-search');
+        const suggestionsList = document.getElementById('suggestions');
+        const cityDisplay = document.getElementById('city-display');
+
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(e, modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        searchInput.addEventListener('input', async (e) => {
+            const query = e.target.value.trim();
+            if (query.length < 3) {
+                suggestionsList.innerHTML = '';
+                return;
+            }
+
+            try {
+                const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=5&language=pt`);
+                const data = await res.json();
+
+                suggestionsList.innerHTML = '';
+                if (data.results) {
+                    data.results.forEach(city => {
+                        const li = document.createElement('li');
+                        const label = `${city.name}${city.admin1 ? ', ' + city.admin1 : ''} (${city.country})`;
+                        li.textContent = label;
+                        li.onclick = () => {
+                            currentCoords = { lat: city.latitude, lon: city.longitude, name: label };
+                            cityDisplay.textContent = label;
+                            searchInput.value = '';
+                            suggestionsList.innerHTML = '';
+                            fetchWeatherData();
+                        };
+                        suggestionsList.appendChild(li);
+                    });
+                }
+            } catch (err) {
+                console.error("Erro na busca de locais:", err);
+            }
+        });
+
+        function get6HourBlockKey(timestamp) {
+            const date = new Date(timestamp);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hour = date.getHours();
+            const blockHour = String(Math.floor(hour / 6) * 6).padStart(2, '0');
+            return `${year}-${month}-${day}_${blockHour}h`;
+        }
+
+        async function fetchWeatherData() {
+            const { lat, lon } = currentCoords;
+            const now = Date.now();
+            const currentBlockKey = get6HourBlockKey(now);
+            const cacheKey = `weather_cache_${lat.toFixed(4)}_${lon.toFixed(4)}_${currentBlockKey}`;
+
+            const cachedData = localStorage.getItem(cacheKey);
+            if (cachedData) {
+                try {
+                    weatherData = JSON.parse(cachedData);
+                    renderCards();
+                    return;
+                } catch (e) {
+                    localStorage.removeItem(cacheKey);
+                }
+            }
+
+            const url = `https://ensemble-api.open-meteo.com/v1/ensemble?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,wind_gusts_10m&models=ecmwf_ifs025&forecast_days=15&timezone=auto`;
+
+            try {
+                const response = await fetch(url);
+                weatherData = await response.json();
+
+                Object.keys(localStorage).forEach(key => {
+                    if (key.startsWith('weather_cache_')) {
+                        localStorage.removeItem(key);
+                    }
+                });
+
+                localStorage.setItem(cacheKey, JSON.stringify(weatherData));
+                renderCards();
+            } catch (error) {
+                console.error("Erro ao buscar dados meteorológicos:", error);
+            }
+        }
+
+        function getBaseValues(hourly, indices) {
+            const baseTempKey = 'temperature_2m';
+            const basePrecipKey = 'precipitation';
+            const baseWindKey = 'wind_gusts_10m';
+
+            const dayTemps = indices.map(idx => hourly[baseTempKey]?.[idx]).filter(v => typeof v === 'number' && !isNaN(v));
+            const dayPrecip = indices.map(idx => hourly[basePrecipKey]?.[idx]).filter(v => typeof v === 'number' && !isNaN(v));
+            const dayWind = indices.map(idx => hourly[baseWindKey]?.[idx]).filter(v => typeof v === 'number' && !isNaN(v));
+
+            const minTemp = dayTemps.length ? Math.round(Math.min(...dayTemps)) : 0;
+            const maxTemp = dayTemps.length ? Math.round(Math.max(...dayTemps)) : 0;
+            const totalPrecip = dayPrecip.length ? dayPrecip.reduce((acc, v) => acc + v, 0).toFixed(1) : '0.0';
+            const maxWind = dayWind.length ? Math.round(Math.max(...dayWind)) : 0;
+
+            return {
+                temp: `${minTemp}° a ${maxTemp}°C`,
+                precip: `${totalPrecip} mm`,
+                wind: `${maxWind} km/h`
+            };
+        }
+
+        function get6HourBreakdown(hourly, indices, metricType) {
+            const times = hourly.time;
+            const keyMap = {
+                'temp': 'temperature_2m',
+                'precip': 'precipitation',
+                'wind': 'wind_gusts_10m'
+            };
+            const metricKey = keyMap[metricType];
+            
+            const blocks = {
+                '00:00 - 06:00': [],
+                '06:00 - 12:00': [],
+                '12:00 - 18:00': [],
+                '18:00 - 24:00': []
+            };
+
+            indices.forEach(idx => {
+                const timeStr = times[idx];
+                const hour = parseInt(timeStr.split('T')[1].split(':')[0], 10);
+                const val = hourly[metricKey]?.[idx];
+
+                if (typeof val === 'number' && !isNaN(val)) {
+                    if (hour >= 0 && hour < 6) blocks['00:00 - 06:00'].push(val);
+                    else if (hour >= 6 && hour < 12) blocks['06:00 - 12:00'].push(val);
+                    else if (hour >= 12 && hour < 18) blocks['12:00 - 18:00'].push(val);
+                    else if (hour >= 18 && hour < 24) blocks['18:00 - 24:00'].push(val);
+                }
+            });
+
+            return blocks;
+        }
+
+        function openDetailModal(type, dateLabel, dateStr) {
+            const daysMap = getDaysMap();
+            const indices = daysMap[dateStr];
+            if (!indices) return;
+
+            const hourly = weatherData.hourly;
+            const rawBlocks = get6HourBreakdown(hourly, indices, type);
+
+            let modalTitle = '';
+            let columnHeader = '';
+            let formatFn = null;
+
+            if (type === 'precip') {
+                modalTitle = `Chuva acumulada - ${dateLabel}`;
+                columnHeader = 'Acumulado';
+                formatFn = (vals) => {
+                    const sum = vals.reduce((acc, v) => acc + v, 0);
+                    return `${sum.toFixed(1)} mm`;
+                };
+            } else if (type === 'temp') {
+                modalTitle = `Temperatura - ${dateLabel}`;
+                columnHeader = 'Valor no Bloco';
+                
+                const allDayTemps = indices.map(idx => hourly['temperature_2m']?.[idx]).filter(v => typeof v === 'number' && !isNaN(v));
+                const globalMin = allDayTemps.length ? Math.min(...allDayTemps) : null;
+
+                formatFn = (vals) => {
+                    if (!vals.length) return '--';
+                    const blockMax = Math.max(...vals);
+                    const blockMin = Math.min(...vals);
+
+                    if (globalMin !== null && blockMin === globalMin) {
+                        return `${Math.round(blockMin)}°C (mínima do dia)`;
+                    }
+                    return `${Math.round(blockMax)}°C (máxima)`;
+                };
+            } else if (type === 'wind') {
+                modalTitle = `Rajadas de vento - ${dateLabel}`;
+                columnHeader = 'Máxima';
+                formatFn = (vals) => {
+                    if (!vals.length) return '--';
+                    return `${Math.round(Math.max(...vals))} km/h`;
+                };
+            }
+
+            document.getElementById('detail-modal-title').textContent = modalTitle;
+            
+            let html = `
+                <table class="detail-table">
+                    <thead>
+                        <tr>
+                            <th>Intervalo</th>
+                            <th>${columnHeader}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            Object.entries(rawBlocks).forEach(([interval, vals]) => {
+                html += `
+                    <tr>
+                        <td>${interval}</td>
+                        <td><strong>${formatFn(vals)}</strong></td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+
+            document.getElementById('detail-modal-body').innerHTML = html;
+            openModal('detail-modal');
+        }
+
+        function calcThresholds(hourly, indices, minAgreementCount = 8) {
+            const tempKeys = Object.keys(hourly).filter(k => k.startsWith('temperature_2m'));
+            const precipKeys = Object.keys(hourly).filter(k => k.startsWith('precipitation'));
+            const windKeys = Object.keys(hourly).filter(k => k.startsWith('wind_gusts_10m'));
+
+            const totalMembers = tempKeys.length || 51;
+            let rawInsights = [];
+
+            const getValidValues = (key) => indices
+                .map(idx => hourly[key][idx])
+                .filter(v => v !== null && v !== undefined && !isNaN(v) && typeof v === 'number');
+
+            if (tempKeys.length > 0) {
+                const tempMaxes = tempKeys.map(k => {
+                    const vals = getValidValues(k);
+                    return vals.length > 0 ? Math.max(...vals) : null;
+                }).filter(v => v !== null);
+
+                const tempMins = tempKeys.map(k => {
+                    const vals = getValidValues(k);
+                    return vals.length > 0 ? Math.min(...vals) : null;
+                }).filter(v => v !== null);
+
+                [35, 40].forEach(threshold => {
+                    const count = tempMaxes.filter(val => val >= threshold).length;
+                    if (count >= minAgreementCount) {
+                        const pct = Math.round((count / totalMembers) * 100);
+                        rawInsights.push({
+                            badge: `${count}/${totalMembers} (${pct}%)`,
+                            text: `indicam calor extremo acima de <strong>${threshold}°C</strong>`,
+                            type: 'temp'
+                        });
+                    }
+                });
+
+                if (tempMins.length > 0) {
+                    [5, 0].forEach(threshold => {
+                        const count = tempMins.filter(val => val <= threshold).length;
+                        if (count >= minAgreementCount) {
+                            const pct = Math.round((count / totalMembers) * 100);
+                            rawInsights.push({
+                                badge: `${count}/${totalMembers} (${pct}%)`,
+                                text: `indicam frio intenso abaixo de <strong>${threshold}°C</strong>`,
+                                type: 'temp'
+                            });
+                        }
+                    });
+                }
+            }
+
+            if (precipKeys.length > 0) {
+                const precipTotals = precipKeys.map(k => {
+                    const vals = getValidValues(k);
+                    return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) : 0;
+                });
+
+                let precipInsights = [];
+
+                [5, 10, 15, 20, 30, 50].forEach(threshold => {
+                    const count = precipTotals.filter(val => val >= threshold).length;
+                    if (count >= minAgreementCount) {
+                        const pct = Math.round((count / totalMembers) * 100);
+                        precipInsights.push({
+                            badge: `${count}/${totalMembers} (${pct}%)`,
+                            text: `indicam chuva acumulada acima de <strong>${threshold} mm</strong>`,
+                            type: 'precip'
+                        });
+                    }
+                });
+
+                if (precipInsights.length > 2) {
+                    precipInsights = precipInsights.slice(-2);
+                }
+                rawInsights.push(...precipInsights);
+            }
+
+            if (windKeys.length > 0) {
+                const windMaxes = windKeys.map(k => {
+                    const vals = getValidValues(k);
+                    return vals.length > 0 ? Math.max(...vals) : 0;
+                });
+
+                let windInsights = [];
+
+                [40, 60, 80, 100].forEach(threshold => {
+                    const count = windMaxes.filter(val => val >= threshold).length;
+                    if (count >= minAgreementCount) {
+                        const pct = Math.round((count / totalMembers) * 100);
+                        windInsights.push({
+                            badge: `${count}/${totalMembers} (${pct}%)`,
+                            text: `indicam rajadas de vento acima de <strong>${threshold} km/h</strong>`,
+                            type: 'wind'
+                        });
+                    }
+                });
+
+                if (windInsights.length > 2) {
+                    windInsights = windInsights.slice(-2);
+                }
+                rawInsights.push(...windInsights);
+            }
+
+            return rawInsights;
+        }
+
+        function getDaysMap() {
+            if (!weatherData || !weatherData.hourly) return {};
+            const times = weatherData.hourly.time;
+            const daysMap = {};
+            times.forEach((t, index) => {
+                const date = t.split('T')[0];
+                if (!daysMap[date]) daysMap[date] = [];
+                daysMap[date].push(index);
+            });
+            return daysMap;
+        }
+
+        function renderCards() {
+            if (!weatherData || !weatherData.hourly) return;
+
+            const container = document.getElementById('cards-container');
+            container.innerHTML = '';
+
+            const hourly = weatherData.hourly;
+            const daysMap = getDaysMap();
+            const dayKeys = Object.keys(daysMap);
+
+            dayKeys.forEach((dateStr, dayIdx) => {
+                const dayIndices = daysMap[dateStr];
+
+                const baseValues = getBaseValues(hourly, dayIndices);
+                const insights = calcThresholds(hourly, dayIndices, 8);
+
+                const [year, month, day] = dateStr.split('-').map(Number);
+                const dateObj = new Date(year, month - 1, day);
+                const formattedDate = dateObj.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
+
+                let insightsHtml = '';
+                if (insights.length > 0) {
+                    insightsHtml = insights.map(item => `
+                        <div class="insight-item">
+                            <span class="insight-badge ${item.type}">${item.badge}</span>
+                            <span>${item.text}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    insightsHtml = `<div class="no-insights">Sem alertas de chuva expressiva, ventos fortes ou extremos de temperatura.</div>`;
+                }
+
+                // Apenas os primeiros 5 dias recebem a classe clicável e o evento
+                const isDetailable = dayIdx < 5;
+                const clickableClass = isDetailable ? 'clickable' : '';
+
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                card.innerHTML = `
+                    <div class="card-header">${formattedDate.toUpperCase()}</div>
+                    <div class="card-body">
+                        <div class="base-metrics-container">
+                            <div class="base-metric-box temp ${clickableClass}" id="box-temp-${dayIdx}">
+                                <span class="metric-title">Temperatura</span>
+                                <span class="metric-value">${baseValues.temp}</span>
+                            </div>
+                            <div class="base-metric-box precip ${clickableClass}" id="box-precip-${dayIdx}">
+                                <span class="metric-title">Chuva acumulada</span>
+                                <span class="metric-value">${baseValues.precip}</span>
+                            </div>
+                            <div class="base-metric-box wind ${clickableClass}" id="box-wind-${dayIdx}">
+                                <span class="metric-title">Rajadas de Vento</span>
+                                <span class="metric-value">${baseValues.wind}</span>
+                            </div>
+                            ${isDetailable ? `
+                                <div class="card-footer-notice">
+                                    Clique em um dos cards acima para detalhes.
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="ensemble-insights-container">
+                            <div class="ensemble-title">
+                                Visão do ensemble
+                                <button class="info-btn" onclick="openModal('info-modal')">i</button>
+                            </div>
+                            <div class="insights-list">
+                                ${insightsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(card);
+
+                // Vincula os eventos de clique no card inteiro da métrica
+                if (isDetailable) {
+                    document.getElementById(`box-temp-${dayIdx}`).onclick = () => openDetailModal('temp', formattedDate, dateStr);
+                    document.getElementById(`box-precip-${dayIdx}`).onclick = () => openDetailModal('precip', formattedDate, dateStr);
+                    document.getElementById(`box-wind-${dayIdx}`).onclick = () => openDetailModal('wind', formattedDate, dateStr);
+                }
+            });
+        }
+
+        fetchWeatherData();
+    </script>
 </body>
 </html>
