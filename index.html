@@ -765,26 +765,26 @@
                     insightsHtml = `<div class="no-insights">Sem alertas de chuva expressiva, ventos fortes ou extremos de temperatura.</div>`;
                 }
 
+                // Apenas os primeiros 5 dias recebem a classe clicável
                 const isDetailable = dayIdx < 5;
                 const clickableClass = isDetailable ? 'clickable' : '';
 
                 const card = document.createElement('div');
                 card.className = 'card';
 
-                // Inclusão do indicador do dia da previsão: (${dayIdx + 1})
                 card.innerHTML = `
                     <div class="card-header">(${dayIdx + 1}) ${formattedDate.toUpperCase()}</div>
                     <div class="card-body">
                         <div class="base-metrics-container">
-                            <div class="base-metric-box temp ${clickableClass}" id="box-temp-${dayIdx}">
+                            <div class="base-metric-box temp ${clickableClass}" ${isDetailable ? `onclick="openDetailModal('temp', '${formattedDate}', '${dateStr}')"` : ''}>
                                 <span class="metric-title">Temperatura</span>
                                 <span class="metric-value">${baseValues.temp}</span>
                             </div>
-                            <div class="base-metric-box precip ${clickableClass}" id="box-precip-${dayIdx}">
+                            <div class="base-metric-box precip ${clickableClass}" ${isDetailable ? `onclick="openDetailModal('precip', '${formattedDate}', '${dateStr}')"` : ''}>
                                 <span class="metric-title">Chuva acumulada</span>
                                 <span class="metric-value">${baseValues.precip}</span>
                             </div>
-                            <div class="base-metric-box wind ${clickableClass}" id="box-wind-${dayIdx}">
+                            <div class="base-metric-box wind ${clickableClass}" ${isDetailable ? `onclick="openDetailModal('wind', '${formattedDate}', '${dateStr}')"` : ''}>
                                 <span class="metric-title">Rajadas de Vento</span>
                                 <span class="metric-value">${baseValues.wind}</span>
                             </div>
@@ -807,12 +807,6 @@
                 `;
 
                 container.appendChild(card);
-
-                if (isDetailable) {
-                    document.getElementById(`box-temp-${dayIdx}`).onclick = () => openDetailModal('temp', formattedDate, dateStr);
-                    document.getElementById(`box-precip-${dayIdx}`).onclick = () => openDetailModal('precip', formattedDate, dateStr);
-                    document.getElementById(`box-wind-${dayIdx}`).onclick = () => openDetailModal('wind', formattedDate, dateStr);
-                }
             });
         }
 
