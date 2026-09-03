@@ -564,7 +564,7 @@
             const maxWind = dayWind.length ? Math.round(Math.max(...dayWind)) : 0;
 
             return {
-                temp: `${minTemp}° a ${maxTemp}°C`,
+                temp: `${minTemp}° a ${maxTemp}°`,
                 precip: `${totalPrecip} mm`,
                 wind: `${maxWind} km/h`
             };
@@ -631,7 +631,7 @@
                     });
 
                     if (maxObj.index === minObj.index) {
-                        return `${Math.round(maxObj.val)}°C`;
+                        return `${Math.round(maxObj.val)}°`;
                     }
                     if (maxObj.index < minObj.index) {
                         return `${Math.round(maxObj.val)}° a ${Math.round(minObj.val)}°`;
