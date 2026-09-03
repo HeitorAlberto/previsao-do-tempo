@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel ECMWF Ensemble</title>
+    <title>Previsão do tempo</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,6 +88,29 @@
             background-color: #f1f3f4;
         }
 
+        .history-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+            justify-content: center;
+        }
+
+        .history-chip {
+            background-color: #e8eaed;
+            color: #3c4043;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: 1px solid #dadce0;
+            transition: background-color 0.2s;
+        }
+
+        .history-chip:hover {
+            background-color: #dadce0;
+        }
+
         .selected-city-display {
             width: 100%;
             max-width: 1000px;
@@ -170,14 +193,12 @@
         }
 
         .metric-value {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 700;
+            text-align: right;
         }
 
         .card-footer-notice {
-            margin-top: 10px;
-            padding-top: 6px;
-            border-top: 1px dashed #e8eaed;
             font-size: 0.725rem;
             color: #70757a;
             text-align: center;
@@ -214,7 +235,7 @@
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            background-color: #1a73e8;
+            background-color: #74b0ff;
             color: #ffffff;
             font-size: 0.75rem;
             font-weight: bolder;
@@ -224,7 +245,7 @@
         }
 
         .info-btn:hover {
-            background-color: #1557b0;
+            background-color: #002e6b;
         }
 
         .insights-list {
@@ -280,13 +301,16 @@
             padding: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             position: relative;
+            text-align: justify;
         }
 
         .modal-header {
             font-size: 1.1rem;
             font-weight: 700;
-            color: #1a73e8;
+            color: #3c4043;
             margin-bottom: 12px;
+            border-bottom: 1px solid #e8eaed;
+            padding-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -314,26 +338,22 @@
             line-height: 1.4;
         }
 
-        .detail-table {
-            width: 100%;
-            border-collapse: collapse;
+        .detail-blocks-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             margin-top: 10px;
         }
 
-        .detail-table th, .detail-table td {
-            padding: 8px 12px;
-            text-align: left;
-            border-bottom: 1px solid #e8eaed;
-            font-size: 0.85rem;
-        }
-
-        .detail-table th {
-            background-color: #f1f3f4;
-            color: #3c4043;
-            font-weight: 700;
-        }
-
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            header {
+                padding: 10px;
+            }
+
             .card-body {
                 flex-direction: column;
             }
@@ -347,10 +367,13 @@
 <body>
 
     <header>
-        <h1>Previsão do tempo - 15 dias</h1>
+        <h1>Previsão do tempo</h1>
         <div class="search-container">
             <input type="text" id="city-search" class="search-input" placeholder="Buscar cidade..." autocomplete="off">
+            <!-- Sugestões posicionadas imediatamente após o input -->
             <ul id="suggestions" class="suggestions-list"></ul>
+            <!-- Histórico posicionado após as sugestões -->
+            <div id="history-container" class="history-container"></div>
         </div>
     </header>
 
@@ -369,20 +392,17 @@
             </div>
             <div class="modal-body">
                 <p>O <strong>Ensemble ECMWF</strong> executa <strong>51 simulações meteorológicas em paralelo</strong>, variando levemente as condições iniciais para medir incertezas na previsão do tempo.</p>
-                <p>Nossos alertas destacam cenários em que há convergência significativa entre os membros:</p>
-                <ul>
-                    <li><strong>Proporções:</strong> mostram quantos membros (ex: 35/51) preveem um determinado evento.</li>
-                    <li><strong>Limiares de Risco:</strong> identificam a probabilidade de chuvas expressivas, ventos fortes ou extremos térmicos.</li>
-                </ul>
+                <p>A <strong>previsão base</strong> é determinística, serve como informação inicial para o dia, mas recomendamos verificar os avisos para acessar alguma informação extra que merece atenção (se houver).</p>
+                <p>Cada aviso é gerado apenas quando pelo menos 25% dos membros concordam com condiçoes que merecem mais atenção.</p>
+                <p>Se não houver concordância mínima de 25%, consideramos a não geração de aviso.</p>
             </div>
         </div>
     </div>
 
     <div id="detail-modal" class="modal-overlay" onclick="closeModal(event, 'detail-modal')">
         <div class="modal-card" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <span id="detail-modal-title">Detalhamento a cada 6h</span>
-                <button class="close-btn" onclick="closeModal(event, 'detail-modal')">&times;</button>
+            <div class="modal-header" id="detail-modal-title">
+                Detalhamento a cada 6h
             </div>
             <div class="modal-body" id="detail-modal-body">
             </div>
@@ -403,6 +423,51 @@
 
         function closeModal(e, modalId) {
             document.getElementById(modalId).style.display = 'none';
+        }
+
+        function getSearchHistory() {
+            try {
+                const history = JSON.parse(localStorage.getItem('weather_search_history'));
+                return Array.isArray(history) ? history : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveToSearchHistory(cityObj) {
+            let history = getSearchHistory();
+            history = history.filter(item => item.name !== cityObj.name);
+            history.unshift(cityObj);
+            if (history.length > 3) {
+                history = history.slice(0, 3);
+            }
+            localStorage.setItem('weather_search_history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const historyContainer = document.getElementById('history-container');
+            const history = getSearchHistory();
+            
+            if (history.length === 0) {
+                historyContainer.innerHTML = '';
+                return;
+            }
+
+            historyContainer.innerHTML = history.map(item => `
+                <div class="history-chip" onclick="selectHistoryCity(${item.lat}, ${item.lon}, '${item.name.replace(/'/g, "\\'")}')">
+                    ${item.name}
+                </div>
+            `).join('');
+        }
+
+        function selectHistoryCity(lat, lon, name) {
+            currentCoords = { lat, lon, name };
+            cityDisplay.textContent = name;
+            searchInput.value = '';
+            suggestionsList.innerHTML = '';
+            fetchWeatherData();
+            saveToSearchHistory(currentCoords);
         }
 
         searchInput.addEventListener('input', async (e) => {
@@ -427,6 +492,7 @@
                             cityDisplay.textContent = label;
                             searchInput.value = '';
                             suggestionsList.innerHTML = '';
+                            saveToSearchHistory(currentCoords);
                             fetchWeatherData();
                         };
                         suggestionsList.appendChild(li);
@@ -514,10 +580,10 @@
             const metricKey = keyMap[metricType];
             
             const blocks = {
-                '00:00 - 06:00': [],
-                '06:00 - 12:00': [],
-                '12:00 - 18:00': [],
-                '18:00 - 24:00': []
+                'Madrugada': [],
+                'Manhã': [],
+                'Tarde': [],
+                'Noite': []
             };
 
             indices.forEach(idx => {
@@ -526,10 +592,11 @@
                 const val = hourly[metricKey]?.[idx];
 
                 if (typeof val === 'number' && !isNaN(val)) {
-                    if (hour >= 0 && hour < 6) blocks['00:00 - 06:00'].push(val);
-                    else if (hour >= 6 && hour < 12) blocks['06:00 - 12:00'].push(val);
-                    else if (hour >= 12 && hour < 18) blocks['12:00 - 18:00'].push(val);
-                    else if (hour >= 18 && hour < 24) blocks['18:00 - 24:00'].push(val);
+                    const item = { time: timeStr, val: val, index: idx };
+                    if (hour >= 0 && hour < 6) blocks['Madrugada'].push(item);
+                    else if (hour >= 6 && hour < 12) blocks['Manhã'].push(item);
+                    else if (hour >= 12 && hour < 18) blocks['Tarde'].push(item);
+                    else if (hour >= 18 && hour < 24) blocks['Noite'].push(item);
                 }
             });
 
@@ -544,66 +611,60 @@
             const hourly = weatherData.hourly;
             const rawBlocks = get6HourBreakdown(hourly, indices, type);
 
-            let modalTitle = '';
-            let columnHeader = '';
+            let metricTitle = '';
             let formatFn = null;
 
             if (type === 'precip') {
-                modalTitle = `Chuva acumulada - ${dateLabel}`;
-                columnHeader = 'Acumulado';
-                formatFn = (vals) => {
-                    const sum = vals.reduce((acc, v) => acc + v, 0);
+                metricTitle = 'CHUVA ACUMULADA';
+                formatFn = (items) => {
+                    const sum = items.reduce((acc, item) => acc + item.val, 0);
                     return `${sum.toFixed(1)} mm`;
                 };
             } else if (type === 'temp') {
-                modalTitle = `Temperatura - ${dateLabel}`;
-                columnHeader = 'Valor no Bloco';
-                
-                const allDayTemps = indices.map(idx => hourly['temperature_2m']?.[idx]).filter(v => typeof v === 'number' && !isNaN(v));
-                const globalMin = allDayTemps.length ? Math.min(...allDayTemps) : null;
+                metricTitle = 'TEMPERATURA';
+                formatFn = (items) => {
+                    if (!items.length) return '--';
+                    let maxObj = items[0], minObj = items[0];
+                    items.forEach(item => {
+                        if (item.val > maxObj.val) maxObj = item;
+                        if (item.val < minObj.val) minObj = item;
+                    });
 
-                formatFn = (vals) => {
-                    if (!vals.length) return '--';
-                    const blockMax = Math.max(...vals);
-                    const blockMin = Math.min(...vals);
-
-                    if (globalMin !== null && blockMin === globalMin) {
-                        return `${Math.round(blockMin)}°C (mínima do dia)`;
+                    if (maxObj.index === minObj.index) {
+                        return `${Math.round(maxObj.val)}°C`;
                     }
-                    return `${Math.round(blockMax)}°C (máxima)`;
+                    if (maxObj.index < minObj.index) {
+                        return `${Math.round(maxObj.val)}° a ${Math.round(minObj.val)}°`;
+                    } else {
+                        return `${Math.round(minObj.val)}° a ${Math.round(maxObj.val)}°`;
+                    }
                 };
             } else if (type === 'wind') {
-                modalTitle = `Rajadas de vento - ${dateLabel}`;
-                columnHeader = 'Máxima';
-                formatFn = (vals) => {
-                    if (!vals.length) return '--';
-                    return `${Math.round(Math.max(...vals))} km/h`;
+                metricTitle = 'RAJADAS DE VENTO';
+                formatFn = (items) => {
+                    if (!items.length) return '--';
+                    const maxVal = Math.max(...items.map(i => i.val));
+                    return `${Math.round(maxVal)} km/h`;
                 };
             }
 
-            document.getElementById('detail-modal-title').textContent = modalTitle;
+            document.getElementById('detail-modal-title').textContent = dateLabel.toUpperCase();
             
             let html = `
-                <table class="detail-table">
-                    <thead>
-                        <tr>
-                            <th>Intervalo</th>
-                            <th>${columnHeader}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div style="font-weight: 700; color: #3c4043; margin-bottom: 8px; text-transform: uppercase; font-size: 0.9rem;">${metricTitle}</div>
+                <div class="detail-blocks-container">
             `;
 
-            Object.entries(rawBlocks).forEach(([interval, vals]) => {
+            Object.entries(rawBlocks).forEach(([interval, items]) => {
                 html += `
-                    <tr>
-                        <td>${interval}</td>
-                        <td><strong>${formatFn(vals)}</strong></td>
-                    </tr>
+                    <div class="base-metric-box ${type}">
+                        <span class="metric-title">${interval}</span>
+                        <span class="metric-value">${formatFn(items)}</span>
+                    </div>
                 `;
             });
 
-            html += `</tbody></table>`;
+            html += `</div>`;
 
             document.getElementById('detail-modal-body').innerHTML = html;
             openModal('detail-modal');
@@ -633,8 +694,8 @@
                 }).filter(v => v !== null);
 
                 const tempMaxRanges = [
-                    { min: 40, label: 'extremo acima de 40°C', type: 'temp' },
-                    { min: 35, max: 40, label: 'entre 35°C e 40°C', type: 'temp' }
+                    { min: 40, label: 'temperatura acima de 40°', type: 'temp' },
+                    { min: 35, max: 40, label: 'temperatura entre 35° e 40°', type: 'temp' }
                 ];
 
                 tempMaxRanges.forEach(range => {
@@ -642,16 +703,15 @@
                     if (count >= minAgreementCount) {
                         const pct = Math.round((count / totalMembers) * 100);
                         rawInsights.push({
-                            badge: `${pct}% dos membros`,
-                            text: `indicam calor ${range.label}`,
+                            text: `${pct}% - ${range.label}`,
                             type: 'temp'
                         });
                     }
                 });
 
                 const tempMinRanges = [
-                    { max: 0, label: 'frio rigoroso abaixo de 0°C', type: 'temp' },
-                    { min: 0, max: 5, label: 'entre 0°C e 5°C', type: 'temp' }
+                    { max: 0, label: 'temperatura abaixo de 0°', type: 'temp' },
+                    { min: 0, max: 5, label: 'temperatura entre 0° e 5°', type: 'temp' }
                 ];
 
                 tempMinRanges.forEach(range => {
@@ -659,8 +719,7 @@
                     if (count >= minAgreementCount) {
                         const pct = Math.round((count / totalMembers) * 100);
                         rawInsights.push({
-                            badge: `${pct}% dos membros`,
-                            text: `indicam ${range.label}`,
+                            text: `${pct}% - ${range.label}`,
                             type: 'temp'
                         });
                     }
@@ -674,11 +733,11 @@
                 });
 
                 const precipRanges = [
-                    { min: 50, label: 'acima de 50 mm (extremo)', type: 'precip' },
-                    { min: 30, max: 50, label: 'entre 30 mm e 50 mm', type: 'precip' },
-                    { min: 20, max: 30, label: 'entre 20 mm e 30 mm', type: 'precip' },
-                    { min: 10, max: 20, label: 'entre 10 mm e 20 mm', type: 'precip' },
-                    { min: 5, max: 10, label: 'entre 5 mm e 10 mm', type: 'precip' }
+                    { min: 50, label: 'chuva acima de 50mm', type: 'precip' },
+                    { min: 30, max: 50, label: 'chuva entre 30mm e 50mm', type: 'precip' },
+                    { min: 20, max: 30, label: 'chuva entre 20mm e 30mm', type: 'precip' },
+                    { min: 10, max: 20, label: 'chuva entre 10mm e 20mm', type: 'precip' },
+                    { min: 5, max: 10, label: 'chuva entre 5mm e 10mm', type: 'precip' }
                 ];
 
                 let precipInsights = [];
@@ -689,14 +748,12 @@
                         const pct = Math.round((count / totalMembers) * 100);
                         precipInsights.push({
                             minVal: range.min,
-                            badge: `${pct}% dos membros`,
-                            text: `indicam chuva ${range.label}`,
+                            text: `${pct}% - ${range.label}`,
                             type: 'precip'
                         });
                     }
                 });
 
-                // Ordena do pior cenário (maior volume) para o menor e limita a apenas 2 itens
                 precipInsights.sort((a, b) => b.minVal - a.minVal);
                 rawInsights.push(...precipInsights.slice(0, 2));
             }
@@ -708,10 +765,10 @@
                 });
 
                 const windRanges = [
-                    { min: 100, label: 'acima de 100 km/h', type: 'wind' },
-                    { min: 80, max: 100, label: 'entre 80 km/h e 100 km/h', type: 'wind' },
-                    { min: 60, max: 80, label: 'entre 60 km/h e 80 km/h', type: 'wind' },
-                    { min: 40, max: 60, label: 'entre 40 km/h e 60 km/h', type: 'wind' }
+                    { min: 100, label: 'rajadas de vento acima de 100km/h', type: 'wind' },
+                    { min: 80, max: 100, label: 'rajadas de vento entre 80 e 100km/h', type: 'wind' },
+                    { min: 60, max: 80, label: 'rajadas de vento entre 60 e 80km/h', type: 'wind' },
+                    { min: 40, max: 60, label: 'rajadas de vento entre 40 e 60km/h', type: 'wind' }
                 ];
 
                 windRanges.forEach(range => {
@@ -719,8 +776,7 @@
                     if (count >= minAgreementCount) {
                         const pct = Math.round((count / totalMembers) * 100);
                         rawInsights.push({
-                            badge: `${pct}% dos membros`,
-                            text: `indicam rajadas de vento ${range.label}`,
+                            text: `${pct}% - ${range.label}`,
                             type: 'wind'
                         });
                     }
@@ -766,7 +822,7 @@
                 if (insights.length > 0) {
                     insightsHtml = insights.map(item => `
                         <div class="insight-item">
-                            <span class="insight-badge ${item.type}">${item.badge} ${item.text}</span>
+                            <span class="insight-badge ${item.type}">${item.text}</span>
                         </div>
                     `).join('');
                 } else {
@@ -783,6 +839,7 @@
                     <div class="card-header">(${dayIdx + 1}) ${formattedDate.toUpperCase()}</div>
                     <div class="card-body">
                         <div class="base-metrics-container">
+                            <div style="text-align: center">Previsão base</div>
                             <div class="base-metric-box temp ${clickableClass}" ${isDetailable ? `onclick="openDetailModal('temp', '${formattedDate}', '${dateStr}')"` : ''}>
                                 <span class="metric-title">Temperatura</span>
                                 <span class="metric-value">${baseValues.temp}</span>
@@ -817,6 +874,7 @@
             });
         }
 
+        renderHistory();
         fetchWeatherData();
     </script>
 </body>
