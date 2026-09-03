@@ -765,15 +765,15 @@
                     insightsHtml = `<div class="no-insights">Sem alertas de chuva expressiva, ventos fortes ou extremos de temperatura.</div>`;
                 }
 
-                // Apenas os primeiros 5 dias recebem a classe clicável e o evento
                 const isDetailable = dayIdx < 5;
                 const clickableClass = isDetailable ? 'clickable' : '';
 
                 const card = document.createElement('div');
                 card.className = 'card';
 
+                // Inclusão do indicador do dia da previsão: (${dayIdx + 1})
                 card.innerHTML = `
-                    <div class="card-header">${formattedDate.toUpperCase()}</div>
+                    <div class="card-header">(${dayIdx + 1}) ${formattedDate.toUpperCase()}</div>
                     <div class="card-body">
                         <div class="base-metrics-container">
                             <div class="base-metric-box temp ${clickableClass}" id="box-temp-${dayIdx}">
@@ -808,7 +808,6 @@
 
                 container.appendChild(card);
 
-                // Vincula os eventos de clique no card inteiro da métrica
                 if (isDetailable) {
                     document.getElementById(`box-temp-${dayIdx}`).onclick = () => openDetailModal('temp', formattedDate, dateStr);
                     document.getElementById(`box-precip-${dayIdx}`).onclick = () => openDetailModal('precip', formattedDate, dateStr);
