@@ -149,7 +149,6 @@
         .base-metric-box.precip { background-color: #bbdefb; color: #0d47a1; }
         .base-metric-box.wind { background-color: #c8e6c9; color: #1b5e20; }
 
-        /* Estilo interativo para os cards de métrica (Apenas primeiros 5 dias) */
         .base-metric-box.clickable {
             cursor: pointer;
             transition: filter 0.15s ease, transform 0.1s ease;
@@ -218,8 +217,7 @@
             background-color: #1a73e8;
             color: #ffffff;
             font-size: 0.75rem;
-            font-weight: bold;
-            font-style: italic;
+            font-weight: bolder;
             cursor: pointer;
             border: none;
             transition: background 0.2s;
@@ -232,7 +230,7 @@
         .insights-list {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 20px;
         }
 
         .insight-item {
@@ -262,7 +260,6 @@
             font-style: italic;
         }
 
-        /* Modal Genérico */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -318,7 +315,6 @@
             line-height: 1.4;
         }
 
-        /* Tabela dos Modais de Detalhamento */
         .detail-table {
             width: 100%;
             border-collapse: collapse;
@@ -366,7 +362,6 @@
         <div id="cards-container" class="cards-container"></div>
     </main>
 
-    <!-- Modal Explicativo do Ensemble -->
     <div id="info-modal" class="modal-overlay" onclick="closeModal(event, 'info-modal')">
         <div class="modal-card" onclick="event.stopPropagation()">
             <div class="modal-header">
@@ -384,7 +379,6 @@
         </div>
     </div>
 
-    <!-- Modal Genérico para Detalhamento 6h -->
     <div id="detail-modal" class="modal-overlay" onclick="closeModal(event, 'detail-modal')">
         <div class="modal-card" onclick="event.stopPropagation()">
             <div class="modal-header">
@@ -639,31 +633,39 @@
                     return vals.length > 0 ? Math.min(...vals) : null;
                 }).filter(v => v !== null);
 
-                [35, 40].forEach(threshold => {
-                    const count = tempMaxes.filter(val => val >= threshold).length;
+                const tempMaxRanges = [
+                    { min: 40, label: 'extremo acima de 40°C', type: 'temp' },
+                    { min: 35, max: 40, label: 'entre 35°C e 40°C', type: 'temp' }
+                ];
+
+                tempMaxRanges.forEach(range => {
+                    const count = tempMaxes.filter(val => range.max ? (val >= range.min && val < range.max) : (val >= range.min)).length;
                     if (count >= minAgreementCount) {
                         const pct = Math.round((count / totalMembers) * 100);
                         rawInsights.push({
-                            badge: `${count}/${totalMembers} (${pct}%)`,
-                            text: `indicam calor extremo acima de <strong>${threshold}°C</strong>`,
+                            badge: `${pct}% dos membros`,
+                            text: `indicam calor ${range.label}`,
                             type: 'temp'
                         });
                     }
                 });
 
-                if (tempMins.length > 0) {
-                    [5, 0].forEach(threshold => {
-                        const count = tempMins.filter(val => val <= threshold).length;
-                        if (count >= minAgreementCount) {
-                            const pct = Math.round((count / totalMembers) * 100);
-                            rawInsights.push({
-                                badge: `${count}/${totalMembers} (${pct}%)`,
-                                text: `indicam frio intenso abaixo de <strong>${threshold}°C</strong>`,
-                                type: 'temp'
-                            });
-                        }
-                    });
-                }
+                const tempMinRanges = [
+                    { max: 0, label: 'frio rigoroso abaixo de 0°C', type: 'temp' },
+                    { min: 0, max: 5, label: 'entre 0°C e 5°C', type: 'temp' }
+                ];
+
+                tempMinRanges.forEach(range => {
+                    const count = tempMins.filter(val => range.min !== undefined ? (val > range.min && val <= range.max) : (val <= range.max)).length;
+                    if (count >= minAgreementCount) {
+                        const pct = Math.round((count / totalMembers) * 100);
+                        rawInsights.push({
+                            badge: `${pct}% dos membros`,
+                            text: `indicam ${range.label}`,
+                            type: 'temp'
+                        });
+                    }
+                });
             }
 
             if (precipKeys.length > 0) {
@@ -672,24 +674,32 @@
                     return vals.length > 0 ? vals.reduce((a, b) => a + b, 0) : 0;
                 });
 
+                const precipRanges = [
+                    { min: 50, label: 'acima de 50 mm (extremo)', type: 'precip' },
+                    { min: 30, max: 50, label: 'entre 30 mm e 50 mm', type: 'precip' },
+                    { min: 20, max: 30, label: 'entre 20 mm e 30 mm', type: 'precip' },
+                    { min: 10, max: 20, label: 'entre 10 mm e 20 mm', type: 'precip' },
+                    { min: 5, max: 10, label: 'entre 5 mm e 10 mm', type: 'precip' }
+                ];
+
                 let precipInsights = [];
 
-                [5, 10, 15, 20, 30, 50].forEach(threshold => {
-                    const count = precipTotals.filter(val => val >= threshold).length;
+                precipRanges.forEach(range => {
+                    const count = precipTotals.filter(val => range.max ? (val >= range.min && val < range.max) : (val >= range.min)).length;
                     if (count >= minAgreementCount) {
                         const pct = Math.round((count / totalMembers) * 100);
                         precipInsights.push({
-                            badge: `${count}/${totalMembers} (${pct}%)`,
-                            text: `indicam chuva acumulada acima de <strong>${threshold} mm</strong>`,
+                            minVal: range.min,
+                            badge: `${pct}% dos membros`,
+                            text: `indicam chuva ${range.label}`,
                             type: 'precip'
                         });
                     }
                 });
 
-                if (precipInsights.length > 2) {
-                    precipInsights = precipInsights.slice(-2);
-                }
-                rawInsights.push(...precipInsights);
+                // Ordena do pior cenário (maior volume) para o menor e limita a apenas 2 itens
+                precipInsights.sort((a, b) => b.minVal - a.minVal);
+                rawInsights.push(...precipInsights.slice(0, 2));
             }
 
             if (windKeys.length > 0) {
@@ -698,24 +708,24 @@
                     return vals.length > 0 ? Math.max(...vals) : 0;
                 });
 
-                let windInsights = [];
+                const windRanges = [
+                    { min: 100, label: 'acima de 100 km/h', type: 'wind' },
+                    { min: 80, max: 100, label: 'entre 80 km/h e 100 km/h', type: 'wind' },
+                    { min: 60, max: 80, label: 'entre 60 km/h e 80 km/h', type: 'wind' },
+                    { min: 40, max: 60, label: 'entre 40 km/h e 60 km/h', type: 'wind' }
+                ];
 
-                [40, 60, 80, 100].forEach(threshold => {
-                    const count = windMaxes.filter(val => val >= threshold).length;
+                windRanges.forEach(range => {
+                    const count = windMaxes.filter(val => range.max ? (val >= range.min && val < range.max) : (val >= range.min)).length;
                     if (count >= minAgreementCount) {
                         const pct = Math.round((count / totalMembers) * 100);
-                        windInsights.push({
-                            badge: `${count}/${totalMembers} (${pct}%)`,
-                            text: `indicam rajadas de vento acima de <strong>${threshold} km/h</strong>`,
+                        rawInsights.push({
+                            badge: `${pct}% dos membros`,
+                            text: `indicam rajadas de vento ${range.label}`,
                             type: 'wind'
                         });
                     }
                 });
-
-                if (windInsights.length > 2) {
-                    windInsights = windInsights.slice(-2);
-                }
-                rawInsights.push(...windInsights);
             }
 
             return rawInsights;
@@ -747,7 +757,7 @@
                 const dayIndices = daysMap[dateStr];
 
                 const baseValues = getBaseValues(hourly, dayIndices);
-                const insights = calcThresholds(hourly, dayIndices, 8);
+                const insights = calcThresholds(hourly, dayIndices, 13);
 
                 const [year, month, day] = dateStr.split('-').map(Number);
                 const dateObj = new Date(year, month - 1, day);
@@ -757,15 +767,13 @@
                 if (insights.length > 0) {
                     insightsHtml = insights.map(item => `
                         <div class="insight-item">
-                            <span class="insight-badge ${item.type}">${item.badge}</span>
-                            <span>${item.text}</span>
+                            <span class="insight-badge ${item.type}">${item.badge} ${item.text}</span>
                         </div>
                     `).join('');
                 } else {
                     insightsHtml = `<div class="no-insights">Sem alertas de chuva expressiva, ventos fortes ou extremos de temperatura.</div>`;
                 }
 
-                // Apenas os primeiros 5 dias recebem a classe clicável
                 const isDetailable = dayIdx < 5;
                 const clickableClass = isDetailable ? 'clickable' : '';
 
