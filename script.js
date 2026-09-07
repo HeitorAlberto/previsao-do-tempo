@@ -5,7 +5,7 @@ let currentCoords = {
     name: "São Paulo, Brasil"
 };
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 
 // ==========================================
 // REFERÊNCIAS DE ELEMENTOS DO DOM
@@ -312,8 +312,13 @@ function get6HourBlockKey(
 }
 
 // ==========================================
-// 5. MÉTRICAS CLIMÁTICAS
+// 5. MÉTRICAS CLIMÁTICAS E TROVOADAS
 // ==========================================
+
+function isThunderCode(code) {
+    // Códigos WMO da Open-Meteo para Trovoada: 95, 96, 99
+    return [95, 96, 99].includes(Math.round(code));
+}
 
 function getCloudCategory(percentage) {
     if (percentage <= 20) {
@@ -346,12 +351,14 @@ function getCloudCategory(percentage) {
 function getDailyCloudSummary(hourly, indices) {
     const times = hourly.time;
     const clouds = hourly.cloud_cover;
+    const codes = hourly.weather_code || [];
 
     if (!clouds) {
         return 'Sem dados de nebulosidade';
     }
 
     const daytimeReadings = [];
+    let hasThunder = false;
 
     indices.forEach(idx => {
         const hour =
@@ -361,6 +368,10 @@ function getDailyCloudSummary(hourly, indices) {
                     .split(':')[0],
                 10
             );
+
+        if (codes[idx] && isThunderCode(codes[idx])) {
+            hasThunder = true;
+        }
 
         if (
             hour >= 6 &&
@@ -409,22 +420,25 @@ function getDailyCloudSummary(hourly, indices) {
         }
     });
 
+    let finalLabel = '';
+
     if (
         maxSeverityCat &&
         maxSeverityCat.count >= 3
     ) {
-        return maxSeverityCat.label;
+        finalLabel = maxSeverityCat.label;
+    } else {
+        const modeCat =
+            Object.values(categoryCounts).reduce(
+                (prev, curr) =>
+                    curr.count > prev.count
+                        ? curr
+                        : prev
+            );
+        finalLabel = modeCat.label;
     }
 
-    const modeCat =
-        Object.values(categoryCounts).reduce(
-            (prev, curr) =>
-                curr.count > prev.count
-                    ? curr
-                    : prev
-        );
-
-    return modeCat.label;
+    return hasThunder ? `${finalLabel}⚡ ` : finalLabel;
 }
 
 function getBaseValues(hourly, indices) {
@@ -513,8 +527,8 @@ function get6HourBreakdown(
         cloud: 'cloud_cover'
     };
 
-    const metricKey =
-        keyMap[metricType];
+    const metricKey = keyMap[metricType];
+    const codes = hourly.weather_code || [];
 
     const blocks = {
         Madrugada: [],
@@ -534,8 +548,8 @@ function get6HourBreakdown(
                 10
             );
 
-        const val =
-            hourly[metricKey]?.[idx];
+        const val = hourly[metricKey]?.[idx];
+        const weatherCode = codes[idx] || 0;
 
         if (
             typeof val !== 'number' ||
@@ -548,6 +562,7 @@ function get6HourBreakdown(
             time: timeStr,
             hour,
             val,
+            weatherCode,
             index: idx
         };
 
@@ -625,6 +640,36 @@ function processEnsembleVariable(hourlyData, baseVariableName) {
             continue;
         }
 
+        // 1. WEATHER_CODE / TROVOADAS: Pega o maior código (não ignora alertas)
+        if (baseVariableName === 'weather_code') {
+            const maxCode = Math.max(...stepValues);
+            processedValues.push(maxCode);
+            continue;
+        }
+
+        // 2. PRECIPITAÇÃO: Percentil 75 (não apaga o sinal de tempestade)
+        if (baseVariableName === 'precipitation') {
+            const sortedPrecip = [...stepValues].sort((a, b) => a - b);
+            const p75Index = Math.floor(sortedPrecip.length * 0.75);
+            const precipVal = sortedPrecip[p75Index] || 0;
+            processedValues.push(Number(precipVal.toFixed(2)));
+            continue;
+        }
+
+        // 3. VENTO: Percentil 90 do Cluster (captura o pico real de rajadas)
+        if (baseVariableName === 'wind_gusts_10m') {
+            const consensusCluster = getConsensusCluster(stepValues, tolerance);
+            const sortedWind = [...consensusCluster].sort((a, b) => a - b);
+            const p90Index = Math.min(
+                Math.floor(sortedWind.length * 0.90),
+                sortedWind.length - 1
+            );
+            const windVal = sortedWind[p90Index] || 0;
+            processedValues.push(Number(windVal.toFixed(2)));
+            continue;
+        }
+
+        // 4. TEMPERATURA E NEBULOSIDADE: Consensus Cluster + Mediana
         const consensusCluster = getConsensusCluster(stepValues, tolerance);
         const sortedCluster = [...consensusCluster].sort((a, b) => a - b);
         const mid = Math.floor(sortedCluster.length / 2);
@@ -645,7 +690,8 @@ function processWeatherData(data) {
         'temperature_2m',
         'precipitation',
         'wind_gusts_10m',
-        'cloud_cover'
+        'cloud_cover',
+        'weather_code'
     ];
 
     const consolidatedHourly = { time: data.hourly.time };
@@ -723,7 +769,7 @@ async function fetchWeatherData() {
         `https://ensemble-api.open-meteo.com/v1/ensemble` +
         `?latitude=${lat}` +
         `&longitude=${lon}` +
-        `&hourly=temperature_2m,precipitation,wind_gusts_10m,cloud_cover` +
+        `&hourly=temperature_2m,precipitation,wind_gusts_10m,cloud_cover,weather_code` +
         `&models=ecmwf_ifs025` +
         `&forecast_days=15` +
         `&timezone=auto`;
@@ -791,23 +837,28 @@ function toggleAccordionBlock(blockId) {
 
     const isVisible = targetAccordion.style.display === 'block';
 
-    // Fecha todos os blocos do acordeão na modal
     const allAccordions = document.querySelectorAll('.accordion-content');
     allAccordions.forEach(acc => {
         acc.style.display = 'none';
     });
 
-    // Se não estava visível, abre o clicado
     if (!isVisible) {
         targetAccordion.style.display = 'block';
     }
 }
 
-function formatSingleValue(val, type) {
+function formatSingleValue(item, type) {
+    const val = item.val;
+    const code = item.weatherCode || 0;
+
     if (type === 'precip') return val.toFixed(1);
     if (type === 'temp') return `${Math.round(val)}°`;
     if (type === 'wind') return Math.round(val);
-    if (type === 'cloud') return Math.round(val);
+    if (type === 'cloud') {
+        const hasThunder = isThunderCode(code);
+        const text = `${Math.round(val)}%`;
+        return hasThunder ? `${text} ⚡ ` : text;
+    }
     return val;
 }
 
@@ -948,10 +999,10 @@ function openDetailModal(
                     0
                 ) / items.length;
 
-            const cat =
-                getCloudCategory(avg);
+            const cat = getCloudCategory(avg);
+            const hasThunder = items.some(i => isThunderCode(i.weatherCode));
 
-            return cat.label;
+            return hasThunder ? ` ${cat.label}⚡` : cat.label;
         };
     }
 
@@ -970,7 +1021,6 @@ function openDetailModal(
             dateLabel.toUpperCase();
     }
 
-    // Identificação de Data/Hora atuais para destaque
     const now = new Date();
     const currentYear = now.getFullYear();
     const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
@@ -1001,7 +1051,6 @@ function openDetailModal(
             ([interval, items], index) => {
                 const blockId = `accordion-block-${index}`;
 
-                // Verifica se este bloco engloba a hora atual no dia de hoje
                 const containsCurrentHour = isToday && items.some(item => item.hour === currentHour);
                 const displayStyle = containsCurrentHour ? 'block' : 'none';
 
@@ -1044,7 +1093,7 @@ function openDetailModal(
                                 return `
                                     <div style="display: flex; flex-direction: column; align-items: center; ${hourBg}">
                                         <span style="font-weight: 700; font-size: 0.85rem; color: #202124;">
-                                            ${formatSingleValue(item.val, type)}
+                                            ${formatSingleValue(item, type)}
                                         </span>
                                         <span style="font-size: 0.75rem; color: #5f6368; margin-top: 2px;">
                                             ${item.hour}h
@@ -1215,7 +1264,7 @@ function renderCards() {
                         </div>
 
                         <div class="card-footer-notice">
-                            Clique nos dados acima para detalhes.
+                            Clique em um dos cards acima para detalhes.
                         </div>
 
                     </div>
