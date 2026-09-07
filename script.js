@@ -546,6 +546,7 @@ function get6HourBreakdown(
 
         const item = {
             time: timeStr,
+            hour,
             val,
             index: idx
         };
@@ -574,402 +575,87 @@ function get6HourBreakdown(
 }
 
 // ==========================================
-// 6. CÁLCULO DE INSIGHTS
+// 6. PROCESSAMENTO ESTATÍSTICO (ENSEMBLE)
 // ==========================================
 
-function calcThresholds(
-    hourly,
-    indices,
-    minAgreementCount = 13
-) {
-    const tempKeys =
-        Object.keys(hourly)
-            .filter(k =>
-                k.startsWith(
-                    'temperature_2m'
-                )
-            );
+function getConsensusCluster(values, tolerance) {
+    if (!values || values.length === 0) return [];
 
-    const precipKeys =
-        Object.keys(hourly)
-            .filter(k =>
-                k.startsWith(
-                    'precipitation'
-                )
-            );
-
-    const windKeys =
-        Object.keys(hourly)
-            .filter(k =>
-                k.startsWith(
-                    'wind_gusts_10m'
-                )
-            );
-
-    let rawInsights = [];
-
-    const getValidValues = key =>
-        indices
-            .map(idx =>
-                hourly[key][idx]
-            )
-            .filter(
-                v =>
-                    v !== null &&
-                    v !== undefined &&
-                    !isNaN(v) &&
-                    typeof v === 'number'
-            );
-
-    const getRobustMax = arr => {
-        if (!arr.length) {
-            return 0;
-        }
-
-        const sorted = [...arr].sort(
-            (a, b) => a - b
-        );
-
-        if (sorted.length < 5) {
-            return sorted[
-                sorted.length - 1
-            ];
-        }
-
-        const p90Index =
-            Math.ceil(
-                sorted.length * 0.90
-            ) - 1;
-
-        return sorted[p90Index];
-    };
-
-    // --------------------------------------
-    // TEMPERATURA
-    // --------------------------------------
-
-    if (tempKeys.length > 0) {
-        const tempMaxes =
-            tempKeys
-                .map(k => {
-                    const vals =
-                        getValidValues(k);
-
-                    return vals.length
-                        ? Math.max(...vals)
-                        : null;
-                })
-                .filter(
-                    v => v !== null
-                );
-
-        const tempMins =
-            tempKeys
-                .map(k => {
-                    const vals =
-                        getValidValues(k);
-
-                    return vals.length
-                        ? Math.min(...vals)
-                        : null;
-                })
-                .filter(
-                    v => v !== null
-                );
-
-        const tempRanges = [
-            {
-                min: 40,
-                labelFn: val =>
-                    `Possibilidade de temperaturas de até ${val}°`,
-                severity: 3,
-                isMax: true
-            },
-            {
-                min: 35,
-                max: 40,
-                labelFn: val =>
-                    `Possibilidade de temperaturas de até ${val}°`,
-                severity: 2,
-                isMax: true
-            },
-            {
-                max: 0,
-                labelFn: () =>
-                    `Possibilidade de temperaturas negativas`,
-                severity: 3,
-                isMax: false
-            },
-            {
-                min: 0,
-                max: 5,
-                labelFn: val =>
-                    `Possibilidade de temperaturas de até ${val}°`,
-                severity: 2,
-                isMax: false
+    const clusters = [];
+    values.forEach(val => {
+        let placed = false;
+        for (const cluster of clusters) {
+            const mean = cluster.reduce((a, b) => a + b, 0) / cluster.length;
+            if (Math.abs(val - mean) <= tolerance) {
+                cluster.push(val);
+                placed = true;
+                break;
             }
-        ];
-
-        let matchedTemp = [];
-
-        tempRanges.forEach(range => {
-            const dataset =
-                range.isMax
-                    ? tempMaxes
-                    : tempMins;
-
-            const matchingValues =
-                dataset.filter(val => {
-                    if (
-                        range.min !==
-                            undefined &&
-                        range.max !==
-                            undefined
-                    ) {
-                        return (
-                            val >= range.min &&
-                            val < range.max
-                        );
-                    }
-
-                    if (
-                        range.min !==
-                        undefined
-                    ) {
-                        return (
-                            val >= range.min
-                        );
-                    }
-
-                    return (
-                        val <= range.max
-                    );
-                });
-
-            if (
-                matchingValues.length >=
-                minAgreementCount
-            ) {
-                const maxVal =
-                    Math.round(
-                        getRobustMax(
-                            matchingValues
-                        )
-                    );
-
-                matchedTemp.push({
-                    severity:
-                        range.severity,
-                    text:
-                        range.labelFn(
-                            maxVal
-                        ),
-                    type: 'temp'
-                });
-            }
-        });
-
-        if (matchedTemp.length > 0) {
-            matchedTemp.sort(
-                (a, b) =>
-                    b.severity -
-                    a.severity
-            );
-
-            rawInsights.push(
-                matchedTemp[0]
-            );
         }
+        if (!placed) clusters.push([val]);
+    });
+
+    clusters.sort((a, b) => b.length - a.length);
+    return clusters[0];
+}
+
+function processEnsembleVariable(hourlyData, baseVariableName) {
+    const memberKeys = Object.keys(hourlyData).filter(key =>
+        key.startsWith(`${baseVariableName}_member`) || key === baseVariableName
+    );
+
+    if (memberKeys.length === 0) return [];
+
+    const totalTimeSteps = hourlyData.time.length;
+    const processedValues = [];
+
+    let tolerance = 1.0;
+    if (baseVariableName === 'temperature_2m') tolerance = 1.5;
+    if (baseVariableName === 'precipitation') tolerance = 0.5;
+    if (baseVariableName === 'wind_gusts_10m') tolerance = 3.0;
+    if (baseVariableName === 'cloud_cover') tolerance = 15.0;
+
+    for (let i = 0; i < totalTimeSteps; i++) {
+        const stepValues = memberKeys
+            .map(key => hourlyData[key]?.[i])
+            .filter(val => val !== null && val !== undefined);
+
+        if (stepValues.length === 0) {
+            processedValues.push(0);
+            continue;
+        }
+
+        const consensusCluster = getConsensusCluster(stepValues, tolerance);
+        const sortedCluster = [...consensusCluster].sort((a, b) => a - b);
+        const mid = Math.floor(sortedCluster.length / 2);
+        const consensusValue = sortedCluster.length % 2 !== 0
+            ? sortedCluster[mid]
+            : (sortedCluster[mid - 1] + sortedCluster[mid]) / 2;
+
+        processedValues.push(Number(consensusValue.toFixed(2)));
     }
 
-    // --------------------------------------
-    // PRECIPITAÇÃO
-    // --------------------------------------
+    return processedValues;
+}
 
-    if (precipKeys.length > 0) {
-        const precipTotals =
-            precipKeys.map(k => {
-                const vals =
-                    getValidValues(k);
+function processWeatherData(data) {
+    if (!data || !data.hourly) return data;
 
-                return vals.length
-                    ? vals.reduce(
-                          (a, b) =>
-                              a + b,
-                          0
-                      )
-                    : 0;
-            });
+    const targetVariables = [
+        'temperature_2m',
+        'precipitation',
+        'wind_gusts_10m',
+        'cloud_cover'
+    ];
 
-        const precipRanges = [
-            {
-                min: 50,
-                severity: 5
-            },
-            {
-                min: 30,
-                max: 50,
-                severity: 4
-            },
-            {
-                min: 20,
-                max: 30,
-                severity: 3
-            },
-            {
-                min: 10,
-                max: 20,
-                severity: 2
-            },
-            {
-                min: 5,
-                max: 10,
-                severity: 1
-            }
-        ];
+    const consolidatedHourly = { time: data.hourly.time };
 
-        let matchedPrecip = [];
+    targetVariables.forEach(variable => {
+        consolidatedHourly[variable] = processEnsembleVariable(data.hourly, variable);
+    });
 
-        precipRanges.forEach(range => {
-            const matchingValues =
-                precipTotals.filter(
-                    val =>
-                        range.max
-                            ? (
-                                  val >=
-                                      range.min &&
-                                  val <
-                                      range.max
-                              )
-                            : val >=
-                              range.min
-                );
-
-            if (
-                matchingValues.length >=
-                minAgreementCount
-            ) {
-                const maxVal =
-                    getRobustMax(
-                        matchingValues
-                    ).toFixed(1);
-
-                matchedPrecip.push({
-                    severity:
-                        range.severity,
-                    text:
-                        `Possibilidade de chuva acumulada de até ${maxVal} mm`,
-                    type: 'precip'
-                });
-            }
-        });
-
-        if (
-            matchedPrecip.length > 0
-        ) {
-            matchedPrecip.sort(
-                (a, b) =>
-                    b.severity -
-                    a.severity
-            );
-
-            rawInsights.push(
-                matchedPrecip[0]
-            );
-        }
-    }
-
-    // --------------------------------------
-    // VENTO
-    // --------------------------------------
-
-    if (windKeys.length > 0) {
-        const windMaxes =
-            windKeys.map(k => {
-                const vals =
-                    getValidValues(k);
-
-                return vals.length
-                    ? Math.max(...vals)
-                    : 0;
-            });
-
-        const windRanges = [
-            {
-                min: 100,
-                severity: 4
-            },
-            {
-                min: 80,
-                max: 100,
-                severity: 3
-            },
-            {
-                min: 60,
-                max: 80,
-                severity: 2
-            },
-            {
-                min: 40,
-                max: 60,
-                severity: 1
-            }
-        ];
-
-        let matchedWind = [];
-
-        windRanges.forEach(range => {
-            const matchingValues =
-                windMaxes.filter(
-                    val =>
-                        range.max
-                            ? (
-                                  val >=
-                                      range.min &&
-                                  val <
-                                      range.max
-                              )
-                            : val >=
-                              range.min
-                );
-
-            if (
-                matchingValues.length >=
-                minAgreementCount
-            ) {
-                const maxVal =
-                    Math.round(
-                        getRobustMax(
-                            matchingValues
-                        )
-                    );
-
-                matchedWind.push({
-                    severity:
-                        range.severity,
-                    text:
-                        `Possibilidade de rajadas de vento de até ${maxVal} km/h`,
-                    type: 'wind'
-                });
-            }
-        });
-
-        if (
-            matchedWind.length > 0
-        ) {
-            matchedWind.sort(
-                (a, b) =>
-                    b.severity -
-                    a.severity
-            );
-
-            rawInsights.push(
-                matchedWind[0]
-            );
-        }
-    }
-
-    return rawInsights;
+    data.hourly = consolidatedHourly;
+    return data;
 }
 
 // ==========================================
@@ -986,11 +672,6 @@ async function fetchWeatherData() {
 
     let cachedData = null;
 
-    /*
-     * Procuramos somente caches da coordenada atual.
-     * O timezone armazenado no próprio cache determina
-     * qual bloco de 6 horas está vigente.
-     */
     Object.keys(localStorage).forEach(key => {
         if (!key.startsWith(coordinatePrefix)) {
             return;
@@ -1032,21 +713,11 @@ async function fetchWeatherData() {
         }
     });
 
-    // --------------------------------------
-    // CACHE ENCONTRADO
-    // --------------------------------------
-
     if (cachedData) {
         weatherData = cachedData;
-
         renderCards();
-
         return;
     }
-
-    // --------------------------------------
-    // BUSCA NA API
-    // --------------------------------------
 
     const url =
         `https://ensemble-api.open-meteo.com/v1/ensemble` +
@@ -1067,16 +738,11 @@ async function fetchWeatherData() {
             );
         }
 
-        const data =
+        const rawData =
             await response.json();
 
-        /*
-         * A API retorna o timezone da localidade.
-         * Exemplo:
-         * America/Sao_Paulo
-         * Europe/London
-         * Asia/Tokyo
-         */
+        const data = processWeatherData(rawData);
+
         const timezone =
             data.timezone || 'UTC';
 
@@ -1089,9 +755,6 @@ async function fetchWeatherData() {
         const cacheKey =
             `${coordinatePrefix}${currentBlockKey}`;
 
-        /*
-         * Metadados do nosso sistema de cache.
-         */
         data._cacheVersion =
             CACHE_VERSION;
 
@@ -1119,8 +782,34 @@ async function fetchWeatherData() {
 }
 
 // ==========================================
-// 8. MODAL DE DETALHES
+// 8. MODAL DE DETALHES (ACORDEÃO E HORÁRIOS)
 // ==========================================
+
+function toggleAccordionBlock(blockId) {
+    const targetAccordion = document.getElementById(blockId);
+    if (!targetAccordion) return;
+
+    const isVisible = targetAccordion.style.display === 'block';
+
+    // Fecha todos os blocos do acordeão na modal
+    const allAccordions = document.querySelectorAll('.accordion-content');
+    allAccordions.forEach(acc => {
+        acc.style.display = 'none';
+    });
+
+    // Se não estava visível, abre o clicado
+    if (!isVisible) {
+        targetAccordion.style.display = 'block';
+    }
+}
+
+function formatSingleValue(val, type) {
+    if (type === 'precip') return val.toFixed(1);
+    if (type === 'temp') return `${Math.round(val)}°`;
+    if (type === 'wind') return Math.round(val);
+    if (type === 'cloud') return Math.round(val);
+    return val;
+}
 
 function openDetailModal(
     type,
@@ -1281,6 +970,16 @@ function openDetailModal(
             dateLabel.toUpperCase();
     }
 
+    // Identificação de Data/Hora atuais para destaque
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+    const currentDay = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${currentYear}-${currentMonth}-${currentDay}`;
+
+    const isToday = dateStr === todayStr;
+    const currentHour = now.getHours();
+
     let html = `
         <div
             style="
@@ -1299,9 +998,19 @@ function openDetailModal(
 
     Object.entries(rawBlocks)
         .forEach(
-            ([interval, items]) => {
+            ([interval, items], index) => {
+                const blockId = `accordion-block-${index}`;
+
+                // Verifica se este bloco engloba a hora atual no dia de hoje
+                const containsCurrentHour = isToday && items.some(item => item.hour === currentHour);
+                const displayStyle = containsCurrentHour ? 'block' : 'none';
+
                 html += `
-                    <div class="base-metric-box ${type}">
+                    <div
+                        class="base-metric-box ${type}"
+                        style="cursor: pointer; user-select: none;"
+                        onclick="toggleAccordionBlock('${blockId}')"
+                    >
                         <span class="metric-title">
                             ${interval}
                         </span>
@@ -1309,6 +1018,41 @@ function openDetailModal(
                         <span class="metric-value">
                             ${formatFn(items)}
                         </span>
+                    </div>
+
+                    <div
+                        id="${blockId}"
+                        class="accordion-content"
+                        style="
+                            display: ${displayStyle};
+                            padding: 10px 4px;
+                            margin-bottom: 8px;
+                        "
+                    >
+                        <div
+                            style="
+                                display: grid;
+                                grid-template-columns: repeat(6, 1fr);
+                                gap: 4px;
+                                text-align: center;
+                            "
+                        >
+                            ${items.map(item => {
+                                const isCurrentHour = isToday && item.hour === currentHour;
+                                const hourBg = isCurrentHour ? 'background-color: #e8f0fe; border-radius: 6px; padding: 4px 0;' : 'padding: 4px 0;';
+
+                                return `
+                                    <div style="display: flex; flex-direction: column; align-items: center; ${hourBg}">
+                                        <span style="font-weight: 700; font-size: 0.85rem; color: #202124;">
+                                            ${formatSingleValue(item.val, type)}
+                                        </span>
+                                        <span style="font-size: 0.75rem; color: #5f6368; margin-top: 2px;">
+                                            ${item.hour}h
+                                        </span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
                 `;
             }
@@ -1375,13 +1119,6 @@ function renderCards() {
                     dayIndices
                 );
 
-            const insights =
-                calcThresholds(
-                    hourly,
-                    dayIndices,
-                    13
-                );
-
             const [
                 year,
                 month,
@@ -1411,41 +1148,6 @@ function renderCards() {
                     }
                 );
 
-            let insightsHtml = '';
-
-            if (
-                insights.length > 0
-            ) {
-                insightsHtml =
-                    insights
-                        .map(
-                            item => `
-                                <div class="insight-item">
-                                    <span class="insight-badge ${item.type}">
-                                        ${item.text}
-                                    </span>
-                                </div>
-                            `
-                        )
-                        .join('');
-            } else {
-                insightsHtml = `
-                    <div class="no-insights">
-                        Sem alertas de chuva expressiva,
-                        ventos fortes ou extremos
-                        de temperatura.
-                    </div>
-                `;
-            }
-
-            const isDetailable =
-                dayIdx < 5;
-
-            const clickableClass =
-                isDetailable
-                    ? 'clickable'
-                    : '';
-
             const card =
                 document.createElement(
                     'div'
@@ -1465,12 +1167,8 @@ function renderCards() {
                     <div class="base-metrics-container">
 
                         <div
-                            class="base-metric-box cloud ${clickableClass}"
-                            ${
-                                isDetailable
-                                    ? `onclick="openDetailModal('cloud', '${formattedDate}', '${dateStr}')"`
-                                    : ''
-                            }
+                            class="base-metric-box cloud clickable"
+                            onclick="openDetailModal('cloud', '${formattedDate}', '${dateStr}')"
                         >
                             <span class="metric-value">
                                 ${cloudSummary}
@@ -1478,12 +1176,8 @@ function renderCards() {
                         </div>
 
                         <div
-                            class="base-metric-box temp ${clickableClass}"
-                            ${
-                                isDetailable
-                                    ? `onclick="openDetailModal('temp', '${formattedDate}', '${dateStr}')"`
-                                    : ''
-                            }
+                            class="base-metric-box temp clickable"
+                            onclick="openDetailModal('temp', '${formattedDate}', '${dateStr}')"
                         >
                             <span class="metric-title">
                                 Temperatura
@@ -1495,12 +1189,8 @@ function renderCards() {
                         </div>
 
                         <div
-                            class="base-metric-box precip ${clickableClass}"
-                            ${
-                                isDetailable
-                                    ? `onclick="openDetailModal('precip', '${formattedDate}', '${dateStr}')"`
-                                    : ''
-                            }
+                            class="base-metric-box precip clickable"
+                            onclick="openDetailModal('precip', '${formattedDate}', '${dateStr}')"
                         >
                             <span class="metric-title">
                                 Chuva acumulada
@@ -1512,12 +1202,8 @@ function renderCards() {
                         </div>
 
                         <div
-                            class="base-metric-box wind ${clickableClass}"
-                            ${
-                                isDetailable
-                                    ? `onclick="openDetailModal('wind', '${formattedDate}', '${dateStr}')"`
-                                    : ''
-                            }
+                            class="base-metric-box wind clickable"
+                            onclick="openDetailModal('wind', '${formattedDate}', '${dateStr}')"
                         >
                             <span class="metric-title">
                                 Rajadas de Vento
@@ -1528,34 +1214,8 @@ function renderCards() {
                             </span>
                         </div>
 
-                        ${
-                            isDetailable
-                                ? `
-                                    <div class="card-footer-notice">
-                                        Clique em um dos cards acima
-                                        para detalhes.
-                                    </div>
-                                `
-                                : ''
-                        }
-
-                    </div>
-
-                    <div class="ensemble-insights-container">
-
-                        <div class="ensemble-title">
-                            Visão do ensemble
-
-                            <button
-                                class="info-btn"
-                                onclick="openModal('info-modal')"
-                            >
-                                i
-                            </button>
-                        </div>
-
-                        <div class="insights-list">
-                            ${insightsHtml}
+                        <div class="card-footer-notice">
+                            Clique nos dados acima para detalhes.
                         </div>
 
                     </div>
