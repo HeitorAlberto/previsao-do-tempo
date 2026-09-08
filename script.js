@@ -1493,14 +1493,7 @@ function openDetailModal(
                 return 'temp-very-hot';
             }
 
-            /*
-             * CHUVA
-             *
-             * <=1 mm  = azul claro
-             * <=5 mm  = azul
-             * <=10 mm = azul escuro
-             * >10 mm  = roxo
-             */
+            
             if (metricType === 'precip') {
 
                 if (val < 0.5) {
@@ -1522,15 +1515,6 @@ function openDetailModal(
                 return 'precip-extreme';
             }
 
-            /*
-             * VENTO
-             *
-             * <20 km/h = verde claro
-             * <40 km/h = verde
-             * <60 km/h = amarelo
-             * <80 km/h = laranja
-             * >=80     = vermelho
-             */
             if (metricType === 'wind') {
                 if (val < 20) {
                     return 'wind-light';
@@ -1554,12 +1538,6 @@ function openDetailModal(
             return '';
         };
 
-    /*
-     * =========================
-     * ELEMENTOS DO MODAL
-     * =========================
-     */
-
     const modalTitle =
         document.getElementById(
             'detail-modal-title'
@@ -1574,12 +1552,6 @@ function openDetailModal(
         modalTitle.textContent =
             dateLabel.toUpperCase();
     }
-
-    /*
-     * =========================
-     * DATA E PERÍODO ATUAL
-     * =========================
-     */
 
     const now =
         new Date();
@@ -1606,14 +1578,6 @@ function openDetailModal(
     const currentHour =
         now.getHours();
 
-    /*
-     * Determina o período atual:
-     *
-     * 00–05 = madrugada
-     * 06–11 = manhã
-     * 12–17 = tarde
-     * 18–23 = noite
-     */
     const getCurrentPeriod =
         hour => {
             if (
@@ -1645,11 +1609,6 @@ function openDetailModal(
             currentHour
         );
 
-    /*
-     * =========================
-     * HTML
-     * =========================
-     */
 
     let html = `
         <div class="detail-metric-title">
@@ -1665,10 +1624,7 @@ function openDetailModal(
                 const blockId =
                     `accordion-block-${index}`;
 
-                /*
-                 * Identifica o período pelo
-                 * primeiro horário do bloco.
-                 */
+                
                 const firstItemHour =
                     items.length
                         ? Number(
@@ -1683,11 +1639,6 @@ function openDetailModal(
                           )
                         : null;
 
-                /*
-                 * Somente o período atual,
-                 * quando estamos visualizando
-                 * hoje, começa aberto.
-                 */
                 const containsCurrentPeriod =
                     isToday &&
                     blockPeriod ===
