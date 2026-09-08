@@ -1502,6 +1502,11 @@ function openDetailModal(
              * >10 mm  = roxo
              */
             if (metricType === 'precip') {
+
+                if (val < 0.5) {
+                    return 'no-precip';
+                }
+
                 if (val <= 1) {
                     return 'precip-light';
                 }
