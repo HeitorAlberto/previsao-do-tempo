@@ -999,12 +999,144 @@ function openDetailModal(
                     0
                 ) / items.length;
 
-            const cat = getCloudCategory(avg);
-            const hasThunder = items.some(i => isThunderCode(i.weatherCode));
+            const cat =
+                getCloudCategory(avg);
 
-            return hasThunder ? ` ${cat.label}⚡` : cat.label;
+            const hasThunder =
+                items.some(
+                    i =>
+                        isThunderCode(
+                            i.weatherCode
+                        )
+                );
+
+            return hasThunder
+                ? ` ${cat.label}⚡`
+                : cat.label;
         };
     }
+
+    /*
+     * Define a classe de cor
+     * para cada valor horário.
+     */
+    const getValueClass =
+        (value, metricType) => {
+            const val =
+                Number(value);
+
+            if (!Number.isFinite(val)) {
+                return '';
+            }
+
+            /*
+             * NUVENS
+             *
+             * 0–33%  = cinza claro
+             * 34–66% = cinza
+             * 67–100% = cinza escuro
+             */
+            if (metricType === 'cloud') {
+                if (val <= 33) {
+                    return 'cloud-low';
+                }
+
+                if (val <= 66) {
+                    return 'cloud-medium';
+                }
+
+                return 'cloud-high';
+            }
+
+            /*
+             * TEMPERATURA
+             *
+             * <=10  = azul claro
+             * <=18  = azul
+             * <=24  = verde
+             * <=28  = amarelo
+             * <=34  = laranja
+             * >34   = vermelho
+             */
+            if (metricType === 'temp') {
+                if (val <= 10) {
+                    return 'temp-cold';
+                }
+
+                if (val <= 18) {
+                    return 'temp-cool';
+                }
+
+                if (val <= 24) {
+                    return 'temp-mild';
+                }
+
+                if (val <= 28) {
+                    return 'temp-warm';
+                }
+
+                if (val <= 34) {
+                    return 'temp-hot';
+                }
+
+                return 'temp-very-hot';
+            }
+
+            /*
+             * CHUVA
+             *
+             * <=1   = azul claro
+             * <=5   = azul
+             * <=10  = azul escuro
+             * >10   = roxo
+             */
+            if (metricType === 'precip') {
+                if (val <= 1) {
+                    return 'precip-light';
+                }
+
+                if (val <= 5) {
+                    return 'precip-moderate';
+                }
+
+                if (val <= 10) {
+                    return 'precip-heavy';
+                }
+
+                return 'precip-extreme';
+            }
+
+            /*
+             * VENTO
+             *
+             * <20   = verde claro
+             * <40   = verde
+             * <60   = amarelo
+             * <80   = laranja
+             * >=80  = vermelho
+             */
+            if (metricType === 'wind') {
+                if (val < 20) {
+                    return 'wind-light';
+                }
+
+                if (val < 40) {
+                    return 'wind-moderate';
+                }
+
+                if (val < 60) {
+                    return 'wind-strong';
+                }
+
+                if (val < 80) {
+                    return 'wind-very-strong';
+                }
+
+                return 'wind-extreme';
+            }
+
+            return '';
+        };
 
     const modalTitle =
         document.getElementById(
@@ -1021,25 +1153,33 @@ function openDetailModal(
             dateLabel.toUpperCase();
     }
 
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
-    const currentDay = String(now.getDate()).padStart(2, '0');
-    const todayStr = `${currentYear}-${currentMonth}-${currentDay}`;
+    const now =
+        new Date();
 
-    const isToday = dateStr === todayStr;
-    const currentHour = now.getHours();
+    const currentYear =
+        now.getFullYear();
+
+    const currentMonth =
+        String(
+            now.getMonth() + 1
+        ).padStart(2, '0');
+
+    const currentDay =
+        String(
+            now.getDate()
+        ).padStart(2, '0');
+
+    const todayStr =
+        `${currentYear}-${currentMonth}-${currentDay}`;
+
+    const isToday =
+        dateStr === todayStr;
+
+    const currentHour =
+        now.getHours();
 
     let html = `
-        <div
-            style="
-                font-weight: 700;
-                color: #3c4043;
-                margin-bottom: 8px;
-                text-transform: uppercase;
-                font-size: 0.9rem;
-            "
-        >
+        <div class="detail-metric-title">
             ${metricTitle}
         </div>
 
@@ -1049,15 +1189,29 @@ function openDetailModal(
     Object.entries(rawBlocks)
         .forEach(
             ([interval, items], index) => {
-                const blockId = `accordion-block-${index}`;
+                const blockId =
+                    `accordion-block-${index}`;
 
-                const containsCurrentHour = isToday && items.some(item => item.hour === currentHour);
-                const displayStyle = containsCurrentHour ? 'block' : 'none';
+                /*
+                 * Somente o período que contém
+                 * a hora atual começa aberto.
+                 */
+                const containsCurrentHour =
+                    isToday &&
+                    items.some(
+                        item =>
+                            item.hour ===
+                            currentHour
+                    );
+
+                const openClass =
+                    containsCurrentHour
+                        ? 'is-open'
+                        : '';
 
                 html += `
                     <div
-                        class="base-metric-box ${type}"
-                        style="cursor: pointer; user-select: none;"
+                        class="base-metric-box ${type} detail-metric-box"
                         onclick="toggleAccordionBlock('${blockId}')"
                     >
                         <span class="metric-title">
@@ -1071,31 +1225,38 @@ function openDetailModal(
 
                     <div
                         id="${blockId}"
-                        class="accordion-content"
-                        style="
-                            display: ${displayStyle};
-                            padding: 10px 4px;
-                            margin-bottom: 8px;
-                        "
+                        class="accordion-content ${openClass}"
                     >
-                        <div
-                            style="
-                                display: grid;
-                                grid-template-columns: repeat(6, 1fr);
-                                gap: 4px;
-                                text-align: center;
-                            "
-                        >
+                        <div class="hourly-values-grid">
                             ${items.map(item => {
-                                const isCurrentHour = isToday && item.hour === currentHour;
-                                const hourBg = isCurrentHour ? 'background-color: #e8f0fe; border-radius: 6px; padding: 4px 0;' : 'padding: 4px 0;';
+                                const isCurrentHour =
+                                    isToday &&
+                                    item.hour ===
+                                        currentHour;
+
+                                const valueClass =
+                                    getValueClass(
+                                        item.val,
+                                        type
+                                    );
+
+                                const currentHourClass =
+                                    isCurrentHour
+                                        ? 'current-hour'
+                                        : '';
 
                                 return `
-                                    <div style="display: flex; flex-direction: column; align-items: center; ${hourBg}">
-                                        <span style="font-weight: 700; font-size: 0.85rem; color: #202124;">
-                                            ${formatSingleValue(item, type)}
+                                    <div class="hourly-value-item">
+                                        <span
+                                            class="hourly-value ${valueClass} ${currentHourClass}"
+                                        >
+                                            ${formatSingleValue(
+                                                item,
+                                                type
+                                            )}
                                         </span>
-                                        <span style="font-size: 0.75rem; color: #5f6368; margin-top: 2px;">
+
+                                        <span class="hourly-hour">
                                             ${item.hour}h
                                         </span>
                                     </div>
@@ -1112,10 +1273,521 @@ function openDetailModal(
     `;
 
     if (modalBody) {
-        modalBody.innerHTML = html;
+        modalBody.innerHTML =
+            html;
     }
 
     openModal('detail-modal');
+}
+
+
+function openDetailModal(
+    type,
+    dateLabel,
+    dateStr
+) {
+    const daysMap =
+        getDaysMap();
+
+    const indices =
+        daysMap[dateStr];
+
+    if (
+        !indices ||
+        !weatherData ||
+        !weatherData.hourly
+    ) {
+        return;
+    }
+
+    const hourly =
+        weatherData.hourly;
+
+    const rawBlocks =
+        get6HourBreakdown(
+            hourly,
+            indices,
+            type
+        );
+
+    let metricTitle = '';
+    let formatFn = null;
+
+    if (type === 'precip') {
+        metricTitle =
+            'CHUVA ACUMULADA';
+
+        formatFn = items => {
+            const sum =
+                items.reduce(
+                    (acc, item) =>
+                        acc + item.val,
+                    0
+                );
+
+            return `${sum.toFixed(1)} mm`;
+        };
+
+    } else if (type === 'temp') {
+        metricTitle =
+            'TEMPERATURA';
+
+        formatFn = items => {
+            if (!items.length) {
+                return '--';
+            }
+
+            let maxObj = items[0];
+            let minObj = items[0];
+
+            items.forEach(item => {
+                if (item.val > maxObj.val) {
+                    maxObj = item;
+                }
+
+                if (item.val < minObj.val) {
+                    minObj = item;
+                }
+            });
+
+            const minRounded =
+                Math.round(minObj.val);
+
+            const maxRounded =
+                Math.round(maxObj.val);
+
+            if (
+                minRounded ===
+                maxRounded
+            ) {
+                return `${maxRounded}°`;
+            }
+
+            if (
+                maxObj.index <
+                minObj.index
+            ) {
+                return `${maxRounded}° a ${minRounded}°`;
+            }
+
+            return `${minRounded}° a ${maxRounded}°`;
+        };
+
+    } else if (type === 'wind') {
+        metricTitle =
+            'RAJADAS DE VENTO';
+
+        formatFn = items => {
+            if (!items.length) {
+                return '--';
+            }
+
+            const maxVal =
+                Math.max(
+                    ...items.map(
+                        i => i.val
+                    )
+                );
+
+            return `${Math.round(maxVal)} km/h`;
+        };
+
+    } else if (type === 'cloud') {
+        metricTitle =
+            'NEBULOSIDADE';
+
+        formatFn = items => {
+            if (!items.length) {
+                return '--';
+            }
+
+            const avg =
+                items.reduce(
+                    (acc, item) =>
+                        acc + item.val,
+                    0
+                ) / items.length;
+
+            const cat =
+                getCloudCategory(avg);
+
+            const hasThunder =
+                items.some(
+                    i =>
+                        isThunderCode(
+                            i.weatherCode
+                        )
+                );
+
+            return hasThunder
+                ? `${cat.label}⚡`
+                : cat.label;
+        };
+    }
+
+    /*
+     * =========================
+     * CORES DOS VALORES
+     * =========================
+     */
+
+    const getValueClass =
+        (value, metricType) => {
+            const val =
+                Number(value);
+
+            if (!Number.isFinite(val)) {
+                return '';
+            }
+
+            /*
+             * NUVENS
+             *
+             * 0–33%   = cinza claro
+             * 34–66%  = cinza
+             * 67–100% = cinza escuro
+             */
+            if (metricType === 'cloud') {
+                if (val <= 33) {
+                    return 'cloud-low';
+                }
+
+                if (val <= 66) {
+                    return 'cloud-medium';
+                }
+
+                return 'cloud-high';
+            }
+
+            /*
+             * TEMPERATURA
+             *
+             * <=10°C = azul claro
+             * <=18°C = azul
+             * <=24°C = verde
+             * <=28°C = amarelo
+             * <=34°C = laranja
+             * >34°C  = vermelho
+             */
+            if (metricType === 'temp') {
+                if (val <= 10) {
+                    return 'temp-cold';
+                }
+
+                if (val <= 18) {
+                    return 'temp-cool';
+                }
+
+                if (val <= 24) {
+                    return 'temp-mild';
+                }
+
+                if (val <= 28) {
+                    return 'temp-warm';
+                }
+
+                if (val <= 34) {
+                    return 'temp-hot';
+                }
+
+                return 'temp-very-hot';
+            }
+
+            /*
+             * CHUVA
+             *
+             * <=1 mm  = azul claro
+             * <=5 mm  = azul
+             * <=10 mm = azul escuro
+             * >10 mm  = roxo
+             */
+            if (metricType === 'precip') {
+                if (val <= 1) {
+                    return 'precip-light';
+                }
+
+                if (val <= 5) {
+                    return 'precip-moderate';
+                }
+
+                if (val <= 10) {
+                    return 'precip-heavy';
+                }
+
+                return 'precip-extreme';
+            }
+
+            /*
+             * VENTO
+             *
+             * <20 km/h = verde claro
+             * <40 km/h = verde
+             * <60 km/h = amarelo
+             * <80 km/h = laranja
+             * >=80     = vermelho
+             */
+            if (metricType === 'wind') {
+                if (val < 20) {
+                    return 'wind-light';
+                }
+
+                if (val < 40) {
+                    return 'wind-moderate';
+                }
+
+                if (val < 60) {
+                    return 'wind-strong';
+                }
+
+                if (val < 80) {
+                    return 'wind-very-strong';
+                }
+
+                return 'wind-extreme';
+            }
+
+            return '';
+        };
+
+    /*
+     * =========================
+     * ELEMENTOS DO MODAL
+     * =========================
+     */
+
+    const modalTitle =
+        document.getElementById(
+            'detail-modal-title'
+        );
+
+    const modalBody =
+        document.getElementById(
+            'detail-modal-body'
+        );
+
+    if (modalTitle) {
+        modalTitle.textContent =
+            dateLabel.toUpperCase();
+    }
+
+    /*
+     * =========================
+     * DATA E PERÍODO ATUAL
+     * =========================
+     */
+
+    const now =
+        new Date();
+
+    const currentYear =
+        now.getFullYear();
+
+    const currentMonth =
+        String(
+            now.getMonth() + 1
+        ).padStart(2, '0');
+
+    const currentDay =
+        String(
+            now.getDate()
+        ).padStart(2, '0');
+
+    const todayStr =
+        `${currentYear}-${currentMonth}-${currentDay}`;
+
+    const isToday =
+        dateStr === todayStr;
+
+    const currentHour =
+        now.getHours();
+
+    /*
+     * Determina o período atual:
+     *
+     * 00–05 = madrugada
+     * 06–11 = manhã
+     * 12–17 = tarde
+     * 18–23 = noite
+     */
+    const getCurrentPeriod =
+        hour => {
+            if (
+                hour >= 0 &&
+                hour < 6
+            ) {
+                return 'madrugada';
+            }
+
+            if (
+                hour >= 6 &&
+                hour < 12
+            ) {
+                return 'manha';
+            }
+
+            if (
+                hour >= 12 &&
+                hour < 18
+            ) {
+                return 'tarde';
+            }
+
+            return 'noite';
+        };
+
+    const currentPeriod =
+        getCurrentPeriod(
+            currentHour
+        );
+
+    /*
+     * =========================
+     * HTML
+     * =========================
+     */
+
+    let html = `
+        <div class="detail-metric-title">
+            ${metricTitle}
+        </div>
+
+        <div class="detail-blocks-container">
+    `;
+
+    Object.entries(rawBlocks)
+        .forEach(
+            ([interval, items], index) => {
+                const blockId =
+                    `accordion-block-${index}`;
+
+                /*
+                 * Identifica o período pelo
+                 * primeiro horário do bloco.
+                 */
+                const firstItemHour =
+                    items.length
+                        ? Number(
+                              items[0].hour
+                          )
+                        : null;
+
+                const blockPeriod =
+                    firstItemHour !== null
+                        ? getCurrentPeriod(
+                              firstItemHour
+                          )
+                        : null;
+
+                /*
+                 * Somente o período atual,
+                 * quando estamos visualizando
+                 * hoje, começa aberto.
+                 */
+                const containsCurrentPeriod =
+                    isToday &&
+                    blockPeriod ===
+                        currentPeriod;
+
+                const openClass =
+                    containsCurrentPeriod
+                        ? 'is-open'
+                        : '';
+
+                html += `
+                    <div
+                        class="base-metric-box ${type} detail-metric-box"
+                        onclick="
+                            this.nextElementSibling
+                                .classList
+                                .toggle('is-open')
+                        "
+                    >
+                        <span class="metric-title">
+                            ${interval}
+                        </span>
+
+                        <span class="metric-value">
+                            ${formatFn(items)}
+                        </span>
+                    </div>
+
+                    <div
+                        id="${blockId}"
+                        class="accordion-content ${openClass}"
+                    >
+                        <div class="hourly-values-grid">
+
+                            ${items.map(item => {
+
+                                const isCurrentHour =
+                                    isToday &&
+                                    Number(
+                                        item.hour
+                                    ) ===
+                                        currentHour;
+
+                                const valueClass =
+                                    getValueClass(
+                                        item.val,
+                                        type
+                                    );
+
+                                const currentHourClass =
+                                    isCurrentHour
+                                        ? 'current-hour'
+                                        : '';
+
+                                return `
+                                    <div
+                                        class="hourly-value-item"
+                                    >
+                                        <span
+                                            class="
+                                                hourly-value
+                                                ${valueClass}
+                                                ${currentHourClass}
+                                            "
+                                        >
+                                            ${formatSingleValue(
+                                                item,
+                                                type
+                                            )}
+                                        </span>
+
+                                        <span
+                                            class="hourly-hour"
+                                        >
+                                            ${item.hour}h
+                                        </span>
+                                    </div>
+                                `;
+
+                            }).join('')}
+
+                        </div>
+                    </div>
+                `;
+            }
+        );
+
+    html += `
+        </div>
+    `;
+
+    /*
+     * =========================
+     * INSERE NO MODAL
+     * =========================
+     */
+
+    if (modalBody) {
+        modalBody.innerHTML =
+            html;
+    }
+
+    openModal(
+        'detail-modal'
+    );
 }
 
 // ==========================================

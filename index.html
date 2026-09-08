@@ -336,7 +336,146 @@
             gap: 8px;
             margin-top: 10px;
         }
+        
+        .detail-metric-title {
+            font-weight: 700;
+            color: #3c4043;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
 
+        .detail-blocks-container {
+            width: 100%;
+        }
+
+        .detail-metric-box {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 10px 4px;
+            margin-bottom: 8px;
+        }
+
+        .accordion-content.is-open {
+            display: block !important;
+        }
+
+        .hourly-values-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+
+        .hourly-value-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hourly-value {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #202124;
+            border-radius: 6px;
+            padding: 4px 7px;
+            min-width: 34px;
+            box-sizing: border-box;
+        }
+
+        .hourly-value.current-hour {
+            box-shadow: 0 0 0 2px #4285f4;
+        }
+
+        .hourly-hour {
+            font-size: 0.75rem;
+            color: #5f6368;
+            margin-top: 2px;
+        }
+
+        /* NUVENS */
+
+        .hourly-value.cloud-low {
+            background-color: #eeeeee;
+        }
+
+        .hourly-value.cloud-medium {
+            background-color: #bdbdbd;
+        }
+
+        .hourly-value.cloud-high {
+            background-color: #757575;
+        }
+
+        /* TEMPERATURA */
+
+        .hourly-value.temp-cold {
+            background-color: #b3e5fc;
+        }
+
+        .hourly-value.temp-cool {
+            background-color: #81d4fa;
+        }
+
+        .hourly-value.temp-mild {
+            background-color: #c8e6c9;
+        }
+
+        .hourly-value.temp-warm {
+            background-color: #fff59d;
+        }
+
+        .hourly-value.temp-hot {
+            background-color: #ffcc80;
+        }
+
+        .hourly-value.temp-very-hot {
+            background-color: #ef9a9a;
+        }
+
+        /* CHUVA */
+
+        .hourly-value.precip-light {
+            background-color: #bbdefb;
+        }
+
+        .hourly-value.precip-moderate {
+            background-color: #64b5f6;
+        }
+
+        .hourly-value.precip-heavy {
+            background-color: #1565c0;
+        }
+
+        .hourly-value.precip-extreme {
+            background-color: #7e57c2;
+        }
+
+        /* VENTO */
+
+        .hourly-value.wind-light {
+            background-color: #a5d6a7;
+        }
+
+        .hourly-value.wind-moderate {
+            background-color: #43a047;
+        }
+
+        .hourly-value.wind-strong {
+            background-color: #fdd835;
+        }
+
+        .hourly-value.wind-very-strong {
+            background-color: #fb8c00;
+        }
+
+        .hourly-value.wind-extreme {
+            background-color: #e53935;
+        }
         @media (max-width: 768px) {
             body {
                 padding: 10px;
