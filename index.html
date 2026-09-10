@@ -20,7 +20,7 @@
         }
 
         .weather-app-container {
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
@@ -181,14 +181,22 @@
             float: right;
             cursor: pointer;
             font-weight: bold;
+            color: #b7b7b7;
+            font-size: 18px;
+            padding: 3px 10px;
+        }
+
+        .modal-close-button:hover {
+            color: #555;
         }
 
         .modal-row-div {
             display: flex;
             justify-content: space-between;
-            padding: 10px 6px;
-            border-bottom: 2px solid white;
-            border-radius: 8px;
+            padding: 7px 6px;
+            border-radius: 0px;
+            background-color: aliceblue;
+            margin-bottom: 5px;
         }
 
         .modal-row-time-div {
@@ -219,6 +227,11 @@
 </head>
 <body>
 
+    <div style="justify-self: center;">
+        <h1>Previsão do tempo</h1>
+    </div>
+    
+
     <div class="weather-app-container">
         <div class="search-box-container">
             <input type="text" id="searchInput" class="search-input" placeholder="Digite o nome da cidade...">
@@ -237,7 +250,7 @@
 
     <div id="modalOverlay" class="modal-overlay" style="display: none;">
         <div class="modal-content-container">
-            <span id="modalClose" class="modal-close-button">[X]</span>
+            <span id="modalClose" class="modal-close-button">x</span>
             <div id="modalHeader" class="modal-header-div"></div>
             <div id="modalBody"></div>
         </div>
