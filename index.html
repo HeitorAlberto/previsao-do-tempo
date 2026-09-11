@@ -125,14 +125,14 @@
         }
 
         .weather-metric-div {
-            border: 1px solid lightgray;
+            border: 2px solid white;
             padding: 10px;
             cursor: pointer;
             background: #fff;
         }
 
         .weather-metric-div:hover {
-            background: #f8f8f8;
+            border: 2px solid black;
         }
 
         .metric-label-div {
@@ -195,8 +195,9 @@
             justify-content: space-between;
             padding: 7px 6px;
             border-radius: 0px;
-            background-color: aliceblue;
             margin-bottom: 5px;
+            border-radius: 6px;
+            border: 2px solid lightgray;
         }
 
         .modal-row-time-div {
@@ -235,6 +236,18 @@
         .bg-wind {
             background-color: #d5fff4;
         }
+
+        @media (max-width: 600px) {
+            .weather-metric-div {
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .metric-label-div, .metric-value-div {
+                margin-bottom: 0px;
+                align-self: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -256,6 +269,8 @@
         </div>
 
         <div id="currentLocationContainer" class="current-location-div" style="display: none;"></div>
+        <div>Modelo ECMWF IFS 9Km</div>
+        <div style="margin-bottom: 20px;">Fonte: Open-meteo API</div>
 
         <div id="forecastContainer" class="forecast-container"></div>
     </div>
