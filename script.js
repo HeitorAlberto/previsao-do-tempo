@@ -125,8 +125,10 @@ async function fetchWeatherData(loc) {
     const cacheKey = getCacheKey(lat, lon);
     const cachedData = localStorage.getItem(cacheKey);
 
+    // Limpa apenas os ciclos antigos desta localidade específica, preservando outras cidades
+    const locationPrefix = `ecmwf_cache_${lat}_${lon}_`;
     Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('ecmwf_cache_') && key !== cacheKey) {
+        if (key.startsWith(locationPrefix) && key !== cacheKey) {
             localStorage.removeItem(key);
         }
     });
