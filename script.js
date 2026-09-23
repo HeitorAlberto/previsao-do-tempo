@@ -125,7 +125,6 @@ async function fetchWeatherData(loc) {
     const cacheKey = getCacheKey(lat, lon);
     const cachedData = localStorage.getItem(cacheKey);
 
-    // Limpa apenas os ciclos antigos desta localidade específica, preservando outras cidades
     const locationPrefix = `ecmwf_cache_${lat}_${lon}_`;
     Object.keys(localStorage).forEach(key => {
         if (key.startsWith(locationPrefix) && key !== cacheKey) {
@@ -162,7 +161,7 @@ function getWeatherDescription(cloudcover, weathercode) {
     if (cloudcover <= 20) {
         return `Poucas nuvens${lightningEmoji}`;
     } else if (cloudcover <= 50) {
-        return `Parcial. Nublado${lightningEmoji}`;
+        return `Nuvens esparsas${lightningEmoji}`;
     } else if (cloudcover <= 80) {
         return `Muitas nuvens${lightningEmoji}`;
     } else {
@@ -349,46 +348,69 @@ function openModal(dayIndex, metricType, dateTitle, bgClass) {
             modalBody.appendChild(rowDiv);
         });
     } else if (metricType === 'temp_range') {
-        const hourlyValues = currentWeatherData.hourly.temperature_2m || [];
         unit = '°C';
+        const hourlyValues = currentWeatherData.hourly.temperature_2m || [];
         let lastPeriodName = '';
 
-        hourlyTime.forEach((t, i) => {
-            if (t && t.startsWith(targetDateStr)) {
-                const hourPart = t.split('T')[1];
-                const hourInt = parseInt(hourPart.split(':')[0], 10);
+        blockHours.forEach(targetHour => {
+            const baseHour = parseInt(targetHour.split(':')[0], 10);
+            let isCurrentBlock = false;
+            let tempValuesInBlock = [];
 
-                const periodName = getPeriodName(hourInt);
-                if (periodName && periodName !== lastPeriodName) {
-                    const separatorDiv = document.createElement('div');
-                    separatorDiv.className = 'modal-group-separator';
-                    separatorDiv.textContent = periodName;
-                    modalBody.appendChild(separatorDiv);
-                    lastPeriodName = periodName;
-                }
-
-                const rowDiv = document.createElement('div');
-                rowDiv.className = `modal-row-div ${bgClass}`;
-
-                if (t === currentDateTimeStr) {
-                    rowDiv.classList.add('current-hour-highlight');
-                }
-
-                const timeDiv = document.createElement('div');
-                timeDiv.className = 'modal-row-time-div';
-                timeDiv.textContent = hourPart;
-
-                let val = hourlyValues[i];
-                let valText = val !== undefined ? `${Math.round(val)}${unit}` : 'N/A';
-
-                const valDiv = document.createElement('div');
-                valDiv.className = 'modal-row-value-div';
-                valDiv.textContent = valText;
-
-                rowDiv.appendChild(timeDiv);
-                rowDiv.appendChild(valDiv);
-                modalBody.appendChild(rowDiv);
+            const periodName = getPeriodName(baseHour);
+            if (periodName && periodName !== lastPeriodName) {
+                const separatorDiv = document.createElement('div');
+                separatorDiv.className = 'modal-group-separator';
+                separatorDiv.textContent = periodName;
+                modalBody.appendChild(separatorDiv);
+                lastPeriodName = periodName;
             }
+
+            for (let i = 0; i < 3; i++) {
+                const hourNum = (baseHour + i) % 24;
+                const hourStr = String(hourNum).padStart(2, '0') + ':00';
+                const fullDateTime = `${targetDateStr}T${hourStr}`;
+
+                if (fullDateTime === currentDateTimeStr) {
+                    isCurrentBlock = true;
+                }
+
+                const index = hourlyTime.indexOf(fullDateTime);
+                if (index !== -1 && hourlyValues[index] !== undefined) {
+                    tempValuesInBlock.push({
+                        hour: hourStr,
+                        value: hourlyValues[index]
+                    });
+                }
+            }
+
+            if (tempValuesInBlock.length === 0) return;
+
+            const isDaytime = baseHour >= 9 && baseHour < 18;
+            let chosenTempObj = tempValuesInBlock.reduce((acc, curr) => {
+                return isDaytime 
+                    ? (curr.value > acc.value ? curr : acc) 
+                    : (curr.value < acc.value ? curr : acc);
+            }, tempValuesInBlock[0]);
+
+            const rowDiv = document.createElement('div');
+            rowDiv.className = `modal-row-div ${bgClass}`;
+
+            if (isCurrentBlock) {
+                rowDiv.classList.add('current-hour-highlight');
+            }
+
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'modal-row-time-div';
+            timeDiv.textContent = targetHour;
+
+            const valDiv = document.createElement('div');
+            valDiv.className = 'modal-row-value-div';
+            valDiv.textContent = `${Math.round(chosenTempObj.value)}${unit}`;
+
+            rowDiv.appendChild(timeDiv);
+            rowDiv.appendChild(valDiv);
+            modalBody.appendChild(rowDiv);
         });
     } else if (metricType === 'precipitation') {
         unit = ' mm';

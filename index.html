@@ -120,11 +120,13 @@
 
         .card-body-div {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
         }
 
         .weather-metric-div {
+            display: flex;
+            justify-content: space-between;
             border: 2px solid white;
             padding: 10px;
             cursor: pointer;
@@ -132,12 +134,12 @@
         }
 
         .weather-metric-div:hover {
-            border: 2px solid black;
+            border: 2px solid rgb(219, 219, 219);
         }
 
         .metric-label-div {
             font-size: 12px;
-            margin-bottom: 5px;
+            align-self: center;
         }
 
         .metric-value-div {
@@ -241,6 +243,10 @@
             .weather-metric-div {
                 display: flex;
                 justify-content: space-between;
+            }
+
+            .card-body-div {
+                grid-template-columns: 1fr;
             }
 
             .metric-label-div, .metric-value-div {
