@@ -23,7 +23,7 @@ export function renderHistory(history, onClick) {
 export function renderForecast(data, cityName, onMetricClick) {
     const container = document.getElementById('forecastContainer');
     const locationDiv = document.getElementById('currentLocationContainer');
-    locationDiv.textContent = `Localidade: ${cityName}`;
+    locationDiv.textContent = `📌 ${cityName}`;
     locationDiv.style.display = 'block';
     container.innerHTML = '';
 
