@@ -144,6 +144,8 @@
         .metric-value-div {
             font-size: 16px;
             font-weight: bold;
+            display: flex;
+            gap: 6px;
         }
 
         .modal-overlay {
@@ -199,6 +201,7 @@
             margin-bottom: 5px;
             border-radius: 6px;
             border: 2px solid lightgray;
+            align-items: center;
         }
 
         .modal-row-time-div {
@@ -207,6 +210,8 @@
 
         .modal-row-value-div {
             font-weight: bold;
+            display: flex;
+            gap: 6px;
         }
 
         .current-hour-highlight {
@@ -218,7 +223,6 @@
             padding: 5px 0px;
             margin-top: 10px;
             margin-bottom: 4px;
-            text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
@@ -288,6 +292,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="./main.js"></script>
 </body>
 </html>
