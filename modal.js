@@ -42,8 +42,9 @@ export function openModal(dayIndex, metricType, dateTitle, bgClass, currentWeath
             displayValue = getWeatherDescription(currentWeatherData.hourly.cloudcover?.[index] ?? 0, currentWeatherData.hourly.weathercode?.[index] ?? 0);
         } else if (metricType === 'temp_range' && index !== -1) {
             const temp = currentWeatherData.hourly.temperature_2m?.[index];
-            displayValue = `${Math.round(temp)}°C`;
-            customStyle = temp < 11 ? 'color: #0066cc; font-weight: bold;' : temp > 29 ? 'color: #cc0000; font-weight: bold;' : '';
+            const roundedTemp = Math.round(temp);
+            displayValue = `${roundedTemp}°C`;
+            customStyle = temp < 11 ? 'color: #0066cc; font-weight: bold;' : roundedTemp >= 30 ? 'color: #cc0000; font-weight: bold;' : '';
         } else if (metricType === 'precipitation' && index !== -1) {
             const precip = currentWeatherData.hourly.precipitation?.[index] || 0;
             displayValue = `${precip.toFixed(1)} mm`;

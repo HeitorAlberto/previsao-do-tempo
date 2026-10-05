@@ -6,8 +6,8 @@ export function hasThunderstormCode(code) {
 
 export function getWeatherDescription(cloudcover, weathercode) {
     const lightning = hasThunderstormCode(weathercode) ? '⚡' : '';
-    if (cloudcover <= 20) return `Céu aberto ${lightning}`;
-    if (cloudcover <= 50) return `Algumas nuvens ${lightning}`;
+    if (cloudcover <= 20) return `Poucas nuvens ${lightning}`;
+    if (cloudcover <= 50) return `Nuvens esparsas ${lightning}`;
     if (cloudcover <= 80) return `Muitas nuvens ${lightning}`;
     return `Nublado ${lightning}`;
 }
