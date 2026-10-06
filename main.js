@@ -4,7 +4,6 @@
 
 import { fetchLocations, fetchWeatherData } from './api.js';
 import { renderHistory, renderForecast } from './ui.js';
-import { openModal } from './modal.js';
 
 let searchHistory = JSON.parse(localStorage.getItem('weather_history') || '[]');
 let currentWeatherData = null;
@@ -12,7 +11,6 @@ let currentCityName = '';
 
 const searchInput = document.getElementById('searchInput');
 const suggestionsContainer = document.getElementById('suggestionsContainer');
-const modalOverlay = document.getElementById('modalOverlay');
 
 renderHistory(searchHistory, selectLocation);
 
@@ -61,9 +59,7 @@ async function selectLocation(loc) {
     renderHistory(searchHistory, selectLocation);
 
     currentWeatherData = await fetchWeatherData(locationObj.latitude, locationObj.longitude);
-    renderForecast(currentWeatherData, currentCityName, (dayIdx, type, title, bg) => {
-        openModal(dayIdx, type, title, bg, currentWeatherData);
-    });
+    
+    // Atualizado: agora renderiza direto com os horários na base do card, sem precisar do modal
+    renderForecast(currentWeatherData, currentCityName);
 }
-document.getElementById('modalClose').addEventListener('click', () => modalOverlay.style.display = 'none');
-modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) modalOverlay.style.display = 'none'; });
