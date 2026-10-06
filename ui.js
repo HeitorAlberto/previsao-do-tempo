@@ -1,7 +1,3 @@
-// Manipula o HTML diretamente.
-
-// Cria os elementos visuais na tela (cards de previsão diária, histórico de buscas) e repassa os eventos de cliques de volta para o main.js.
-
 import { calculateCardCondition } from './processamento.js';
 
 export function renderHistory(history, onClick) {
@@ -43,8 +39,15 @@ export function renderForecast(data, cityName, onMetricClick) {
         const body = document.createElement('div');
         body.className = 'card-body-div';
 
+        const conditionResult = calculateCardCondition(
+            data.hourly?.time || [], 
+            data.hourly?.cloudcover || [], 
+            data.hourly?.weathercode || [], 
+            dateStr
+        );
+
         const metrics = [
-            { label: 'Condição', value: calculateCardCondition(data.hourly?.time || [], data.hourly?.cloudcover || [], data.hourly?.weathercode || [], dateStr), type: 'condition', bg: 'bg-condition' },
+            { label: 'Condição', value: conditionResult.text, icon: conditionResult.icon, type: 'condition', bg: 'bg-condition' },
             { label: 'Temperatura', value: `${Math.round(data.daily.temperature_2m_min[index])}° a ${Math.round(data.daily.temperature_2m_max[index])}°`, type: 'temp_range', bg: 'bg-temp' },
             { label: 'Chuva Acumulada', value: `${data.daily.precipitation_sum[index]} mm`, type: 'precipitation', bg: 'bg-precip' },
             { label: 'Rajada de Vento', value: `${Math.round(data.daily.wind_gusts_10m_max[index])} km/h`, type: 'wind_gusts', bg: 'bg-wind' }
@@ -53,7 +56,19 @@ export function renderForecast(data, cityName, onMetricClick) {
         metrics.forEach(m => {
             const mDiv = document.createElement('div');
             mDiv.className = `weather-metric-div ${m.bg}`;
-            mDiv.innerHTML = `<div class="metric-label-div">${m.label}</div><div class="metric-value-div">${m.value}</div>`;
+
+            if (m.icon) {
+                mDiv.innerHTML = `
+                    <div class="metric-label-div">${m.label}</div>
+                    <div class="metric-value-div" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
+                        <span>${m.value}</span>
+                        <img src="${m.icon}" alt="${m.value}" style="width: 28px; height: 28px; object-fit: contain;" />
+                    </div>
+                `;
+            } else {
+                mDiv.innerHTML = `<div class="metric-label-div">${m.label}</div><div class="metric-value-div">${m.value}</div>`;
+            }
+
             mDiv.addEventListener('click', () => onMetricClick(index, m.type, header.textContent, m.bg));
             body.appendChild(mDiv);
         });

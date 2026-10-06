@@ -20,7 +20,9 @@ export async function fetchWeatherData(lat, lon) {
     const cachedData = localStorage.getItem(cacheKey);
     if (cachedData) return JSON.parse(cachedData);
 
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_gusts_10m_max&hourly=temperature_2m,precipitation,wind_gusts_10m,cloudcover,weathercode&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
+    // 🚀 Adicionado 'sunrise,sunset' nos parâmetros diários para o cálculo correto de dia/noite
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_gusts_10m_max,sunrise,sunset&hourly=temperature_2m,precipitation,wind_gusts_10m,cloudcover,weathercode&models=ecmwf_ifs&timezone=auto&forecast_days=10`;
+    
     const response = await fetch(url);
     const data = await response.json();
     
