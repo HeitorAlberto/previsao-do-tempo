@@ -9,8 +9,8 @@ function getTempColor(temp) {
 
 function getPrecipColor(precip) {
     if (precip === 0 || precip === 0.0) return '#000000'; 
-    if (precip <= 2) return '#006aff';                   
-    if (precip < 10) return '#9d00ff';                   
+    if (precip <= 2) return '#006aff';                 
+    if (precip < 10) return '#9d00ff';                 
     return '#df0000';                                    
 }
 
@@ -170,29 +170,30 @@ export function renderForecast(data, cityName) {
                     const condDesc = getWeatherDescription(cloudcover, weathercode, isNight);
 
                     const temp = Math.round(data.hourly.temperature_2m?.[hIndex] || 0);
-                    // Garante que o valor da precipitação seja lido como número real
                     const precip = parseFloat(data.hourly.precipitation?.[hIndex] || 0);
                     const precipFormatted = precip.toFixed(1);
                     const wind = Math.round(data.hourly.wind_gusts_10m?.[hIndex] || 0);
 
-                    // Aplica as cores conforme os limites exatos
                     const tempColor = getTempColor(temp);
                     const precipColor = getPrecipColor(precip);
 
-                    let condDisplay = `<span>${condDesc.text}</span>`;
+                    // ALTERAÇÃO AQUI: Apenas o ícone (sem o texto)
+                    let condDisplay = '';
                     if (condDesc.icon) {
                         condDisplay = `
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                                <span>${condDesc.text}</span>
-                                <img src="${condDesc.icon}" alt="${condDesc.text}" style="width: 22px; height: 22px; object-fit: contain;" />
+                            <div style="display: flex; align-items: center; justify-content: center;">
+                                <img src="${condDesc.icon}" alt="Condição do tempo" style="width: 24px; height: 24px; object-fit: contain;" />
                             </div>
                         `;
+                    } else {
+                        // Fallback caso não venha o ícone
+                        condDisplay = `<span>${condDesc.text}</span>`;
                     }
 
                     rowDiv.innerHTML = `
                         <div class="hourly-time-label">${hourStr}</div>
                         <div class="hourly-details-group">
-                            <div class="weather-metric-div bg-condition" style="padding: 6px 10px; display: flex; align-items: center;">${condDisplay}</div>
+                            <div class="weather-metric-div bg-condition" style="padding: 6px 10px; display: flex; align-items: center; justify-content: center;">${condDisplay}</div>
                             <div class="weather-metric-div bg-temp" style="padding: 6px 10px; display: flex; align-items: center;">
                                 <span style="color: ${tempColor}; font-weight: bold;">${temp}°C</span>
                             </div>
