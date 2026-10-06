@@ -5,7 +5,17 @@ export function openModal(dayIndex, metricType, dateTitle, bgClass, currentWeath
     const modalBody = document.getElementById('modalBody');
     const modalOverlay = document.getElementById('modalOverlay');
 
-    modalHeader.textContent = dateTitle;
+    // Inclui o título e o botão de fechar no mesmo contexto do header sticky
+    modalHeader.innerHTML = `
+        <span class="modal-title-text" style="font-weight: bold; font-size: 1.1rem;">${dateTitle}</span>
+        <button id="modalCloseBtn" style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">&times;</button>
+    `;
+
+    // Adiciona o evento para fechar o modal pelo botão recém-criado
+    document.getElementById('modalCloseBtn').addEventListener('click', () => {
+        modalOverlay.style.display = 'none';
+    });
+
     modalBody.innerHTML = '';
 
     if (!currentWeatherData?.hourly?.time) {
