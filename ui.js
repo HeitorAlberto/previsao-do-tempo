@@ -1,4 +1,4 @@
-import { calculateCardCondition, getWeatherDescription } from './processamento.js';
+import { calculateCardCondition, getWeatherDescription, calculateDayPeriodsIcons } from './processamento.js';
 
 // Funções auxiliares com a lógica exata de intervalos numéricos
 function getTempColor(temp) {
@@ -62,15 +62,21 @@ export function renderForecast(data, cityName) {
         const body = document.createElement('div');
         body.className = 'card-body-div';
 
-        const conditionResult = calculateCardCondition(
+        // Calcula os ícones dos 4 períodos
+        const dayPeriodsIcons = calculateDayPeriodsIcons(
             data.hourly?.time || [], 
             data.hourly?.cloudcover || [], 
             data.hourly?.weathercode || [], 
             dateStr
         );
 
+        // Mapeia os ícones centralizados (sem legenda "Condição")
+        const iconsHtml = dayPeriodsIcons.map(p => `
+            <img src="${p.icon}" alt="${p.periodKey}" title="${p.periodKey}" style="width: 24px; height: 24px; object-fit: contain;" />
+        `).join('');
+
         const metrics = [
-            { label: 'Condição', value: conditionResult.text, icon: conditionResult.icon, bg: 'bg-condition' },
+            { label: 'Condição', valueHtml: `<div style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 100%;">${iconsHtml}</div>`, bg: 'bg-condition', noLabel: true },
             { label: 'Temperatura', value: `${Math.round(data.daily.temperature_2m_min[index])}° a ${Math.round(data.daily.temperature_2m_max[index])}°`, bg: 'bg-temp' },
             { label: 'Chuva Acumulada', value: `${data.daily.precipitation_sum[index]} mm`, bg: 'bg-precip' },
             { label: 'Rajada de Vento', value: `${Math.round(data.daily.wind_gusts_10m_max[index])} km/h`, bg: 'bg-wind' }
@@ -80,13 +86,16 @@ export function renderForecast(data, cityName) {
             const mDiv = document.createElement('div');
             mDiv.className = `weather-metric-div ${m.bg}`;
 
-            if (m.icon) {
+            if (m.noLabel) {
+                // Se for a métrica de condição, exibe apenas os ícones centralizados sem o label "Condição"
+                mDiv.innerHTML = m.valueHtml;
+                mDiv.style.display = 'flex';
+                mDiv.style.alignItems = 'center';
+                mDiv.style.justifyContent = 'center';
+            } else if (m.valueHtml) {
                 mDiv.innerHTML = `
                     <div class="metric-label-div">${m.label}</div>
-                    <div class="metric-value-div" style="display: flex; align-items: center; gap: 8px; justify-content: center;">
-                        <span>${m.value}</span>
-                        <img src="${m.icon}" alt="${m.value}" style="width: 28px; height: 28px; object-fit: contain;" />
-                    </div>
+                    <div class="metric-value-div">${m.valueHtml}</div>
                 `;
             } else {
                 mDiv.innerHTML = `<div class="metric-label-div">${m.label}</div><div class="metric-value-div">${m.value}</div>`;
@@ -177,16 +186,16 @@ export function renderForecast(data, cityName) {
                     const tempColor = getTempColor(temp);
                     const precipColor = getPrecipColor(precip);
 
-                    // ALTERAÇÃO AQUI: Apenas o ícone (sem o texto)
+                    // Ícone com o texto ao lado para a visão hora a hora
                     let condDisplay = '';
                     if (condDesc.icon) {
                         condDisplay = `
-                            <div style="display: flex; align-items: center; justify-content: center;">
-                                <img src="${condDesc.icon}" alt="Condição do tempo" style="width: 24px; height: 24px; object-fit: contain;" />
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                <img src="${condDesc.icon}" alt="${condDesc.text}" style="width: 24px; height: 24px; object-fit: contain;" />
+                                <span style="font-size: 0.9rem;">${condDesc.text}</span>
                             </div>
                         `;
                     } else {
-                        // Fallback caso não venha o ícone
                         condDisplay = `<span>${condDesc.text}</span>`;
                     }
 
@@ -195,10 +204,10 @@ export function renderForecast(data, cityName) {
                         <div class="hourly-details-group">
                             <div class="weather-metric-div bg-condition" style="padding: 6px 10px; display: flex; align-items: center; justify-content: center;">${condDisplay}</div>
                             <div class="weather-metric-div bg-temp" style="padding: 6px 10px; display: flex; align-items: center;">
-                                <span style="color: ${tempColor}; font-weight: bold;">${temp}°C</span>
+                                <span style="color: ${tempColor};">${temp}°C</span>
                             </div>
                             <div class="weather-metric-div bg-precip" style="padding: 6px 10px; display: flex; align-items: center;">
-                                <span style="color: ${precipColor}; font-weight: bold;">${precipFormatted} mm</span>
+                                <span style="color: ${precipColor};">${precipFormatted} mm</span>
                             </div>
                             <div class="weather-metric-div bg-wind" style="padding: 6px 10px; display: flex; align-items: center;"><span>${wind} km/h</span></div>
                         </div>
