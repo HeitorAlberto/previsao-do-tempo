@@ -33,7 +33,7 @@ export function renderHistory(history, onClick) {
 export function renderForecast(data, cityName) {
     const container = document.getElementById('forecastContainer');
     const locationDiv = document.getElementById('currentLocationContainer');
-    locationDiv.textContent = `📌 ${cityName}`;
+    locationDiv.textContent = `Local: ${cityName}`;
     locationDiv.style.display = 'block';
     container.innerHTML = '';
 
