@@ -14,6 +14,79 @@ function getPrecipColor(precip) {
     return '#df0000';                                    
 }
 
+function generateTurnSummary(turnHoursData) {
+    if (!turnHoursData || turnHoursData.length === 0) return 'Dados indisponíveis para este turno.';
+
+    const maxWind = Math.max(...turnHoursData.map(h => h.wind));
+    const avgCloud = turnHoursData.reduce((sum, h) => sum + h.cloudcover, 0) / turnHoursData.length;
+
+    const lightHours = turnHoursData.filter(h => h.precip > 0 && h.precip <= 2.0);
+    const moderateHours = turnHoursData.filter(h => h.precip > 2.0 && h.precip < 10.0);
+    const heavyHours = turnHoursData.filter(h => h.precip >= 10.0);
+
+    const totalRainHours = lightHours.length + moderateHours.length + heavyHours.length;
+
+    const parts = [];
+
+    // --- 1. CONDIÇÃO DE NUVENS ---
+    if (avgCloud < 20) {
+        parts.push('Céu limpo');
+    } else if (avgCloud < 40) {
+        parts.push('poucas nuvens');
+    } else if (avgCloud < 75) {
+        parts.push('parcialmente nublado');
+    } else {
+        parts.push('nublado');
+    }
+
+    // --- 2. CONDIÇÃO DE CHUVA (Respeitando rigorosamente os limites) ---
+    if (totalRainHours > 0) {
+        if (heavyHours.length > 0) {
+            // A partir de 10 mm (Chuva Forte)
+            if (heavyHours.length === 6) {
+                parts.push('chuva forte persistente');
+            } else {
+                parts.push('pancadas de chuva forte');
+            }
+        } else if (moderateHours.length > 0) {
+            // Entre 2.1 mm e 9.9 mm (Chuva Moderada)
+            if (moderateHours.length === 6) {
+                parts.push('chuva moderada persistente');
+            } else if (moderateHours.length >= 3) {
+                parts.push('pancadas de chuva moderada'); // Mantém moderada, pois não atingiu 10mm
+            } else {
+                parts.push('pancadas de chuva moderada');
+            }
+        } else if (lightHours.length > 0) {
+            // Até 2 mm (Chuva Leve)
+            parts.push('chuva leve isolada');
+        }
+    } else {
+        parts.push('sem chuva');
+    }
+
+    // --- 3. CONDIÇÃO DE VENTOS ---
+    if (maxWind >= 80) {
+        parts.push('ventos intensos');
+    } else if (maxWind >= 60) {
+        parts.push('ventos fortes');
+    } else if (maxWind >= 40) {
+        parts.push('ventos moderados');
+    }
+
+    // Monta a frase final unindo os elementos por vírgulas
+    let text = '';
+    if (parts.length === 1) {
+        text = parts[0];
+    } else if (parts.length === 2) {
+        text = `${parts[0]} e ${parts[1]}`;
+    } else {
+        text = `${parts.slice(0, -1).join(', ')} e ${parts[parts.length - 1]}`;
+    }
+
+    return text.charAt(0).toUpperCase() + text.slice(1) + '.';
+}
+
 export function renderHistory(history, onClick) {
     const historyContainer = document.getElementById('historyContainer');
     const historyList = document.getElementById('historyList');
@@ -87,7 +160,6 @@ export function renderForecast(data, cityName) {
             mDiv.className = `weather-metric-div ${m.bg}`;
 
             if (m.noLabel) {
-                // Se for a métrica de condição, exibe apenas os ícones centralizados sem o label "Condição"
                 mDiv.innerHTML = m.valueHtml;
                 mDiv.style.display = 'flex';
                 mDiv.style.alignItems = 'center';
@@ -160,6 +232,8 @@ export function renderForecast(data, cityName) {
             turnHoursContainer.className = 'turn-hours-container';
             turnHoursContainer.style.display = 'none';
 
+            const turnHoursData = [];
+
             turn.hours.forEach(hourNum => {
                 const hourStr = `${String(hourNum).padStart(2, '0')}:00`;
                 const fullDateTime = `${dateStr}T${hourStr}`;
@@ -175,18 +249,19 @@ export function renderForecast(data, cityName) {
                 if (hIndex !== -1) {
                     const cloudcover = data.hourly.cloudcover?.[hIndex] ?? 0;
                     const weathercode = data.hourly.weathercode?.[hIndex] ?? 0;
+                    const temp = Math.round(data.hourly.temperature_2m?.[hIndex] || 0);
+                    const precip = parseFloat(data.hourly.precipitation?.[hIndex] || 0);
+                    const wind = Math.round(data.hourly.wind_gusts_10m?.[hIndex] || 0);
+
+                    turnHoursData.push({ cloudcover, weathercode, temp, precip, wind });
+
                     const isNight = hourNum < 6 || hourNum >= 18;
                     const condDesc = getWeatherDescription(cloudcover, weathercode, isNight);
 
-                    const temp = Math.round(data.hourly.temperature_2m?.[hIndex] || 0);
-                    const precip = parseFloat(data.hourly.precipitation?.[hIndex] || 0);
                     const precipFormatted = precip.toFixed(1);
-                    const wind = Math.round(data.hourly.wind_gusts_10m?.[hIndex] || 0);
-
                     const tempColor = getTempColor(temp);
                     const precipColor = getPrecipColor(precip);
 
-                    // Ícone com o texto ao lado para a visão hora a hora
                     let condDisplay = '';
                     if (condDesc.icon) {
                         condDisplay = `
@@ -218,6 +293,15 @@ export function renderForecast(data, cityName) {
 
                 turnHoursContainer.appendChild(rowDiv);
             });
+
+            // --- GERAÇÃO DO RESUMO TEXTUAL ---
+            const summaryText = generateTurnSummary(turnHoursData);
+            const turnSummaryDiv = document.createElement('div');
+            turnSummaryDiv.className = 'turn-summary-text';
+            turnSummaryDiv.style.cssText = 'padding: 8px 12px; margin-bottom: 8px; background: rgba(0, 0, 0, 0.04); border-radius: 6px; font-size: 0.88rem; font-weight: 500; text-align: center; color: #333;';
+            turnSummaryDiv.textContent = summaryText;
+
+            turnHoursContainer.insertBefore(turnSummaryDiv, turnHoursContainer.firstChild);
 
             btn.addEventListener('click', () => {
                 if (activeButtonBtn) activeButtonBtn.classList.remove('active');
