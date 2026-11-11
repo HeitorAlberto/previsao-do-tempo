@@ -30,11 +30,11 @@ function generateTurnSummary(turnHoursData) {
 
     // --- 1. CONDIÇÃO DE NUVENS ---
     if (avgCloud < 20) {
-        parts.push('Céu limpo');
-    } else if (avgCloud < 40) {
         parts.push('poucas nuvens');
+    } else if (avgCloud < 40) {
+        parts.push('nuvens esparsas');
     } else if (avgCloud < 75) {
-        parts.push('parcialmente nublado');
+        parts.push('muitas nuvens');
     } else {
         parts.push('nublado');
     }
@@ -46,20 +46,20 @@ function generateTurnSummary(turnHoursData) {
             if (heavyHours.length === 6) {
                 parts.push('chuva forte persistente');
             } else {
-                parts.push('pancadas de chuva forte');
+                parts.push('momentos de chuva forte');
             }
         } else if (moderateHours.length > 0) {
             // Entre 2.1 mm e 9.9 mm (Chuva Moderada)
             if (moderateHours.length === 6) {
                 parts.push('chuva moderada persistente');
             } else if (moderateHours.length >= 3) {
-                parts.push('pancadas de chuva moderada'); // Mantém moderada, pois não atingiu 10mm
-            } else {
                 parts.push('pancadas de chuva moderada');
+            } else {
+                parts.push('momentos de chuva moderada');
             }
         } else if (lightHours.length > 0) {
             // Até 2 mm (Chuva Leve)
-            parts.push('chuva leve isolada');
+            parts.push('pancadas de chuva leve');
         }
     } else {
         parts.push('sem chuva');
@@ -79,9 +79,9 @@ function generateTurnSummary(turnHoursData) {
     if (parts.length === 1) {
         text = parts[0];
     } else if (parts.length === 2) {
-        text = `${parts[0]} e ${parts[1]}`;
+        text = `${parts[0]} • ${parts[1]}`;
     } else {
-        text = `${parts.slice(0, -1).join(', ')} e ${parts[parts.length - 1]}`;
+        text = `${parts.slice(0, -1).join(' • ')} • ${parts[parts.length - 1]}`;
     }
 
     return text.charAt(0).toUpperCase() + text.slice(1) + '.';
