@@ -1,4 +1,4 @@
-import { calculateCardCondition, getWeatherDescription, calculateDayPeriodsIcons } from './processamento.js';
+import { calculateCardCondition, getWeatherDescription, calculateDayPeriodsIcons, hasThunderstormCode } from './processamento.js';
 
 // Funções auxiliares com a lógica exata de intervalos numéricos
 function getTempColor(temp) {
@@ -11,7 +11,7 @@ function getPrecipColor(precip) {
     if (precip === 0 || precip === 0.0) return '#000000'; 
     if (precip <= 2) return '#006aff';                 
     if (precip < 10) return '#9d00ff';                 
-    return '#df0000';                                    
+    return '#df0000';                                        
 }
 
 function generateTurnSummary(turnHoursData) {
@@ -19,6 +19,7 @@ function generateTurnSummary(turnHoursData) {
 
     const maxWind = Math.max(...turnHoursData.map(h => h.wind));
     const avgCloud = turnHoursData.reduce((sum, h) => sum + h.cloudcover, 0) / turnHoursData.length;
+    const totalPrecip = turnHoursData.reduce((sum, h) => sum + h.precip, 0);
 
     const lightHours = turnHoursData.filter(h => h.precip > 0 && h.precip <= 2.0);
     const moderateHours = turnHoursData.filter(h => h.precip > 2.0 && h.precip < 10.0);
@@ -26,65 +27,59 @@ function generateTurnSummary(turnHoursData) {
 
     const totalRainHours = lightHours.length + moderateHours.length + heavyHours.length;
 
-    const parts = [];
+    const lines = [];
 
     // --- 1. CONDIÇÃO DE NUVENS ---
-    if (avgCloud < 20) {
-        parts.push('poucas nuvens');
-    } else if (avgCloud < 40) {
-        parts.push('nuvens esparsas');
-    } else if (avgCloud < 75) {
-        parts.push('muitas nuvens');
+    let cloudText = '';
+    if (avgCloud <= 20) {
+        cloudText = 'Poucas nuvens';
+    } else if (avgCloud <= 50) {
+        cloudText = 'Nuvens esparsas';
+    } else if (avgCloud <= 80) {
+        cloudText = 'Muitas nuvens';
     } else {
-        parts.push('nublado');
+        cloudText = 'Nublado';
     }
+    lines.push(cloudText);
 
-    // --- 2. CONDIÇÃO DE CHUVA (Respeitando rigorosamente os limites) ---
+    // --- 2. CONDIÇÃO DE CHUVA (Com acumulado entre parênteses) ---
+    let rainText = '';
+    const precipFormatted = totalPrecip.toFixed(1).replace('.', ','); // Formato padrão BR opcional, ou use .toFixed(1)
+    
     if (totalRainHours > 0) {
         if (heavyHours.length > 0) {
-            // A partir de 10 mm (Chuva Forte)
             if (heavyHours.length === 6) {
-                parts.push('chuva forte persistente');
+                rainText = `Chuva forte persistente (${totalPrecip.toFixed(1)} mm)`;
             } else {
-                parts.push('momentos de chuva forte');
+                rainText = `Momentos de chuva forte (${totalPrecip.toFixed(1)} mm)`;
             }
         } else if (moderateHours.length > 0) {
-            // Entre 2.1 mm e 9.9 mm (Chuva Moderada)
             if (moderateHours.length === 6) {
-                parts.push('chuva moderada persistente');
+                rainText = `Chuva moderada persistente (${totalPrecip.toFixed(1)} mm)`;
             } else if (moderateHours.length >= 3) {
-                parts.push('pancadas de chuva moderada');
+                rainText = `Pancadas de chuva moderada (${totalPrecip.toFixed(1)} mm)`;
             } else {
-                parts.push('momentos de chuva moderada');
+                rainText = `Momentos de chuva moderada (${totalPrecip.toFixed(1)} mm)`;
             }
         } else if (lightHours.length > 0) {
-            // Até 2 mm (Chuva Leve)
-            parts.push('pancadas de chuva leve');
+            rainText = `Pancadas de chuva leve (${totalPrecip.toFixed(1)} mm)`;
         }
     } else {
-        parts.push('sem chuva');
+        rainText = `Sem chuva (${totalPrecip.toFixed(1)} mm)`;
     }
+    lines.push(rainText);
 
-    // --- 3. CONDIÇÃO DE VENTOS ---
+    // --- 3. CONDIÇÃO DE VENTOS (Com emoji de alerta) ---
     if (maxWind >= 80) {
-        parts.push('ventos intensos');
+        lines.push(`Ventos intensos ⚠️`);
     } else if (maxWind >= 60) {
-        parts.push('ventos fortes');
+        lines.push(`Ventos fortes ⚠️`);
     } else if (maxWind >= 40) {
-        parts.push('ventos moderados');
+        lines.push(`Ventos moderados ⚠️`);
     }
 
-    // Monta a frase final unindo os elementos por vírgulas
-    let text = '';
-    if (parts.length === 1) {
-        text = parts[0];
-    } else if (parts.length === 2) {
-        text = `${parts[0]} • ${parts[1]}`;
-    } else {
-        text = `${parts.slice(0, -1).join(' • ')} • ${parts[parts.length - 1]}`;
-    }
-
-    return text.charAt(0).toUpperCase() + text.slice(1) + '.';
+    // Retorna as linhas unidas por <br> para exibição em HTML
+    return lines.join('<br>');
 }
 
 export function renderHistory(history, onClick) {
@@ -204,10 +199,10 @@ export function renderForecast(data, cityName) {
         displayArea.className = 'turn-display-area';
 
         const turns = [
-            { label: '0h', hours: [0, 1, 2, 3, 4, 5] },
-            { label: '6h', hours: [6, 7, 8, 9, 10, 11] },
-            { label: '12h', hours: [12, 13, 14, 15, 16, 17] },
-            { label: '18h', hours: [18, 19, 20, 21, 22, 23] }
+            { label: '0h - 6h', hours: [0, 1, 2, 3, 4, 5] },
+            { label: '6h - 12h', hours: [6, 7, 8, 9, 10, 11] },
+            { label: '12h - 18h', hours: [12, 13, 14, 15, 16, 17] },
+            { label: '18h - 00h', hours: [18, 19, 20, 21, 22, 23] }
         ];
 
         let activeButtonBtn = null;
@@ -295,11 +290,11 @@ export function renderForecast(data, cityName) {
             });
 
             // --- GERAÇÃO DO RESUMO TEXTUAL ---
-            const summaryText = generateTurnSummary(turnHoursData);
+            const summaryHtml = generateTurnSummary(turnHoursData);
             const turnSummaryDiv = document.createElement('div');
             turnSummaryDiv.className = 'turn-summary-text';
-            turnSummaryDiv.style.cssText = 'padding: 8px 12px; margin-bottom: 8px; background: rgba(0, 0, 0, 0.04); border-radius: 6px; font-size: 0.88rem; font-weight: 500; text-align: center; color: #333;';
-            turnSummaryDiv.textContent = summaryText;
+            turnSummaryDiv.style.cssText = 'padding: 8px 12px; margin-bottom: 8px; background: rgba(0, 0, 0, 0.04); border-radius: 6px; font-size: 0.88rem; font-weight: 500; text-align: center; color: #333; line-height: 1.4;';
+            turnSummaryDiv.innerHTML = summaryHtml; // Usando innerHTML para respeitar o <br> das linhas separadas
 
             turnHoursContainer.insertBefore(turnSummaryDiv, turnHoursContainer.firstChild);
 

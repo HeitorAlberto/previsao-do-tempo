@@ -29,7 +29,7 @@ export function getWeatherDescription(cloudcover, weathercode, isNight = false) 
         } else if (cloudcover <= 50) {
             text = 'Nuvens esparsas';
             iconPath = `icones/nuvens-esparsas-${periodSuffix}.png`;
-        } else if (cloudcover <= 80) {
+        } else if (cloudcover <= 75) {
             text = 'Muitas nuvens';
             iconPath = `icones/muitas-nuvens-${periodSuffix}.png`;
         } else {
@@ -44,29 +44,6 @@ export function getWeatherDescription(cloudcover, weathercode, isNight = false) 
     };
 }
 
-// Função para remover extremos (menor e maior valor) e tirar a média dos valores restantes
-function calculateTrimmedAverage(arr) {
-    if (!arr || arr.length === 0) return 0;
-    if (arr.length <= 2) {
-        // Se tiver poucos elementos, apenas tira a média simples
-        const sum = arr.reduce((acc, val) => acc + val, 0);
-        return sum / arr.length;
-    }
-
-    // Ordena os valores em ordem crescente
-    const sorted = [...arr].sort((a, b) => a - b);
-    
-    // Remove o menor e o maior (extremos)
-    sorted.shift();
-    sorted.pop();
-
-    // Se após remover sobra algum elemento, calcula a média deles
-    if (sorted.length === 0) return arr[0];
-    
-    const sum = sorted.reduce((acc, val) => acc + val, 0);
-    return sum / sorted.length;
-}
-
 // Retorna os ícones para os 4 períodos do dia de um dia específico
 export function calculateDayPeriodsIcons(hourlyTime, cloudcoverArr, weathercodeArr, targetDateStr) {
     const periods = [
@@ -77,7 +54,8 @@ export function calculateDayPeriodsIcons(hourlyTime, cloudcoverArr, weathercodeA
     ];
 
     return periods.map(period => {
-        const cloudValues = [];
+        let totalCloud = 0;
+        let count = 0;
         let periodHasThunderstorm = false;
 
         period.hours.forEach(hourNum => {
@@ -87,7 +65,8 @@ export function calculateDayPeriodsIcons(hourlyTime, cloudcoverArr, weathercodeA
 
             if (hIndex !== -1) {
                 if (cloudcoverArr?.[hIndex] != null) {
-                    cloudValues.push(cloudcoverArr[hIndex]);
+                    totalCloud += cloudcoverArr[hIndex];
+                    count++;
                 }
                 if (hasThunderstormCode(weathercodeArr?.[hIndex])) {
                     periodHasThunderstorm = true;
@@ -95,8 +74,8 @@ export function calculateDayPeriodsIcons(hourlyTime, cloudcoverArr, weathercodeA
             }
         });
 
-        // Aplica a lógica de remoção de extremos e cálculo da média
-        const avgCloud = calculateTrimmedAverage(cloudValues);
+        // Calcula a média simples diretamente
+        const avgCloud = count > 0 ? totalCloud / count : 0;
         const dummyWeatherCode = periodHasThunderstorm ? 95 : 0;
 
         const desc = getWeatherDescription(avgCloud, dummyWeatherCode, period.isNight);
